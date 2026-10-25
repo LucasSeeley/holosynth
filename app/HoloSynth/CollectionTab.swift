@@ -32,11 +32,7 @@ struct CollectionTab: View {
         .sheet(item: $zoomed) { card in
             ZStack {
                 ScreenBackground()
-                VStack(spacing: 16) {
-                    CardView(card: card).padding(.horizontal, 40)
-                    Text("#\(card.num) · \(card.look)").font(.barlow(15)).foregroundColor(Theme.muted)
-                        .multilineTextAlignment(.center).padding(.horizontal, 30)
-                }
+                CardView(card: card).padding(.horizontal, 40)
             }
         }
     }
