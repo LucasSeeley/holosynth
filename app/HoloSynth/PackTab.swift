@@ -25,13 +25,19 @@ struct PackTab: View {
                 }
             }
         }
+        .onAppear {
+            guard let starter = store.starterPack else { return }
+            store.starterPack = nil
+            flipped = []; torn = false; tearProgress = 0
+            pulled = starter
+        }
     }
 
     private var shop: some View {
         VStack(spacing: 20) {
             Spacer()
             packImage.frame(maxHeight: 360)
-            Text("Starter pack · 3 cards").font(.headline).foregroundColor(Theme.fg)
+            Text("Card pack · 3 cards").font(.headline).foregroundColor(Theme.fg)
             Button {
                 buying = true
                 Task {

@@ -141,14 +141,16 @@ struct AuthView: View {
 
 struct HomeView: View {
     @EnvironmentObject var store: GameStore
+    @State private var tab = 0
 
     var body: some View {
-        TabView {
-            BattleTab().tabItem { Label("Battle", systemImage: "bolt.fill") }
-            PackTab().tabItem { Label("Packs", systemImage: "gift.fill") }
-            CollectionTab().tabItem { Label("Cards", systemImage: "square.grid.3x3.fill") }
+        TabView(selection: $tab) {
+            BattleTab().tabItem { Label("Battle", systemImage: "bolt.fill") }.tag(0)
+            PackTab().tabItem { Label("Packs", systemImage: "gift.fill") }.tag(1)
+            CollectionTab().tabItem { Label("Cards", systemImage: "square.grid.3x3.fill") }.tag(2)
         }
         .task { await store.refresh() }
+        .onAppear { if store.starterPack != nil { tab = 1 } }
     }
 }
 
