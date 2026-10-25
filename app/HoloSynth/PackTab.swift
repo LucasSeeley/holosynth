@@ -265,6 +265,7 @@ struct PackTab: View {
     private func tearOpen() {
         guard !torn else { return }
         UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+        Sound.tear.play()
         sparking = true; sparkOut = false
         withAnimation(.easeIn(duration: 0.45)) { torn = true }
         withAnimation(.linear(duration: 0.4)) { shakes += 1 }
@@ -282,6 +283,7 @@ struct PackTab: View {
     private func flip(_ i: Int, _ id: String) {
         guard !flipped.contains(i) else { return }
         withAnimation(.easeInOut(duration: 0.45)) { _ = flipped.insert(i) }
+        Sound.flip.play()
         let rarity = CardBook.card(id)?.rarity ?? "Common"
         guard rarity != "Common" else {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
@@ -290,6 +292,7 @@ struct PackTab: View {
         UINotificationFeedbackGenerator().notificationOccurred(.success)
         let color = Theme.rarityColor(rarity)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            (rarity == "Legendary" ? Sound.legendary : Sound.rare).play()
             withAnimation(.easeOut(duration: 0.15)) { burst = color }
             withAnimation(.easeIn(duration: rarity == "Legendary" ? 1.2 : 0.5).delay(0.15)) { burst = nil }
         }

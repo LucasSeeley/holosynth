@@ -132,6 +132,7 @@ struct FriendBattleView: View {
                     .padding(20)
                 }
                 .transition(.opacity)
+                .onAppear { (w == m.you ? Sound.victory : Sound.defeat).play() }
             }
         }
     }

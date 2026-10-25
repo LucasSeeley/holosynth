@@ -92,8 +92,8 @@ struct CampaignBattleView: View {
             .padding(20)
         }
         .onAppear {
-            if r.won { UINotificationFeedbackGenerator().notificationOccurred(.success) }
-            else { UINotificationFeedbackGenerator().notificationOccurred(.error) }
+            if r.won { UINotificationFeedbackGenerator().notificationOccurred(.success); Sound.victory.play() }
+            else { UINotificationFeedbackGenerator().notificationOccurred(.error); Sound.defeat.play() }
         }
     }
 

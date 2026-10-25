@@ -346,6 +346,7 @@ struct BattleBoard: View {
         if side == you {
             guard !s.acted[you][i] else { return }
             UISelectionFeedbackGenerator().selectionChanged()
+            Sound.select.play()
             if selected == i { selected = nil; move = nil } else { selected = i; move = nil }
             error = nil
         } else if let from = selected, let mv = move {
@@ -356,6 +357,7 @@ struct BattleBoard: View {
     private func choose(_ kind: String) {
         guard let from = selected else { return }
         UISelectionFeedbackGenerator().selectionChanged()
+        Sound.move.play()
         move = kind
         // one enemy left standing: no need to tap it
         let living = s.teams[1 - you].indices.filter { s.teams[1 - you][$0].hp > 0 }
@@ -393,6 +395,7 @@ struct BattleBoard: View {
                 await pause(0.16)
                 // impact
                 UIImpactFeedbackGenerator(style: e.ko ? .heavy : .medium).impactOccurred()
+                (e.ko ? Sound.ko : e.move == "special" ? Sound.crit : Sound.hit).play()
                 fx[t, default: HitFX()].ghostHP = cur.teams[1 - e.p][e.to].hp
                 cur.teams[1 - e.p][e.to].hp = max(0, cur.teams[1 - e.p][e.to].hp - e.dmg)
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.55)) { fx[a]?.lunge = 0 }
@@ -406,7 +409,7 @@ struct BattleBoard: View {
                 await pause(0.45)
             }
             withAnimation(.easeOut(duration: 0.25)) { shown = target; acting = nil }
-            if target.turn == you && target.winner == nil { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
+            if target.turn == you && target.winner == nil { UIImpactFeedbackGenerator(style: .light).impactOccurred(); Sound.turn.play() }
         }
         playing = false
         onSettled()
