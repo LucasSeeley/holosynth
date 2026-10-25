@@ -64,10 +64,10 @@ struct BattleBoard: View {
         }
         .onAppear {
             if shown == nil { shown = state; latest = state }
-            if state.winner == nil { Music.start() }
+            if state.winner == nil { Music.play(.battle) }
             withAnimation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true)) { pulse = true }
         }
-        .onDisappear { Music.stop() }
+        .onDisappear { Music.play(.menu) }
         .onChange(of: state) { new in
             latest = new
             Task { await playBack() }

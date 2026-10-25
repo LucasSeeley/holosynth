@@ -29,30 +29,49 @@ enum Sound: String, CaseIterable {
     }
 }
 
-// Battle music: a seamless loop (WAV, since AAC adds a gap at the loop point). Stays off if other audio is playing.
+// Music: calm loop in the menus, intense loop in battles. WAVs because AAC adds a gap at the loop point.
+// Stays off if other audio (the player's own music) is already playing.
 enum Music {
+    enum Track: String, CaseIterable { case menu, battle }
+    private static let volume: [Track: Float] = [.menu: 0.3, .battle: 0.4]
+    private static var current: Track?
     private static var generation = 0
-    private static let player: AVAudioPlayer? = {
+    private static let players: [Track: AVAudioPlayer] = {
         _ = session
-        guard let url = Bundle.main.url(forResource: "battle", withExtension: "wav"),
-              let p = try? AVAudioPlayer(contentsOf: url) else { return nil }
-        p.numberOfLoops = -1
-        p.prepareToPlay()
-        return p
+        var out: [Track: AVAudioPlayer] = [:]
+        for t in Track.allCases {
+            if let url = Bundle.main.url(forResource: t.rawValue, withExtension: "wav"),
+               let p = try? AVAudioPlayer(contentsOf: url) {
+                p.numberOfLoops = -1
+                p.prepareToPlay()
+                out[t] = p
+            }
+        }
+        return out
     }()
 
-    static func start() {
-        guard !AVAudioSession.sharedInstance().isOtherAudioPlaying, let p = player else { return }
-        generation += 1
-        if !p.isPlaying { p.currentTime = 0; p.volume = 0; p.play() }
-        p.setVolume(0.4, fadeDuration: 1.0)
+    static func play(_ track: Track) {
+        guard track != current, !AVAudioSession.sharedInstance().isOtherAudioPlaying else { return }
+        fadeOut()
+        generation += 1     // cancels a pending stop if this same track is coming back
+        current = track
+        guard let p = players[track] else { return }
+        p.currentTime = 0
+        p.volume = 0
+        p.play()
+        p.setVolume(volume[track] ?? 0.3, fadeDuration: 1.0)
     }
 
     static func stop() {
-        guard let p = player, p.isPlaying else { return }
+        fadeOut()
+        current = nil
+    }
+
+    private static func fadeOut() {
+        guard let old = current, let p = players[old], p.isPlaying else { return }
         generation += 1
         let mine = generation
         p.setVolume(0, fadeDuration: 0.8)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.85) { if generation == mine { p.stop() } }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.85) { if generation == mine || current != old { p.stop() } }
     }
 }

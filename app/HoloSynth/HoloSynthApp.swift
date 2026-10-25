@@ -131,6 +131,7 @@ struct HomeView: View {
         .toolbarBackground(Theme.ink, for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)
         .task { await store.refresh() }
+        .onAppear { Music.play(.menu) }
         // New accounts pick their first card before anything else.
         .fullScreenCover(isPresented: Binding(get: { store.profile?.needsStarter == true }, set: { _ in })) {
             CardPicker(eyebrow: "Welcome to HoloSynth", title: "Choose your first card",
