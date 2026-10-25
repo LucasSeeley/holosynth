@@ -38,7 +38,7 @@ enum Sound: String, CaseIterable {
 // Stays off if other audio (the player's own music) is already playing.
 enum Music {
     enum Track: String, CaseIterable { case menu, battle }
-    private static let volume: [Track: Float] = [.menu: 0.3, .battle: 0.4]
+    private static let volume: [Track: Float] = [.menu: 0.5, .battle: 0.6]
     private static var current: Track?
     private static var generation = 0
     private static let players: [Track: AVAudioPlayer] = {
