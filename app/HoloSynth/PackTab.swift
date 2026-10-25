@@ -1,7 +1,8 @@
 import SwiftUI
 import UIKit
 
-// Buy a pack, drag a finger across the top to tear it open, watch the cards rise out, then tap each to flip.
+// Buy a pack, drag a finger across the top to tear it open, watch the cards rise out, then reveal them
+// one at a time: swipe the top card of the stack to turn it over, swipe again (or wait) for the next.
 // Rarity tells early: light leaking from the tear takes the colour of the best card inside.
 struct PackTab: View {
     @EnvironmentObject var store: GameStore
@@ -13,6 +14,9 @@ struct PackTab: View {
     @State private var rising = false             // cards poking out of the pack
     @State private var dealt = false              // pack gone, cards laid out face down
     @State private var flipped: Set<Int> = []
+    @State private var current = 0               // card on top of the stack; == count once all are revealed
+    @State private var dragX: CGFloat = 0
+    @State private var throwDir: [Int: CGFloat] = [:]
     @State private var sparking = false
     @State private var sparkOut = false
     @State private var shakes: CGFloat = 0
@@ -42,6 +46,7 @@ struct PackTab: View {
         tearProgress = 0; lastTick = 0
         torn = false; rising = false; dealt = false
         flipped = []; sparking = false; sparkOut = false
+        current = 0; dragX = 0; throwDir = [:]
         pulled = cards
     }
 
@@ -90,7 +95,9 @@ struct PackTab: View {
         GeometryReader { geo in
             let packW = min(geo.size.width * 0.7, 300)
             let packH = packW * 1050 / 686
-            let cardW = min((geo.size.width - 48) / 3, 130)
+            let smallW = min((geo.size.width - 48) / 3, 130)    // in the pack and in the final row
+            let bigW = min(geo.size.width * 0.7, 320)           // revealing one at a time
+            let finished = dealt && current >= pulled.count
             let tearY = -packH / 2 + packH * tearLine          // tear line, relative to the pack centre
             ZStack {
                 // light from inside the pack, behind everything
@@ -101,17 +108,25 @@ struct PackTab: View {
                     .opacity(dealt ? 0 : (torn ? 0.9 : tearProgress * 0.5))
                     .scaleEffect(torn ? 1.3 : 1)
 
-                // cards: hidden in the pack, rise out of the opening, then fan into a row
+                // cards: hidden in the pack, rise out of the opening, then stack up big to reveal one by one
                 ForEach(Array(pulled.enumerated()), id: \.offset) { i, id in
+                    let slot = cardSlot(i, finished: finished, width: geo.size.width, tearY: tearY, smallW: smallW)
                     FlipCard(card: CardBook.card(id), flipped: flipped.contains(i))
-                        .frame(width: cardW, height: cardW * 7 / 5)
-                        .rotationEffect(.degrees(dealt ? 0 : Double(i - 1) * 5))
-                        .offset(x: CGFloat(i - 1) * (dealt ? cardW + 10 : 8),
-                                y: dealt ? 0 : (rising ? tearY - cardW * 0.25 : 0))
+                        .frame(width: bigW, height: bigW * 7 / 5)
+                        .scaleEffect(slot.small ? smallW / bigW : 1 - CGFloat(max(0, i - current)) * 0.05)
+                        .rotationEffect(.degrees(slot.angle))
+                        .offset(slot.offset)
+                        .zIndex(-Double(i))
                         .animation(.spring(response: 0.6, dampingFraction: 0.7), value: rising)
-                        .animation(.spring(response: 0.55, dampingFraction: 0.72).delay(Double(i) * 0.09), value: dealt)
-                        .onTapGesture { if dealt { flip(i, id) } }
-                        .allowsHitTesting(dealt)
+                        .animation(.spring(response: 0.55, dampingFraction: 0.75), value: dealt)
+                        .gesture(DragGesture(minimumDistance: 10)
+                            .onChanged { dragX = $0.translation.width }
+                            .onEnded { v in
+                                if abs(v.translation.width) > 60 { swipe(i, id, dir: v.translation.width > 0 ? 1 : -1) }
+                                withAnimation(.spring()) { dragX = 0 }
+                            })
+                        .onTapGesture { swipe(i, id, dir: 1) }
+                        .allowsHitTesting(dealt && i == current)
                 }
 
                 // pack body
@@ -146,7 +161,7 @@ struct PackTab: View {
                 // sparks when it rips
                 if sparking { sparks(at: tearY) }
 
-                hint.offset(y: dealt ? cardW * 0.7 + 60 : packH / 2 + 36)
+                hint.offset(y: finished ? smallW * 0.7 + 60 : (dealt ? bigW * 0.7 + 60 : packH / 2 + 36))
             }
             .frame(width: geo.size.width, height: geo.size.height)
             .contentShape(Rectangle())
@@ -172,6 +187,42 @@ struct PackTab: View {
         }
     }
 
+    // Where card i sits: in the pack, stacked (top card follows your finger), thrown aside, or in the final row.
+    private func cardSlot(_ i: Int, finished: Bool, width: CGFloat, tearY: CGFloat, smallW: CGFloat)
+        -> (offset: CGSize, angle: Double, small: Bool) {
+        let side = CGFloat(i - 1)
+        if !dealt { return (CGSize(width: side * 8, height: rising ? tearY - smallW * 0.25 : 0), Double(side) * 5, true) }
+        if finished { return (CGSize(width: side * (smallW + 10), height: 0), 0, true) }
+        if i < current {
+            let dir = throwDir[i] ?? 1
+            return (CGSize(width: dir * width * 1.3, height: -40), Double(dir) * 25, false)
+        }
+        if i == current { return (CGSize(width: dragX, height: 0), Double(dragX) / 18, false) }
+        let depth = CGFloat(i - current)
+        return (CGSize(width: 0, height: depth * 16), i.isMultiple(of: 2) ? 3 : -3, false)
+    }
+
+    // First swipe turns the top card over; the next swipe (or a short wait) throws it aside.
+    private func swipe(_ i: Int, _ id: String, dir: CGFloat) {
+        guard dealt, i == current else { return }
+        throwDir[i] = dir
+        guard flipped.contains(i) else {
+            flip(i, id)
+            let rarity = CardBook.card(id)?.rarity ?? "Common"
+            let wait = ["Epic": 2.6, "Legendary": 3.4][rarity] ?? 1.6
+            DispatchQueue.main.asyncAfter(deadline: .now() + wait) {
+                if current == i { advance() }
+            }
+            return
+        }
+        advance()
+    }
+
+    private func advance() {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        withAnimation(.spring(response: 0.45, dampingFraction: 0.8)) { current += 1 }
+    }
+
     private func sparks(at y: CGFloat) -> some View {
         ZStack {
             ForEach(0..<16, id: \.self) { i in
@@ -190,8 +241,9 @@ struct PackTab: View {
         if !torn {
             Text("Swipe across the top to tear it open").font(.subheadline).foregroundColor(Theme.muted)
                 .opacity(tearProgress > 0 ? 0 : 1)
-        } else if dealt && flipped.count < pulled.count {
-            Text("Tap each card to flip it").font(.subheadline).foregroundColor(Theme.muted)
+        } else if dealt && current < pulled.count {
+            Text(flipped.contains(current) ? "Swipe for the next card" : "Swipe to reveal \(current + 1) of \(pulled.count)")
+                .font(.subheadline).foregroundColor(Theme.muted)
         } else if dealt {
             VStack(spacing: 14) {
                 Text("Added to your collection").font(.subheadline).foregroundColor(Theme.muted)
