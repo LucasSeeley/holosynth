@@ -182,6 +182,7 @@ struct PackTab: View {
                     guard abs(drag.startLocation.y - (geo.size.height / 2 + tearY)) < 80 else { return }
                     let p = min(1, abs(drag.translation.width) / (packW * 0.85))
                     guard p > tearProgress else { return }
+                    Rip.scratch(speed: Double(p - tearProgress) * 40)
                     tearProgress = p
                     if p - lastTick > 0.08 {
                         lastTick = p
@@ -191,6 +192,7 @@ struct PackTab: View {
                 }
                 .onEnded { _ in
                     guard !torn else { return }
+                    Rip.end()
                     if tearProgress > 0.7 { tearOpen() }
                     else { withAnimation(.spring()) { tearProgress = 0 }; lastTick = 0 }
                 })
@@ -265,6 +267,7 @@ struct PackTab: View {
     private func tearOpen() {
         guard !torn else { return }
         UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+        Rip.end()
         Sound.tear.play()
         sparking = true; sparkOut = false
         withAnimation(.easeIn(duration: 0.45)) { torn = true }

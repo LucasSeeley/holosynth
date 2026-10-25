@@ -80,3 +80,33 @@ enum Music {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.85) { if generation == mine || current != old { p.stop() } }
     }
 }
+
+// The pack rip: a looping tear sound that plays while the finger is moving across the pack and goes quiet when it stops.
+enum Rip {
+    private static var lastMove = Date.distantPast
+    private static let player: AVAudioPlayer? = {
+        _ = session
+        guard let url = Bundle.main.url(forResource: "rip", withExtension: "wav"),
+              let p = try? AVAudioPlayer(contentsOf: url) else { return nil }
+        p.numberOfLoops = -1
+        p.prepareToPlay()
+        return p
+    }()
+
+    // Call on every drag step; `speed` 0…1 sets how loud the rip is.
+    static func scratch(speed: Double) {
+        guard let p = player else { return }
+        lastMove = Date()
+        if !p.isPlaying { p.volume = 0; p.play() }
+        p.setVolume(Float(0.35 + 0.65 * min(1, speed)), fadeDuration: 0.04)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+            if Date().timeIntervalSince(lastMove) >= 0.11 { p.setVolume(0, fadeDuration: 0.06) }   // finger stopped
+        }
+    }
+
+    static func end() {
+        guard let p = player, p.isPlaying else { return }
+        p.setVolume(0, fadeDuration: 0.05)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { p.stop(); p.currentTime = 0 }
+    }
+}
