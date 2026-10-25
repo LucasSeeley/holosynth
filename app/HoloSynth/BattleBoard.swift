@@ -397,7 +397,8 @@ struct BattleBoard: View {
                 await pause(0.16)
                 // impact
                 UIImpactFeedbackGenerator(style: e.ko ? .heavy : .medium).impactOccurred()
-                (e.ko ? Sound.ko : e.move == "special" ? Sound.crit : Sound.hit).play()
+                let sound = e.ko ? Sound.ko : e.move == "special" ? Sound.crit : Sound.hit
+                sound.play()
                 fx[t, default: HitFX()].ghostHP = cur.teams[1 - e.p][e.to].hp
                 cur.teams[1 - e.p][e.to].hp = max(0, cur.teams[1 - e.p][e.to].hp - e.dmg)
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.55)) { fx[a]?.lunge = 0 }
@@ -408,7 +409,8 @@ struct BattleBoard: View {
                 withAnimation(.easeOut(duration: 0.3)) { fx[t]?.flash = false }
                 await pause(0.35)
                 withAnimation(.easeOut(duration: 0.5)) { fx[t]?.ghostHP = nil; fx[t]?.pop = nil }
-                await pause(0.45)
+                // wait for the hit sound to finish before anything else plays
+                await pause(max(0.45, sound.duration - 0.65 + 0.1))
             }
             withAnimation(.easeOut(duration: 0.25)) { shown = target; acting = nil }
             if target.turn == you && target.winner == nil { UIImpactFeedbackGenerator(style: .light).impactOccurred(); Sound.turn.play() }

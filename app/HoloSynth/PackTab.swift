@@ -291,7 +291,7 @@ struct PackTab: View {
         }
         UINotificationFeedbackGenerator().notificationOccurred(.success)
         let color = Theme.rarityColor(rarity)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + Sound.flip.duration) {
             (rarity == "Legendary" ? Sound.legendary : Sound.rare).play()
             withAnimation(.easeOut(duration: 0.15)) { burst = color }
             withAnimation(.easeIn(duration: rarity == "Legendary" ? 1.2 : 0.5).delay(0.15)) { burst = nil }

@@ -9,20 +9,25 @@ private let session: Void = {
 enum Sound: String, CaseIterable {
     case select, move, hit, crit, ko, turn, victory, defeat, tear, flip, rare, legendary
 
-    // three players per sound so a quick repeat doesn't cut off the one still ringing
-    private static var players: [Sound: [AVAudioPlayer]] = {
+    private static var players: [Sound: AVAudioPlayer] = {
         _ = session
-        var out: [Sound: [AVAudioPlayer]] = [:]
+        var out: [Sound: AVAudioPlayer] = [:]
         for s in Sound.allCases {
-            guard let url = Bundle.main.url(forResource: s.rawValue, withExtension: "wav") else { continue }
-            out[s] = (0..<3).compactMap { _ in try? AVAudioPlayer(contentsOf: url) }
-            out[s]?.forEach { $0.prepareToPlay() }
+            if let url = Bundle.main.url(forResource: s.rawValue, withExtension: "wav"),
+               let p = try? AVAudioPlayer(contentsOf: url) {
+                p.prepareToPlay()
+                out[s] = p
+            }
         }
         return out
     }()
 
+    var duration: TimeInterval { Self.players[self]?.duration ?? 0 }
+
+    // One effect at a time: a new one stops whatever is still ringing. Battles space their sounds out by `duration`.
     func play() {
-        guard let pool = Self.players[self], let p = pool.first(where: { !$0.isPlaying }) ?? pool.first else { return }
+        guard let p = Self.players[self] else { return }
+        for other in Self.players.values where other !== p && other.isPlaying { other.stop() }
         p.currentTime = 0
         p.play()
     }
