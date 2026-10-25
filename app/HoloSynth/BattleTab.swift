@@ -19,9 +19,15 @@ struct BattleTab: View {
             PlayerBar()
             ZStack {
                 ScreenBackground()
+                lobby
+            }
+        }
+        // The code screen and the match itself take over the whole screen: no tabs mid-battle.
+        .fullScreenCover(isPresented: Binding(get: { match != nil }, set: { if !$0 { match = nil } })) {
+            ZStack {
+                ScreenBackground()
                 if let match, match.status != "waiting", let state = match.state { board(match, state) }
-                else if let match, match.status == "waiting" { waiting(match) }
-                else { lobby }
+                else if let match { waiting(match) }
             }
         }
         .task { await loadCurrent() }
