@@ -74,6 +74,16 @@ enum Music {
         current = nil
     }
 
+    // shortcut: temporary readout to find why music is silent on Lucas's phone; remove once fixed.
+    static var debugText: String {
+        let ses = AVAudioSession.sharedInstance()
+        let p = current.flatMap { players[$0] }
+        return "music \(players.count)/2 · \(current?.rawValue ?? "none") · playing \(p?.isPlaying ?? false) · vol \(p?.volume ?? -1)"
+            + " · t \(Int(p?.currentTime ?? -1)) · hint \(ses.secondaryAudioShouldBeSilencedHint) · other \(ses.isOtherAudioPlaying)"
+            + " · \(ses.category.rawValue.replacingOccurrences(of: "AVAudioSessionCategory", with: "")) · out \(ses.outputVolume)"
+            + " · \(ses.currentRoute.outputs.map(\.portType.rawValue).joined(separator: ","))"
+    }
+
     private static func fadeOut() {
         guard let old = current, let p = players[old], p.isPlaying else { return }
         generation += 1
