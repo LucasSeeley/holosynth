@@ -19,9 +19,6 @@ struct PlayTab: View {
                         HStack(spacing: 12) { friendTile(p); packTile }
                         teamPanel(p)
                         stats(p)
-                        TimelineView(.periodic(from: .now, by: 1)) { _ in
-                            Text(Music.debugText).font(.system(size: 10, design: .monospaced)).foregroundColor(Theme.muted)
-                        }
                     }
                     .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 16)
                 }
