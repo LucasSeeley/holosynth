@@ -2,7 +2,7 @@ import AVFoundation
 
 private let session: Void = {
     // Ambient: respects the silent switch and mixes with whatever else is playing.
-    try? AVAudioSession.sharedInstance().setCategory(.ambient)
+    _ = try? AVAudioSession.sharedInstance().setCategory(.ambient)
 }()
 
 // Sound effects (Resources/Sounds, synthesized by scratch scripts, no licences needed).
