@@ -124,14 +124,21 @@ struct HomeView: View {
 
     var body: some View {
         TabView(selection: $tab) {
-            BattleTab().tabItem { Label("Battle", systemImage: "bolt.fill") }.tag(0)
+            PlayTab(tab: $tab).tabItem { Label("Play", systemImage: "bolt.fill") }.tag(0)
             PackTab().tabItem { Label("Packs", systemImage: "gift.fill") }.tag(1)
             CollectionTab().tabItem { Label("Cards", systemImage: "square.grid.3x3.fill") }.tag(2)
         }
         .toolbarBackground(Theme.ink, for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)
         .task { await store.refresh() }
-        .onAppear { if store.starterPack != nil { tab = 1 } }
+        // New accounts pick their first card before anything else.
+        .fullScreenCover(isPresented: Binding(get: { store.profile?.needsStarter == true }, set: { _ in })) {
+            CardPicker(eyebrow: "Welcome to HoloSynth", title: "Choose your first card",
+                       subtitle: "The other two join you as you clear the campaign.",
+                       ids: ["volt", "fang", "goliath"], cta: "Choose", showAdvantage: true) { id in
+                await store.pickStarter(id)
+            }
+        }
     }
 }
 

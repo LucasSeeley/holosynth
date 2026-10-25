@@ -1,8 +1,8 @@
 // HoloSynth game server: a Cloudflare Worker over D1. Every reply is JSON; errors are { error: "message" }.
 // It also serves the iPhone app download (IPA + SideStore source) from the KV namespace bound as FILES.
 import {
-  STARTER_TEAM, START_GOLD, PACK_COST, WIN_GOLD, WIN_XP,
-  levelFor, openPack, newBattle, applyMove,
+  STARTER_TEAM, START_GOLD, PACK_COST, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN, CHAPTER_TITLE, NEW_CARD_AFTER,
+  levelFor, openPack, newBattle, newCampaignBattle, applyMove, aiMove,
 } from './game.js';
 
 class HttpError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
@@ -39,17 +39,46 @@ async function body(req) {
 }
 
 // ---- player profile ----
+const getProgress = async (db, userId) =>
+  await db.prepare('SELECT * FROM progress WHERE user_id = ?').bind(userId).first()
+  ?? { user_id: userId, cleared: 0, wins: 0, packs: 0, run: null };
+
+// Starters you can pick after level 3 (null when there's no pick waiting).
+const pendingChoice = (prog, owned) => {
+  const have = STARTER_TEAM.filter(id => owned[id]);
+  return prog.cleared >= NEW_CARD_AFTER[0] && have.length === 1 ? STARTER_TEAM.filter(id => !owned[id]) : null;
+};
+
 async function profile(db, user) {
   const { results } = await db.prepare('SELECT card_id, count FROM collection WHERE user_id = ?').bind(user.id).all();
+  const collection = Object.fromEntries(results.map(r => [r.card_id, r.count]));
+  const prog = await getProgress(db, user.id);
+  const next = CAMPAIGN[prog.cleared];
   return {
     username: user.username,
     gold: user.gold,
     xp: user.xp,
     level: levelFor(user.xp),
     team: JSON.parse(user.team),
-    collection: Object.fromEntries(results.map(r => [r.card_id, r.count])),
+    collection,
+    needsStarter: results.length === 0,
+    wins: prog.wins,
+    packs: prog.packs,
+    campaign: {
+      chapter: CHAPTER_TITLE,
+      cleared: prog.cleared,
+      total: CAMPAIGN.length,
+      next: next ? { num: prog.cleared + 1, title: next.title, enemies: next.enemies, boss: !!next.boss } : null,
+      choose: pendingChoice(prog, collection),
+      friendsUnlocked: prog.cleared >= NEW_CARD_AFTER[1],
+    },
   };
 }
+
+const freshUser = (db, id) => db.prepare('SELECT * FROM users WHERE id = ?').bind(id).first();
+const addCard = (db, userId, id) => db.prepare(
+  'INSERT INTO collection (user_id, card_id, count) VALUES (?, ?, 1) ON CONFLICT (user_id, card_id) DO UPDATE SET count = count + 1',
+).bind(userId, id);
 
 async function signup(req, db) {
   const { username = '', password = '' } = await body(req);
@@ -62,9 +91,8 @@ async function signup(req, db) {
   const salt = randomHex(16);
   const user = await db.prepare(
     'INSERT INTO users (username, pass_hash, salt, gold, team, created) VALUES (?, ?, ?, ?, ?, ?) RETURNING *',
-  ).bind(name, await hashPassword(password, salt), salt, START_GOLD, JSON.stringify(STARTER_TEAM), now()).first();
-  await db.batch(STARTER_TEAM.map(id =>
-    db.prepare('INSERT INTO collection (user_id, card_id, count) VALUES (?, ?, 1)').bind(user.id, id)));
+  ).bind(name, await hashPassword(password, salt), salt, START_GOLD, '[]', now()).first();
+  await db.prepare('INSERT INTO progress (user_id) VALUES (?)').bind(user.id).run();
   return json({ token: await newSession(db, user.id), profile: await profile(db, user) });
 }
 
@@ -79,10 +107,11 @@ async function login(req, db) {
 
 async function setTeam(req, db, user) {
   const { team } = await body(req);
-  if (!Array.isArray(team) || team.length !== 3 || new Set(team).size !== 3) {
-    throw new HttpError(400, 'Pick 3 different cards.');
-  }
   const owned = (await profile(db, user)).collection;
+  const size = Math.min(3, Object.keys(owned).length);   // a full team is 3, fewer while the campaign hands out cards
+  if (!Array.isArray(team) || team.length !== size || new Set(team).size !== size) {
+    throw new HttpError(400, `Pick ${size} different cards.`);
+  }
   if (!team.every(id => owned[id])) throw new HttpError(400, "You don't own all of those cards.");
   await db.prepare('UPDATE users SET team = ? WHERE id = ?').bind(JSON.stringify(team), user.id).run();
   return json(await profile(db, { ...user, team: JSON.stringify(team) }));
@@ -96,14 +125,114 @@ async function buyPack(db, user) {
     'UPDATE users SET gold = gold - ?, packs_since_legend = ? WHERE id = ? AND gold >= ?',
   ).bind(PACK_COST, pack.packsSinceLegend, user.id, PACK_COST).run();
   if (!res.meta.changes) throw new HttpError(400, `You need ${PACK_COST} gold.`);
-  await db.batch(pack.cards.map(id => db.prepare(
-    'INSERT INTO collection (user_id, card_id, count) VALUES (?, ?, 1) ON CONFLICT (user_id, card_id) DO UPDATE SET count = count + 1',
-  ).bind(user.id, id)));
-  const fresh = await db.prepare('SELECT * FROM users WHERE id = ?').bind(user.id).first();
-  return json({ cards: pack.cards, profile: await profile(db, fresh) });
+  await db.batch([...pack.cards.map(id => addCard(db, user.id, id)), bumpProgress(db, user.id, 'packs')]);
+  return json({ cards: pack.cards, profile: await profile(db, await freshUser(db, user.id)) });
+}
+
+const bumpProgress = (db, userId, field) => db.prepare(
+  `INSERT INTO progress (user_id, ${field}) VALUES (?, 1) ON CONFLICT (user_id) DO UPDATE SET ${field} = ${field} + 1`,
+).bind(userId);
+
+// ---- starter card & campaign ----
+async function pickStarter(req, db, user) {
+  const { card } = await body(req);
+  if (!STARTER_TEAM.includes(card)) throw new HttpError(400, 'Pick Volt, Fang or Goliath.');
+  // Only works while the collection is empty, so it can't be used to grab extra cards.
+  const res = await db.prepare(
+    'UPDATE users SET team = ? WHERE id = ? AND NOT EXISTS (SELECT 1 FROM collection WHERE user_id = ?)',
+  ).bind(JSON.stringify([card]), user.id, user.id).run();
+  if (!res.meta.changes) throw new HttpError(400, 'You already have your first card.');
+  await addCard(db, user.id, card).run();
+  return json(await profile(db, await freshUser(db, user.id)));
+}
+
+async function pickReward(req, db, user) {
+  const { card } = await body(req);
+  const prof = await profile(db, user);
+  if (!prof.campaign.choose?.includes(card)) throw new HttpError(400, "That card isn't on offer.");
+  const team = [...prof.team, card];
+  await db.batch([addCard(db, user.id, card),
+    db.prepare('UPDATE users SET team = ? WHERE id = ?').bind(JSON.stringify(team), user.id)]);
+  return json(await profile(db, await freshUser(db, user.id)));
+}
+
+const runView = run => run && { level: run.level + 1, title: CAMPAIGN[run.level].title, boss: !!CAMPAIGN[run.level].boss, state: run.state };
+
+async function startCampaign(db, user) {
+  const prof = await profile(db, user);
+  if (prof.needsStarter) throw new HttpError(400, 'Pick your first card.');
+  if (prof.campaign.choose) throw new HttpError(400, 'Pick your new card first.');
+  const prog = await getProgress(db, user.id);
+  if (prog.cleared >= CAMPAIGN.length) throw new HttpError(400, 'You beat the whole chapter!');
+  const run = { level: prog.cleared, state: newCampaignBattle(prof.team, prog.cleared) };
+  await db.prepare('INSERT INTO progress (user_id, run) VALUES (?, ?) ON CONFLICT (user_id) DO UPDATE SET run = excluded.run')
+    .bind(user.id, JSON.stringify(run)).run();
+  return json(runView(run));
+}
+
+async function campaignMove(req, db, user) {
+  const prog = await getProgress(db, user.id);
+  if (!prog.run) throw new HttpError(400, 'No campaign battle in progress.');
+  const run = JSON.parse(prog.run);
+  const { from, move: kind, to } = await body(req);
+  try {
+    applyMove(run.state, 0, from, kind, to);
+    while (run.state.winner === null && run.state.turn === 1) {
+      const m = aiMove(run.state, 1);
+      applyMove(run.state, 1, m.from, m.move, m.to);
+    }
+  } catch (e) { throw new HttpError(400, e.message); }
+
+  const done = run.state.winner !== null;
+  // Save only if the run hasn't changed since we read it (stops double-submitted moves).
+  const res = await db.prepare('UPDATE progress SET run = ? WHERE user_id = ? AND run = ?')
+    .bind(done ? null : JSON.stringify(run), user.id, prog.run).run();
+  if (!res.meta.changes) throw new HttpError(409, 'The battle changed. Refreshing.');
+
+  let result = null;
+  if (done) result = run.state.winner === 0 ? await campaignWin(db, user, run.level) : { won: false };
+  return json({ ...runView(run), result, profile: await profile(db, await freshUser(db, user.id)) });
+}
+
+// First clear of a level: gold, XP, and the level's prize (new card / boss pack).
+async function campaignWin(db, user, level) {
+  const res = await db.prepare('UPDATE progress SET cleared = cleared + 1, wins = wins + 1 WHERE user_id = ? AND cleared = ?')
+    .bind(user.id, level).run();
+  if (!res.meta.changes) return { won: true, gold: 0, xp: 0 };
+  await db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(CAMPAIGN_GOLD, WIN_XP, user.id).run();
+  const result = { won: true, gold: CAMPAIGN_GOLD, xp: WIN_XP };
+  const num = level + 1;
+  const owned = (await profile(db, await freshUser(db, user.id))).collection;
+  if (num === NEW_CARD_AFTER[0]) result.chooseCard = true;
+  if (num === NEW_CARD_AFTER[1]) {
+    const missing = STARTER_TEAM.filter(id => !owned[id]);
+    if (missing.length === 1) {   // the one you didn't pick at level 3 joins
+      const fresh = await freshUser(db, user.id);
+      await db.batch([addCard(db, user.id, missing[0]),
+        db.prepare('UPDATE users SET team = ? WHERE id = ?').bind(JSON.stringify([...JSON.parse(fresh.team), missing[0]]), user.id)]);
+      result.newCard = missing[0];
+    }
+  }
+  if (CAMPAIGN[level].boss) {
+    const fresh = await freshUser(db, user.id);
+    const pack = openPack(fresh.packs_since_legend);
+    await db.batch([...pack.cards.map(id => addCard(db, user.id, id)),
+      db.prepare('UPDATE users SET packs_since_legend = ? WHERE id = ?').bind(pack.packsSinceLegend, user.id),
+      bumpProgress(db, user.id, 'packs')]);
+    result.pack = pack.cards;
+  }
+  return result;
+}
+
+async function leaveCampaign(db, user) {
+  await db.prepare('UPDATE progress SET run = NULL WHERE user_id = ?').bind(user.id).run();
+  return json({ ok: true });
 }
 
 // ---- matches ----
+const needFullTeam = user => {
+  if (JSON.parse(user.team).length < 3) throw new HttpError(400, 'Clear campaign level 6 to battle friends.');
+};
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const makeCode = () => Array.from(crypto.getRandomValues(new Uint8Array(5)), b => CODE_CHARS[b % CODE_CHARS.length]).join('');
 
@@ -121,6 +250,7 @@ async function matchView(db, m, user) {
 }
 
 async function createMatch(db, user) {
+  needFullTeam(user);
   await db.prepare("UPDATE matches SET status = 'done', updated = ? WHERE p0 = ? AND status = 'waiting'")
     .bind(now(), user.id).run();  // only one open invite per player
   for (let tries = 0; tries < 5; tries++) {
@@ -133,6 +263,7 @@ async function createMatch(db, user) {
 }
 
 async function joinMatch(req, db, user) {
+  needFullTeam(user);
   const { code = '' } = await body(req);
   const m = await db.prepare("SELECT * FROM matches WHERE code = ? AND status = 'waiting'")
     .bind(String(code).trim().toUpperCase()).first();
@@ -174,7 +305,8 @@ async function move(req, db, user, id) {
   if (!res.meta.changes) throw new HttpError(409, 'The match changed. Refreshing.');
   if (done) {
     const winnerId = state.winner === 0 ? m.p0 : m.p1;
-    await db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(WIN_GOLD, WIN_XP, winnerId).run();
+    await db.batch([db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(WIN_GOLD, WIN_XP, winnerId),
+      bumpProgress(db, winnerId, 'wins')]);
   }
   return json(await matchView(db, { ...m, state: JSON.stringify(state), status: done ? 'done' : 'active' }, user));
 }
@@ -189,8 +321,9 @@ async function leaveMatch(db, user, id) {
     state.winner = 1 - you;
     await db.prepare("UPDATE matches SET state = ?, status = 'done', updated = ? WHERE id = ?")
       .bind(JSON.stringify(state), now(), m.id).run();
-    await db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?')
-      .bind(WIN_GOLD, WIN_XP, you === 0 ? m.p1 : m.p0).run();
+    const winnerId = you === 0 ? m.p1 : m.p0;
+    await db.batch([db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(WIN_GOLD, WIN_XP, winnerId),
+      bumpProgress(db, winnerId, 'wins')]);
   }
   return json({ ok: true });
 }
@@ -220,6 +353,14 @@ async function route(req, env) {
   if (method === 'GET' && pathname === '/me') return json(await profile(db, user));
   if (method === 'POST' && pathname === '/team') return setTeam(req, db, user);
   if (method === 'POST' && pathname === '/packs') return buyPack(db, user);
+  if (method === 'POST' && pathname === '/starter') return pickStarter(req, db, user);
+  if (a === 'campaign') {
+    if (method === 'GET' && b === 'current') return json(runView(JSON.parse((await getProgress(db, user.id)).run)));
+    if (method === 'POST' && b === 'start') return startCampaign(db, user);
+    if (method === 'POST' && b === 'move') return campaignMove(req, db, user);
+    if (method === 'POST' && b === 'leave') return leaveCampaign(db, user);
+    if (method === 'POST' && b === 'reward') return pickReward(req, db, user);
+  }
   if (a === 'matches') {
     if (method === 'POST' && !b) return createMatch(db, user);
     if (method === 'GET' && b === 'current') return currentMatch(db, user);

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { newBattle, applyMove, openPack, BY_ID, PITY_PACKS } from '../src/game.js';
+import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, PITY_PACKS, CAMPAIGN, STARTER_TEAM } from '../src/game.js';
 
 const fixed = v => () => v;
 
@@ -55,4 +55,29 @@ test('drop rates roughly match 85/10/4/1', () => {
   for (let i = 0; i < 20000; i++) for (const id of openPack(0).cards) n[BY_ID[id].rarity]++;
   const pct = r => (100 * n[r]) / 60000;
   assert.ok(Math.abs(pct('Common') - 85) < 1.5 && Math.abs(pct('Legendary') - 1) < 0.5, JSON.stringify(n));
+});
+
+test('teams smaller than 3 play out', () => {
+  const s = newBattle(['volt'], ['crow', 'moth'], () => 0);
+  assert.deepEqual(s.acted, [[false], [false, false]]);
+  applyMove(s, 0, 0, 'basic', 0);
+  assert.deepEqual(s.acted[0], [false], 'a lone card is ready again right away');
+});
+
+test('computer takes the knockout over a bigger hit', () => {
+  const s = newBattle(['volt', 'goliath'], ['fang'], () => 0.9);   // computer (side 1) moves first
+  s.teams[0][0].hp = 10;   // Volt is one hit from KO; Fang would do more damage to Goliath (Beast beats Mech)
+  assert.deepEqual(aiMove(s, 1), { from: 0, move: 'basic', to: 0 });
+});
+
+test('every starter path can win every campaign level going first', () => {
+  const paths = [];
+  for (const a of STARTER_TEAM) for (const b of STARTER_TEAM) if (a !== b) paths.push([a, b]);
+  CAMPAIGN.forEach((_, level) => paths.forEach(path => {
+    const team = level < 3 ? [path[0]] : level < 6 ? path : STARTER_TEAM;
+    const s = newCampaignBattle(team, level);
+    assert.equal(s.turn, 0);
+    while (s.winner === null) { const m = aiMove(s, s.turn); applyMove(s, s.turn, m.from, m.move, m.to); }
+    assert.equal(s.winner, 0, `level ${level + 1} with ${team.join('+')}`);
+  }));
 });

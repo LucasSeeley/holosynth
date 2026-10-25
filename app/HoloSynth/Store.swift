@@ -43,7 +43,7 @@ final class GameStore: ObservableObject {
     }
     @Published var profile: Profile?
     @Published var error: String?
-    @Published var starterPack: [String]?   // set on sign-up so the first screen is opening your starter cards
+    @Published var pendingPack: [String]?   // a pack won in the campaign, opened on the Packs tab
 
     func auth(username: String, password: String, newAccount: Bool) async {
         do {
@@ -51,7 +51,6 @@ final class GameStore: ObservableObject {
                                                       body: ["username": username, "password": password])
             token = reply.token
             profile = reply.profile
-            if newAccount { starterPack = reply.profile.team }
             error = nil
         } catch { self.error = error.localizedDescription }
     }
@@ -77,6 +76,17 @@ final class GameStore: ObservableObject {
             self.error = error.localizedDescription
             return nil
         }
+    }
+
+    // First card on sign-up, and the card you pick after campaign level 3.
+    func pickStarter(_ id: String) async {
+        do { profile = try await API.call("starter", token: token, body: ["card": id]) }
+        catch { self.error = error.localizedDescription }
+    }
+
+    func pickReward(_ id: String) async {
+        do { profile = try await API.call("campaign/reward", token: token, body: ["card": id]) }
+        catch { self.error = error.localizedDescription }
     }
 
     func setTeam(_ ids: [String]) async {

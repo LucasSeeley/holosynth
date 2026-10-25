@@ -9,6 +9,8 @@ struct CollectionTab: View {
     @State private var zoomed: Card?
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 10), count: 3)
+    // A full team is 3; while the campaign is still handing out cards it is however many you own.
+    private var teamSize: Int { min(3, store.profile?.collection.count ?? 0) }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -40,7 +42,7 @@ struct CollectionTab: View {
     private var teamSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text(editing ? "Pick 3 cards · \(picked.count)/3" : "Your team").sectionTitle()
+                Text(editing ? "Pick \(teamSize) · \(picked.count)/\(teamSize)" : "Your team").sectionTitle()
                 Spacer()
                 if editing {
                     Button("Cancel") { editing = false }.buttonStyle(OutlineButton(color: Theme.muted))
@@ -48,7 +50,7 @@ struct CollectionTab: View {
                         Task { await store.setTeam(picked); editing = false }
                     }
                     .buttonStyle(OutlineButton())
-                    .disabled(picked.count != 3)
+                    .disabled(picked.count != teamSize)
                 } else {
                     Button("Edit team") {
                         picked = store.profile?.team ?? []
@@ -91,7 +93,7 @@ struct CollectionTab: View {
                 .onTapGesture {
                     if editing {
                         if let i = picked.firstIndex(of: card.id) { picked.remove(at: i) }
-                        else if picked.count < 3 { picked.append(card.id) }
+                        else if picked.count < teamSize { picked.append(card.id) }
                     } else {
                         zoomed = card
                     }

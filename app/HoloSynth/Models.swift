@@ -32,13 +32,45 @@ enum CardBook {
 
 // MARK: - Server replies
 
-struct Profile: Decodable {
+struct Profile: Decodable, Equatable {
     let username: String
     let gold: Int
     let xp: Int
     let level: Int
     let team: [String]
     let collection: [String: Int]
+    let needsStarter: Bool
+    let wins: Int
+    let packs: Int
+    let campaign: Campaign
+}
+
+struct Campaign: Decodable, Equatable {
+    struct Level: Decodable, Equatable { let num: Int; let title: String; let enemies: [String]; let boss: Bool }
+    let chapter: String
+    let cleared: Int
+    let total: Int
+    let next: Level?             // nil once the chapter is beaten
+    let choose: [String]?        // starters on offer after level 3, until you pick one
+    let friendsUnlocked: Bool
+}
+
+// A campaign battle against the computer; `result` and `profile` come back once it ends.
+struct CampaignRun: Decodable, Equatable {
+    struct Result: Decodable, Equatable {
+        let won: Bool
+        let gold: Int?
+        let xp: Int?
+        let chooseCard: Bool?
+        let newCard: String?
+        let pack: [String]?
+    }
+    let level: Int
+    let title: String
+    let boss: Bool
+    let state: BattleState
+    let result: Result?
+    let profile: Profile?
 }
 
 struct AuthReply: Decodable { let token: String; let profile: Profile }

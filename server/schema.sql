@@ -32,3 +32,11 @@ CREATE TABLE IF NOT EXISTS matches (
 );
 CREATE INDEX IF NOT EXISTS matches_p0 ON matches (p0, status);
 CREATE INDEX IF NOT EXISTS matches_p1 ON matches (p1, status);
+-- One row per player: campaign progress, stats, and the campaign battle in progress (JSON, null when none).
+CREATE TABLE IF NOT EXISTS progress (
+  user_id INTEGER PRIMARY KEY,
+  cleared INTEGER NOT NULL DEFAULT 0,
+  wins INTEGER NOT NULL DEFAULT 0,
+  packs INTEGER NOT NULL DEFAULT 0,
+  run TEXT
+);

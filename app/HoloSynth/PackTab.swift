@@ -42,11 +42,15 @@ struct PackTab: View {
                 }
             }
         }
-        .onAppear {
-            guard let starter = store.starterPack else { return }
-            store.starterPack = nil
-            start(starter)
-        }
+        .onAppear(perform: openPending)
+        .onChange(of: store.pendingPack) { _ in openPending() }
+    }
+
+    // A pack won in the campaign opens here the same way as a bought one.
+    private func openPending() {
+        guard let cards = store.pendingPack else { return }
+        store.pendingPack = nil
+        start(cards)
     }
 
     private func start(_ cards: [String]) {
@@ -74,7 +78,7 @@ struct PackTab: View {
             .buttonStyle(GoldButton())
             .disabled(buying || (store.profile?.gold ?? 0) < 250)
             if (store.profile?.gold ?? 0) < 250 {
-                Text("Win battles to earn 50 gold each.").font(.barlow(14)).foregroundColor(Theme.muted)
+                Text("Clear campaign levels and win battles to earn gold.").font(.barlow(14)).foregroundColor(Theme.muted)
             }
             if let error = store.error { Text(error).font(.barlow(14, semibold: true)).foregroundColor(Theme.pink) }
             Spacer()
