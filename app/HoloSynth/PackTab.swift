@@ -29,7 +29,14 @@ struct PackTab: View {
             PlayerBar()
             ZStack {
                 ScreenBackground()
-                if pulled.isEmpty { shop } else { opening }
+                shop
+            }
+        }
+        // Opening takes over the whole screen so the tabs can't be seen or tapped mid-rip.
+        .fullScreenCover(isPresented: Binding(get: { !pulled.isEmpty }, set: { if !$0 { pulled = [] } })) {
+            ZStack {
+                ScreenBackground()
+                opening
                 if let burst {
                     burst.opacity(0.45).ignoresSafeArea().allowsHitTesting(false).transition(.opacity)
                 }
