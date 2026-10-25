@@ -370,9 +370,9 @@ struct BattleBoard: View {
         sending = true
         error = nil
         Task {
+            // stays locked until the move has played out (playBack unlocks), so nothing can be tapped mid-attack
             do { try await onMove(from, mv, to) }
-            catch { self.error = error.localizedDescription; move = nil }
-            sending = false
+            catch { self.error = error.localizedDescription; move = nil; sending = false }
         }
     }
 
@@ -416,6 +416,7 @@ struct BattleBoard: View {
             if target.turn == you && target.winner == nil { UIImpactFeedbackGenerator(style: .light).impactOccurred(); Sound.turn.play() }
         }
         playing = false
+        sending = false
         if latest?.winner != nil { Music.stop() }
         onSettled()
     }
