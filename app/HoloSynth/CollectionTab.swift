@@ -17,8 +17,7 @@ struct CollectionTab: View {
                 VStack(alignment: .leading, spacing: 14) {
                     teamSection
                     let owned = store.profile?.collection ?? [:]
-                    Text("Collection · \(owned.count) of \(CardBook.all.count)")
-                        .font(.headline).foregroundColor(Theme.fg)
+                    Text("Collection · \(owned.count) of \(CardBook.all.count)").sectionTitle().padding(.top, 8)
                     LazyVGrid(columns: columns, spacing: 10) {
                         ForEach(CardBook.all) { card in
                             cell(card, count: owned[card.id] ?? 0)
@@ -28,13 +27,13 @@ struct CollectionTab: View {
                 .padding(16)
             }
         }
-        .background(Theme.bg.ignoresSafeArea())
+        .background(ScreenBackground())
         .sheet(item: $zoomed) { card in
             ZStack {
-                Theme.bg.ignoresSafeArea()
+                ScreenBackground()
                 VStack(spacing: 16) {
                     CardView(card: card).padding(.horizontal, 40)
-                    Text("#\(card.num) · \(card.look)").font(.footnote).foregroundColor(Theme.muted)
+                    Text("#\(card.num) · \(card.look)").font(.barlow(15)).foregroundColor(Theme.muted)
                         .multilineTextAlignment(.center).padding(.horizontal, 30)
                 }
             }
@@ -44,20 +43,21 @@ struct CollectionTab: View {
     private var teamSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text(editing ? "Pick 3 cards (\(picked.count)/3)" : "Your team").font(.headline).foregroundColor(Theme.fg)
+                Text(editing ? "Pick 3 cards · \(picked.count)/3" : "Your team").sectionTitle()
                 Spacer()
                 if editing {
-                    Button("Cancel") { editing = false }
+                    Button("Cancel") { editing = false }.buttonStyle(OutlineButton(color: Theme.muted))
                     Button("Save") {
                         Task { await store.setTeam(picked); editing = false }
                     }
+                    .buttonStyle(OutlineButton())
                     .disabled(picked.count != 3)
-                    .fontWeight(.bold)
                 } else {
                     Button("Edit team") {
                         picked = store.profile?.team ?? []
                         editing = true
                     }
+                    .buttonStyle(OutlineButton())
                 }
             }
             HStack(spacing: 10) {
@@ -66,12 +66,12 @@ struct CollectionTab: View {
                     if i < team.count, let card = CardBook.card(team[i]) {
                         CardView(card: card)
                     } else {
-                        RoundedRectangle(cornerRadius: 8).stroke(Theme.line, style: StrokeStyle(lineWidth: 1, dash: [4]))
+                        RoundedRectangle(cornerRadius: 8).stroke(Theme.brass.opacity(0.4), style: StrokeStyle(lineWidth: 1, dash: [4]))
                             .aspectRatio(5.0 / 7.0, contentMode: .fit)
                     }
                 }
             }
-            if let error = store.error { Text(error).font(.footnote).foregroundColor(Theme.pink) }
+            if let error = store.error { Text(error).font(.barlow(14, semibold: true)).foregroundColor(Theme.pink) }
         }
     }
 
@@ -83,12 +83,12 @@ struct CollectionTab: View {
                     if count > 1 {
                         Text("×\(count)").font(.caption2.bold().monospacedDigit())
                             .padding(.horizontal, 5).padding(.vertical, 2)
-                            .background(Theme.gold, in: Capsule()).foregroundColor(.black).offset(x: 4, y: -6)
+                            .background(Theme.brass, in: Capsule()).foregroundColor(Color(hex: 0x1A0D05)).offset(x: 4, y: -6)
                     }
                 }
                 .overlay {
                     if editing, picked.contains(card.id) {
-                        RoundedRectangle(cornerRadius: 8).stroke(Theme.cyan, lineWidth: 3)
+                        RoundedRectangle(cornerRadius: 8).stroke(Theme.brass, lineWidth: 3).shadow(color: Theme.brass, radius: 8)
                     }
                 }
                 .onTapGesture {
@@ -101,7 +101,7 @@ struct CollectionTab: View {
                 }
         } else {
             CardBack().opacity(0.35)
-                .overlay(Text("#\(card.num)").font(.caption.monospacedDigit()).foregroundColor(Theme.fg))
+                .overlay(Text("#\(card.num)").font(.chakra(13, semibold: true)).foregroundColor(Theme.fg))
         }
     }
 }

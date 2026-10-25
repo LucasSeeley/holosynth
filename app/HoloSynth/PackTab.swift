@@ -28,7 +28,7 @@ struct PackTab: View {
         VStack(spacing: 0) {
             PlayerBar()
             ZStack {
-                Theme.bg.ignoresSafeArea()
+                ScreenBackground()
                 if pulled.isEmpty { shop } else { opening }
                 if let burst {
                     burst.opacity(0.45).ignoresSafeArea().allowsHitTesting(false).transition(.opacity)
@@ -54,7 +54,7 @@ struct PackTab: View {
         VStack(spacing: 20) {
             Spacer()
             packArt.frame(maxHeight: 360).shadow(color: Theme.backRed.opacity(0.7), radius: 24)
-            Text("Card pack · 3 cards").font(.headline).foregroundColor(Theme.fg)
+            Text("HoloSynth pack · 3 cards").sectionTitle()
             Button {
                 buying = true
                 Task {
@@ -62,15 +62,14 @@ struct PackTab: View {
                     buying = false
                 }
             } label: {
-                Label(buying ? "Opening…" : "Buy for 250 gold", systemImage: "circle.hexagongrid.fill")
-                    .font(.headline).padding(.horizontal, 28).padding(.vertical, 14)
-                    .background(Theme.gold, in: Capsule()).foregroundColor(.black)
+                Label(buying ? "Opening…" : "Buy · 250", systemImage: "circle.hexagongrid.fill")
             }
+            .buttonStyle(GoldButton())
             .disabled(buying || (store.profile?.gold ?? 0) < 250)
             if (store.profile?.gold ?? 0) < 250 {
-                Text("Win battles to earn 50 gold each.").font(.footnote).foregroundColor(Theme.muted)
+                Text("Win battles to earn 50 gold each.").font(.barlow(14)).foregroundColor(Theme.muted)
             }
-            if let error = store.error { Text(error).font(.footnote).foregroundColor(Theme.pink) }
+            if let error = store.error { Text(error).font(.barlow(14, semibold: true)).foregroundColor(Theme.pink) }
             Spacer()
         }
         .padding(24)
@@ -239,17 +238,15 @@ struct PackTab: View {
 
     @ViewBuilder private var hint: some View {
         if !torn {
-            Text("Swipe across the top to tear it open").font(.subheadline).foregroundColor(Theme.muted)
+            Text("Swipe across the top to tear it open").font(.barlow(15)).foregroundColor(Theme.muted)
                 .opacity(tearProgress > 0 ? 0 : 1)
         } else if dealt && current < pulled.count {
             Text(flipped.contains(current) ? "Swipe for the next card" : "Swipe to reveal \(current + 1) of \(pulled.count)")
-                .font(.subheadline).foregroundColor(Theme.muted)
+                .font(.barlow(15)).foregroundColor(Theme.muted)
         } else if dealt {
             VStack(spacing: 14) {
-                Text("Added to your collection").font(.subheadline).foregroundColor(Theme.muted)
-                Button("Done") { pulled = [] }
-                    .font(.headline).padding(.horizontal, 30).padding(.vertical, 12)
-                    .background(Theme.cyan, in: Capsule()).foregroundColor(.black)
+                Text("Added to your collection").font(.barlow(15)).foregroundColor(Theme.muted)
+                Button("Done") { pulled = [] }.buttonStyle(GoldButton(height: 50)).frame(width: 200)
             }
         }
     }

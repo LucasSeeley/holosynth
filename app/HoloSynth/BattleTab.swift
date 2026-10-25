@@ -18,7 +18,7 @@ struct BattleTab: View {
         VStack(spacing: 0) {
             PlayerBar()
             ZStack {
-                Theme.bg.ignoresSafeArea()
+                ScreenBackground()
                 if let match, match.status != "waiting", let state = match.state { board(match, state) }
                 else if let match, match.status == "waiting" { waiting(match) }
                 else { lobby }
@@ -39,21 +39,25 @@ struct BattleTab: View {
                 }
             }
             .padding(.horizontal, 8)
-            Text("Your team · change it in Cards").font(.footnote).foregroundColor(Theme.muted)
-            Button { Task { await run { match = try await API.call("matches", token: store.token, body: [:]) } } } label: {
-                Text("Create a match").font(.headline).frame(maxWidth: .infinity).padding(14)
-                    .background(Theme.cyan, in: RoundedRectangle(cornerRadius: 12)).foregroundColor(.black)
+            Text("Your team · change it in Cards").font(.barlow(14)).foregroundColor(Theme.muted)
+            Button("Create a match") {
+                Task { await run { match = try await API.call("matches", token: store.token, body: [:]) } }
             }
-            HStack {
-                TextField("Friend's code", text: $codeInput)
-                    .textInputAutocapitalization(.characters).autocorrectionDisabled()
-                    .padding(12).background(Theme.panel, in: RoundedRectangle(cornerRadius: 10))
-                    .foregroundColor(Theme.fg)
+            .buttonStyle(GoldButton())
+            .padding(.top, 8)
+            HStack(spacing: 10) {
+                HStack(spacing: 12) {
+                    Image(systemName: "number").font(.system(size: 17, weight: .medium)).foregroundColor(Theme.brass)
+                    TextField("", text: $codeInput, prompt: Text("Friend's code").foregroundColor(Theme.muted))
+                        .textInputAutocapitalization(.characters).autocorrectionDisabled()
+                        .font(.chakra(17, semibold: true)).foregroundColor(Theme.fg)
+                }
+                .padding(.horizontal, 16).frame(height: 54)
+                .goldPanel()
                 Button("Join") {
                     Task { await run { match = try await API.call("matches/join", token: store.token, body: ["code": codeInput]) } }
                 }
-                .font(.headline).padding(.horizontal, 18).padding(.vertical, 12)
-                .background(Theme.pink, in: RoundedRectangle(cornerRadius: 10)).foregroundColor(.black)
+                .buttonStyle(OutlineButton()).frame(height: 54)
                 .disabled(codeInput.count < 5)
             }
             errorText
@@ -66,15 +70,19 @@ struct BattleTab: View {
     private func waiting(_ m: MatchView) -> some View {
         VStack(spacing: 16) {
             Spacer()
-            Text("Send this code to a friend").foregroundColor(Theme.muted)
-            Text(m.code).font(.system(size: 54, weight: .bold, design: .monospaced)).foregroundColor(Theme.cyan)
+            Text("Send this code to a friend").sectionTitle()
+            Text(m.code).font(.chakra(54)).tracking(6).foregroundColor(Theme.fg)
+                .shadow(color: Theme.brass.opacity(0.5), radius: 14)
                 .textSelection(.enabled)
+                .padding(.horizontal, 24).padding(.vertical, 8)
+                .goldPanel(16, lit: true)
             ShareLink(item: "Battle me in HoloSynth! Code: \(m.code)") {
                 Label("Share code", systemImage: "square.and.arrow.up")
             }
-            ProgressView().tint(Theme.cyan)
-            Text("Waiting for them to join…").font(.footnote).foregroundColor(Theme.muted)
-            Button("Cancel") { Task { await leave() } }.foregroundColor(Theme.pink)
+            .buttonStyle(GoldButton(height: 50)).frame(width: 220)
+            ProgressView().tint(Theme.brass)
+            Text("Waiting for them to join…").font(.barlow(14)).foregroundColor(Theme.muted)
+            Button("Cancel") { Task { await leave() } }.buttonStyle(OutlineButton(color: Theme.pink))
             errorText
             Spacer()
         }
@@ -88,19 +96,18 @@ struct BattleTab: View {
         let myTurn = s.turn == me && s.winner == nil
         return VStack(spacing: 12) {
             row(s, side: foe, mine: false, label: m.players[foe] ?? "Opponent", tappable: myTurn && move != nil)
-            Text(status(m, s)).font(.headline).foregroundColor(myTurn ? Theme.cyan : Theme.muted)
+            Text(status(m, s)).font(.chakra(17, semibold: true)).foregroundColor(myTurn ? Theme.brass : Theme.muted)
                 .multilineTextAlignment(.center).frame(maxWidth: .infinity)
-            if let last = s.log.last { Text(describe(last, m)).font(.footnote).foregroundColor(Theme.muted) }
+            if let last = s.log.last { Text(describe(last, m)).font(.barlow(14)).foregroundColor(Theme.muted) }
             row(s, side: me, mine: true, label: "You", tappable: myTurn)
             if myTurn, let sel = selected, let card = CardBook.card(s.teams[me][sel].id) { movePicker(card, unit: s.teams[me][sel]) }
             errorText
             Spacer(minLength: 0)
             if s.winner != nil {
                 Button("Back") { match = nil; Task { await store.refresh() } }
-                    .font(.headline).padding(.horizontal, 36).padding(.vertical, 12)
-                    .background(Theme.cyan, in: Capsule()).foregroundColor(.black)
+                    .buttonStyle(GoldButton(height: 50)).frame(width: 200)
             } else {
-                Button("Forfeit") { confirmLeave = true }.font(.footnote).foregroundColor(Theme.pink)
+                Button("Forfeit") { confirmLeave = true }.font(.chakra(13, semibold: true)).tracking(1.5).foregroundColor(Theme.pink)
                     .confirmationDialog("Forfeit this match? Your opponent wins.", isPresented: $confirmLeave, titleVisibility: .visible) {
                         Button("Forfeit", role: .destructive) { Task { await leave() } }
                     }
@@ -114,7 +121,7 @@ struct BattleTab: View {
 
     private func row(_ s: BattleState, side: Int, mine isMine: Bool, label: String, tappable: Bool) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(label).font(.caption.bold()).foregroundColor(Theme.muted)
+            Text(label).font(.chakra(12, semibold: true)).tracking(2).textCase(.uppercase).foregroundColor(Theme.brass.opacity(0.8))
             HStack(spacing: 8) {
                 ForEach(Array(s.teams[side].enumerated()), id: \.offset) { i, unit in
                     if let card = CardBook.card(unit.id) {
@@ -123,10 +130,11 @@ struct BattleTab: View {
                         CardView(card: card, hpNow: unit.hp, cooldown: unit.cd)
                             .saturation(ko ? 0 : 1)
                             .opacity(ko ? 0.35 : (isMine && acted ? 0.55 : 1))
-                            .overlay { if ko { Text("KO").font(.title.bold()).foregroundColor(Theme.pink) } }
+                            .overlay { if ko { Text("KO").font(.chakra(28)).foregroundColor(Theme.pink) } }
                             .overlay {
                                 if isMine && selected == i {
-                                    RoundedRectangle(cornerRadius: 8).stroke(Theme.cyan, lineWidth: 3)
+                                    RoundedRectangle(cornerRadius: 8).stroke(Theme.brass, lineWidth: 3)
+                                        .shadow(color: Theme.brass, radius: 8)
                                 }
                             }
                             .offset(x: hit.map { $0.side == side && $0.index == i } == true ? 6 : 0)
@@ -152,19 +160,26 @@ struct BattleTab: View {
     private func moveButton(_ id: String, title: String, dmg: Int, enabled: Bool, note: String? = nil) -> some View {
         Button { move = id } label: {
             VStack(spacing: 2) {
-                Text(title).font(.subheadline.bold()).lineLimit(1).minimumScaleFactor(0.7)
-                Text(note ?? "\(dmg) damage").font(.caption.monospacedDigit())
+                Text(title).font(.chakra(15)).lineLimit(1).minimumScaleFactor(0.7)
+                Text(note ?? "\(dmg) damage").font(.barlow(13, semibold: true)).monospacedDigit()
             }
             .frame(maxWidth: .infinity).padding(10)
-            .background(move == id ? Theme.cyan : Theme.panel, in: RoundedRectangle(cornerRadius: 10))
-            .foregroundColor(move == id ? .black : Theme.fg)
+            .foregroundColor(move == id ? Color(hex: 0x1A0D05) : Theme.fg)
+            .background {
+                if move == id {
+                    RoundedRectangle(cornerRadius: 12).fill(LinearGradient(colors: [Color(hex: 0xFFD77A), Color(hex: 0xE0A12A)],
+                                                                          startPoint: .top, endPoint: .bottom))
+                } else {
+                    Color.clear.goldPanel(12)
+                }
+            }
         }
         .disabled(!enabled)
         .opacity(enabled ? 1 : 0.4)
     }
 
     @ViewBuilder private var errorText: some View {
-        if let error { Text(error).font(.footnote).foregroundColor(Theme.pink).multilineTextAlignment(.center) }
+        if let error { Text(error).font(.barlow(14, semibold: true)).foregroundColor(Theme.pink).multilineTextAlignment(.center) }
     }
 
     // MARK: text

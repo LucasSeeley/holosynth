@@ -11,7 +11,7 @@ struct HoloSynthApp: App {
             }
             .environmentObject(store)
             .preferredColorScheme(.dark)
-            .tint(Theme.cyan)
+            .tint(Theme.brass)
         }
     }
 }
@@ -25,11 +25,11 @@ struct AuthView: View {
     @FocusState private var focus: Field?
     enum Field { case user, pass }
 
-    private let gold = Color(hex: 0xE8B85A)
+    private let gold = Theme.brass
 
     var body: some View {
         ZStack {
-            background
+            ScreenBackground()
             ScrollView {
                 VStack(spacing: 0) {
                     if let logo = Art.image("logo") {
@@ -92,27 +92,6 @@ struct AuthView: View {
         }
     }
 
-    private var background: some View {
-        ZStack {
-            Color(hex: 0x07060C)
-            if let bg = Art.image("login_bg") {
-                GeometryReader { geo in
-                    Image(uiImage: bg).resizable().scaledToFill()
-                        .frame(width: geo.size.width, height: geo.size.height).clipped()
-                }
-            }
-            LinearGradient(stops: [
-                .init(color: Color(hex: 0x07060C).opacity(0.55), location: 0),
-                .init(color: Color(hex: 0x07060C).opacity(0.35), location: 0.3),
-                .init(color: Color(hex: 0x07060C).opacity(0.85), location: 0.58),
-                .init(color: Color(hex: 0x07060C), location: 0.75),
-            ], startPoint: .top, endPoint: .bottom)
-            RadialGradient(colors: [Theme.backRed.opacity(0.45), .clear], center: UnitPoint(x: 0.5, y: 0.38),
-                           startRadius: 0, endRadius: 260)
-        }
-        .ignoresSafeArea()
-    }
-
     private func field<Content: View>(_ which: Field, icon: String, @ViewBuilder _ content: () -> Content) -> some View {
         let on = focus == which
         return HStack(spacing: 12) {
@@ -149,6 +128,8 @@ struct HomeView: View {
             PackTab().tabItem { Label("Packs", systemImage: "gift.fill") }.tag(1)
             CollectionTab().tabItem { Label("Cards", systemImage: "square.grid.3x3.fill") }.tag(2)
         }
+        .toolbarBackground(Theme.ink, for: .tabBar)
+        .toolbarBackground(.visible, for: .tabBar)
         .task { await store.refresh() }
         .onAppear { if store.starterPack != nil { tab = 1 } }
     }
@@ -159,21 +140,34 @@ struct PlayerBar: View {
     @EnvironmentObject var store: GameStore
 
     var body: some View {
-        HStack {
+        HStack(spacing: 12) {
             if let p = store.profile {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(p.username).font(.headline)
-                    Text("Level \(p.level) · \(p.xp % 100)/100 XP").font(.caption).foregroundColor(Theme.muted)
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(p.username).font(.chakra(17)).foregroundColor(Theme.fg)
+                    HStack(spacing: 8) {
+                        Text("LV \(p.level)").font(.chakra(12, semibold: true)).tracking(1.5).foregroundColor(Theme.brass)
+                        GeometryReader { geo in
+                            ZStack(alignment: .leading) {
+                                Capsule().fill(Theme.brass.opacity(0.15))
+                                Capsule().fill(Theme.brass).frame(width: geo.size.width * CGFloat(p.xp % 100) / 100)
+                            }
+                        }
+                        .frame(width: 90, height: 5)
+                    }
                 }
                 Spacer()
-                Label("\(p.gold)", systemImage: "circle.hexagongrid.fill")
-                    .font(.headline.monospacedDigit()).foregroundColor(Theme.gold)
+                HStack(spacing: 6) {
+                    Image(systemName: "circle.hexagongrid.fill").foregroundColor(Theme.brass)
+                    Text("\(p.gold)").font(.chakra(17)).monospacedDigit().foregroundColor(Theme.fg)
+                }
+                .padding(.horizontal, 12).frame(height: 36)
+                .goldPanel(18)
             } else {
                 Spacer()
             }
         }
-        .foregroundColor(Theme.fg)
         .padding(.horizontal, 16).padding(.vertical, 10)
-        .background(Theme.panel)
+        .background(Theme.ink.opacity(0.85))
+        .overlay(alignment: .bottom) { Rectangle().fill(Theme.brass.opacity(0.25)).frame(height: 1) }
     }
 }
