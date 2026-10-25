@@ -1,25 +1,31 @@
 import SwiftUI
 import UIKit
 
-// Buy a pack, swipe across it to tear it open, then tap each card to flip it.
-// Rarity tells on the flip: Rare blue flash, Epic purple + shake, Legendary gold burst.
+// Buy a pack, drag a finger across the top to tear it open, watch the cards rise out, then tap each to flip.
+// Rarity tells early: light leaking from the tear takes the colour of the best card inside.
 struct PackTab: View {
     @EnvironmentObject var store: GameStore
     @State private var pulled: [String] = []     // cards in the pack being opened
-    @State private var torn = false
-    @State private var flipped: Set<Int> = []
     @State private var buying = false
     @State private var tearProgress: CGFloat = 0
+    @State private var lastTick: CGFloat = 0
+    @State private var torn = false               // top strip ripped off
+    @State private var rising = false             // cards poking out of the pack
+    @State private var dealt = false              // pack gone, cards laid out face down
+    @State private var flipped: Set<Int> = []
+    @State private var sparking = false
+    @State private var sparkOut = false
+    @State private var shakes: CGFloat = 0
     @State private var burst: Color?
+
+    private let tearLine: CGFloat = 0.095         // just under the crimped top of pack.webp
 
     var body: some View {
         VStack(spacing: 0) {
             PlayerBar()
             ZStack {
                 Theme.bg.ignoresSafeArea()
-                if pulled.isEmpty { shop }
-                else if !torn { sealedPack }
-                else { reveal }
+                if pulled.isEmpty { shop } else { opening }
                 if let burst {
                     burst.opacity(0.45).ignoresSafeArea().allowsHitTesting(false).transition(.opacity)
                 }
@@ -28,23 +34,26 @@ struct PackTab: View {
         .onAppear {
             guard let starter = store.starterPack else { return }
             store.starterPack = nil
-            flipped = []; torn = false; tearProgress = 0
-            pulled = starter
+            start(starter)
         }
+    }
+
+    private func start(_ cards: [String]) {
+        tearProgress = 0; lastTick = 0
+        torn = false; rising = false; dealt = false
+        flipped = []; sparking = false; sparkOut = false
+        pulled = cards
     }
 
     private var shop: some View {
         VStack(spacing: 20) {
             Spacer()
-            packImage.frame(maxHeight: 360)
+            packArt.frame(maxHeight: 360).shadow(color: Theme.backRed.opacity(0.7), radius: 24)
             Text("Card pack · 3 cards").font(.headline).foregroundColor(Theme.fg)
             Button {
                 buying = true
                 Task {
-                    if let cards = await store.buyPack() {
-                        flipped = []; torn = false; tearProgress = 0
-                        pulled = cards
-                    }
+                    if let cards = await store.buyPack() { start(cards) }
                     buying = false
                 }
             } label: {
@@ -62,60 +71,151 @@ struct PackTab: View {
         .padding(24)
     }
 
-    private var packImage: some View {
+    private var packArt: some View {
         Group {
             if let img = Art.image("pack") { Image(uiImage: img).resizable().scaledToFit() }
             else { RoundedRectangle(cornerRadius: 12).fill(Theme.backRed) }
         }
-        .shadow(color: Theme.backRed.opacity(0.7), radius: 24)
     }
 
-    private var sealedPack: some View {
-        VStack(spacing: 18) {
-            Spacer()
-            ZStack(alignment: .top) {
-                packImage.frame(maxHeight: 420)
-                // tear line follows your finger across the top of the pack
-                Rectangle().fill(Theme.gold)
-                    .frame(width: 260 * tearProgress, height: 3)
-                    .shadow(color: Theme.gold, radius: 6)
-                    .frame(maxWidth: 260, alignment: .leading)
-                    .padding(.top, 34)
-            }
-            .gesture(DragGesture(minimumDistance: 5)
-                .onChanged { tearProgress = min(1, abs($0.translation.width) / 220) }
-                .onEnded { _ in
-                    if tearProgress > 0.6 {
-                        UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
-                        withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) { torn = true }
-                    } else {
-                        withAnimation { tearProgress = 0 }
-                    }
-                })
-            Text("Swipe across the top to tear it open").font(.subheadline).foregroundColor(Theme.muted)
-            Spacer()
-        }
-        .padding(24)
+    // Colour of the best card in the pack: white-gold for all commons.
+    private var leakColor: Color {
+        let order = ["Legendary", "Epic", "Rare"]
+        let rarities = pulled.compactMap { CardBook.card($0)?.rarity }
+        if let best = order.first(where: rarities.contains) { return Theme.rarityColor(best) }
+        return Color(hex: 0xFFE7A8)
     }
 
-    private var reveal: some View {
-        VStack(spacing: 18) {
-            Spacer()
-            HStack(spacing: 10) {
+    private var opening: some View {
+        GeometryReader { geo in
+            let packW = min(geo.size.width * 0.7, 300)
+            let packH = packW * 1050 / 686
+            let cardW = min((geo.size.width - 48) / 3, 130)
+            let tearY = -packH / 2 + packH * tearLine          // tear line, relative to the pack centre
+            ZStack {
+                // light from inside the pack, behind everything
+                Ellipse().fill(leakColor)
+                    .frame(width: packW * 0.9, height: packH * 0.35)
+                    .blur(radius: 40)
+                    .offset(y: tearY)
+                    .opacity(dealt ? 0 : (torn ? 0.9 : tearProgress * 0.5))
+                    .scaleEffect(torn ? 1.3 : 1)
+
+                // cards: hidden in the pack, rise out of the opening, then fan into a row
                 ForEach(Array(pulled.enumerated()), id: \.offset) { i, id in
                     FlipCard(card: CardBook.card(id), flipped: flipped.contains(i))
-                        .onTapGesture { flip(i, id) }
+                        .frame(width: cardW, height: cardW * 7 / 5)
+                        .rotationEffect(.degrees(dealt ? 0 : Double(i - 1) * 5))
+                        .offset(x: CGFloat(i - 1) * (dealt ? cardW + 10 : 8),
+                                y: dealt ? 0 : (rising ? tearY - cardW * 0.25 : 0))
+                        .animation(.spring(response: 0.6, dampingFraction: 0.7), value: rising)
+                        .animation(.spring(response: 0.55, dampingFraction: 0.72).delay(Double(i) * 0.09), value: dealt)
+                        .onTapGesture { if dealt { flip(i, id) } }
+                        .allowsHitTesting(dealt)
                 }
+
+                // pack body
+                packArt.clipShape(TearEdge(top: false, at: tearLine))
+                    .frame(width: packW, height: packH)
+                    .shadow(color: Theme.backRed.opacity(0.7), radius: 24)
+                    .modifier(Shake(animatableData: shakes))
+                    .offset(y: dealt ? geo.size.height : 0)
+                    .opacity(dealt ? 0 : 1)
+
+                // glowing seam following the finger
+                if !torn && tearProgress > 0 {
+                    Capsule().fill(LinearGradient(colors: [leakColor, .white], startPoint: .leading, endPoint: .trailing))
+                        .frame(width: packW * tearProgress, height: 4)
+                        .shadow(color: leakColor, radius: 8)
+                        .frame(width: packW, alignment: .leading)
+                        .offset(y: tearY)
+                    Circle().fill(.white).frame(width: 14, height: 14).blur(radius: 3)
+                        .shadow(color: leakColor, radius: 12)
+                        .offset(x: -packW / 2 + packW * tearProgress, y: tearY)
+                }
+
+                // the top strip: peels up from the left as you drag, then flies off
+                packArt.clipShape(TearEdge(top: true, at: tearLine))
+                    .frame(width: packW, height: packH)
+                    .rotationEffect(.degrees(torn ? 50 : Double(tearProgress) * 14),
+                                    anchor: UnitPoint(x: 1, y: tearLine))
+                    .offset(x: torn ? packW * 0.7 : 0, y: torn ? -packH * 0.7 : -tearProgress * 6)
+                    .opacity(torn ? 0 : 1)
+                    .modifier(Shake(animatableData: shakes))
+
+                // sparks when it rips
+                if sparking { sparks(at: tearY) }
+
+                hint.offset(y: dealt ? cardW * 0.7 + 60 : packH / 2 + 36)
             }
-            .padding(.horizontal, 14)
-            Text(flipped.count < pulled.count ? "Tap each card to flip it" : "Added to your collection")
-                .font(.subheadline).foregroundColor(Theme.muted)
-            if flipped.count == pulled.count {
+            .frame(width: geo.size.width, height: geo.size.height)
+            .contentShape(Rectangle())
+            .gesture(DragGesture(minimumDistance: 4)
+                .onChanged { drag in
+                    guard !torn else { return }
+                    // only a swipe that starts across the top of the pack tears it
+                    guard abs(drag.startLocation.y - (geo.size.height / 2 + tearY)) < 80 else { return }
+                    let p = min(1, abs(drag.translation.width) / (packW * 0.85))
+                    guard p > tearProgress else { return }
+                    tearProgress = p
+                    if p - lastTick > 0.08 {
+                        lastTick = p
+                        UIImpactFeedbackGenerator(style: .rigid).impactOccurred(intensity: 0.4 + p * 0.6)
+                    }
+                    if p >= 1 { tearOpen() }
+                }
+                .onEnded { _ in
+                    guard !torn else { return }
+                    if tearProgress > 0.7 { tearOpen() }
+                    else { withAnimation(.spring()) { tearProgress = 0 }; lastTick = 0 }
+                })
+        }
+    }
+
+    private func sparks(at y: CGFloat) -> some View {
+        ZStack {
+            ForEach(0..<16, id: \.self) { i in
+                let angle = Double(i) / 16 * 2 * .pi
+                let dist = CGFloat(90 + (i * 37) % 70)
+                Circle().fill(i.isMultiple(of: 3) ? Color.white : leakColor).frame(width: 5, height: 5)
+                    .offset(x: sparkOut ? CGFloat(cos(angle)) * dist : 0,
+                            y: y + (sparkOut ? CGFloat(sin(angle)) * dist * 0.6 : 0))
+                    .opacity(sparkOut ? 0 : 1)
+            }
+        }
+        .allowsHitTesting(false)
+    }
+
+    @ViewBuilder private var hint: some View {
+        if !torn {
+            Text("Swipe across the top to tear it open").font(.subheadline).foregroundColor(Theme.muted)
+                .opacity(tearProgress > 0 ? 0 : 1)
+        } else if dealt && flipped.count < pulled.count {
+            Text("Tap each card to flip it").font(.subheadline).foregroundColor(Theme.muted)
+        } else if dealt {
+            VStack(spacing: 14) {
+                Text("Added to your collection").font(.subheadline).foregroundColor(Theme.muted)
                 Button("Done") { pulled = [] }
                     .font(.headline).padding(.horizontal, 30).padding(.vertical, 12)
                     .background(Theme.cyan, in: Capsule()).foregroundColor(.black)
             }
-            Spacer()
+        }
+    }
+
+    private func tearOpen() {
+        guard !torn else { return }
+        UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+        sparking = true; sparkOut = false
+        withAnimation(.easeIn(duration: 0.45)) { torn = true }
+        withAnimation(.linear(duration: 0.4)) { shakes += 1 }
+        DispatchQueue.main.async { withAnimation(.easeOut(duration: 0.8)) { sparkOut = true } }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            rising = true
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
+            withAnimation(.easeIn(duration: 0.5)) { dealt = true }
+            sparking = false
         }
     }
 
@@ -165,5 +265,39 @@ struct FlipCard: View {
     private var glow: Color {
         guard let card, card.rarity != "Common" else { return .clear }
         return Theme.rarityColor(card.rarity)
+    }
+}
+
+// Top strip or body of the pack, split along a zigzag tear.
+struct TearEdge: Shape {
+    let top: Bool
+    let at: CGFloat
+
+    func path(in r: CGRect) -> Path {
+        let y = r.height * at, teeth = 18, amp = r.height * 0.008
+        let edge = (0...teeth).map { i in
+            CGPoint(x: r.width * CGFloat(i) / CGFloat(teeth), y: y + (i.isMultiple(of: 2) ? -amp : amp))
+        }
+        var p = Path()
+        if top {
+            p.move(to: .zero)
+            p.addLine(to: CGPoint(x: r.width, y: 0))
+            edge.reversed().forEach { p.addLine(to: $0) }
+        } else {
+            p.move(to: edge[0])
+            edge.dropFirst().forEach { p.addLine(to: $0) }
+            p.addLine(to: CGPoint(x: r.width, y: r.height))
+            p.addLine(to: CGPoint(x: 0, y: r.height))
+        }
+        p.closeSubpath()
+        return p
+    }
+}
+
+// Side-to-side jolt; animate animatableData up by 1 for one shake.
+struct Shake: GeometryEffect {
+    var animatableData: CGFloat
+    func effectValue(size: CGSize) -> ProjectionTransform {
+        ProjectionTransform(CGAffineTransform(translationX: 7 * sin(animatableData * .pi * 6), y: 0))
     }
 }
