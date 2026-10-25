@@ -208,7 +208,7 @@ struct BattleBoard: View {
             .padding(.horizontal, 8).padding(.top, 6).padding(.bottom, 8)
         }
         .frame(width: w)
-        .background(cardTint(card), in: RoundedRectangle(cornerRadius: 12))
+        .background(card.face, in: RoundedRectangle(cornerRadius: 12))
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(look.ring, lineWidth: look.width))
         .shadow(color: look.glow, radius: look.radius)
