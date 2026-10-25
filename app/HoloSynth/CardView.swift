@@ -1,6 +1,6 @@
 import SwiftUI
 
-// A HoloSynth card front, drawn like the design sheet: 5:7, name + HP, art, class + rarity, two moves.
+// A HoloSynth card front, drawn like the design sheet: 5:7, class symbol + name + HP, art, two moves.
 // Everything scales with the card's width so it reads the same at any size.
 struct CardView: View {
     let card: Card
@@ -10,9 +10,12 @@ struct CardView: View {
     var body: some View {
         GeometryReader { geo in
             let w = geo.size.width
-            let cls = Theme.classColor(card.cls)
             VStack(alignment: .leading, spacing: w * 0.04) {
-                HStack(alignment: .center) {
+                HStack(alignment: .center, spacing: w * 0.02) {
+                    if let icon = Art.classIcon(card.cls) {
+                        Image(uiImage: icon).resizable().frame(width: w * 0.063, height: w * 0.063)
+                            .accessibilityLabel(card.cls)
+                    }
                     Text(card.name).font(.system(size: w * 0.055, weight: .bold))
                     Spacer(minLength: 2)
                     Text(hpNow.map { "\($0)/\(card.hp) HP" } ?? "\(card.hp) HP")
@@ -32,17 +35,6 @@ struct CardView: View {
                 }
                 .aspectRatio(1.3, contentMode: .fit)
                 .clipShape(RoundedRectangle(cornerRadius: w * 0.07, style: .continuous))
-
-                HStack(spacing: w * 0.02) {
-                    if let icon = Art.classIcon(card.cls) {
-                        Image(uiImage: icon).resizable().frame(width: w * 0.06, height: w * 0.06)
-                    }
-                    Text(card.cls.uppercased()).foregroundColor(cls).fontWeight(.bold)
-                    Spacer()
-                    Text(card.rarity.uppercased()).foregroundColor(Theme.muted)
-                }
-                .font(.system(size: w * 0.044, design: .monospaced))
-                .lineLimit(1)
 
                 VStack(spacing: w * 0.02) {
                     moveRow(card.basic.name, dmg: card.basic.dmg, cd: nil, w: w)
