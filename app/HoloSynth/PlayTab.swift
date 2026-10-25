@@ -90,7 +90,7 @@ struct PlayTab: View {
         return ZStack(alignment: .bottomLeading) {
             Color(hex: 0x02060F)
                 .overlay(alignment: .top) {
-                    if let id = c.next?.enemies.first, let img = Art.image(id) {
+                    if let img = Art.image(c.next?.enemies.first ?? "card_bg") {   // chapter done: the shared card background
                         Image(uiImage: img).resizable().aspectRatio(1.3, contentMode: .fill).padding(.top, 22)
                     }
                 }

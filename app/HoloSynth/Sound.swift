@@ -1,8 +1,9 @@
 import AVFoundation
 
 private let session: Void = {
-    // Ambient: respects the silent switch and mixes with whatever else is playing.
-    _ = try? AVAudioSession.sharedInstance().setCategory(.ambient)
+    // Playback so the game is heard with the silent switch on; mixWithOthers so it never stops the player's own audio.
+    _ = try? AVAudioSession.sharedInstance().setCategory(.playback, options: [.mixWithOthers])
+    _ = try? AVAudioSession.sharedInstance().setActive(true)
 }()
 
 // Sound effects (Resources/Sounds, synthesized by scratch scripts, no licences needed).
