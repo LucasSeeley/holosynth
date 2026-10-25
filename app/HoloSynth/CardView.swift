@@ -46,13 +46,21 @@ struct CardView: View {
             .foregroundColor(Theme.fg)
             .padding(w * 0.05)
             .frame(width: w, height: geo.size.height, alignment: .top)
-            .background(LinearGradient(colors: [Color(hex: 0x1B1A2B), Color(hex: 0x0E0D18)],
+            .background(LinearGradient(colors: [tint(0.38, over: 0x12111D), tint(0.12, over: 0x0A0912)],
                                        startPoint: .topLeading, endPoint: .bottomTrailing))
             .clipShape(RoundedRectangle(cornerRadius: w * 0.06, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: w * 0.06, style: .continuous)
                 .stroke(Theme.rarityColor(card.rarity), lineWidth: max(1, w * 0.008)))
         }
         .aspectRatio(5.0 / 7.0, contentMode: .fit)
+    }
+
+    // The character colour blended into a dark base, same as the design sheet's color-mix.
+    private func tint(_ amount: Double, over base: UInt32) -> Color {
+        let c = UInt32(card.color.dropFirst(), radix: 16) ?? base
+        func ch(_ v: UInt32, _ shift: UInt32) -> Double { Double((v >> shift) & 0xFF) / 255 }
+        func mix(_ shift: UInt32) -> Double { ch(c, shift) * amount + ch(base, shift) * (1 - amount) }
+        return Color(red: mix(16), green: mix(8), blue: mix(0))
     }
 
     private func moveRow(_ name: String, dmg: Int, cd: Int?, w: CGFloat, ready: Bool = true) -> some View {

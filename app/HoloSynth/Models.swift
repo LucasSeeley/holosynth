@@ -15,6 +15,7 @@ struct Card: Decodable, Identifiable, Hashable {
     let basic: Attack
     let special: Special
     let look: String
+    let color: String   // character's neon colour, "#rrggbb"; tints the card face
 }
 
 enum CardBook {

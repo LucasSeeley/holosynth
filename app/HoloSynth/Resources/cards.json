@@ -15,7 +15,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Brawler android with neon-blue electric gauntlets and a cracked chrome faceplate."
+  "look": "Brawler android with neon-blue electric gauntlets and a cracked chrome faceplate.",
+  "color": "#3ff0ff"
  },
  {
   "id": "fang",
@@ -33,7 +34,8 @@
    "dmg": 20,
    "cd": 2
   },
-  "look": "Chrome cyber-wolf with glowing pink fangs."
+  "look": "Chrome cyber-wolf with glowing pink fangs.",
+  "color": "#ff3fa4"
  },
  {
   "id": "goliath",
@@ -51,7 +53,8 @@
    "dmg": 30,
    "cd": 3
   },
-  "look": "Squat walker mech with orange vents and a heavy arm cannon."
+  "look": "Squat walker mech with orange vents and a heavy arm cannon.",
+  "color": "#ff8a3d"
  },
  {
   "id": "razor",
@@ -69,7 +72,8 @@
    "dmg": 30,
    "cd": 3
   },
-  "look": "Samurai android with a violet hardlight katana and a split visor."
+  "look": "Samurai android with a violet hardlight katana and a split visor.",
+  "color": "#8f7bff"
  },
  {
   "id": "stinger",
@@ -87,7 +91,8 @@
    "dmg": 20,
    "cd": 1
   },
-  "look": "Chrome cyber-scorpion with a dripping green neon tail."
+  "look": "Chrome cyber-scorpion with a dripping green neon tail.",
+  "color": "#3dff8a"
  },
  {
   "id": "sentry",
@@ -105,7 +110,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Tripod turret drone with a red scanning eye and twin barrels."
+  "look": "Tripod turret drone with a red scanning eye and twin barrels.",
+  "color": "#ff4d5e"
  },
  {
   "id": "hex",
@@ -123,7 +129,8 @@
    "dmg": 30,
    "cd": 3
   },
-  "look": "Slim hacker android surrounded by floating holo keyboards."
+  "look": "Slim hacker android surrounded by floating holo keyboards.",
+  "color": "#ff3fa4"
  },
  {
   "id": "mantis",
@@ -141,7 +148,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Chrome praying mantis with teal blade arms."
+  "look": "Chrome praying mantis with teal blade arms.",
+  "color": "#2fe3c4"
  },
  {
   "id": "rook",
@@ -159,7 +167,8 @@
    "dmg": 30,
    "cd": 3
   },
-  "look": "Boxy walker tank with a hazard-striped cannon."
+  "look": "Boxy walker tank with a hazard-striped cannon.",
+  "color": "#ffd23d"
  },
  {
   "id": "wirelash",
@@ -177,7 +186,8 @@
    "dmg": 20,
    "cd": 1
   },
-  "look": "Scrapyard android whose arm unspools into a sparking cable whip."
+  "look": "Scrapyard android whose arm unspools into a sparking cable whip.",
+  "color": "#3ff0ff"
  },
  {
   "id": "raptor",
@@ -195,7 +205,8 @@
    "dmg": 30,
    "cd": 3
   },
-  "look": "Cyber-hawk with glowing amber wings."
+  "look": "Cyber-hawk with glowing amber wings.",
+  "color": "#ffb03d"
  },
  {
   "id": "crusher",
@@ -213,7 +224,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Heavy cargo-loader mech with giant hydraulic fists and blue warning lights."
+  "look": "Heavy cargo-loader mech with giant hydraulic fists and blue warning lights.",
+  "color": "#4a7dff"
  },
  {
   "id": "nyx",
@@ -231,7 +243,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Stealth android whose plating bends light."
+  "look": "Stealth android whose plating bends light.",
+  "color": "#8f7bff"
  },
  {
   "id": "mongoose",
@@ -249,7 +262,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Lightning-fast cyber-mongoose with amber reflex sensors."
+  "look": "Lightning-fast cyber-mongoose with amber reflex sensors.",
+  "color": "#ffb03d"
  },
  {
   "id": "harvester",
@@ -267,7 +281,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Farm combine mech with glowing lime thresher blades."
+  "look": "Farm combine mech with glowing lime thresher blades.",
+  "color": "#b6ff3d"
  },
  {
   "id": "blaze",
@@ -285,7 +300,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Brawler android with plasma-flame fists and vented shoulders."
+  "look": "Brawler android with plasma-flame fists and vented shoulders.",
+  "color": "#ff8a3d"
  },
  {
   "id": "narwhal",
@@ -303,7 +319,8 @@
    "dmg": 30,
    "cd": 3
   },
-  "look": "Hovering cyber-narwhal with a frosted crystal tusk."
+  "look": "Hovering cyber-narwhal with a frosted crystal tusk.",
+  "color": "#9fe8ff"
  },
  {
   "id": "siphon",
@@ -321,7 +338,8 @@
    "dmg": 20,
    "cd": 1
   },
-  "look": "Spindly mech that plugs cables into its targets."
+  "look": "Spindly mech that plugs cables into its targets.",
+  "color": "#ff3df0"
  },
  {
   "id": "ronin",
@@ -339,7 +357,8 @@
    "dmg": 30,
    "cd": 3
   },
-  "look": "Battered swordsman android with a red neon tanto."
+  "look": "Battered swordsman android with a red neon tanto.",
+  "color": "#ff4d5e"
  },
  {
   "id": "viper",
@@ -357,7 +376,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Cyber-cobra with a hood made of light panels."
+  "look": "Cyber-cobra with a hood made of light panels.",
+  "color": "#3dff8a"
  },
  {
   "id": "juggernaut",
@@ -375,7 +395,8 @@
    "dmg": 30,
    "cd": 3
   },
-  "look": "Hulking siege mech that never stops walking."
+  "look": "Hulking siege mech that never stops walking.",
+  "color": "#ff4d5e"
  },
  {
   "id": "glitch",
@@ -393,7 +414,8 @@
    "dmg": 30,
    "cd": 3
   },
-  "look": "Flickering android that skips frames when it moves."
+  "look": "Flickering android that skips frames when it moves.",
+  "color": "#ff3fa4"
  },
  {
   "id": "rhino",
@@ -411,7 +433,8 @@
    "dmg": 30,
    "cd": 3
   },
-  "look": "Armored cyber-rhino with a chrome drill horn."
+  "look": "Armored cyber-rhino with a chrome drill horn.",
+  "color": "#ffd23d"
  },
  {
   "id": "scout",
@@ -429,7 +452,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Recon drone with a sweeping blue laser."
+  "look": "Recon drone with a sweeping blue laser.",
+  "color": "#3ff0ff"
  },
  {
   "id": "cipher",
@@ -447,7 +471,8 @@
    "dmg": 35,
    "cd": 3
   },
-  "look": "Codebreaker android with a spinning cipher-wheel face."
+  "look": "Codebreaker android with a spinning cipher-wheel face.",
+  "color": "#3ff0ff"
  },
  {
   "id": "arachne",
@@ -465,7 +490,8 @@
    "dmg": 20,
    "cd": 1
   },
-  "look": "Mechanical spider spinning glowing violet webs."
+  "look": "Mechanical spider spinning glowing violet webs.",
+  "color": "#8f7bff"
  },
  {
   "id": "gyro",
@@ -483,7 +509,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Gyrocopter mech with spinning saw rotors."
+  "look": "Gyrocopter mech with spinning saw rotors.",
+  "color": "#2fe3c4"
  },
  {
   "id": "bounty",
@@ -501,7 +528,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Hunter android in a long coat with a neon revolver arm."
+  "look": "Hunter android in a long coat with a neon revolver arm.",
+  "color": "#ffb03d"
  },
  {
   "id": "shark",
@@ -519,7 +547,8 @@
    "dmg": 25,
    "cd": 3
   },
-  "look": "Cyber-shark that swims through the air on hover fins."
+  "look": "Cyber-shark that swims through the air on hover fins.",
+  "color": "#4a7dff"
  },
  {
   "id": "forge",
@@ -537,7 +566,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Foundry mech with a glowing molten core."
+  "look": "Foundry mech with a glowing molten core.",
+  "color": "#ff8a3d"
  },
  {
   "id": "spike",
@@ -555,7 +585,8 @@
    "dmg": 20,
    "cd": 1
   },
-  "look": "Brawler android covered in chrome spikes."
+  "look": "Brawler android covered in chrome spikes.",
+  "color": "#b6ff3d"
  },
  {
   "id": "silverback",
@@ -573,7 +604,8 @@
    "dmg": 25,
    "cd": 3
   },
-  "look": "Chrome gorilla with glowing blue knuckles."
+  "look": "Chrome gorilla with glowing blue knuckles.",
+  "color": "#9fe8ff"
  },
  {
   "id": "burrower",
@@ -591,7 +623,8 @@
    "dmg": 30,
    "cd": 3
   },
-  "look": "Mining mech with a massive spiral drill."
+  "look": "Mining mech with a massive spiral drill.",
+  "color": "#ffd23d"
  },
  {
   "id": "echo",
@@ -609,7 +642,8 @@
    "dmg": 20,
    "cd": 1
   },
-  "look": "Android with speaker cones built into its shoulders."
+  "look": "Android with speaker cones built into its shoulders.",
+  "color": "#2fe3c4"
  },
  {
   "id": "panther",
@@ -627,7 +661,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Sleek black cyber-panther with violet eyes."
+  "look": "Sleek black cyber-panther with violet eyes.",
+  "color": "#8f7bff"
  },
  {
   "id": "mortar",
@@ -645,7 +680,8 @@
    "dmg": 30,
    "cd": 3
   },
-  "look": "Artillery walker with stubby launch tubes."
+  "look": "Artillery walker with stubby launch tubes.",
+  "color": "#ffb03d"
  },
  {
   "id": "rivet",
@@ -663,7 +699,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Dockworker android with a hydraulic wrench arm."
+  "look": "Dockworker android with a hydraulic wrench arm.",
+  "color": "#ffd23d"
  },
  {
   "id": "croc",
@@ -681,7 +718,8 @@
    "dmg": 30,
    "cd": 3
   },
-  "look": "Swamp cyber-croc with a lime neon jaw."
+  "look": "Swamp cyber-croc with a lime neon jaw.",
+  "color": "#b6ff3d"
  },
  {
   "id": "bastion",
@@ -699,7 +737,8 @@
    "dmg": 25,
    "cd": 3
   },
-  "look": "Fortress mech with fold-out armor walls."
+  "look": "Fortress mech with fold-out armor walls.",
+  "color": "#4a7dff"
  },
  {
   "id": "vandal",
@@ -717,7 +756,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Android with spray-nozzle hands that shoot blinding neon paint."
+  "look": "Android with spray-nozzle hands that shoot blinding neon paint.",
+  "color": "#ff3df0"
  },
  {
   "id": "hornet",
@@ -735,7 +775,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Fist-sized robo-hornet with a plasma stinger."
+  "look": "Fist-sized robo-hornet with a plasma stinger.",
+  "color": "#ffd23d"
  },
  {
   "id": "magnus",
@@ -753,7 +794,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Junkyard crane mech with a giant magnet."
+  "look": "Junkyard crane mech with a giant magnet.",
+  "color": "#ff4d5e"
  },
  {
   "id": "phantom",
@@ -771,7 +813,8 @@
    "dmg": 30,
    "cd": 3
   },
-  "look": "Hologram android that is barely there."
+  "look": "Hologram android that is barely there.",
+  "color": "#9fe8ff"
  },
  {
   "id": "vesper",
@@ -789,7 +832,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Cyber-bat that maps the arena with pink sonar."
+  "look": "Cyber-bat that maps the arena with pink sonar.",
+  "color": "#ff3df0"
  },
  {
   "id": "buzzsaw",
@@ -807,7 +851,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Scrap mech with a spinning buzzsaw arm."
+  "look": "Scrap mech with a spinning buzzsaw arm.",
+  "color": "#b6ff3d"
  },
  {
   "id": "brick",
@@ -825,7 +870,8 @@
    "dmg": 25,
    "cd": 3
   },
-  "look": "Huge bouncer android with slab-like chrome forearms."
+  "look": "Huge bouncer android with slab-like chrome forearms.",
+  "color": "#ff8a3d"
  },
  {
   "id": "boar",
@@ -843,7 +889,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Chrome boar with glowing red tusks."
+  "look": "Chrome boar with glowing red tusks.",
+  "color": "#ff4d5e"
  },
  {
   "id": "skyburst",
@@ -861,7 +908,8 @@
    "dmg": 35,
    "cd": 3
   },
-  "look": "Jetpack mech that rains micro-missiles."
+  "look": "Jetpack mech that rains micro-missiles.",
+  "color": "#ff3fa4"
  },
  {
   "id": "shiv",
@@ -879,7 +927,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Small scavenger android with twin hardlight knives."
+  "look": "Small scavenger android with twin hardlight knives.",
+  "color": "#3dff8a"
  },
  {
   "id": "kraken",
@@ -897,7 +946,8 @@
    "dmg": 20,
    "cd": 1
   },
-  "look": "Neon octopus that sprays glowing ink."
+  "look": "Neon octopus that sprays glowing ink.",
+  "color": "#2fe3c4"
  },
  {
   "id": "welder",
@@ -915,7 +965,8 @@
    "dmg": 20,
    "cd": 1
   },
-  "look": "Repair bot with a white-hot welding arm."
+  "look": "Repair bot with a white-hot welding arm.",
+  "color": "#3ff0ff"
  },
  {
   "id": "neon",
@@ -933,7 +984,8 @@
    "dmg": 20,
    "cd": 1
   },
-  "look": "Android whose glowing circuit lines pulse when it fights."
+  "look": "Android whose glowing circuit lines pulse when it fights.",
+  "color": "#ff3fa4"
  },
  {
   "id": "hyena",
@@ -951,7 +1003,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Laughing cyber-hyena with a cracked amber visor."
+  "look": "Laughing cyber-hyena with a cracked amber visor.",
+  "color": "#ffb03d"
  },
  {
   "id": "hive",
@@ -969,7 +1022,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Cloud of tiny worker drones moving as one."
+  "look": "Cloud of tiny worker drones moving as one.",
+  "color": "#ffd23d"
  },
  {
   "id": "static",
@@ -987,7 +1041,8 @@
    "dmg": 30,
    "cd": 3
   },
-  "look": "Android that stores lightning in coils down its back."
+  "look": "Android that stores lightning in coils down its back.",
+  "color": "#3ff0ff"
  },
  {
   "id": "grizzly",
@@ -1005,7 +1060,8 @@
    "dmg": 25,
    "cd": 3
   },
-  "look": "Massive cyber-bear with exhaust pipes on its back."
+  "look": "Massive cyber-bear with exhaust pipes on its back.",
+  "color": "#ff8a3d"
  },
  {
   "id": "hoist",
@@ -1023,7 +1079,8 @@
    "dmg": 30,
    "cd": 3
   },
-  "look": "Construction crane mech with a swinging hook."
+  "look": "Construction crane mech with a swinging hook.",
+  "color": "#ffb03d"
  },
  {
   "id": "ember",
@@ -1041,7 +1098,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Dancer android with molten-glow legs."
+  "look": "Dancer android with molten-glow legs.",
+  "color": "#ff4d5e"
  },
  {
   "id": "komodo",
@@ -1059,7 +1117,8 @@
    "dmg": 20,
    "cd": 1
   },
-  "look": "Cyber-lizard dripping green static."
+  "look": "Cyber-lizard dripping green static.",
+  "color": "#b6ff3d"
  },
  {
   "id": "watchtower",
@@ -1077,7 +1136,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Tall tower mech with a blinding spotlight head."
+  "look": "Tall tower mech with a blinding spotlight head.",
+  "color": "#9fe8ff"
  },
  {
   "id": "jackal",
@@ -1095,7 +1155,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Gang-leader android with a jackal-shaped chrome head."
+  "look": "Gang-leader android with a jackal-shaped chrome head.",
+  "color": "#ffb03d"
  },
  {
   "id": "moth",
@@ -1113,7 +1174,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Giant cyber-moth drawn to neon signs."
+  "look": "Giant cyber-moth drawn to neon signs.",
+  "color": "#9fe8ff"
  },
  {
   "id": "dozer",
@@ -1131,7 +1193,8 @@
    "dmg": 30,
    "cd": 3
   },
-  "look": "Bulldozer mech with a scarred chrome blade."
+  "look": "Bulldozer mech with a scarred chrome blade.",
+  "color": "#ff8a3d"
  },
  {
   "id": "monk",
@@ -1149,7 +1212,8 @@
    "dmg": 20,
    "cd": 1
   },
-  "look": "Monk android wrapped in a glowing data-bead necklace."
+  "look": "Monk android wrapped in a glowing data-bead necklace.",
+  "color": "#2fe3c4"
  },
  {
   "id": "vixen",
@@ -1167,7 +1231,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Two-tailed cyber-fox with pink fire tips."
+  "look": "Two-tailed cyber-fox with pink fire tips.",
+  "color": "#ff3fa4"
  },
  {
   "id": "overclock",
@@ -1185,7 +1250,8 @@
    "dmg": 30,
    "cd": 3
   },
-  "look": "Overclocked mech venting red steam."
+  "look": "Overclocked mech venting red steam.",
+  "color": "#ff4d5e"
  },
  {
   "id": "riot",
@@ -1203,7 +1269,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Riot-control android with a hardlight shield."
+  "look": "Riot-control android with a hardlight shield.",
+  "color": "#4a7dff"
  },
  {
   "id": "scarab",
@@ -1221,7 +1288,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Armored beetle with an oil-slick teal shell."
+  "look": "Armored beetle with an oil-slick teal shell.",
+  "color": "#2fe3c4"
  },
  {
   "id": "lancer",
@@ -1239,7 +1307,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Jousting mech with a violet plasma lance."
+  "look": "Jousting mech with a violet plasma lance.",
+  "color": "#8f7bff"
  },
  {
   "id": "lotus",
@@ -1257,7 +1326,8 @@
    "dmg": 30,
    "cd": 3
   },
-  "look": "Martial-arts android whose kicks leave pink light petals."
+  "look": "Martial-arts android whose kicks leave pink light petals.",
+  "color": "#ff3df0"
  },
  {
   "id": "crow",
@@ -1275,7 +1345,8 @@
    "dmg": 30,
    "cd": 3
   },
-  "look": "Cyber-crow with a cracked camera eye."
+  "look": "Cyber-crow with a cracked camera eye.",
+  "color": "#8f7bff"
  },
  {
   "id": "railer",
@@ -1293,7 +1364,8 @@
    "dmg": 35,
    "cd": 3
   },
-  "look": "Sniper mech with a long rail cannon."
+  "look": "Sniper mech with a long rail cannon.",
+  "color": "#9fe8ff"
  },
  {
   "id": "gunner",
@@ -1311,7 +1383,8 @@
    "dmg": 30,
    "cd": 3
   },
-  "look": "Mercenary android with a smoking neon rifle arm."
+  "look": "Mercenary android with a smoking neon rifle arm.",
+  "color": "#ff4d5e"
  },
  {
   "id": "hare",
@@ -1329,7 +1402,8 @@
    "dmg": 20,
    "cd": 1
   },
-  "look": "Speedy cyber-hare with spring-loaded legs."
+  "look": "Speedy cyber-hare with spring-loaded legs.",
+  "color": "#3ff0ff"
  },
  {
   "id": "shredder",
@@ -1347,7 +1421,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Recycling mech with shredder jaws."
+  "look": "Recycling mech with shredder jaws.",
+  "color": "#3dff8a"
  },
  {
   "id": "drifter",
@@ -1365,7 +1440,8 @@
    "dmg": 20,
    "cd": 1
   },
-  "look": "Racer android with wheel hubs in its legs and a chain fist."
+  "look": "Racer android with wheel hubs in its legs and a chain fist.",
+  "color": "#ff8a3d"
  },
  {
   "id": "eel",
@@ -1383,7 +1459,8 @@
    "dmg": 30,
    "cd": 3
   },
-  "look": "Electric eel crackling with cyan current."
+  "look": "Electric eel crackling with cyan current.",
+  "color": "#3ff0ff"
  },
  {
   "id": "pylon",
@@ -1401,7 +1478,8 @@
    "dmg": 20,
    "cd": 1
   },
-  "look": "Walking power pylon crackling with arcs."
+  "look": "Walking power pylon crackling with arcs.",
+  "color": "#3ff0ff"
  },
  {
   "id": "siren",
@@ -1419,7 +1497,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Android with a resonator throat that cracks glass."
+  "look": "Android with a resonator throat that cracks glass.",
+  "color": "#9fe8ff"
  },
  {
   "id": "ram",
@@ -1437,7 +1516,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Chrome ram with spiraling neon horns."
+  "look": "Chrome ram with spiraling neon horns.",
+  "color": "#ff8a3d"
  },
  {
   "id": "quake",
@@ -1455,7 +1535,8 @@
    "dmg": 30,
    "cd": 3
   },
-  "look": "Squat mech with piston-driven fists."
+  "look": "Squat mech with piston-driven fists.",
+  "color": "#ffb03d"
  },
  {
   "id": "warden",
@@ -1473,7 +1554,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Guard android with magnetic shackle hands."
+  "look": "Guard android with magnetic shackle hands.",
+  "color": "#4a7dff"
  },
  {
   "id": "piranha",
@@ -1491,7 +1573,8 @@
    "dmg": 20,
    "cd": 1
   },
-  "look": "Swarm of flying robo-piranhas."
+  "look": "Swarm of flying robo-piranhas.",
+  "color": "#ff4d5e"
  },
  {
   "id": "cyclone",
@@ -1509,7 +1592,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Turbine mech that whips up neon wind."
+  "look": "Turbine mech that whips up neon wind.",
+  "color": "#2fe3c4"
  },
  {
   "id": "dynamo",
@@ -1527,7 +1611,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Power-plant android with spinning turbine gauntlets."
+  "look": "Power-plant android with spinning turbine gauntlets.",
+  "color": "#ffd23d"
  },
  {
   "id": "mammoth",
@@ -1545,7 +1630,8 @@
    "dmg": 30,
    "cd": 3
   },
-  "look": "Frozen cyber-mammoth with glowing ice tusks."
+  "look": "Frozen cyber-mammoth with glowing ice tusks.",
+  "color": "#9fe8ff"
  },
  {
   "id": "chopper",
@@ -1563,7 +1649,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Attack-helicopter mech with twin rotors."
+  "look": "Attack-helicopter mech with twin rotors.",
+  "color": "#ff4d5e"
  },
  {
   "id": "rogue",
@@ -1581,7 +1668,8 @@
    "dmg": 30,
    "cd": 3
   },
-  "look": "Thief android that fights from inside a cloud of neon smoke."
+  "look": "Thief android that fights from inside a cloud of neon smoke.",
+  "color": "#8f7bff"
  },
  {
   "id": "sabre",
@@ -1599,7 +1687,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Sabertooth cyber-cat with amber plasma fangs."
+  "look": "Sabertooth cyber-cat with amber plasma fangs.",
+  "color": "#ffb03d"
  },
  {
   "id": "crawler",
@@ -1617,7 +1706,8 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Six-legged crawler mech built for climbing walls."
+  "look": "Six-legged crawler mech built for climbing walls.",
+  "color": "#8f7bff"
  },
  {
   "id": "vanta",
@@ -1635,7 +1725,8 @@
    "dmg": 35,
    "cd": 3
   },
-  "look": "Martial-arts android in light-eating black plating with a blue edge."
+  "look": "Martial-arts android in light-eating black plating with a blue edge.",
+  "color": "#8f7bff"
  },
  {
   "id": "basilisk",
@@ -1653,7 +1744,8 @@
    "dmg": 30,
    "cd": 2
   },
-  "look": "Chrome serpent whose stare freezes circuits solid."
+  "look": "Chrome serpent whose stare freezes circuits solid.",
+  "color": "#3ff0ff"
  },
  {
   "id": "warlord",
@@ -1671,7 +1763,8 @@
    "dmg": 35,
    "cd": 3
   },
-  "look": "Command mech that calls down satellite strikes."
+  "look": "Command mech that calls down satellite strikes.",
+  "color": "#ff4d5e"
  },
  {
   "id": "shogun",
@@ -1689,7 +1782,8 @@
    "dmg": 30,
    "cd": 2
   },
-  "look": "Warlord android with a twin-bladed hardlight naginata."
+  "look": "Warlord android with a twin-bladed hardlight naginata.",
+  "color": "#ff4d5e"
  },
  {
   "id": "chimera",
@@ -1707,7 +1801,8 @@
    "dmg": 30,
    "cd": 2
   },
-  "look": "Three-headed cyber-beast, each head a different neon color."
+  "look": "Three-headed cyber-beast, each head a different neon color.",
+  "color": "#ff3df0"
  },
  {
   "id": "colossus",
@@ -1725,7 +1820,8 @@
    "dmg": 35,
    "cd": 3
   },
-  "look": "Towering mech that blocks out the city lights."
+  "look": "Towering mech that blocks out the city lights.",
+  "color": "#4a7dff"
  },
  {
   "id": "specter",
@@ -1743,7 +1839,8 @@
    "dmg": 30,
    "cd": 2
   },
-  "look": "Spy android that phases through walls in a shimmer of static."
+  "look": "Spy android that phases through walls in a shimmer of static.",
+  "color": "#9fe8ff"
  },
  {
   "id": "wyvern",
@@ -1761,7 +1858,8 @@
    "dmg": 35,
    "cd": 3
   },
-  "look": "Small cyber-dragon with green plasma in its throat."
+  "look": "Small cyber-dragon with green plasma in its throat.",
+  "color": "#3dff8a"
  },
  {
   "id": "valkyrie",
@@ -1779,7 +1877,8 @@
    "dmg": 30,
    "cd": 2
   },
-  "look": "Winged combat mech that dives from the sky."
+  "look": "Winged combat mech that dives from the sky.",
+  "color": "#ff3fa4"
  },
  {
   "id": "overdrive",
@@ -1797,7 +1896,8 @@
    "dmg": 35,
    "cd": 3
   },
-  "look": "Racer android with turbo-boosted legs."
+  "look": "Racer android with turbo-boosted legs.",
+  "color": "#ff8a3d"
  },
  {
   "id": "manticore",
@@ -1815,7 +1915,8 @@
    "dmg": 30,
    "cd": 2
   },
-  "look": "Lion-bodied cyber-beast with a scorpion tail."
+  "look": "Lion-bodied cyber-beast with a scorpion tail.",
+  "color": "#ffb03d"
  },
  {
   "id": "reactor",
@@ -1833,7 +1934,8 @@
    "dmg": 35,
    "cd": 3
   },
-  "look": "Walking power core leaking lime radiation."
+  "look": "Walking power core leaking lime radiation.",
+  "color": "#b6ff3d"
  },
  {
   "id": "prism",
@@ -1851,7 +1953,8 @@
    "dmg": 35,
    "cd": 3
   },
-  "look": "Crystal-bodied android that splits light into rainbow blades."
+  "look": "Crystal-bodied android that splits light into rainbow blades.",
+  "color": "#3ff0ff"
  },
  {
   "id": "thunderhide",
@@ -1869,7 +1972,8 @@
    "dmg": 30,
    "cd": 2
   },
-  "look": "Armored cyber-bison with lightning arcing between its horns."
+  "look": "Armored cyber-bison with lightning arcing between its horns.",
+  "color": "#4a7dff"
  },
  {
   "id": "hellfire",
@@ -1887,7 +1991,8 @@
    "dmg": 35,
    "cd": 3
   },
-  "look": "Flamethrower tank mech with glowing fuel tanks."
+  "look": "Flamethrower tank mech with glowing fuel tanks.",
+  "color": "#ff8a3d"
  },
  {
   "id": "paragon",
@@ -1905,7 +2010,8 @@
    "dmg": 40,
    "cd": 3
   },
-  "look": "Golden android with a sun reactor in its chest."
+  "look": "Golden android with a sun reactor in its chest.",
+  "color": "#ffd23d"
  },
  {
   "id": "leviathan",
@@ -1923,7 +2029,8 @@
    "dmg": 40,
    "cd": 3
   },
-  "look": "Colossal cyber-sea-serpent from the flooded districts."
+  "look": "Colossal cyber-sea-serpent from the flooded districts.",
+  "color": "#2fe3c4"
  },
  {
   "id": "dreadnought",
@@ -1941,7 +2048,8 @@
    "dmg": 40,
    "cd": 3
   },
-  "look": "Flying battleship mech bristling with cannons."
+  "look": "Flying battleship mech bristling with cannons.",
+  "color": "#ff4d5e"
  },
  {
   "id": "nightblade",
@@ -1959,7 +2067,8 @@
    "dmg": 40,
    "cd": 3
   },
-  "look": "Assassin android whose blade swallows light."
+  "look": "Assassin android whose blade swallows light.",
+  "color": "#8f7bff"
  },
  {
   "id": "phoenix",
@@ -1977,7 +2086,8 @@
    "dmg": 35,
    "cd": 2
   },
-  "look": "Firebird made of burning neon."
+  "look": "Firebird made of burning neon.",
+  "color": "#ff8a3d"
  },
  {
   "id": "omega",
@@ -1995,7 +2105,8 @@
    "dmg": 40,
    "cd": 3
   },
-  "look": "AI war machine with one all-seeing lens."
+  "look": "AI war machine with one all-seeing lens.",
+  "color": "#3ff0ff"
  },
  {
   "id": "sovereign",
@@ -2013,7 +2124,8 @@
    "dmg": 50,
    "cd": 3
   },
-  "look": "Ruler android of the neon city, crowned in hardlight."
+  "look": "Ruler android of the neon city, crowned in hardlight.",
+  "color": "#ffd23d"
  },
  {
   "id": "apex",
@@ -2031,7 +2143,8 @@
    "dmg": 50,
    "cd": 3
   },
-  "look": "Ancient alpha predator rebuilt in chrome."
+  "look": "Ancient alpha predator rebuilt in chrome.",
+  "color": "#ff4d5e"
  },
  {
   "id": "genesis",
@@ -2049,6 +2162,7 @@
    "dmg": 55,
    "cd": 3
   },
-  "look": "Self-building mech that grows new parts mid-fight."
+  "look": "Self-building mech that grows new parts mid-fight.",
+  "color": "#ff3df0"
  }
 ]
