@@ -14,6 +14,9 @@ env:
 jobs:
   server:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      statuses: write
     outputs:
       url: ${{ steps.deploy.outputs.url }}
       kv: ${{ steps.setup.outputs.kv }}
@@ -55,9 +58,16 @@ jobs:
           URL=$(grep -o 'https://[a-zA-Z0-9.-]*workers\.dev' deploy.log | head -1)
           test -n "$URL"
           echo "url=$URL" >> "$GITHUB_OUTPUT"
+          # Publish the server address on the commit so it can be read without the Actions logs.
+          gh api "repos/${{ github.repository }}/statuses/${{ github.sha }}" \
+            -f state=success -f context=server-url -f description="HoloSynth server" -f target_url="$URL"
+        env:
+          GH_TOKEN: ${{ github.token }}
 
   ios:
     needs: server
+    # Mac minutes are limited on a private repo: put [skip ios] in a commit message for server-only changes.
+    if: ${{ !contains(github.event.head_commit.message, '[skip ios]') }}
     runs-on: macos-15
     env:
       URL: ${{ needs.server.outputs.url }}
