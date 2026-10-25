@@ -64,6 +64,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
 
+      - name: Play a full match against the live server
+        run: |
+          node test/e2e.mjs "${{ steps.deploy.outputs.url }}"
+          curl -sf "${{ steps.deploy.outputs.url }}/source.json" | head -c 400 || echo "no app published yet"
+          curl -sfI "${{ steps.deploy.outputs.url }}/HoloSynth.ipa" | head -3 || true
+
   ios:
     needs: server
     # Mac minutes are limited on a private repo: put [skip ios] in a commit message for server-only changes.
