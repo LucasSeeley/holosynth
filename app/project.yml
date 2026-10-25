@@ -42,3 +42,8 @@ targets:
           - UIInterfaceOrientationPortrait
         UIUserInterfaceStyle: Dark
         ITSAppUsesNonExemptEncryption: false
+        UIAppFonts:
+          - ChakraPetch-Bold.ttf
+          - ChakraPetch-SemiBold.ttf
+          - Barlow-Regular.ttf
+          - Barlow-SemiBold.ttf
