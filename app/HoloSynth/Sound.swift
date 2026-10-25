@@ -62,9 +62,9 @@ enum Music {
         current = track
         guard let p = players[track] else { return }
         p.currentTime = 0
-        p.volume = 0
+        // no fade-in: a fade started right after play() can leave the volume stuck at 0
+        p.volume = volume[track] ?? 0.3
         p.play()
-        p.setVolume(volume[track] ?? 0.3, fadeDuration: 1.0)
     }
 
     static func stop() {
