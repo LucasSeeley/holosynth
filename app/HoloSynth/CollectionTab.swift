@@ -19,7 +19,8 @@ struct CollectionTab: View {
                     let owned = store.profile?.collection ?? [:]
                     Text("Collection · \(owned.count) of \(CardBook.all.count)").sectionTitle().padding(.top, 8)
                     LazyVGrid(columns: columns, spacing: 10) {
-                        ForEach(CardBook.all) { card in
+                        // owned cards first, each group still in number order
+                        ForEach(CardBook.all.filter { owned[$0.id] != nil } + CardBook.all.filter { owned[$0.id] == nil }) { card in
                             cell(card, count: owned[card.id] ?? 0)
                         }
                     }
