@@ -1,0 +1,15 @@
+name = "holosynth"
+main = "src/index.js"
+compatibility_date = "2025-06-01"
+workers_dev = true
+
+# database_id is filled in by the deploy workflow (it creates the database the first time).
+[[d1_databases]]
+binding = "DB"
+database_name = "holosynth"
+database_id = "__D1_ID__"
+
+# App download files (IPA, SideStore source, build log), also filled in by the workflow.
+[[kv_namespaces]]
+binding = "FILES"
+id = "__KV_ID__"

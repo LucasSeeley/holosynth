@@ -1,0 +1,6 @@
+{
+  "type": "module",
+  "private": true,
+  "scripts": { "test": "node --test test/*.test.js" },
+  "devDependencies": { "wrangler": "4.20.0" }
+}

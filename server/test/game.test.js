@@ -1,0 +1,58 @@
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+import { newBattle, applyMove, openPack, BY_ID, PITY_PACKS } from '../src/game.js';
+
+const fixed = v => () => v;
+
+test('class advantage adds 20%', () => {
+  const s = newBattle(['volt', 'fang', 'goliath'], ['fang', 'goliath', 'volt'], fixed(0));  // player 0 starts
+  applyMove(s, 0, 0, 'basic', 0);                     // Fighter Volt (10) -> Beast Fang: 12
+  assert.equal(s.teams[1][0].hp, BY_ID.fang.hp - 12);
+  applyMove(s, 1, 0, 'basic', 0);                     // Beast Fang (15) -> Fighter Volt: no bonus
+  assert.equal(s.teams[0][0].hp, BY_ID.volt.hp - 15);
+});
+
+test('turns alternate and a card cannot act twice in a round', () => {
+  const s = newBattle(['volt', 'fang', 'goliath'], ['volt', 'fang', 'goliath'], fixed(0));
+  assert.throws(() => applyMove(s, 1, 0, 'basic', 0), /not your turn/);
+  applyMove(s, 0, 0, 'basic', 0);
+  applyMove(s, 1, 0, 'basic', 0);
+  assert.throws(() => applyMove(s, 0, 0, 'basic', 0), /already acted/);
+  applyMove(s, 0, 1, 'basic', 0);
+  applyMove(s, 1, 1, 'basic', 0);
+  applyMove(s, 0, 2, 'basic', 0);                     // all three acted -> round resets
+  assert.deepEqual(s.acted[0], [false, false, false]);
+});
+
+test('special goes on cooldown counted in that card\'s own actions', () => {
+  const s = newBattle(['volt', 'fang', 'goliath'], ['goliath', 'goliath', 'goliath'], fixed(0));
+  applyMove(s, 0, 0, 'special', 0);                   // Overcharge, cd 2
+  assert.equal(s.teams[0][0].cd, 2);
+  for (const i of [1, 2]) { applyMove(s, 1, i - 1, 'basic', 0); applyMove(s, 0, i, 'basic', 0); }
+  applyMove(s, 1, 2, 'basic', 0);
+  assert.throws(() => applyMove(s, 0, 0, 'special', 1), /cooling down/);
+});
+
+test('knocking out the whole team wins', () => {
+  const s = newBattle(['goliath', 'goliath', 'goliath'], ['volt', 'volt', 'volt'], fixed(0));
+  for (const t of s.teams[1]) t.hp = 1;
+  applyMove(s, 0, 0, 'basic', 0); applyMove(s, 1, 1, 'basic', 0);
+  applyMove(s, 0, 1, 'basic', 1); applyMove(s, 1, 2, 'basic', 0);
+  applyMove(s, 0, 2, 'basic', 2);
+  assert.equal(s.winner, 0);
+  assert.throws(() => applyMove(s, 1, 2, 'basic', 0), /over/);
+});
+
+test('pity gives a Legendary on the 30th pack without one', () => {
+  const p = openPack(PITY_PACKS - 1, fixed(0));       // rand 0 -> all Common otherwise
+  assert.equal(BY_ID[p.cards[2]].rarity, 'Legendary');
+  assert.equal(p.packsSinceLegend, 0);
+  assert.equal(openPack(0, fixed(0)).packsSinceLegend, 1);
+});
+
+test('drop rates roughly match 85/10/4/1', () => {
+  const n = { Common: 0, Rare: 0, Epic: 0, Legendary: 0 };
+  for (let i = 0; i < 20000; i++) for (const id of openPack(0).cards) n[BY_ID[id].rarity]++;
+  const pct = r => (100 * n[r]) / 60000;
+  assert.ok(Math.abs(pct('Common') - 85) < 1.5 && Math.abs(pct('Legendary') - 1) < 0.5, JSON.stringify(n));
+});

@@ -1,0 +1,7 @@
+node_modules/
+.wrangler/
+app/build/
+app/HoloSynth.xcodeproj/
+app/Payload/
+*.ipa
+.DS_Store

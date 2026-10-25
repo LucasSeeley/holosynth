@@ -1,0 +1,44 @@
+# XcodeGen spec: the build turns this into HoloSynth.xcodeproj, so no Xcode project file is kept in git.
+name: HoloSynth
+options:
+  bundleIdPrefix: com.lucasseeley
+  deploymentTarget:
+    iOS: "16.0"
+settings:
+  base:
+    API_BASE: https://localhost
+    BUILD_NUMBER: "1"
+targets:
+  HoloSynth:
+    type: application
+    platform: iOS
+    sources:
+      - path: HoloSynth
+        excludes:
+          - "Resources/Art/**"
+      - path: HoloSynth/Resources/Art
+        type: folder
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lucasseeley.holosynth
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: $(BUILD_NUMBER)
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        TARGETED_DEVICE_FAMILY: "1"
+        SWIFT_VERSION: "5.0"
+        CODE_SIGNING_ALLOWED: "NO"
+        CODE_SIGNING_REQUIRED: "NO"
+        CODE_SIGN_IDENTITY: ""
+    info:
+      path: HoloSynth/Info.plist
+      properties:
+        CFBundleDisplayName: HoloSynth
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        APIBase: $(API_BASE)
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UIUserInterfaceStyle: Dark
+        ITSAppUsesNonExemptEncryption: false

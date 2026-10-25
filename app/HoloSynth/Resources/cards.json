@@ -1,0 +1,2054 @@
+[
+ {
+  "id": "volt",
+  "num": 1,
+  "name": "Volt",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 60,
+  "basic": {
+   "name": "Shock Punch",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Overcharge",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Brawler android with neon-blue electric gauntlets and a cracked chrome faceplate."
+ },
+ {
+  "id": "fang",
+  "num": 2,
+  "name": "Fang",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 55,
+  "basic": {
+   "name": "Neon Bite",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Pounce",
+   "dmg": 20,
+   "cd": 2
+  },
+  "look": "Chrome cyber-wolf with glowing pink fangs."
+ },
+ {
+  "id": "goliath",
+  "num": 3,
+  "name": "Goliath",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 70,
+  "basic": {
+   "name": "Scatter Shot",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Cannon Blast",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Squat walker mech with orange vents and a heavy arm cannon."
+ },
+ {
+  "id": "razor",
+  "num": 4,
+  "name": "Razor",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 50,
+  "basic": {
+   "name": "Hardlight Slash",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Thousand Cuts",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Samurai android with a violet hardlight katana and a split visor."
+ },
+ {
+  "id": "stinger",
+  "num": 5,
+  "name": "Stinger",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 65,
+  "basic": {
+   "name": "Tail Jab",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Venom Spike",
+   "dmg": 20,
+   "cd": 1
+  },
+  "look": "Chrome cyber-scorpion with a dripping green neon tail."
+ },
+ {
+  "id": "sentry",
+  "num": 6,
+  "name": "Sentry",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 80,
+  "basic": {
+   "name": "Pulse Fire",
+   "dmg": 5
+  },
+  "special": {
+   "name": "Lockdown Barrage",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Tripod turret drone with a red scanning eye and twin barrels."
+ },
+ {
+  "id": "hex",
+  "num": 7,
+  "name": "Hex",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 55,
+  "basic": {
+   "name": "Code Spike",
+   "dmg": 10
+  },
+  "special": {
+   "name": "System Crash",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Slim hacker android surrounded by floating holo keyboards."
+ },
+ {
+  "id": "mantis",
+  "num": 8,
+  "name": "Mantis",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 60,
+  "basic": {
+   "name": "Scythe Swipe",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Twin Reap",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Chrome praying mantis with teal blade arms."
+ },
+ {
+  "id": "rook",
+  "num": 9,
+  "name": "Rook",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 75,
+  "basic": {
+   "name": "Rivet Gun",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Siege Shot",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Boxy walker tank with a hazard-striped cannon."
+ },
+ {
+  "id": "wirelash",
+  "num": 10,
+  "name": "Wirelash",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 60,
+  "basic": {
+   "name": "Live Wire",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Short Circuit",
+   "dmg": 20,
+   "cd": 1
+  },
+  "look": "Scrapyard android whose arm unspools into a sparking cable whip."
+ },
+ {
+  "id": "raptor",
+  "num": 11,
+  "name": "Raptor",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 50,
+  "basic": {
+   "name": "Talon Rake",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Dive Strike",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Cyber-hawk with glowing amber wings."
+ },
+ {
+  "id": "crusher",
+  "num": 12,
+  "name": "Crusher",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 70,
+  "basic": {
+   "name": "Hydraulic Slam",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Crush Grip",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Heavy cargo-loader mech with giant hydraulic fists and blue warning lights."
+ },
+ {
+  "id": "nyx",
+  "num": 13,
+  "name": "Nyx",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 55,
+  "basic": {
+   "name": "Shadow Jab",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Blackout Strike",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Stealth android whose plating bends light."
+ },
+ {
+  "id": "mongoose",
+  "num": 14,
+  "name": "Mongoose",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 55,
+  "basic": {
+   "name": "Dart Bite",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Cobra Breaker",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Lightning-fast cyber-mongoose with amber reflex sensors."
+ },
+ {
+  "id": "harvester",
+  "num": 15,
+  "name": "Harvester",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 75,
+  "basic": {
+   "name": "Thresher",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Reap Field",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Farm combine mech with glowing lime thresher blades."
+ },
+ {
+  "id": "blaze",
+  "num": 16,
+  "name": "Blaze",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 60,
+  "basic": {
+   "name": "Flame Knuckle",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Inferno Rush",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Brawler android with plasma-flame fists and vented shoulders."
+ },
+ {
+  "id": "narwhal",
+  "num": 17,
+  "name": "Narwhal",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 75,
+  "basic": {
+   "name": "Tusk Poke",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Ice Lance",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Hovering cyber-narwhal with a frosted crystal tusk."
+ },
+ {
+  "id": "siphon",
+  "num": 18,
+  "name": "Siphon",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 60,
+  "basic": {
+   "name": "Drain Tap",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Power Leech",
+   "dmg": 20,
+   "cd": 1
+  },
+  "look": "Spindly mech that plugs cables into its targets."
+ },
+ {
+  "id": "ronin",
+  "num": 19,
+  "name": "Ronin",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 65,
+  "basic": {
+   "name": "Edge Cut",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Iaido Flash",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Battered swordsman android with a red neon tanto."
+ },
+ {
+  "id": "viper",
+  "num": 20,
+  "name": "Viper",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 50,
+  "basic": {
+   "name": "Fang Strike",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Neurotoxin",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Cyber-cobra with a hood made of light panels."
+ },
+ {
+  "id": "juggernaut",
+  "num": 21,
+  "name": "Juggernaut",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 85,
+  "basic": {
+   "name": "Stomp",
+   "dmg": 5
+  },
+  "special": {
+   "name": "Steamroll",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Hulking siege mech that never stops walking."
+ },
+ {
+  "id": "glitch",
+  "num": 22,
+  "name": "Glitch",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 50,
+  "basic": {
+   "name": "Packet Loss",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Desync",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Flickering android that skips frames when it moves."
+ },
+ {
+  "id": "rhino",
+  "num": 23,
+  "name": "Rhino",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 85,
+  "basic": {
+   "name": "Horn Jab",
+   "dmg": 5
+  },
+  "special": {
+   "name": "Stampede",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Armored cyber-rhino with a chrome drill horn."
+ },
+ {
+  "id": "scout",
+  "num": 24,
+  "name": "Scout",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 50,
+  "basic": {
+   "name": "Laser Ping",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Target Lock",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Recon drone with a sweeping blue laser."
+ },
+ {
+  "id": "cipher",
+  "num": 25,
+  "name": "Cipher",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 60,
+  "basic": {
+   "name": "Data Jab",
+   "dmg": 5
+  },
+  "special": {
+   "name": "Decrypt",
+   "dmg": 35,
+   "cd": 3
+  },
+  "look": "Codebreaker android with a spinning cipher-wheel face."
+ },
+ {
+  "id": "arachne",
+  "num": 26,
+  "name": "Arachne",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 55,
+  "basic": {
+   "name": "Bite",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Web Snare",
+   "dmg": 20,
+   "cd": 1
+  },
+  "look": "Mechanical spider spinning glowing violet webs."
+ },
+ {
+  "id": "gyro",
+  "num": 27,
+  "name": "Gyro",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 55,
+  "basic": {
+   "name": "Rotor Slice",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Blade Spin",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Gyrocopter mech with spinning saw rotors."
+ },
+ {
+  "id": "bounty",
+  "num": 28,
+  "name": "Bounty",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 65,
+  "basic": {
+   "name": "Pistol Shot",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Dead or Alive",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Hunter android in a long coat with a neon revolver arm."
+ },
+ {
+  "id": "shark",
+  "num": 29,
+  "name": "Shark",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 70,
+  "basic": {
+   "name": "Chomp",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Feeding Frenzy",
+   "dmg": 25,
+   "cd": 3
+  },
+  "look": "Cyber-shark that swims through the air on hover fins."
+ },
+ {
+  "id": "forge",
+  "num": 30,
+  "name": "Forge",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 75,
+  "basic": {
+   "name": "Hot Rivet",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Molten Pour",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Foundry mech with a glowing molten core."
+ },
+ {
+  "id": "spike",
+  "num": 31,
+  "name": "Spike",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 55,
+  "basic": {
+   "name": "Knee Strike",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Spiked Rush",
+   "dmg": 20,
+   "cd": 1
+  },
+  "look": "Brawler android covered in chrome spikes."
+ },
+ {
+  "id": "silverback",
+  "num": 32,
+  "name": "Silverback",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 80,
+  "basic": {
+   "name": "Knuckle Pound",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Chest Beat",
+   "dmg": 25,
+   "cd": 3
+  },
+  "look": "Chrome gorilla with glowing blue knuckles."
+ },
+ {
+  "id": "burrower",
+  "num": 33,
+  "name": "Burrower",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 70,
+  "basic": {
+   "name": "Drill Jab",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Tunnel Strike",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Mining mech with a massive spiral drill."
+ },
+ {
+  "id": "echo",
+  "num": 34,
+  "name": "Echo",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 60,
+  "basic": {
+   "name": "Sonic Pulse",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Feedback Loop",
+   "dmg": 20,
+   "cd": 1
+  },
+  "look": "Android with speaker cones built into its shoulders."
+ },
+ {
+  "id": "panther",
+  "num": 35,
+  "name": "Panther",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 55,
+  "basic": {
+   "name": "Swipe",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Shadow Pounce",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Sleek black cyber-panther with violet eyes."
+ },
+ {
+  "id": "mortar",
+  "num": 36,
+  "name": "Mortar",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 65,
+  "basic": {
+   "name": "Shell Toss",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Barrage",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Artillery walker with stubby launch tubes."
+ },
+ {
+  "id": "rivet",
+  "num": 37,
+  "name": "Rivet",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 70,
+  "basic": {
+   "name": "Wrench Swing",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Overtime",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Dockworker android with a hydraulic wrench arm."
+ },
+ {
+  "id": "croc",
+  "num": 38,
+  "name": "Croc",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 75,
+  "basic": {
+   "name": "Snap",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Death Roll",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Swamp cyber-croc with a lime neon jaw."
+ },
+ {
+  "id": "bastion",
+  "num": 39,
+  "name": "Bastion",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 85,
+  "basic": {
+   "name": "Plate Slam",
+   "dmg": 5
+  },
+  "special": {
+   "name": "Fortify Blast",
+   "dmg": 25,
+   "cd": 3
+  },
+  "look": "Fortress mech with fold-out armor walls."
+ },
+ {
+  "id": "vandal",
+  "num": 40,
+  "name": "Vandal",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 55,
+  "basic": {
+   "name": "Spray Burst",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Tag Out",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Android with spray-nozzle hands that shoot blinding neon paint."
+ },
+ {
+  "id": "hornet",
+  "num": 41,
+  "name": "Hornet",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 45,
+  "basic": {
+   "name": "Sting",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Swarm Dive",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Fist-sized robo-hornet with a plasma stinger."
+ },
+ {
+  "id": "magnus",
+  "num": 42,
+  "name": "Magnus",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 65,
+  "basic": {
+   "name": "Pull",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Polarity Crush",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Junkyard crane mech with a giant magnet."
+ },
+ {
+  "id": "phantom",
+  "num": 43,
+  "name": "Phantom",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 45,
+  "basic": {
+   "name": "Fade Hit",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Haunt",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Hologram android that is barely there."
+ },
+ {
+  "id": "vesper",
+  "num": 44,
+  "name": "Vesper",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 50,
+  "basic": {
+   "name": "Screech",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Sonar Blast",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Cyber-bat that maps the arena with pink sonar."
+ },
+ {
+  "id": "buzzsaw",
+  "num": 45,
+  "name": "Buzzsaw",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 60,
+  "basic": {
+   "name": "Grind",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Rip Cut",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Scrap mech with a spinning buzzsaw arm."
+ },
+ {
+  "id": "brick",
+  "num": 46,
+  "name": "Brick",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 80,
+  "basic": {
+   "name": "Haymaker",
+   "dmg": 5
+  },
+  "special": {
+   "name": "Body Slam",
+   "dmg": 25,
+   "cd": 3
+  },
+  "look": "Huge bouncer android with slab-like chrome forearms."
+ },
+ {
+  "id": "boar",
+  "num": 47,
+  "name": "Boar",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 70,
+  "basic": {
+   "name": "Tusk Gore",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Charge",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Chrome boar with glowing red tusks."
+ },
+ {
+  "id": "skyburst",
+  "num": 48,
+  "name": "Skyburst",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 55,
+  "basic": {
+   "name": "Missile Ping",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Payload",
+   "dmg": 35,
+   "cd": 3
+  },
+  "look": "Jetpack mech that rains micro-missiles."
+ },
+ {
+  "id": "shiv",
+  "num": 49,
+  "name": "Shiv",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 50,
+  "basic": {
+   "name": "Quick Stab",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Backstab",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Small scavenger android with twin hardlight knives."
+ },
+ {
+  "id": "kraken",
+  "num": 50,
+  "name": "Kraken",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 65,
+  "basic": {
+   "name": "Tentacle Lash",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Ink Cloud",
+   "dmg": 20,
+   "cd": 1
+  },
+  "look": "Neon octopus that sprays glowing ink."
+ },
+ {
+  "id": "welder",
+  "num": 51,
+  "name": "Welder",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 65,
+  "basic": {
+   "name": "Torch Burn",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Arc Weld",
+   "dmg": 20,
+   "cd": 1
+  },
+  "look": "Repair bot with a white-hot welding arm."
+ },
+ {
+  "id": "neon",
+  "num": 52,
+  "name": "Neon",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 60,
+  "basic": {
+   "name": "Light Jab",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Flashbang",
+   "dmg": 20,
+   "cd": 1
+  },
+  "look": "Android whose glowing circuit lines pulse when it fights."
+ },
+ {
+  "id": "hyena",
+  "num": 53,
+  "name": "Hyena",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 55,
+  "basic": {
+   "name": "Cackle Bite",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Pack Hunt",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Laughing cyber-hyena with a cracked amber visor."
+ },
+ {
+  "id": "hive",
+  "num": 54,
+  "name": "Hive",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 50,
+  "basic": {
+   "name": "Swarm Sting",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Swarm Cloud",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Cloud of tiny worker drones moving as one."
+ },
+ {
+  "id": "static",
+  "num": 55,
+  "name": "Static",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 55,
+  "basic": {
+   "name": "Zap",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Overload",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Android that stores lightning in coils down its back."
+ },
+ {
+  "id": "grizzly",
+  "num": 56,
+  "name": "Grizzly",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 85,
+  "basic": {
+   "name": "Maul",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Bear Hug",
+   "dmg": 25,
+   "cd": 3
+  },
+  "look": "Massive cyber-bear with exhaust pipes on its back."
+ },
+ {
+  "id": "hoist",
+  "num": 57,
+  "name": "Hoist",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 75,
+  "basic": {
+   "name": "Hook Swing",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Drop Load",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Construction crane mech with a swinging hook."
+ },
+ {
+  "id": "ember",
+  "num": 58,
+  "name": "Ember",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 50,
+  "basic": {
+   "name": "Cinder Kick",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Firewalk",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Dancer android with molten-glow legs."
+ },
+ {
+  "id": "komodo",
+  "num": 59,
+  "name": "Komodo",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 70,
+  "basic": {
+   "name": "Lick Bite",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Infection",
+   "dmg": 20,
+   "cd": 1
+  },
+  "look": "Cyber-lizard dripping green static."
+ },
+ {
+  "id": "watchtower",
+  "num": 60,
+  "name": "Watchtower",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 80,
+  "basic": {
+   "name": "Spotlight",
+   "dmg": 5
+  },
+  "special": {
+   "name": "Searchlight Burn",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Tall tower mech with a blinding spotlight head."
+ },
+ {
+  "id": "jackal",
+  "num": 61,
+  "name": "Jackal",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 60,
+  "basic": {
+   "name": "Pipe Swing",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Ambush",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Gang-leader android with a jackal-shaped chrome head."
+ },
+ {
+  "id": "moth",
+  "num": 62,
+  "name": "Moth",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 45,
+  "basic": {
+   "name": "Dust Flick",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Glow Dust",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Giant cyber-moth drawn to neon signs."
+ },
+ {
+  "id": "dozer",
+  "num": 63,
+  "name": "Dozer",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 85,
+  "basic": {
+   "name": "Shove",
+   "dmg": 5
+  },
+  "special": {
+   "name": "Plow Through",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Bulldozer mech with a scarred chrome blade."
+ },
+ {
+  "id": "monk",
+  "num": 64,
+  "name": "Monk",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 70,
+  "basic": {
+   "name": "Palm Strike",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Inner Charge",
+   "dmg": 20,
+   "cd": 1
+  },
+  "look": "Monk android wrapped in a glowing data-bead necklace."
+ },
+ {
+  "id": "vixen",
+  "num": 65,
+  "name": "Vixen",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 50,
+  "basic": {
+   "name": "Quick Bite",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Fox Fire",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Two-tailed cyber-fox with pink fire tips."
+ },
+ {
+  "id": "overclock",
+  "num": 66,
+  "name": "Overclock",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 55,
+  "basic": {
+   "name": "Spin Up",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Overheat",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Overclocked mech venting red steam."
+ },
+ {
+  "id": "riot",
+  "num": 67,
+  "name": "Riot",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 75,
+  "basic": {
+   "name": "Baton Hit",
+   "dmg": 5
+  },
+  "special": {
+   "name": "Shield Bash",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Riot-control android with a hardlight shield."
+ },
+ {
+  "id": "scarab",
+  "num": 68,
+  "name": "Scarab",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 75,
+  "basic": {
+   "name": "Pincer",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Burrow Strike",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Armored beetle with an oil-slick teal shell."
+ },
+ {
+  "id": "lancer",
+  "num": 69,
+  "name": "Lancer",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 60,
+  "basic": {
+   "name": "Lance Poke",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Plasma Lance",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Jousting mech with a violet plasma lance."
+ },
+ {
+  "id": "lotus",
+  "num": 70,
+  "name": "Lotus",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 55,
+  "basic": {
+   "name": "Petal Kick",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Bloom Burst",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Martial-arts android whose kicks leave pink light petals."
+ },
+ {
+  "id": "crow",
+  "num": 71,
+  "name": "Crow",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 45,
+  "basic": {
+   "name": "Peck",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Murder Dive",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Cyber-crow with a cracked camera eye."
+ },
+ {
+  "id": "railer",
+  "num": 72,
+  "name": "Railer",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 50,
+  "basic": {
+   "name": "Charge Shot",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Rail Blast",
+   "dmg": 35,
+   "cd": 3
+  },
+  "look": "Sniper mech with a long rail cannon."
+ },
+ {
+  "id": "gunner",
+  "num": 73,
+  "name": "Gunner",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 60,
+  "basic": {
+   "name": "Burst Fire",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Full Auto",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Mercenary android with a smoking neon rifle arm."
+ },
+ {
+  "id": "hare",
+  "num": 74,
+  "name": "Hare",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 50,
+  "basic": {
+   "name": "Spring Kick",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Burrow Ambush",
+   "dmg": 20,
+   "cd": 1
+  },
+  "look": "Speedy cyber-hare with spring-loaded legs."
+ },
+ {
+  "id": "shredder",
+  "num": 75,
+  "name": "Shredder",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 65,
+  "basic": {
+   "name": "Claw Grab",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Shred",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Recycling mech with shredder jaws."
+ },
+ {
+  "id": "drifter",
+  "num": 76,
+  "name": "Drifter",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 65,
+  "basic": {
+   "name": "Tire Iron",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Hit and Run",
+   "dmg": 20,
+   "cd": 1
+  },
+  "look": "Racer android with wheel hubs in its legs and a chain fist."
+ },
+ {
+  "id": "eel",
+  "num": 77,
+  "name": "Eel",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 55,
+  "basic": {
+   "name": "Shock Bite",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Voltage Coil",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Electric eel crackling with cyan current."
+ },
+ {
+  "id": "pylon",
+  "num": 78,
+  "name": "Pylon",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 70,
+  "basic": {
+   "name": "Arc Zap",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Tesla Field",
+   "dmg": 20,
+   "cd": 1
+  },
+  "look": "Walking power pylon crackling with arcs."
+ },
+ {
+  "id": "siren",
+  "num": 79,
+  "name": "Siren",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 55,
+  "basic": {
+   "name": "Scream",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Shatter Note",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Android with a resonator throat that cracks glass."
+ },
+ {
+  "id": "ram",
+  "num": 80,
+  "name": "Ram",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 70,
+  "basic": {
+   "name": "Headbutt",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Battering Charge",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Chrome ram with spiraling neon horns."
+ },
+ {
+  "id": "quake",
+  "num": 81,
+  "name": "Quake",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 80,
+  "basic": {
+   "name": "Ground Pound",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Seismic Slam",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Squat mech with piston-driven fists."
+ },
+ {
+  "id": "warden",
+  "num": 82,
+  "name": "Warden",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 70,
+  "basic": {
+   "name": "Cuff Strike",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Lockup",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Guard android with magnetic shackle hands."
+ },
+ {
+  "id": "piranha",
+  "num": 83,
+  "name": "Piranha",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 45,
+  "basic": {
+   "name": "Nibble",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Frenzy",
+   "dmg": 20,
+   "cd": 1
+  },
+  "look": "Swarm of flying robo-piranhas."
+ },
+ {
+  "id": "cyclone",
+  "num": 84,
+  "name": "Cyclone",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 60,
+  "basic": {
+   "name": "Fan Blade",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Tornado Spin",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Turbine mech that whips up neon wind."
+ },
+ {
+  "id": "dynamo",
+  "num": 85,
+  "name": "Dynamo",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 65,
+  "basic": {
+   "name": "Turbine Punch",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Power Surge",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Power-plant android with spinning turbine gauntlets."
+ },
+ {
+  "id": "mammoth",
+  "num": 86,
+  "name": "Mammoth",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 85,
+  "basic": {
+   "name": "Trunk Slap",
+   "dmg": 5
+  },
+  "special": {
+   "name": "Tusk Quake",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Frozen cyber-mammoth with glowing ice tusks."
+ },
+ {
+  "id": "chopper",
+  "num": 87,
+  "name": "Chopper",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 55,
+  "basic": {
+   "name": "Rotor Strike",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Strafing Run",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Attack-helicopter mech with twin rotors."
+ },
+ {
+  "id": "rogue",
+  "num": 88,
+  "name": "Rogue",
+  "rarity": "Common",
+  "cls": "Fighter",
+  "hp": 50,
+  "basic": {
+   "name": "Smoke Jab",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Vanish Strike",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Thief android that fights from inside a cloud of neon smoke."
+ },
+ {
+  "id": "sabre",
+  "num": 89,
+  "name": "Sabre",
+  "rarity": "Common",
+  "cls": "Beast",
+  "hp": 60,
+  "basic": {
+   "name": "Claw Rake",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Sabre Bite",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Sabertooth cyber-cat with amber plasma fangs."
+ },
+ {
+  "id": "crawler",
+  "num": 90,
+  "name": "Crawler",
+  "rarity": "Common",
+  "cls": "Mech",
+  "hp": 70,
+  "basic": {
+   "name": "Leg Stab",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Pin Down",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Six-legged crawler mech built for climbing walls."
+ },
+ {
+  "id": "vanta",
+  "num": 91,
+  "name": "Vanta",
+  "rarity": "Rare",
+  "cls": "Fighter",
+  "hp": 75,
+  "basic": {
+   "name": "Void Palm",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Event Horizon",
+   "dmg": 35,
+   "cd": 3
+  },
+  "look": "Martial-arts android in light-eating black plating with a blue edge."
+ },
+ {
+  "id": "basilisk",
+  "num": 92,
+  "name": "Basilisk",
+  "rarity": "Rare",
+  "cls": "Beast",
+  "hp": 70,
+  "basic": {
+   "name": "Petrify Gaze",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Stone Coil",
+   "dmg": 30,
+   "cd": 2
+  },
+  "look": "Chrome serpent whose stare freezes circuits solid."
+ },
+ {
+  "id": "warlord",
+  "num": 93,
+  "name": "Warlord",
+  "rarity": "Rare",
+  "cls": "Mech",
+  "hp": 90,
+  "basic": {
+   "name": "Gatling Sweep",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Orbital Strike",
+   "dmg": 35,
+   "cd": 3
+  },
+  "look": "Command mech that calls down satellite strikes."
+ },
+ {
+  "id": "shogun",
+  "num": 94,
+  "name": "Shogun",
+  "rarity": "Rare",
+  "cls": "Fighter",
+  "hp": 80,
+  "basic": {
+   "name": "Command Slash",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Dragon Cut",
+   "dmg": 30,
+   "cd": 2
+  },
+  "look": "Warlord android with a twin-bladed hardlight naginata."
+ },
+ {
+  "id": "chimera",
+  "num": 95,
+  "name": "Chimera",
+  "rarity": "Rare",
+  "cls": "Beast",
+  "hp": 75,
+  "basic": {
+   "name": "Triple Bite",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Hydra Breath",
+   "dmg": 30,
+   "cd": 2
+  },
+  "look": "Three-headed cyber-beast, each head a different neon color."
+ },
+ {
+  "id": "colossus",
+  "num": 96,
+  "name": "Colossus",
+  "rarity": "Rare",
+  "cls": "Mech",
+  "hp": 95,
+  "basic": {
+   "name": "Arm Sweep",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Titan Fall",
+   "dmg": 35,
+   "cd": 3
+  },
+  "look": "Towering mech that blocks out the city lights."
+ },
+ {
+  "id": "specter",
+  "num": 97,
+  "name": "Specter",
+  "rarity": "Rare",
+  "cls": "Fighter",
+  "hp": 65,
+  "basic": {
+   "name": "Phase Strike",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Ghost Protocol",
+   "dmg": 30,
+   "cd": 2
+  },
+  "look": "Spy android that phases through walls in a shimmer of static."
+ },
+ {
+  "id": "wyvern",
+  "num": 98,
+  "name": "Wyvern",
+  "rarity": "Rare",
+  "cls": "Beast",
+  "hp": 70,
+  "basic": {
+   "name": "Wing Slash",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Plasma Breath",
+   "dmg": 35,
+   "cd": 3
+  },
+  "look": "Small cyber-dragon with green plasma in its throat."
+ },
+ {
+  "id": "valkyrie",
+  "num": 99,
+  "name": "Valkyrie",
+  "rarity": "Rare",
+  "cls": "Mech",
+  "hp": 70,
+  "basic": {
+   "name": "Wing Blades",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Sky Lance",
+   "dmg": 30,
+   "cd": 2
+  },
+  "look": "Winged combat mech that dives from the sky."
+ },
+ {
+  "id": "overdrive",
+  "num": 100,
+  "name": "Overdrive",
+  "rarity": "Rare",
+  "cls": "Fighter",
+  "hp": 70,
+  "basic": {
+   "name": "Nitro Kick",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Redline",
+   "dmg": 35,
+   "cd": 3
+  },
+  "look": "Racer android with turbo-boosted legs."
+ },
+ {
+  "id": "manticore",
+  "num": 101,
+  "name": "Manticore",
+  "rarity": "Rare",
+  "cls": "Beast",
+  "hp": 80,
+  "basic": {
+   "name": "Spiked Tail",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Venom Volley",
+   "dmg": 30,
+   "cd": 2
+  },
+  "look": "Lion-bodied cyber-beast with a scorpion tail."
+ },
+ {
+  "id": "reactor",
+  "num": 102,
+  "name": "Reactor",
+  "rarity": "Rare",
+  "cls": "Mech",
+  "hp": 75,
+  "basic": {
+   "name": "Core Pulse",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Meltdown",
+   "dmg": 35,
+   "cd": 3
+  },
+  "look": "Walking power core leaking lime radiation."
+ },
+ {
+  "id": "prism",
+  "num": 103,
+  "name": "Prism",
+  "rarity": "Rare",
+  "cls": "Fighter",
+  "hp": 70,
+  "basic": {
+   "name": "Refract Jab",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Spectrum Burst",
+   "dmg": 35,
+   "cd": 3
+  },
+  "look": "Crystal-bodied android that splits light into rainbow blades."
+ },
+ {
+  "id": "thunderhide",
+  "num": 104,
+  "name": "Thunderhide",
+  "rarity": "Rare",
+  "cls": "Beast",
+  "hp": 85,
+  "basic": {
+   "name": "Storm Charge",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Thunder Stampede",
+   "dmg": 30,
+   "cd": 2
+  },
+  "look": "Armored cyber-bison with lightning arcing between its horns."
+ },
+ {
+  "id": "hellfire",
+  "num": 105,
+  "name": "Hellfire",
+  "rarity": "Rare",
+  "cls": "Mech",
+  "hp": 80,
+  "basic": {
+   "name": "Napalm Spit",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Firestorm",
+   "dmg": 35,
+   "cd": 3
+  },
+  "look": "Flamethrower tank mech with glowing fuel tanks."
+ },
+ {
+  "id": "paragon",
+  "num": 106,
+  "name": "Paragon",
+  "rarity": "Epic",
+  "cls": "Fighter",
+  "hp": 95,
+  "basic": {
+   "name": "Radiant Fist",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Solar Flare",
+   "dmg": 40,
+   "cd": 3
+  },
+  "look": "Golden android with a sun reactor in its chest."
+ },
+ {
+  "id": "leviathan",
+  "num": 107,
+  "name": "Leviathan",
+  "rarity": "Epic",
+  "cls": "Beast",
+  "hp": 100,
+  "basic": {
+   "name": "Tidal Crush",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Abyss Roar",
+   "dmg": 40,
+   "cd": 3
+  },
+  "look": "Colossal cyber-sea-serpent from the flooded districts."
+ },
+ {
+  "id": "dreadnought",
+  "num": 108,
+  "name": "Dreadnought",
+  "rarity": "Epic",
+  "cls": "Mech",
+  "hp": 105,
+  "basic": {
+   "name": "Broadside",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Armageddon Salvo",
+   "dmg": 40,
+   "cd": 3
+  },
+  "look": "Flying battleship mech bristling with cannons."
+ },
+ {
+  "id": "nightblade",
+  "num": 109,
+  "name": "Nightblade",
+  "rarity": "Epic",
+  "cls": "Fighter",
+  "hp": 80,
+  "basic": {
+   "name": "Umbral Cut",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Eclipse",
+   "dmg": 40,
+   "cd": 3
+  },
+  "look": "Assassin android whose blade swallows light."
+ },
+ {
+  "id": "phoenix",
+  "num": 110,
+  "name": "Phoenix",
+  "rarity": "Epic",
+  "cls": "Beast",
+  "hp": 85,
+  "basic": {
+   "name": "Ember Talon",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Rebirth Blaze",
+   "dmg": 35,
+   "cd": 2
+  },
+  "look": "Firebird made of burning neon."
+ },
+ {
+  "id": "omega",
+  "num": 111,
+  "name": "Omega",
+  "rarity": "Epic",
+  "cls": "Mech",
+  "hp": 90,
+  "basic": {
+   "name": "Null Beam",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Erase Protocol",
+   "dmg": 40,
+   "cd": 3
+  },
+  "look": "AI war machine with one all-seeing lens."
+ },
+ {
+  "id": "sovereign",
+  "num": 112,
+  "name": "Sovereign",
+  "rarity": "Legendary",
+  "cls": "Fighter",
+  "hp": 120,
+  "basic": {
+   "name": "Crown Strike",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Neon Judgment",
+   "dmg": 50,
+   "cd": 3
+  },
+  "look": "Ruler android of the neon city, crowned in hardlight."
+ },
+ {
+  "id": "apex",
+  "num": 113,
+  "name": "Apex",
+  "rarity": "Legendary",
+  "cls": "Beast",
+  "hp": 115,
+  "basic": {
+   "name": "Primal Rend",
+   "dmg": 25
+  },
+  "special": {
+   "name": "Extinction",
+   "dmg": 50,
+   "cd": 3
+  },
+  "look": "Ancient alpha predator rebuilt in chrome."
+ },
+ {
+  "id": "genesis",
+  "num": 114,
+  "name": "Genesis",
+  "rarity": "Legendary",
+  "cls": "Mech",
+  "hp": 125,
+  "basic": {
+   "name": "Forge Beam",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Singularity",
+   "dmg": 55,
+   "cd": 3
+  },
+  "look": "Self-building mech that grows new parts mid-fight."
+ }
+]

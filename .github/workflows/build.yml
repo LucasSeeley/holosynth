@@ -1,0 +1,118 @@
+# On every push to main: test and deploy the game server to Cloudflare, then build the iPhone app
+# on a Mac runner and publish it (IPA + SideStore source) through the server.
+name: build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+      kv: ${{ steps.setup.outputs.kv }}
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm test
+
+      - name: Create the database and file storage the first time
+        id: setup
+        run: |
+          D1=$(npx wrangler d1 list --json | jq -r '.[] | select(.name=="holosynth") | .uuid')
+          if [ -z "$D1" ]; then
+            npx wrangler d1 create holosynth
+            D1=$(npx wrangler d1 list --json | jq -r '.[] | select(.name=="holosynth") | .uuid')
+          fi
+          KV=$(npx wrangler kv namespace list | jq -r '.[] | select(.title=="holosynth-files") | .id')
+          if [ -z "$KV" ]; then
+            npx wrangler kv namespace create holosynth-files
+            KV=$(npx wrangler kv namespace list | jq -r '.[] | select(.title=="holosynth-files") | .id')
+          fi
+          test -n "$D1" && test -n "$KV"
+          sed -i "s/__D1_ID__/$D1/; s/__KV_ID__/$KV/" wrangler.toml
+          echo "kv=$KV" >> "$GITHUB_OUTPUT"
+
+      - name: Update database tables
+        run: npx wrangler d1 execute holosynth --remote --file schema.sql
+
+      - name: Deploy
+        id: deploy
+        run: |
+          npx wrangler deploy | tee deploy.log
+          URL=$(grep -o 'https://[a-zA-Z0-9.-]*workers\.dev' deploy.log | head -1)
+          test -n "$URL"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+  ios:
+    needs: server
+    runs-on: macos-15
+    env:
+      URL: ${{ needs.server.outputs.url }}
+      KV: ${{ needs.server.outputs.kv }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: brew install xcodegen
+
+      - name: Build the app (unsigned; SideStore signs it on the phone)
+        working-directory: app
+        run: |
+          set -o pipefail
+          xcodegen generate
+          xcodebuild -project HoloSynth.xcodeproj -scheme HoloSynth -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build \
+            API_BASE="$URL" BUILD_NUMBER="${{ github.run_number }}" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build 2>&1 | tee build.log | grep -E "error:|warning: .*deprecated|BUILD (SUCCEEDED|FAILED)" || true
+          grep -q "BUILD SUCCEEDED" build.log
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/HoloSynth.app Payload/
+          zip -qr HoloSynth.ipa Payload
+
+      - name: Publish for SideStore
+        working-directory: app
+        run: |
+          SIZE=$(stat -f%z HoloSynth.ipa)
+          DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          VERSION="1.0.${{ github.run_number }}"
+          cat > source.json <<JSON
+          {
+            "name": "HoloSynth",
+            "identifier": "com.lucasseeley.holosynth.source",
+            "apps": [{
+              "name": "HoloSynth",
+              "bundleIdentifier": "com.lucasseeley.holosynth",
+              "developerName": "Lucas",
+              "iconURL": "$URL/icon.png",
+              "localizedDescription": "Neon card battler. Rip packs, build a team, battle friends.",
+              "tintColor": "#9E1024",
+              "versions": [{ "version": "$VERSION", "buildVersion": "${{ github.run_number }}", "date": "$DATE", "downloadURL": "$URL/HoloSynth.ipa", "size": $SIZE, "minOSVersion": "16.0" }]
+            }]
+          }
+          JSON
+          put() { npx -y wrangler@4.20.0 kv key put "$1" --path "$2" --namespace-id "$KV" --remote; }
+          put HoloSynth.ipa HoloSynth.ipa
+          put source.json source.json
+          put icon.png HoloSynth/Assets.xcassets/AppIcon.appiconset/icon.png
+
+      - name: Save the build log where it can be read
+        if: always()
+        working-directory: app
+        run: |
+          { echo "run ${{ github.run_number }} · ${{ job.status }} · $(date -u)"; grep -E "error:|BUILD (SUCCEEDED|FAILED)" build.log | head -60; echo ---; tail -40 build.log; } > build.txt 2>/dev/null || echo "no build log" > build.txt
+          npx -y wrangler@4.20.0 kv key put build.txt --path build.txt --namespace-id "$KV" --remote || true
