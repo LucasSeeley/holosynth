@@ -1,0 +1,18 @@
+# Manual: show the last iPhone build log (stored in KV as build.txt) as annotations, readable without the Actions logs.
+name: build-log
+
+on:
+  workflow_dispatch:
+
+jobs:
+  log:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - run: |
+          KV=$(npx -y wrangler@4.20.0 kv namespace list | jq -r '.[] | select(.title=="holosynth-files") | .id')
+          npx -y wrangler@4.20.0 kv key get build.txt --namespace-id "$KV" --remote > build.txt
+          grep -E "error:" build.txt | head -40 | sed 's/^/::error::/' || true
+          echo "::notice title=head::$(head -c 1500 build.txt | tr '\n' '|')"
