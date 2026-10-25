@@ -123,7 +123,7 @@ struct PlayTab: View {
                 if c.choose != nil {
                     Button("Pick") { screen = .reward }.buttonStyle(GoldButton(height: 46)).frame(width: 110)
                 } else if c.next != nil {
-                    Button("Continue") { screen = .campaign }.buttonStyle(GoldButton(height: 46)).frame(width: 140)
+                    Button(c.cleared == 0 ? "Start" : "Continue") { screen = .campaign }.buttonStyle(GoldButton(height: 46)).frame(width: 140)
                 }
             }
             .padding(14)
