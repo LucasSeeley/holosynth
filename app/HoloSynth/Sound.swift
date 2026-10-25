@@ -35,7 +35,7 @@ enum Sound: String, CaseIterable {
 }
 
 // Music: calm loop in the menus, intense loop in battles. WAVs because AAC adds a gap at the loop point.
-// Stays off while another app's music is playing.
+// Mixes with other apps' audio rather than going quiet for it.
 enum Music {
     enum Track: String, CaseIterable { case menu, battle }
     private static let volume: [Track: Float] = [.menu: 0.5, .battle: 0.6]
@@ -56,16 +56,24 @@ enum Music {
     }()
 
     static func play(_ track: Track) {
-        // secondaryAudioShouldBeSilencedHint is only true when another app's music is playing; isOtherAudioPlaying
-        // also counts background/silent audio from other apps, which kept the music off
-        guard track != current, !AVAudioSession.sharedInstance().secondaryAudioShouldBeSilencedHint else { return }
+        guard track != current else { return }
         fadeOut()
         generation += 1     // cancels a pending stop if this same track is coming back
         current = track
+        start(track)
+    }
+
+    // Coming back to the app (or a play() that failed during launch): get the current track going again.
+    static func resume() {
+        guard let t = current, players[t]?.isPlaying == false else { if current == nil { play(.menu) }; return }
+        start(t)
+    }
+
+    private static func start(_ track: Track) {
         guard let p = players[track] else { return }
+        _ = try? AVAudioSession.sharedInstance().setActive(true)
         p.currentTime = 0
-        // no fade-in: a fade started right after play() can leave the volume stuck at 0
-        p.volume = volume[track] ?? 0.3
+        p.volume = volume[track] ?? 0.3   // no fade-in: a fade started right after play() can leave the volume stuck at 0
         p.play()
     }
 

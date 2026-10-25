@@ -3,6 +3,7 @@ import SwiftUI
 @main
 struct HoloSynthApp: App {
     @StateObject private var store = GameStore()
+    @Environment(\.scenePhase) private var phase
 
     var body: some Scene {
         WindowGroup {
@@ -12,6 +13,7 @@ struct HoloSynthApp: App {
             .environmentObject(store)
             .preferredColorScheme(.dark)
             .tint(Theme.brass)
+            .onChange(of: phase) { p in if p == .active && store.token != nil { Music.resume() } }
         }
     }
 }
