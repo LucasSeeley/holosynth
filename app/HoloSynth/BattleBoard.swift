@@ -64,8 +64,10 @@ struct BattleBoard: View {
         }
         .onAppear {
             if shown == nil { shown = state; latest = state }
+            if state.winner == nil { Music.start() }
             withAnimation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true)) { pulse = true }
         }
+        .onDisappear { Music.stop() }
         .onChange(of: state) { new in
             latest = new
             Task { await playBack() }
@@ -412,6 +414,7 @@ struct BattleBoard: View {
             if target.turn == you && target.winner == nil { UIImpactFeedbackGenerator(style: .light).impactOccurred(); Sound.turn.play() }
         }
         playing = false
+        if latest?.winner != nil { Music.stop() }
         onSettled()
     }
 }
