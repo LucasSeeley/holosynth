@@ -10,30 +10,31 @@ struct CampaignBattleView: View {
 
     @State var run: CampaignRun?
     @State var error: String?
+    @State var settled = true      // false while the last move is still playing out on the board
 
     var body: some View {
         ZStack {
             ScreenBackground()
             if let run {
-                VStack(spacing: 4) {
-                    Text(run.boss ? "BOSS · LEVEL \(run.level)" : "LEVEL \(run.level)").sectionTitle()
-                    Text(run.title).font(.chakra(22)).foregroundColor(Theme.fg)
-                    BattleBoard(state: run.state, you: 0, foeName: run.boss ? "Boss" : "Enemy",
-                                winText: "You won!", leaveLabel: "Quit",
-                                leaveQuestion: "Quit this fight? You can try again any time.",
-                                onMove: { from, mv, to in
+                BattleBoard(state: run.state, you: 0,
+                            eyebrow: run.boss ? "Boss · Level \(run.level)" : "Level \(run.level)", title: run.title,
+                            foeName: run.boss ? "The boss" : "The enemy",
+                            leaveLabel: "Quit", leaveQuestion: "Quit this fight? You can try again any time.",
+                            onMove: { from, mv, to in
+                                settled = false
+                                do {
                                     let next: CampaignRun = try await API.call("campaign/move", token: store.token,
                                                                                body: ["from": from, "move": mv, "to": to])
                                     self.run = next
                                     if let p = next.profile { store.profile = p }
-                                },
-                                onLeave: {
-                                    _ = try? await API.call("campaign/leave", token: store.token, body: [:]) as [String: Bool]
-                                    onClose(.none)
-                                })
-                }
-                .padding(.top, 8)
-                if let result = run.result { resultPanel(result, run: run) }
+                                } catch { settled = true; throw error }
+                            },
+                            onLeave: {
+                                _ = try? await API.call("campaign/leave", token: store.token, body: [:]) as [String: Bool]
+                                onClose(.none)
+                            },
+                            onSettled: { settled = true })
+                if let result = run.result, settled { resultPanel(result, run: run).transition(.opacity) }
             } else if let error {
                 VStack(spacing: 16) {
                     Text(error).font(.barlow(15, semibold: true)).foregroundColor(Theme.pink).multilineTextAlignment(.center)

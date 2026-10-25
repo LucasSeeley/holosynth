@@ -76,7 +76,7 @@ struct CampaignRun: Decodable, Equatable {
 struct AuthReply: Decodable { let token: String; let profile: Profile }
 struct PackReply: Decodable { let cards: [String]; let profile: Profile }
 
-struct Unit: Decodable, Equatable { let id: String; let hp: Int; let cd: Int }
+struct Unit: Decodable, Equatable { let id: String; var hp: Int; var cd: Int }
 
 struct LogEntry: Decodable, Equatable {
     let p: Int, from: Int, to: Int
@@ -87,11 +87,12 @@ struct LogEntry: Decodable, Equatable {
 }
 
 struct BattleState: Decodable, Equatable {
-    let teams: [[Unit]]
-    let acted: [[Bool]]
-    let turn: Int
-    let winner: Int?
-    let log: [LogEntry]
+    var teams: [[Unit]]
+    var acted: [[Bool]]
+    var turn: Int
+    var winner: Int?
+    var log: [LogEntry]
+    var moves: Int?             // moves made so far (older matches don't have it)
 }
 
 struct MatchView: Decodable, Equatable {

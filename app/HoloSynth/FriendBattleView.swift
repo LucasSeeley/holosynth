@@ -9,6 +9,7 @@ struct FriendBattleView: View {
     @State var codeInput = ""
     @State var busy = false
     @State var error: String?
+    @State var settled = true      // false while a move is still playing out on the board
 
     var body: some View {
         ZStack {
@@ -101,21 +102,36 @@ struct FriendBattleView: View {
     // MARK: board
 
     private func board(_ m: MatchView, _ s: BattleState) -> some View {
-        VStack(spacing: 0) {
-            BattleBoard(state: s, you: m.you, foeName: m.players[1 - m.you] ?? "Opponent",
-                        winText: "You won! +50 gold, +25 XP",
+        ZStack {
+            BattleBoard(state: s, you: m.you, eyebrow: "Friend battle", title: "vs \(m.players[1 - m.you] ?? "Opponent")",
+                        foeName: m.players[1 - m.you] ?? "Opponent",
                         leaveLabel: "Forfeit", leaveQuestion: "Forfeit this match? Your opponent wins.",
                         onMove: { from, mv, to in
-                            let next: MatchView = try await API.call("matches/\(m.id)/move", token: store.token,
-                                                                     body: ["from": from, "move": mv, "to": to])
-                            match = next
-                            if next.state?.winner != nil { await store.refresh() }
+                            settled = false
+                            do {
+                                let next: MatchView = try await API.call("matches/\(m.id)/move", token: store.token,
+                                                                         body: ["from": from, "move": mv, "to": to])
+                                match = next
+                                if next.state?.winner != nil { await store.refresh() }
+                            } catch { settled = true; throw error }
                         },
-                        onLeave: { await leave() })
-            if s.winner != nil {
-                Button("Back") { match = nil; Task { await store.refresh() } }
-                    .buttonStyle(GoldButton(height: 50)).frame(width: 200)
-                    .padding(.bottom, 24)
+                        onLeave: { await leave() },
+                        onSettled: { settled = true })
+            if let w = s.winner, settled {
+                ZStack {
+                    Color.black.opacity(0.6).ignoresSafeArea()
+                    VStack(spacing: 14) {
+                        Text(w == m.you ? "Victory" : "Defeated").font(.chakra(34)).textCase(.uppercase)
+                            .foregroundColor(w == m.you ? Theme.brass : Theme.pink)
+                        Text(w == m.you ? "+50 gold  ·  +25 XP" : "Better luck next time.").font(.barlow(16)).foregroundColor(Theme.fg)
+                        Button("Back") { match = nil; Task { await store.refresh() } }.buttonStyle(GoldButton())
+                    }
+                    .padding(24).frame(maxWidth: 340)
+                    .background(Theme.ink.opacity(0.92), in: RoundedRectangle(cornerRadius: 22))
+                    .overlay(RoundedRectangle(cornerRadius: 22).stroke(Theme.brass.opacity(0.5), lineWidth: 1))
+                    .padding(20)
+                }
+                .transition(.opacity)
             }
         }
     }
@@ -147,6 +163,7 @@ struct FriendBattleView: View {
             try? await Task.sleep(nanoseconds: 2_000_000_000)
             guard let m = match, m.status != "done", m.state?.turn != m.you || m.status == "waiting" else { continue }
             if let fresh: MatchView = try? await API.call("matches/\(m.id)", token: store.token), fresh != match {
+                if fresh.state != m.state { settled = false }   // their move plays out before any result shows
                 match = fresh
                 if fresh.state?.winner != nil { await store.refresh() }
             }

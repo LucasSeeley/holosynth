@@ -83,6 +83,7 @@ export function applyMove(state, p, from, move, to) {
   state.acted[p][from] = true;
   refreshActed(state, p);
   refreshActed(state, 1 - p);
+  state.moves = (state.moves || 0) + 1;   // total so far; the log is capped, so the app uses this to spot new moves
   state.log.push({ p, from, to, move, dmg, adv, ko: target.hp === 0 });
   if (state.log.length > 30) state.log.shift();
 
