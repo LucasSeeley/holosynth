@@ -1,6 +1,6 @@
 import SwiftUI
 
-// A HoloSynth card front, drawn like the design sheet: 5:7, class symbol + name + HP, art, two moves.
+// A HoloSynth card front, drawn like the design sheet: 5:7, class symbol + name + HP, art, two moves, a joke.
 // Everything scales with the card's width so it reads the same at any size.
 struct CardView: View {
     let card: Card
@@ -42,6 +42,11 @@ struct CardView: View {
                             ready: cooldown == 0)
                 }
                 Spacer(minLength: 0)
+                Text(card.quip)
+                    .font(.system(size: w * 0.036).italic())
+                    .foregroundColor(Theme.fg.opacity(0.62))
+                    .multilineTextAlignment(.center).lineLimit(3).minimumScaleFactor(0.7)
+                    .frame(maxWidth: .infinity)
             }
             .foregroundColor(Theme.fg)
             .padding(w * 0.05)

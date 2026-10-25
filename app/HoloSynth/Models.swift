@@ -16,6 +16,7 @@ struct Card: Decodable, Identifiable, Hashable {
     let special: Special
     let look: String
     let color: String   // character's neon colour, "#rrggbb"; tints the card face
+    let quip: String    // one-line joke printed small at the bottom of the card
 }
 
 enum CardBook {

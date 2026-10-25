@@ -16,7 +16,8 @@
    "cd": 2
   },
   "look": "Brawler android with neon-blue electric gauntlets and a cracked chrome faceplate.",
-  "color": "#3ff0ff"
+  "color": "#3ff0ff",
+  "quip": "Cracked his faceplate punching a vending machine. It still owes him a soda."
  },
  {
   "id": "fang",
@@ -35,7 +36,8 @@
    "cd": 2
   },
   "look": "Chrome cyber-wolf with glowing pink fangs.",
-  "color": "#ff3fa4"
+  "color": "#ff3fa4",
+  "quip": "Good boy. Bites anyway."
  },
  {
   "id": "goliath",
@@ -54,7 +56,8 @@
    "cd": 3
   },
   "look": "Squat walker mech with orange vents and a heavy arm cannon.",
-  "color": "#ff8a3d"
+  "color": "#ff8a3d",
+  "quip": "Short, loud, and absolutely not compensating for anything."
  },
  {
   "id": "razor",
@@ -73,7 +76,8 @@
    "cd": 3
   },
   "look": "Samurai android with a violet hardlight katana and a split visor.",
-  "color": "#8f7bff"
+  "color": "#8f7bff",
+  "quip": "Split his own visor showing off. Calls it a style choice."
  },
  {
   "id": "stinger",
@@ -92,7 +96,8 @@
    "cd": 1
   },
   "look": "Chrome cyber-scorpion with a dripping green neon tail.",
-  "color": "#3dff8a"
+  "color": "#3dff8a",
+  "quip": "The green drip is venom. Probably. Don't lick it."
  },
  {
   "id": "sentry",
@@ -111,7 +116,8 @@
    "cd": 2
   },
   "look": "Tripod turret drone with a red scanning eye and twin barrels.",
-  "color": "#ff4d5e"
+  "color": "#ff4d5e",
+  "quip": "Three legs, two barrels, zero chill."
  },
  {
   "id": "hex",
@@ -130,7 +136,8 @@
    "cd": 3
   },
   "look": "Slim hacker android surrounded by floating holo keyboards.",
-  "color": "#ff3fa4"
+  "color": "#ff3fa4",
+  "quip": "Types 400 words a minute. All of them are insults."
  },
  {
   "id": "mantis",
@@ -149,7 +156,8 @@
    "cd": 2
   },
   "look": "Chrome praying mantis with teal blade arms.",
-  "color": "#2fe3c4"
+  "color": "#2fe3c4",
+  "quip": "Prays before every fight. Mostly that you hold still."
  },
  {
   "id": "rook",
@@ -168,7 +176,8 @@
    "cd": 3
   },
   "look": "Boxy walker tank with a hazard-striped cannon.",
-  "color": "#ffd23d"
+  "color": "#ffd23d",
+  "quip": "Moves in straight lines only. Refuses to explain why."
  },
  {
   "id": "wirelash",
@@ -187,7 +196,8 @@
    "cd": 1
   },
   "look": "Scrapyard android whose arm unspools into a sparking cable whip.",
-  "color": "#3ff0ff"
+  "color": "#3ff0ff",
+  "quip": "Made entirely of extension cords and bad decisions."
  },
  {
   "id": "raptor",
@@ -206,7 +216,8 @@
    "cd": 3
   },
   "look": "Cyber-hawk with glowing amber wings.",
-  "color": "#ffb03d"
+  "color": "#ffb03d",
+  "quip": "Screams like an eagle. Is legally a hawk."
  },
  {
   "id": "crusher",
@@ -225,7 +236,8 @@
    "cd": 2
   },
   "look": "Heavy cargo-loader mech with giant hydraulic fists and blue warning lights.",
-  "color": "#4a7dff"
+  "color": "#4a7dff",
+  "quip": "Was hired to lift crates. Now lifts people. Same pay."
  },
  {
   "id": "nyx",
@@ -244,7 +256,8 @@
    "cd": 2
   },
   "look": "Stealth android whose plating bends light.",
-  "color": "#8f7bff"
+  "color": "#8f7bff",
+  "quip": "You won't see him coming. He won't see you leaving either."
  },
  {
   "id": "mongoose",
@@ -263,7 +276,8 @@
    "cd": 2
   },
   "look": "Lightning-fast cyber-mongoose with amber reflex sensors.",
-  "color": "#ffb03d"
+  "color": "#ffb03d",
+  "quip": "Has never lost a staring contest. Or blinked."
  },
  {
   "id": "harvester",
@@ -282,7 +296,8 @@
    "cd": 2
   },
   "look": "Farm combine mech with glowing lime thresher blades.",
-  "color": "#b6ff3d"
+  "color": "#b6ff3d",
+  "quip": "Retired from farming. The crops know why."
  },
  {
   "id": "blaze",
@@ -301,7 +316,8 @@
    "cd": 2
   },
   "look": "Brawler android with plasma-flame fists and vented shoulders.",
-  "color": "#ff8a3d"
+  "color": "#ff8a3d",
+  "quip": "Has never once held a cold drink."
  },
  {
   "id": "narwhal",
@@ -320,7 +336,8 @@
    "cd": 3
   },
   "look": "Hovering cyber-narwhal with a frosted crystal tusk.",
-  "color": "#9fe8ff"
+  "color": "#9fe8ff",
+  "quip": "The unicorn of the sea, now with a frost setting."
  },
  {
   "id": "siphon",
@@ -339,7 +356,8 @@
    "cd": 1
   },
   "look": "Spindly mech that plugs cables into its targets.",
-  "color": "#ff3df0"
+  "color": "#ff3df0",
+  "quip": "Your battery's on 1%? That was him."
  },
  {
   "id": "ronin",
@@ -358,7 +376,8 @@
    "cd": 3
   },
   "look": "Battered swordsman android with a red neon tanto.",
-  "color": "#ff4d5e"
+  "color": "#ff4d5e",
+  "quip": "No master, no shop, no warranty."
  },
  {
   "id": "viper",
@@ -377,7 +396,8 @@
    "cd": 2
   },
   "look": "Cyber-cobra with a hood made of light panels.",
-  "color": "#3dff8a"
+  "color": "#3dff8a",
+  "quip": "Hood lights up like a billboard. Subtle, it is not."
  },
  {
   "id": "juggernaut",
@@ -396,7 +416,8 @@
    "cd": 3
   },
   "look": "Hulking siege mech that never stops walking.",
-  "color": "#ff4d5e"
+  "color": "#ff4d5e",
+  "quip": "Doesn't know how to stop. Literally. The brakes are missing."
  },
  {
   "id": "glitch",
@@ -415,7 +436,8 @@
    "cd": 3
   },
   "look": "Flickering android that skips frames when it moves.",
-  "color": "#ff3fa4"
+  "color": "#ff3fa4",
+  "quip": "Lags in real life. Somehow still wins."
  },
  {
   "id": "rhino",
@@ -434,7 +456,8 @@
    "cd": 3
   },
   "look": "Armored cyber-rhino with a chrome drill horn.",
-  "color": "#ffd23d"
+  "color": "#ffd23d",
+  "quip": "Horn upgraded to a drill. Doorbells are a thing of the past."
  },
  {
   "id": "scout",
@@ -453,7 +476,8 @@
    "cd": 2
   },
   "look": "Recon drone with a sweeping blue laser.",
-  "color": "#3ff0ff"
+  "color": "#3ff0ff",
+  "quip": "Points a laser at you. Then his friends show up."
  },
  {
   "id": "cipher",
@@ -472,7 +496,8 @@
    "cd": 3
   },
   "look": "Codebreaker android with a spinning cipher-wheel face.",
-  "color": "#3ff0ff"
+  "color": "#3ff0ff",
+  "quip": "Spins its own face to think. It's a lot."
  },
  {
   "id": "arachne",
@@ -491,7 +516,8 @@
    "cd": 1
   },
   "look": "Mechanical spider spinning glowing violet webs.",
-  "color": "#8f7bff"
+  "color": "#8f7bff",
+  "quip": "Eight legs, glowing webs, ruins every dinner party."
  },
  {
   "id": "gyro",
@@ -510,7 +536,8 @@
    "cd": 2
   },
   "look": "Gyrocopter mech with spinning saw rotors.",
-  "color": "#2fe3c4"
+  "color": "#2fe3c4",
+  "quip": "Flies with saws. The neighbors have filed complaints."
  },
  {
   "id": "bounty",
@@ -529,7 +556,8 @@
    "cd": 2
   },
   "look": "Hunter android in a long coat with a neon revolver arm.",
-  "color": "#ffb03d"
+  "color": "#ffb03d",
+  "quip": "Wanted: Dead or Alive. Accepts both, prefers whichever's quicker."
  },
  {
   "id": "shark",
@@ -548,7 +576,8 @@
    "cd": 3
   },
   "look": "Cyber-shark that swims through the air on hover fins.",
-  "color": "#4a7dff"
+  "color": "#4a7dff",
+  "quip": "Hates water. Loves you."
  },
  {
   "id": "forge",
@@ -567,7 +596,8 @@
    "cd": 2
   },
   "look": "Foundry mech with a glowing molten core.",
-  "color": "#ff8a3d"
+  "color": "#ff8a3d",
+  "quip": "Runs hot. Bring oven mitts to the handshake."
  },
  {
   "id": "spike",
@@ -586,7 +616,8 @@
    "cd": 1
   },
   "look": "Brawler android covered in chrome spikes.",
-  "color": "#b6ff3d"
+  "color": "#b6ff3d",
+  "quip": "Cannot be hugged. Has tried."
  },
  {
   "id": "silverback",
@@ -605,7 +636,8 @@
    "cd": 3
   },
   "look": "Chrome gorilla with glowing blue knuckles.",
-  "color": "#9fe8ff"
+  "color": "#9fe8ff",
+  "quip": "Chest beat registers on seismographs."
  },
  {
   "id": "burrower",
@@ -624,7 +656,8 @@
    "cd": 3
   },
   "look": "Mining mech with a massive spiral drill.",
-  "color": "#ffd23d"
+  "color": "#ffd23d",
+  "quip": "Arrives from below. Leaves a sinkhole and a bad review."
  },
  {
   "id": "echo",
@@ -643,7 +676,8 @@
    "cd": 1
   },
   "look": "Android with speaker cones built into its shoulders.",
-  "color": "#2fe3c4"
+  "color": "#2fe3c4",
+  "quip": "Echo. Echo. Echo. She won't stop."
  },
  {
   "id": "panther",
@@ -662,7 +696,8 @@
    "cd": 2
   },
   "look": "Sleek black cyber-panther with violet eyes.",
-  "color": "#8f7bff"
+  "color": "#8f7bff",
+  "quip": "A cat in every way. Knocks your stuff off tables at 90 mph."
  },
  {
   "id": "mortar",
@@ -681,7 +716,8 @@
    "cd": 3
   },
   "look": "Artillery walker with stubby launch tubes.",
-  "color": "#ffb03d"
+  "color": "#ffb03d",
+  "quip": "Can't aim. Doesn't need to."
  },
  {
   "id": "rivet",
@@ -700,7 +736,8 @@
    "cd": 2
   },
   "look": "Dockworker android with a hydraulic wrench arm.",
-  "color": "#ffd23d"
+  "color": "#ffd23d",
+  "quip": "Clocked in for overtime. Never clocked out."
  },
  {
   "id": "croc",
@@ -719,7 +756,8 @@
    "cd": 3
   },
   "look": "Swamp cyber-croc with a lime neon jaw.",
-  "color": "#b6ff3d"
+  "color": "#b6ff3d",
+  "quip": "Smiles a lot. That's the problem."
  },
  {
   "id": "bastion",
@@ -738,7 +776,8 @@
    "cd": 3
   },
   "look": "Fortress mech with fold-out armor walls.",
-  "color": "#4a7dff"
+  "color": "#4a7dff",
+  "quip": "A building with legs and anger issues."
  },
  {
   "id": "vandal",
@@ -757,7 +796,8 @@
    "cd": 2
   },
   "look": "Android with spray-nozzle hands that shoot blinding neon paint.",
-  "color": "#ff3df0"
+  "color": "#ff3df0",
+  "quip": "Every wall is a canvas. Every face too."
  },
  {
   "id": "hornet",
@@ -776,7 +816,8 @@
    "cd": 2
   },
   "look": "Fist-sized robo-hornet with a plasma stinger.",
-  "color": "#ffd23d"
+  "color": "#ffd23d",
+  "quip": "Fist-sized. Somehow that's worse."
  },
  {
   "id": "magnus",
@@ -795,7 +836,8 @@
    "cd": 2
   },
   "look": "Junkyard crane mech with a giant magnet.",
-  "color": "#ff4d5e"
+  "color": "#ff4d5e",
+  "quip": "Your belt buckle is now his belt buckle."
  },
  {
   "id": "phantom",
@@ -814,7 +856,8 @@
    "cd": 3
   },
   "look": "Hologram android that is barely there.",
-  "color": "#9fe8ff"
+  "color": "#9fe8ff",
+  "quip": "Barely there. Still shows up to fights, technically."
  },
  {
   "id": "vesper",
@@ -833,7 +876,8 @@
    "cd": 2
   },
   "look": "Cyber-bat that maps the arena with pink sonar.",
-  "color": "#ff3df0"
+  "color": "#ff3df0",
+  "quip": "Sees with sound. Screams with purpose."
  },
  {
   "id": "buzzsaw",
@@ -852,7 +896,8 @@
    "cd": 2
   },
   "look": "Scrap mech with a spinning buzzsaw arm.",
-  "color": "#b6ff3d"
+  "color": "#b6ff3d",
+  "quip": "Built from scrap. Turns things back into scrap."
  },
  {
   "id": "brick",
@@ -871,7 +916,8 @@
    "cd": 3
   },
   "look": "Huge bouncer android with slab-like chrome forearms.",
-  "color": "#ff8a3d"
+  "color": "#ff8a3d",
+  "quip": "Bouncer. Your name is not on the list."
  },
  {
   "id": "boar",
@@ -890,7 +936,8 @@
    "cd": 2
   },
   "look": "Chrome boar with glowing red tusks.",
-  "color": "#ff4d5e"
+  "color": "#ff4d5e",
+  "quip": "Doesn't do turns. Only forward."
  },
  {
   "id": "skyburst",
@@ -909,7 +956,8 @@
    "cd": 3
   },
   "look": "Jetpack mech that rains micro-missiles.",
-  "color": "#ff3fa4"
+  "color": "#ff3fa4",
+  "quip": "Flies on a jetpack held together with tape and hope."
  },
  {
   "id": "shiv",
@@ -928,7 +976,8 @@
    "cd": 2
   },
   "look": "Small scavenger android with twin hardlight knives.",
-  "color": "#3dff8a"
+  "color": "#3dff8a",
+  "quip": "Small. Stabby. Sincerely sorry."
  },
  {
   "id": "kraken",
@@ -947,7 +996,8 @@
    "cd": 1
   },
   "look": "Neon octopus that sprays glowing ink.",
-  "color": "#2fe3c4"
+  "color": "#2fe3c4",
+  "quip": "Eight arms, all of them slapping."
  },
  {
   "id": "welder",
@@ -966,7 +1016,8 @@
    "cd": 1
   },
   "look": "Repair bot with a white-hot welding arm.",
-  "color": "#3ff0ff"
+  "color": "#3ff0ff",
+  "quip": "Fixes friends. Melts enemies. Same tool."
  },
  {
   "id": "neon",
@@ -985,7 +1036,8 @@
    "cd": 1
   },
   "look": "Android whose glowing circuit lines pulse when it fights.",
-  "color": "#ff3fa4"
+  "color": "#ff3fa4",
+  "quip": "Lights up when angry. Visible from orbit most days."
  },
  {
   "id": "hyena",
@@ -1004,7 +1056,8 @@
    "cd": 2
   },
   "look": "Laughing cyber-hyena with a cracked amber visor.",
-  "color": "#ffb03d"
+  "color": "#ffb03d",
+  "quip": "Laughs at every joke. Especially the ones you didn't make."
  },
  {
   "id": "hive",
@@ -1023,7 +1076,8 @@
    "cd": 2
   },
   "look": "Cloud of tiny worker drones moving as one.",
-  "color": "#ffd23d"
+  "color": "#ffd23d",
+  "quip": "A thousand drones and one shared opinion."
  },
  {
   "id": "static",
@@ -1042,7 +1096,8 @@
    "cd": 3
   },
   "look": "Android that stores lightning in coils down its back.",
-  "color": "#3ff0ff"
+  "color": "#3ff0ff",
+  "quip": "Pet him once and your hair stands up for a week."
  },
  {
   "id": "grizzly",
@@ -1061,7 +1116,8 @@
    "cd": 3
   },
   "look": "Massive cyber-bear with exhaust pipes on its back.",
-  "color": "#ff8a3d"
+  "color": "#ff8a3d",
+  "quip": "Bear hugs are not a gesture. They're a move."
  },
  {
   "id": "hoist",
@@ -1080,7 +1136,8 @@
    "cd": 3
   },
   "look": "Construction crane mech with a swinging hook.",
-  "color": "#ffb03d"
+  "color": "#ffb03d",
+  "quip": "Picks you up. Drops you off. Not at your stop."
  },
  {
   "id": "ember",
@@ -1099,7 +1156,8 @@
    "cd": 2
   },
   "look": "Dancer android with molten-glow legs.",
-  "color": "#ff4d5e"
+  "color": "#ff4d5e",
+  "quip": "Dances like the floor is lava, because it is now."
  },
  {
   "id": "komodo",
@@ -1118,7 +1176,8 @@
    "cd": 1
   },
   "look": "Cyber-lizard dripping green static.",
-  "color": "#b6ff3d"
+  "color": "#b6ff3d",
+  "quip": "One lick and your firmware is never the same."
  },
  {
   "id": "watchtower",
@@ -1137,7 +1196,8 @@
    "cd": 2
   },
   "look": "Tall tower mech with a blinding spotlight head.",
-  "color": "#9fe8ff"
+  "color": "#9fe8ff",
+  "quip": "Shines a light in your face and asks where you were Tuesday."
  },
  {
   "id": "jackal",
@@ -1156,7 +1216,8 @@
    "cd": 2
   },
   "look": "Gang-leader android with a jackal-shaped chrome head.",
-  "color": "#ffb03d"
+  "color": "#ffb03d",
+  "quip": "Runs a gang of three. Two are pipes."
  },
  {
   "id": "moth",
@@ -1175,7 +1236,8 @@
    "cd": 2
   },
   "look": "Giant cyber-moth drawn to neon signs.",
-  "color": "#9fe8ff"
+  "color": "#9fe8ff",
+  "quip": "Will abandon any fight for a nice neon sign."
  },
  {
   "id": "dozer",
@@ -1194,7 +1256,8 @@
    "cd": 3
   },
   "look": "Bulldozer mech with a scarred chrome blade.",
-  "color": "#ff8a3d"
+  "color": "#ff8a3d",
+  "quip": "Ask him to move. He'll move you."
  },
  {
   "id": "monk",
@@ -1213,7 +1276,8 @@
    "cd": 1
   },
   "look": "Monk android wrapped in a glowing data-bead necklace.",
-  "color": "#2fe3c4"
+  "color": "#2fe3c4",
+  "quip": "Achieved inner peace. Uses it to punch harder."
  },
  {
   "id": "vixen",
@@ -1232,7 +1296,8 @@
    "cd": 2
   },
   "look": "Two-tailed cyber-fox with pink fire tips.",
-  "color": "#ff3fa4"
+  "color": "#ff3fa4",
+  "quip": "Two tails, both on fire, zero regrets."
  },
  {
   "id": "overclock",
@@ -1251,7 +1316,8 @@
    "cd": 3
   },
   "look": "Overclocked mech venting red steam.",
-  "color": "#ff4d5e"
+  "color": "#ff4d5e",
+  "quip": "Runs at 300%. Warranty voided on day one."
  },
  {
   "id": "riot",
@@ -1270,7 +1336,8 @@
    "cd": 2
   },
   "look": "Riot-control android with a hardlight shield.",
-  "color": "#4a7dff"
+  "color": "#4a7dff",
+  "quip": "Brought a shield to a party. Wasn't invited back."
  },
  {
   "id": "scarab",
@@ -1289,7 +1356,8 @@
    "cd": 2
   },
   "look": "Armored beetle with an oil-slick teal shell.",
-  "color": "#2fe3c4"
+  "color": "#2fe3c4",
+  "quip": "Shell looks like an oil spill. Personality too."
  },
  {
   "id": "lancer",
@@ -1308,7 +1376,8 @@
    "cd": 2
   },
   "look": "Jousting mech with a violet plasma lance.",
-  "color": "#8f7bff"
+  "color": "#8f7bff",
+  "quip": "Jousting is dead. Nobody told him."
  },
  {
   "id": "lotus",
@@ -1327,7 +1396,8 @@
    "cd": 3
   },
   "look": "Martial-arts android whose kicks leave pink light petals.",
-  "color": "#ff3df0"
+  "color": "#ff3df0",
+  "quip": "Kicks so pretty you'll forget it hurt. It still hurt."
  },
  {
   "id": "crow",
@@ -1346,7 +1416,8 @@
    "cd": 3
   },
   "look": "Cyber-crow with a cracked camera eye.",
-  "color": "#8f7bff"
+  "color": "#8f7bff",
+  "quip": "Steals shiny things. You are slightly shiny."
  },
  {
   "id": "railer",
@@ -1365,7 +1436,8 @@
    "cd": 3
   },
   "look": "Sniper mech with a long rail cannon.",
-  "color": "#9fe8ff"
+  "color": "#9fe8ff",
+  "quip": "Shoots you from three districts away, then texts \"gg\"."
  },
  {
   "id": "gunner",
@@ -1384,7 +1456,8 @@
    "cd": 3
   },
   "look": "Mercenary android with a smoking neon rifle arm.",
-  "color": "#ff4d5e"
+  "color": "#ff4d5e",
+  "quip": "Hasn't cooled his rifle since the last update."
  },
  {
   "id": "hare",
@@ -1403,7 +1476,8 @@
    "cd": 1
   },
   "look": "Speedy cyber-hare with spring-loaded legs.",
-  "color": "#3ff0ff"
+  "color": "#3ff0ff",
+  "quip": "Hops into combat. Burrows out of responsibility."
  },
  {
   "id": "shredder",
@@ -1422,7 +1496,8 @@
    "cd": 2
   },
   "look": "Recycling mech with shredder jaws.",
-  "color": "#3dff8a"
+  "color": "#3dff8a",
+  "quip": "Reduce. Reuse. Ruin."
  },
  {
   "id": "drifter",
@@ -1441,7 +1516,8 @@
    "cd": 1
   },
   "look": "Racer android with wheel hubs in its legs and a chain fist.",
-  "color": "#ff8a3d"
+  "color": "#ff8a3d",
+  "quip": "Never turns. Just slides sideways and hopes."
  },
  {
   "id": "eel",
@@ -1460,7 +1536,8 @@
    "cd": 3
   },
   "look": "Electric eel crackling with cyan current.",
-  "color": "#3ff0ff"
+  "color": "#3ff0ff",
+  "quip": "Swims through power lines for fun."
  },
  {
   "id": "pylon",
@@ -1479,7 +1556,8 @@
    "cd": 1
   },
   "look": "Walking power pylon crackling with arcs.",
-  "color": "#3ff0ff"
+  "color": "#3ff0ff",
+  "quip": "Do not touch. Seriously. Read the sign."
  },
  {
   "id": "siren",
@@ -1498,7 +1576,8 @@
    "cd": 2
   },
   "look": "Android with a resonator throat that cracks glass.",
-  "color": "#9fe8ff"
+  "color": "#9fe8ff",
+  "quip": "Hit one high note. Lost three windows and a friend."
  },
  {
   "id": "ram",
@@ -1517,7 +1596,8 @@
    "cd": 2
   },
   "look": "Chrome ram with spiraling neon horns.",
-  "color": "#ff8a3d"
+  "color": "#ff8a3d",
+  "quip": "Solves every problem with his forehead."
  },
  {
   "id": "quake",
@@ -1536,7 +1616,8 @@
    "cd": 3
   },
   "look": "Squat mech with piston-driven fists.",
-  "color": "#ffb03d"
+  "color": "#ffb03d",
+  "quip": "Every step is a 4.2 on the Richter scale."
  },
  {
   "id": "warden",
@@ -1555,7 +1636,8 @@
    "cd": 2
   },
   "look": "Guard android with magnetic shackle hands.",
-  "color": "#4a7dff"
+  "color": "#4a7dff",
+  "quip": "You have the right to remain shocked."
  },
  {
   "id": "piranha",
@@ -1574,7 +1656,8 @@
    "cd": 1
   },
   "look": "Swarm of flying robo-piranhas.",
-  "color": "#ff4d5e"
+  "color": "#ff4d5e",
+  "quip": "Individually adorable. Collectively a blender."
  },
  {
   "id": "cyclone",
@@ -1593,7 +1676,8 @@
    "cd": 2
   },
   "look": "Turbine mech that whips up neon wind.",
-  "color": "#2fe3c4"
+  "color": "#2fe3c4",
+  "quip": "Bad hair day guaranteed."
  },
  {
   "id": "dynamo",
@@ -1612,7 +1696,8 @@
    "cd": 2
   },
   "look": "Power-plant android with spinning turbine gauntlets.",
-  "color": "#ffd23d"
+  "color": "#ffd23d",
+  "quip": "Powers a whole block. Charges you rent."
  },
  {
   "id": "mammoth",
@@ -1631,7 +1716,8 @@
    "cd": 3
   },
   "look": "Frozen cyber-mammoth with glowing ice tusks.",
-  "color": "#9fe8ff"
+  "color": "#9fe8ff",
+  "quip": "Thawed out last Tuesday. Still grumpy about it."
  },
  {
   "id": "chopper",
@@ -1650,7 +1736,8 @@
    "cd": 2
   },
   "look": "Attack-helicopter mech with twin rotors.",
-  "color": "#ff4d5e"
+  "color": "#ff4d5e",
+  "quip": "Two rotors means twice the loud."
  },
  {
   "id": "rogue",
@@ -1669,7 +1756,8 @@
    "cd": 3
   },
   "look": "Thief android that fights from inside a cloud of neon smoke.",
-  "color": "#8f7bff"
+  "color": "#8f7bff",
+  "quip": "Fights inside a smoke cloud. Nobody's sure he's actually there."
  },
  {
   "id": "sabre",
@@ -1688,7 +1776,8 @@
    "cd": 2
   },
   "look": "Sabertooth cyber-cat with amber plasma fangs.",
-  "color": "#ffb03d"
+  "color": "#ffb03d",
+  "quip": "Teeth sized for a bigger cat. Doesn't care."
  },
  {
   "id": "crawler",
@@ -1707,7 +1796,8 @@
    "cd": 2
   },
   "look": "Six-legged crawler mech built for climbing walls.",
-  "color": "#8f7bff"
+  "color": "#8f7bff",
+  "quip": "Climbs walls, ceilings and your nerves."
  },
  {
   "id": "vanta",
@@ -1726,7 +1816,8 @@
    "cd": 3
   },
   "look": "Martial-arts android in light-eating black plating with a blue edge.",
-  "color": "#8f7bff"
+  "color": "#8f7bff",
+  "quip": "Absorbs light, sound and criticism."
  },
  {
   "id": "basilisk",
@@ -1745,7 +1836,8 @@
    "cd": 2
   },
   "look": "Chrome serpent whose stare freezes circuits solid.",
-  "color": "#3ff0ff"
+  "color": "#3ff0ff",
+  "quip": "Don't make eye contact. Seriously, look away."
  },
  {
   "id": "warlord",
@@ -1764,7 +1856,8 @@
    "cd": 3
   },
   "look": "Command mech that calls down satellite strikes.",
-  "color": "#ff4d5e"
+  "color": "#ff4d5e",
+  "quip": "Doesn't fight. Calls in a favor from space."
  },
  {
   "id": "shogun",
@@ -1783,7 +1876,8 @@
    "cd": 2
   },
   "look": "Warlord android with a twin-bladed hardlight naginata.",
-  "color": "#ff4d5e"
+  "color": "#ff4d5e",
+  "quip": "Two blades on one stick, because one blade is for amateurs."
  },
  {
   "id": "chimera",
@@ -1802,7 +1896,8 @@
    "cd": 2
   },
   "look": "Three-headed cyber-beast, each head a different neon color.",
-  "color": "#ff3df0"
+  "color": "#ff3df0",
+  "quip": "Three heads, one stomach, constant arguments."
  },
  {
   "id": "colossus",
@@ -1821,7 +1916,8 @@
    "cd": 3
   },
   "look": "Towering mech that blocks out the city lights.",
-  "color": "#4a7dff"
+  "color": "#4a7dff",
+  "quip": "Blocks out the sun. Doesn't apologize."
  },
  {
   "id": "specter",
@@ -1840,7 +1936,8 @@
    "cd": 2
   },
   "look": "Spy android that phases through walls in a shimmer of static.",
-  "color": "#9fe8ff"
+  "color": "#9fe8ff",
+  "quip": "Phases through walls. Still uses doors to be polite."
  },
  {
   "id": "wyvern",
@@ -1859,7 +1956,8 @@
    "cd": 3
   },
   "look": "Small cyber-dragon with green plasma in its throat.",
-  "color": "#3dff8a"
+  "color": "#3dff8a",
+  "quip": "Small dragon, huge attitude, terrible breath."
  },
  {
   "id": "valkyrie",
@@ -1878,7 +1976,8 @@
    "cd": 2
   },
   "look": "Winged combat mech that dives from the sky.",
-  "color": "#ff3fa4"
+  "color": "#ff3fa4",
+  "quip": "Dives from the clouds. Lands on you specifically."
  },
  {
   "id": "overdrive",
@@ -1897,7 +1996,8 @@
    "cd": 3
   },
   "look": "Racer android with turbo-boosted legs.",
-  "color": "#ff8a3d"
+  "color": "#ff8a3d",
+  "quip": "Zero to sixty before you finish blinking."
  },
  {
   "id": "manticore",
@@ -1916,7 +2016,8 @@
    "cd": 2
   },
   "look": "Lion-bodied cyber-beast with a scorpion tail.",
-  "color": "#ffb03d"
+  "color": "#ffb03d",
+  "quip": "A lion that said yes to every upgrade."
  },
  {
   "id": "reactor",
@@ -1935,7 +2036,8 @@
    "cd": 3
   },
   "look": "Walking power core leaking lime radiation.",
-  "color": "#b6ff3d"
+  "color": "#b6ff3d",
+  "quip": "Glows lime. Should not be hugged."
  },
  {
   "id": "prism",
@@ -1954,7 +2056,8 @@
    "cd": 3
   },
   "look": "Crystal-bodied android that splits light into rainbow blades.",
-  "color": "#3ff0ff"
+  "color": "#3ff0ff",
+  "quip": "Turns a flashlight into a rainbow of pain."
  },
  {
   "id": "thunderhide",
@@ -1973,7 +2076,8 @@
    "cd": 2
   },
   "look": "Armored cyber-bison with lightning arcing between its horns.",
-  "color": "#4a7dff"
+  "color": "#4a7dff",
+  "quip": "Charges on his own lightning. Never pays the bill."
  },
  {
   "id": "hellfire",
@@ -1992,7 +2096,8 @@
    "cd": 3
   },
   "look": "Flamethrower tank mech with glowing fuel tanks.",
-  "color": "#ff8a3d"
+  "color": "#ff8a3d",
+  "quip": "Sees a problem, sets it on fire."
  },
  {
   "id": "paragon",
@@ -2011,7 +2116,8 @@
    "cd": 3
   },
   "look": "Golden android with a sun reactor in its chest.",
-  "color": "#ffd23d"
+  "color": "#ffd23d",
+  "quip": "Has a sun in his chest. Never needs a nightlight."
  },
  {
   "id": "leviathan",
@@ -2030,7 +2136,8 @@
    "cd": 3
   },
   "look": "Colossal cyber-sea-serpent from the flooded districts.",
-  "color": "#2fe3c4"
+  "color": "#2fe3c4",
+  "quip": "Floods your district. Asks why you're wet."
  },
  {
   "id": "dreadnought",
@@ -2049,7 +2156,8 @@
    "cd": 3
   },
   "look": "Flying battleship mech bristling with cannons.",
-  "color": "#ff4d5e"
+  "color": "#ff4d5e",
+  "quip": "A battleship that learned to fly. Nobody stopped it."
  },
  {
   "id": "nightblade",
@@ -2068,7 +2176,8 @@
    "cd": 3
   },
   "look": "Assassin android whose blade swallows light.",
-  "color": "#8f7bff"
+  "color": "#8f7bff",
+  "quip": "His sword eats light. Hates birthday candles."
  },
  {
   "id": "phoenix",
@@ -2087,7 +2196,8 @@
    "cd": 2
   },
   "look": "Firebird made of burning neon.",
-  "color": "#ff8a3d"
+  "color": "#ff8a3d",
+  "quip": "Dies, comes back, does it again. Show-off."
  },
  {
   "id": "omega",
@@ -2106,7 +2216,8 @@
    "cd": 3
   },
   "look": "AI war machine with one all-seeing lens.",
-  "color": "#3ff0ff"
+  "color": "#3ff0ff",
+  "quip": "One eye, all-seeing. Saw what you did."
  },
  {
   "id": "sovereign",
@@ -2125,7 +2236,8 @@
    "cd": 3
   },
   "look": "Ruler android of the neon city, crowned in hardlight.",
-  "color": "#ffd23d"
+  "color": "#ffd23d",
+  "quip": "Rules the neon city. The crown is mostly for show."
  },
  {
   "id": "apex",
@@ -2144,7 +2256,8 @@
    "cd": 3
   },
   "look": "Ancient alpha predator rebuilt in chrome.",
-  "color": "#ff4d5e"
+  "color": "#ff4d5e",
+  "quip": "At the top of the food chain. Ate the rest of the chain."
  },
  {
   "id": "genesis",
@@ -2163,6 +2276,7 @@
    "cd": 3
   },
   "look": "Self-building mech that grows new parts mid-fight.",
-  "color": "#ff3df0"
+  "color": "#ff3df0",
+  "quip": "Builds itself mid-fight. Never finishes. Always upgrading."
  }
 ]
