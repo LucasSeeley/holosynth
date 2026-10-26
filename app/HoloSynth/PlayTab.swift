@@ -170,13 +170,14 @@ struct PlayTab: View {
     private var packTile: some View {
         Button { tab = 1 } label: {
             ZStack(alignment: .bottomLeading) {
-                if let img = Art.image("pack") {
-                    Image(uiImage: img).resizable().scaledToFit().frame(height: 120)
-                        .rotationEffect(.degrees(10))
-                        .shadow(color: Theme.backRed.opacity(0.8), radius: 8, y: 6)
-                        .offset(x: 6, y: -8)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                // all three packs fanned out: Magic and Omni behind, Cyber in front
+                ZStack {
+                    fanned("magic", angle: -16, x: -30, height: 88)
+                    fanned("omni", angle: 16, x: 28, height: 88)
+                    fanned("cyber", angle: 0, x: 0, height: 96)
                 }
+                .frame(width: 120, height: 120)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Open a pack").font(.chakra(16)).foregroundColor(Theme.fg)
                     Text("1,000 gold").font(.barlow(13)).foregroundColor(Theme.brass)
@@ -189,6 +190,14 @@ struct PlayTab: View {
             .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.brass.opacity(0.28), lineWidth: 1))
         }
         .buttonStyle(.plain)
+    }
+
+    @ViewBuilder private func fanned(_ type: String, angle: Double, x: CGFloat, height: CGFloat) -> some View {
+        if let img = Art.pack(type) {
+            Image(uiImage: img).resizable().scaledToFit().frame(height: height)
+                .shadow(color: .black.opacity(0.6), radius: 6, y: 5)
+                .rotationEffect(.degrees(angle)).offset(x: x, y: -6)
+        }
     }
 
     private func teamPanel(_ p: Profile) -> some View {
