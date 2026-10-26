@@ -238,12 +238,30 @@ struct TradeOfferView: View {
             TradeHeader(title: trade.mine ? "Your offer to \(trade.name)" : "\(trade.name) wants to trade", avatar: trade.avatar, onClose: onClose)
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 12) {
+                    if trade.mine {   // pending and accepted share one layout; only the tag and the button change
+                        let ready = trade.status == "accepted"
+                        Text(ready ? "Accepted" : "Pending · waiting for \(trade.name)")
+                            .font(.chakra(12, semibold: true)).tracking(2).textCase(.uppercase).lineLimit(1).minimumScaleFactor(0.7)
+                            .foregroundColor(ready ? Theme.online : Theme.muted)
+                            .padding(.horizontal, 14).frame(height: 30)
+                            .background(Theme.ink.opacity(0.6), in: RoundedRectangle(cornerRadius: 10))
+                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(ready ? Theme.online : Theme.muted.opacity(0.6), lineWidth: 1))
+                    }
                     show("You get", trade.get, gold: trade.getGold)
                     show("You give", trade.give, gold: trade.giveGold)
                     if let error { Text(error).font(.barlow(14, semibold: true)).foregroundColor(Theme.pink) }
                     if trade.mine {
-                        Text("Waiting for \(trade.name) to answer.").font(.barlow(14)).foregroundColor(Theme.muted)
-                        Button("Cancel offer") { answer("cancel") }.buttonStyle(OutlineButton()).disabled(busy)
+                        if trade.status == "accepted" {
+                            Button(busy ? "Claiming…" : "Claim") { claim() }.buttonStyle(GoldButton()).disabled(busy)
+                        } else {
+                            Button { answer("cancel") } label: {
+                                Text("Cancel offer").font(.chakra(18)).tracking(2.2).textCase(.uppercase).foregroundColor(Theme.muted)
+                                    .frame(maxWidth: .infinity).frame(height: 56)
+                                    .background(Theme.ink.opacity(0.6), in: RoundedRectangle(cornerRadius: 14))
+                                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.muted.opacity(0.5), lineWidth: 1))
+                            }
+                            .disabled(busy)
+                        }
                     } else {
                         HStack(spacing: 10) {
                             Button { answer("decline") } label: { Text("Decline").frame(maxWidth: .infinity) }
@@ -259,6 +277,7 @@ struct TradeOfferView: View {
         }
     }
 
+    // Fixed-height title row and always 3 card slots, so every trade screen lines up the same.
     private func show(_ title: String, _ ids: [String], gold: Int) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
@@ -266,15 +285,15 @@ struct TradeOfferView: View {
                 Spacer()
                 if gold > 0 { Label("\(gold)", systemImage: "circle.hexagongrid.fill").font(.chakra(15)).foregroundColor(Theme.fg) }
             }
-            if ids.isEmpty {
-                Text(gold > 0 ? "Just gold" : "Nothing").font(.barlow(14)).foregroundColor(Theme.muted)
-            } else {
-                HStack(spacing: 10) {
-                    ForEach(Array(ids.enumerated()), id: \.offset) { _, id in
-                        if let c = CardBook.card(id) { CardView(card: c) }
-                    }
-                    ForEach(ids.count..<3, id: \.self) { _ in Color.clear.aspectRatio(5.0 / 7.0, contentMode: .fit) }
+            .frame(height: 22)
+            HStack(spacing: 10) {
+                ForEach(0..<3, id: \.self) { i in
+                    if i < ids.count, let c = CardBook.card(ids[i]) { CardView(card: c) }
+                    else { Color.clear.aspectRatio(5.0 / 7.0, contentMode: .fit) }
                 }
+            }
+            .overlay {
+                if ids.isEmpty { Text(gold > 0 ? "Just gold" : "Nothing").font(.barlow(14)).foregroundColor(Theme.muted) }
             }
         }
         .padding(14)
@@ -299,6 +318,21 @@ struct TradeOfferView: View {
             Spacer()
         }
         .onAppear { Sound.rare.play() }
+    }
+
+    private func claim() {
+        busy = true; error = nil
+        Task {
+            do {
+                let d: TradeDone = try await API.call("trades/claim", token: store.token, body: ["id": trade.id])
+                store.social = d.social; store.profile = d.profile
+                done = d
+            } catch {
+                self.error = error.localizedDescription
+                await store.loadSocial()
+            }
+            busy = false
+        }
     }
 
     private func answer(_ action: String) {

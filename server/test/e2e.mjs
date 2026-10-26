@@ -119,6 +119,13 @@ check((await call('/trades/cancel', b.token, { id: counter.social.trades[0].id }
 const offer2 = await call('/trades', a.token, { to: bn, giveGold: 10 });
 const traded = await call('/trades/accept', b.token, { id: offer2.social.trades[0].id });
 check(traded.gold === 10 && traded.profile.gold === goldB + 10 && (await call('/me', a.token)).gold === goldA - 10, 'gold traded');
+const offer3 = await call('/trades', a.token, { to: bn, getGold: 5 });
+await call('/trades/accept', b.token, { id: offer3.social.trades[0].id });
+const ready = (await call('/social', a.token)).trades[0];
+check(ready?.status === 'accepted' && (await call('/me', a.token)).gold === goldA - 10, 'accepted, waiting to be claimed');
+const claimed = await call('/trades/claim', a.token, { id: ready.id });
+check(claimed.gold === 5 && claimed.profile.gold === goldA - 5 && claimed.social.trades.length === 1, 'claimed (the gold-only one is still there to claim)');
+await expectError(call('/trades/claim', a.token, { id: ready.id }), 404);
 const unf = await call('/friends/remove', b.token, { name: an });
 check(unf.social.friends.length === 0, 'unfriended');
 console.log('social OK');

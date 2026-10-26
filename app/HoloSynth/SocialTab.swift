@@ -126,7 +126,8 @@ struct SocialTab: View {
                     HStack(spacing: 12) {
                         Avatar(id: t.avatar, size: 40)
                         Group {
-                            if t.mine { Text("Waiting for ") + Text(t.name).font(.chakra(15)).foregroundColor(Theme.fg) + Text(" to answer your offer") }
+                            if t.mine && t.status == "accepted" { Text(t.name).font(.chakra(15)).foregroundColor(Theme.fg) + Text(" accepted your trade") }
+                            else if t.mine { Text("Waiting for ") + Text(t.name).font(.chakra(15)).foregroundColor(Theme.fg) + Text(" to answer your offer") }
                             else { Text(t.name).font(.chakra(15)).foregroundColor(Theme.fg) + Text(" sent you a trade offer") }
                         }
                         .font(.barlow(15)).foregroundColor(Theme.muted).multilineTextAlignment(.leading)

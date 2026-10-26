@@ -121,6 +121,7 @@ struct Social: Decodable, Equatable {
 struct Trade: Decodable, Equatable, Identifiable {
     let id: Int
     let mine: Bool
+    let status: String?         // open | accepted (mine, waiting for me to claim)
     let name: String            // the other player
     let avatar: String
     let give: [String]          // card ids; a repeat is another copy

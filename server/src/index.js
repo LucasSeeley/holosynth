@@ -378,9 +378,10 @@ async function socialView(db, user) {
       ORDER BY f.created DESC`).bind(user.id),
     db.prepare(`SELECT m.id AS match_id, m.code, ${PERSON} FROM challenges c JOIN matches m ON m.id = c.match_id AND m.status = 'waiting'
       JOIN users u ON u.id = m.p0 LEFT JOIN presence p ON p.user_id = u.id WHERE c.to_id = ?1 ORDER BY m.updated DESC`).bind(user.id),
-    db.prepare(`SELECT t.id AS trade_id, t.from_id, t.give, t.get, t.give_gold, t.get_gold, ${PERSON} FROM trades t
+    db.prepare(`SELECT t.id AS trade_id, t.from_id, t.give, t.get, t.give_gold, t.get_gold, t.status, ${PERSON} FROM trades t
       JOIN users u ON u.id = CASE WHEN t.from_id = ?1 THEN t.to_id ELSE t.from_id END LEFT JOIN presence p ON p.user_id = u.id
-      WHERE (t.from_id = ?1 OR t.to_id = ?1) AND t.status = 'open' ORDER BY t.created DESC`).bind(user.id),
+      WHERE ((t.from_id = ?1 OR t.to_id = ?1) AND t.status = 'open') OR (t.from_id = ?1 AND t.status = 'accepted')
+      ORDER BY t.created DESC`).bind(user.id),
   ]);
   const list = friends.results.map(person)
     .sort((a, b) => (b.online - a.online) || ((b.seen || 0) - (a.seen || 0)) || a.name.localeCompare(b.name));
@@ -396,7 +397,7 @@ async function socialView(db, user) {
 // A trade seen by `me`: `mine` = I sent it; give/get are always from my side.
 const tradeView = me => r => {
   const mine = r.from_id === me, give = JSON.parse(r.give), get = JSON.parse(r.get);
-  return { id: r.trade_id, mine, ...person(r),
+  return { id: r.trade_id, mine, status: r.status, ...person(r),
     give: mine ? give : get, get: mine ? get : give, giveGold: mine ? r.give_gold : r.get_gold, getGold: mine ? r.get_gold : r.give_gold };
 };
 // What a player can trade: everything they own, minus one copy of each card on their team.
@@ -422,6 +423,20 @@ async function friendByName(db, user, name) {
   if (!other || !(await areFriends(db, user.id, other.id))) throw new HttpError(404, 'You can only trade with friends.');
   return other;
 }
+// Accepted: the accepter got their side at once; the sender's side waits here until they claim it.
+async function claimTrade(req, db, user) {
+  const { id } = await body(req);
+  const t = await db.prepare("SELECT * FROM trades WHERE id = ? AND from_id = ? AND status = 'accepted'").bind(Number(id), user.id).first();
+  if (!t) throw new HttpError(404, 'Nothing to claim.');
+  const claim = await db.prepare("UPDATE trades SET status = 'done' WHERE id = ? AND status = 'accepted'").bind(t.id).run();
+  if (!claim.meta.changes) throw new HttpError(404, 'Nothing to claim.');
+  const get = JSON.parse(t.get), other = await freshUser(db, t.to_id);
+  await db.batch([...get.map(id => addCard(db, user.id, id)),
+    db.prepare('UPDATE users SET gold = gold + ? WHERE id = ?').bind(t.get_gold, user.id)]);
+  return json({ received: get, gold: t.get_gold, from: other?.username ?? 'your friend',
+    social: await socialView(db, user), profile: await profile(db, await freshUser(db, user.id)) });
+}
+
 // Both players' tradeable cards, for building an offer.
 async function tradeCards(db, user, name) {
   const other = await friendByName(db, user, name);
@@ -453,20 +468,19 @@ async function answerTrade(req, db, user, action) {
     return json({ message: null, social: await socialView(db, user) });
   }
   // claim it first so it can only be accepted once, then check both sides still have what they offered
-  const claim = await db.prepare("UPDATE trades SET status = 'done' WHERE id = ? AND status = 'open'").bind(t.id).run();
+  const claim = await db.prepare("UPDATE trades SET status = 'accepted' WHERE id = ? AND status = 'open'").bind(t.id).run();
   if (!claim.meta.changes) throw new HttpError(404, 'That trade is no longer open.');
   const from = await freshUser(db, t.from_id), give = JSON.parse(t.give), get = JSON.parse(t.get);
   const fail = msg => db.prepare("UPDATE trades SET status = 'open' WHERE id = ?").bind(t.id).run().then(() => { throw new HttpError(400, msg); });
   if (!covers(await spareCards(db, from), give) || from.gold < t.give_gold) await fail(`${from.username} no longer has everything in this offer.`);
   if (!covers(await spareCards(db, user), get) || user.gold < t.get_gold) await fail("You no longer have everything this offer asks for.");
   // shortcut: checks and the swap are separate steps, so a pack bought in the same instant could overdraw; fine between friends, wrap in one guarded batch if it ever matters
-  const move = (ids, fromId, toId) => ids.flatMap(id => [
-    db.prepare('UPDATE collection SET count = count - 1 WHERE user_id = ? AND card_id = ?').bind(fromId, id),
-    addCard(db, toId, id)]);
+  // both sides leave now; I get mine now, the sender claims theirs from the Social tab
+  const take = (ids, fromId) => ids.map(id => db.prepare('UPDATE collection SET count = count - 1 WHERE user_id = ? AND card_id = ?').bind(fromId, id));
   await db.batch([
-    ...move(give, from.id, user.id), ...move(get, user.id, from.id),
+    ...take(give, from.id), ...take(get, user.id), ...give.map(id => addCard(db, user.id, id)),
     db.prepare('DELETE FROM collection WHERE count <= 0 AND user_id IN (?, ?)').bind(from.id, user.id),
-    db.prepare('UPDATE users SET gold = gold - ? + ? WHERE id = ?').bind(t.give_gold, t.get_gold, from.id),
+    db.prepare('UPDATE users SET gold = gold - ? WHERE id = ?').bind(t.give_gold, from.id),
     db.prepare('UPDATE users SET gold = gold - ? + ? WHERE id = ?').bind(t.get_gold, t.give_gold, user.id),
   ]);
   return json({ message: null, received: give, gold: t.give_gold, from: from.username,
@@ -750,6 +764,7 @@ async function route(req, env) {
   if (method === 'POST' && pathname === '/challenges/decline') return declineChallenge(req, db, user);
   if (method === 'GET' && a === 'trades' && b === 'cards' && c) return tradeCards(db, user, decodeURIComponent(c));
   if (method === 'POST' && pathname === '/trades') return offerTrade(req, db, user);
+  if (method === 'POST' && pathname === '/trades/claim') return claimTrade(req, db, user);
   if (method === 'POST' && a === 'trades' && ['accept', 'decline', 'cancel'].includes(b)) return answerTrade(req, db, user, b);
   if (a === 'campaign') {
     if (method === 'GET' && b === 'current') return json(runView(JSON.parse((await getProgress(db, user.id)).run)));
