@@ -171,8 +171,7 @@ struct PackTab: View {
                 // sparks when it rips
                 if sparking { sparks(at: tearY) }
 
-                hint.offset(y: finished ? CGFloat((pulled.count + 2) / 3) * (smallW * 7 / 5 + 10) / 2 + 40
-                                       : (dealt ? bigW * 0.7 + 60 : packH / 2 + 36))
+                hint.offset(y: hintY(finished: finished, smallW: smallW, bigW: bigW, packH: packH))
             }
             .frame(width: geo.size.width, height: geo.size.height)
             .contentShape(Rectangle())
@@ -198,6 +197,15 @@ struct PackTab: View {
                     else { withAnimation(.spring()) { tearProgress = 0 }; lastTick = 0 }
                 })
         }
+    }
+
+    // The hint / Done button sits just under the cards.
+    private func hintY(finished: Bool, smallW: CGFloat, bigW: CGFloat, packH: CGFloat) -> CGFloat {
+        if finished {
+            let rows = CGFloat((pulled.count + 2) / 3)
+            return rows * (smallW * 7 / 5 + 10) / 2 + 40
+        }
+        return dealt ? bigW * 0.7 + 60 : packH / 2 + 36
     }
 
     // Where card i sits: in the pack, stacked (top card follows your finger), thrown aside, or in the final row.
