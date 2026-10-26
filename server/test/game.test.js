@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS, levelFor, levelStart, fusedHp, fusedDmg, SECOND } from '../src/game.js';
+import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS, levelFor, levelStart, fusedHp, fusedDmg, SECOND, FUSE_GOLD } from '../src/game.js';
 
 const fixed = v => () => v;
 
@@ -125,6 +125,7 @@ test('each level needs double the XP of the last', () => {
 
 test('fusion boosts stats and unlocks a stronger second special', () => {
   assert.equal(Object.keys(SECOND).length, 15);
+  assert.deepEqual(FUSE_GOLD, [1000, 2500, 5000]);
   for (const [id, m] of Object.entries(SECOND)) {
     assert.ok(['Epic', 'Legendary'].includes(BY_ID[id].rarity), id);
     assert.ok(m.dmg > BY_ID[id].special.dmg, `${id}: second special hits harder`);

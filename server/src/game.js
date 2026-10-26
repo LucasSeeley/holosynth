@@ -113,6 +113,7 @@ export const gauntletHeal = team => team.map(u => (u.hp === 0 ? 0 : Math.min(uni
 // Fuse 5 spare copies into one copy for +10% HP, +20% basic or +10% special (max 3 each).
 // Epic and Legendary cards can also unlock a second, stronger special (10 copies + 10,000 gold); the special bonus applies to it too.
 export const FUSE_COST = 5, FUSE_MAX = 3, SECOND_COST = { copies: 10, gold: 10000 };
+export const FUSE_GOLD = [1000, 2500, 5000];   // gold for a stat's 1st, 2nd and 3rd fusion
 export const SECOND = Object.fromEntries(CARDS.filter(c => c.special2).map(c => [c.id, c.special2]));   // Epic & Legendary only
 // f = { h, b, s, x }: fusion levels for HP, basic, special, and whether the second special is unlocked.
 export const fusedHp = (id, f) => Math.round(BY_ID[id].hp * (1 + 0.1 * (f?.h || 0)));

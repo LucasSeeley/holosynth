@@ -15,6 +15,7 @@ struct FuseSheet: View {
 
     private static let gold = Color(hex: 0xFFD77A)
     private let cost = 5, maxLevel = 3, secondCopies = 10, secondGold = 10_000
+    private let fuseGold = [1000, 2500, 5000]   // a stat's 1st, 2nd and 3rd fusion (same as the server)
 
     private var fusion: Fusion? { store.profile?.fusion(card.id) }
     private var copies: Int { store.profile?.collection[card.id] ?? 0 }
@@ -44,7 +45,7 @@ struct FuseSheet: View {
             .font(.barlow(14)).foregroundColor(Theme.muted)
             Button { fusing = true } label: { Label("Fuse", systemImage: "sparkles") }.buttonStyle(GoldButton())
                 .padding(.horizontal, 24)
-            Text("Fusing uses \(cost) spare copies").font(.barlow(13)).foregroundColor(Theme.muted)
+            Text("Fusing uses \(cost) spare copies and some gold").font(.barlow(13)).foregroundColor(Theme.muted)
             Spacer(minLength: 0)
         }
         .padding(.vertical, 20)
@@ -65,7 +66,7 @@ struct FuseSheet: View {
                     HStack(spacing: 14) {
                         CardView(card: card, fusion: fusion).frame(width: 120)
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("\(cost) copies per fusion").sectionTitle()
+                            Text("\(cost) copies + gold per fusion").sectionTitle()
                             (Text("You have ") + Text("\(spare) spare").font(.chakra(14)).foregroundColor(Theme.fg) + Text(" copies."))
                                 .font(.barlow(14)).foregroundColor(Theme.muted)
                             Text("Each stat can be fused \(maxLevel) times.").font(.barlow(13)).foregroundColor(Theme.muted)
@@ -104,6 +105,8 @@ struct FuseSheet: View {
 
     private func statRow(_ title: String, sub: String, stat: String, level: Int, now: Int, next: Int, last: Bool = false) -> some View {
         let maxed = level >= maxLevel
+        let price = maxed ? 0 : fuseGold[level]
+        let gold = store.profile?.gold ?? 0
         return HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 5) {
                 HStack(spacing: 8) { Text(title).font(.chakra(16)).foregroundColor(Theme.fg); Pips(level: level) }
@@ -116,6 +119,10 @@ struct FuseSheet: View {
                     }
                 }
                 .font(.barlow(13)).foregroundColor(Theme.muted)
+                if !maxed {
+                    Text("\(cost) copies + \(price.formatted()) gold").font(.barlow(12))
+                        .foregroundColor(gold < price ? Color(hex: 0xFF7884) : Theme.muted)
+                }
             }
             Spacer(minLength: 4)
             if maxed {
@@ -124,7 +131,7 @@ struct FuseSheet: View {
             } else {
                 Button("Fuse") { fuse(stat, title: sub, before: now, after: next) }
                     .buttonStyle(GoldButton(height: 40)).frame(width: 84)
-                    .disabled(busy || spare < cost)
+                    .disabled(busy || spare < cost || gold < price)
             }
         }
         .padding(.vertical, 12)

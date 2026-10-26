@@ -3,7 +3,7 @@
 import {
   BY_ID, STARTER_TEAM, START_GOLD, PACK_COST, PACK_COSTS, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN_XP, CAMPAIGN, CHAPTERS, NEW_CARD_AFTER, OPEN_LEVELS,
   levelFor, levelStart, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack,
-  gauntletEnemies, gauntletBattle, gauntletHeal, fusedHp, FUSE_COST, FUSE_MAX, SECOND, SECOND_COST, gauntletGold, GAUNTLET_PACK_EVERY, newCampaignBattle, applyMove, aiMove,
+  gauntletEnemies, gauntletBattle, gauntletHeal, fusedHp, FUSE_COST, FUSE_GOLD, FUSE_MAX, SECOND, SECOND_COST, gauntletGold, GAUNTLET_PACK_EVERY, newCampaignBattle, applyMove, aiMove,
 } from './game.js';
 
 class HttpError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
@@ -80,11 +80,17 @@ async function fuseCard(req, db, user) {
     if (target?.x) throw new HttpError(400, 'Already unlocked.');
     if (user.gold < SECOND_COST.gold) throw new HttpError(400, `You need ${SECOND_COST.gold.toLocaleString('en-US')} gold.`);
   } else if ((target?.[stat] ?? 0) >= FUSE_MAX) throw new HttpError(400, 'That stat is already maxed.');
+  const gold = stat === 'x' ? SECOND_COST.gold : FUSE_GOLD[target?.[stat] ?? 0];
+  if (user.gold < gold) throw new HttpError(400, `You need ${gold.toLocaleString('en-US')} gold.`);
+  const paid = await db.prepare('UPDATE users SET gold = gold - ? WHERE id = ? AND gold >= ?').bind(gold, user.id, gold).run();
+  if (!paid.meta.changes) throw new HttpError(400, `You need ${gold.toLocaleString('en-US')} gold.`);
   const take = await db.prepare('UPDATE collection SET count = count - ? WHERE user_id = ? AND card_id = ? AND count >= ?')
     .bind(need, user.id, card, need + rows.length + (target ? 0 : 1)).run();
-  if (!take.meta.changes) throw new HttpError(400, `You need ${need} spare copies to fuse.`);
+  if (!take.meta.changes) {
+    await db.prepare('UPDATE users SET gold = gold + ? WHERE id = ?').bind(gold, user.id).run();   // refund
+    throw new HttpError(400, `You need ${need} spare copies to fuse.`);
+  }
   const writes = [];
-  if (stat === 'x') writes.push(db.prepare('UPDATE users SET gold = gold - ? WHERE id = ?').bind(SECOND_COST.gold, user.id));
   if (target) writes.push(db.prepare(`UPDATE fused SET ${stat} = ${stat === 'x' ? 1 : `${stat} + 1`} WHERE id = ?`).bind(target.id));
   else writes.push(db.prepare(`INSERT INTO fused (user_id, card_id, ${stat}) VALUES (?, ?, 1)`).bind(user.id, card));
   await db.batch(writes);
