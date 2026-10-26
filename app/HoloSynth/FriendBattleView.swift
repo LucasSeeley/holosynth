@@ -124,7 +124,11 @@ struct FriendBattleView: View {
                                                                          body: ["from": from, "move": mv, "to": to])
                                 match = next
                                 if next.state?.winner != nil { await store.refresh() }
-                            } catch { settled = true; throw error }
+                            } catch {
+                                // out of step with the server: load the real match
+                                if let fresh: MatchView = try? await API.call("matches/\(m.id)", token: store.token) { match = fresh }
+                                settled = true; throw error
+                            }
                         },
                         onLeave: { await leave() },
                         onSettled: { settled = true })

@@ -420,6 +420,20 @@ async function declineChallenge(req, db, user) {
   return json({ message: null, social: await socialView(db, user) });
 }
 
+// Someone's public card, shown when you tap a friend request. Only between people linked by a request or friendship.
+async function playerCard(db, user, name) {
+  const other = await db.prepare('SELECT * FROM users WHERE username = ?').bind(name).first();
+  const linked = other && await db.prepare(
+    'SELECT 1 FROM friends WHERE (user_id = ?1 AND friend_id = ?2) OR (user_id = ?2 AND friend_id = ?1)').bind(user.id, other.id).first();
+  if (!linked) throw new HttpError(404, 'Player not found.');
+  const p = await profile(db, other);
+  return json({
+    name: p.username, level: p.level, avatar: p.avatar, since: p.since, wins: p.wins, team: p.team,
+    cards: Object.keys(p.collection).length,
+    campaign: p.campaign.next ? `Ch ${p.campaign.chapterNum} · ${p.campaign.next.num}` : 'Done',
+  });
+}
+
 async function setAvatar(req, db, user) {
   const { card = '' } = await body(req);
   if (!await db.prepare('SELECT 1 FROM collection WHERE user_id = ? AND card_id = ?').bind(user.id, String(card)).first()) {
@@ -461,6 +475,7 @@ async function route(req, env) {
   if (method === 'POST' && pathname === '/starter') return pickStarter(req, db, user);
   if (method === 'POST' && pathname === '/avatar') return setAvatar(req, db, user);
   if (method === 'GET' && pathname === '/social') return json(await socialView(db, user));
+  if (method === 'GET' && a === 'players' && b) return playerCard(db, user, decodeURIComponent(b));
   if (method === 'POST' && pathname === '/friends') return addFriend(req, db, user);
   if (method === 'POST' && pathname === '/friends/remove') return removeFriend(req, db, user);
   if (method === 'POST' && pathname === '/friends/challenge') return challengeFriend(req, db, user);

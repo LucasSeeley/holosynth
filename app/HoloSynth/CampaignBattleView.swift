@@ -27,7 +27,11 @@ struct CampaignBattleView: View {
                                                                                body: ["from": from, "move": mv, "to": to])
                                     self.run = next
                                     if let p = next.profile { store.profile = p }
-                                } catch { settled = true; throw error }
+                                } catch {
+                                    // out of step with the server (e.g. a reply that never arrived): load the real battle
+                                    if let fresh: CampaignRun = try? await API.call("campaign/current", token: store.token) { self.run = fresh }
+                                    settled = true; throw error
+                                }
                             },
                             onLeave: {
                                 _ = try? await API.call("campaign/leave", token: store.token, body: [:]) as [String: Bool]

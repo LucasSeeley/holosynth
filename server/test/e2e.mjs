@@ -72,6 +72,9 @@ check((await call('/friends', a.token, { name: bn })).message.includes('sent'), 
 await expectError(call('/friends', a.token, { name: an }), 400);              // yourself
 await expectError(call('/friends/challenge', a.token, { name: bn }), 400);    // not friends yet
 check((await call('/social', b.token)).requests[0]?.name === an, 'b sees the request');
+const card = await call(`/players/${an}`, b.token);
+check(card.name === an && card.team.length === 3 && card.cards >= 3 && card.campaign === 'Ch 1 · 7', 'request shows their profile');
+await expectError(call('/players/nobody_here', b.token), 404);
 const accepted = await call('/friends', b.token, { name: an.toUpperCase() });
 check(accepted.message.includes('now friends') && accepted.social.friends[0].online, 'friends and online');
 const ch = await call('/friends/challenge', a.token, { name: bn });
