@@ -82,7 +82,8 @@ struct CollectionTab: View {
                     if count > 1 {
                         Text("×\(count)").font(.chakra(9)).monospacedDigit()
                             .padding(.horizontal, 4).padding(.vertical, 1)
-                            .background(Theme.brass, in: Capsule()).foregroundColor(Color(hex: 0x1A0D05)).offset(x: 3, y: -4)
+                            .background(Theme.brass, in: Capsule()).foregroundColor(Color(hex: 0x1A0D05))
+                            .scaleEffect(0.5, anchor: .topTrailing).offset(x: 2, y: -2)
                             .accessibilityLabel("\(count) copies")
                     }
                 }
