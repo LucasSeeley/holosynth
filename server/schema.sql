@@ -72,3 +72,18 @@ CREATE TABLE IF NOT EXISTS gauntlet (
   run TEXT
 );
 CREATE INDEX IF NOT EXISTS gauntlet_best ON gauntlet (best);
+-- Trade offers between friends: up to 3 cards (repeats = copies) and some gold each way.
+-- status: open | done | declined | cancelled | countered
+CREATE TABLE IF NOT EXISTS trades (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  from_id INTEGER NOT NULL,
+  to_id INTEGER NOT NULL,
+  give TEXT NOT NULL,
+  get TEXT NOT NULL,
+  give_gold INTEGER NOT NULL DEFAULT 0,
+  get_gold INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL,
+  created INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS trades_to ON trades (to_id, status);
+CREATE INDEX IF NOT EXISTS trades_from ON trades (from_id, status);

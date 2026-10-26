@@ -10,6 +10,8 @@ struct SocialTab: View {
     @State private var battle = false
     @State private var viewing: Social.Person?    // a friend request opened as a profile sheet
     @State private var friendCard: Social.Person? // a friend's profile, just to look at
+    @State private var tradeWith: TradeTarget?    // building an offer (or a counter)
+    @State private var openTrade: Trade?          // an offer opened to answer or cancel
 
     var body: some View {
         ZStack {
@@ -23,6 +25,7 @@ struct SocialTab: View {
                     }
                     if let s = store.social {
                         ForEach(s.challenges) { challengeCard($0) }
+                        if let t = s.trades, !t.isEmpty { trades(t) }
                         if !s.requests.isEmpty { requests(s.requests) }
                         if s.friends.isEmpty { empty } else { friends(s.friends) }
                     } else {
@@ -42,6 +45,15 @@ struct SocialTab: View {
             }
         }
         .sheet(item: $friendCard) { p in PlayerSheet(name: p.name, onAnswer: nil) }
+        .fullScreenCover(item: $tradeWith) { t in
+            TradeBuilder(friend: t.name, avatar: t.avatar, counter: t.counter) { tradeWith = nil }
+        }
+        .fullScreenCover(item: $openTrade) { t in
+            TradeOfferView(trade: t, onCounter: {
+                openTrade = nil
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { tradeWith = TradeTarget(name: t.name, avatar: t.avatar, counter: t) }
+            }, onClose: { openTrade = nil })
+        }
         .fullScreenCover(isPresented: $battle) {
             FriendBattleView { battle = false; Task { await store.loadSocial() } }
         }
@@ -106,10 +118,40 @@ struct SocialTab: View {
         }
     }
 
+    // Offers sent to you open to answer; your own open to cancel.
+    private func trades(_ list: [Trade]) -> some View {
+        panel("Trades", count: list.count) {
+            ForEach(list) { t in
+                Button { openTrade = t } label: {
+                    HStack(spacing: 12) {
+                        Avatar(id: t.avatar, size: 40)
+                        Group {
+                            if t.mine { Text("Waiting for ") + Text(t.name).font(.chakra(15)).foregroundColor(Theme.fg) + Text(" to answer your offer") }
+                            else { Text(t.name).font(.chakra(15)).foregroundColor(Theme.fg) + Text(" sent you a trade offer") }
+                        }
+                        .font(.barlow(15)).foregroundColor(Theme.muted).multilineTextAlignment(.leading)
+                        Spacer(minLength: 4)
+                        Image(systemName: "chevron.right").font(.system(size: 14, weight: .bold)).foregroundColor(Theme.brass)
+                    }
+                    .padding(.vertical, 8).contentShape(Rectangle())
+                    .overlay(alignment: .bottom) { if t != list.last { Rectangle().fill(Theme.brass.opacity(0.1)).frame(height: 1) } }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
     private func friends(_ list: [Social.Person]) -> some View {
         panel("Friends", count: list.count) {
             ForEach(list) { p in
                 row(p, subtitle: Text("Level \(p.level) · ") + seen(p), last: p == list.last) {
+                    Button { tradeWith = TradeTarget(name: p.name, avatar: p.avatar, counter: nil) } label: {
+                        Image(systemName: "arrow.left.arrow.right").font(.system(size: 16, weight: .bold)).foregroundColor(Theme.brass)
+                            .frame(width: 40, height: 40)
+                            .background(Theme.ink.opacity(0.6), in: RoundedRectangle(cornerRadius: 12))
+                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.brass.opacity(0.5), lineWidth: 1))
+                    }
+                    .accessibilityLabel("Trade with \(p.name)")
                     Button { challenge(p) } label: { SwordsButton(gold: false) }
                         .accessibilityLabel("Battle \(p.name)")
                 }
@@ -221,6 +263,13 @@ struct SocialTab: View {
             busy = false
         }
     }
+}
+
+struct TradeTarget: Identifiable {
+    let name: String
+    let avatar: String
+    let counter: Trade?
+    var id: String { name + "\(counter?.id ?? 0)" }
 }
 
 // The 40-point square battle button: crossed swords, solid gold (answer a challenge) or gold outline (send one).

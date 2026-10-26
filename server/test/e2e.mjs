@@ -103,6 +103,22 @@ await call(`/matches/${fight.id}/leave`, a.token, {});
 await expectError(call('/avatar', a.token, { card: 'sovereign' }), 400);
 check((await call('/avatar', a.token, { card: 'goliath' })).avatar === 'goliath', 'avatar set');
 check((await call('/me', b.token)).friends === 1 && (await call('/social', b.token)).friends[0].avatar === 'goliath', 'avatar shows to friends');
+// trades: team cards are locked, gold-only offers, counter, cancel, accept
+await expectError(call('/trades', a.token, { to: bn, give: ['volt'] }), 400);           // on a's team, no spare copy
+await expectError(call('/trades', a.token, { to: bn, giveGold: 1e9 }), 400);             // not that much gold
+const goldA = (await call('/me', a.token)).gold, goldB = (await call('/me', b.token)).gold;
+const offer = await call('/trades', a.token, { to: bn, giveGold: 10 });
+const tradeId = offer.social.trades[0].id;
+check(offer.social.trades[0].mine && offer.social.trades[0].giveGold === 10, 'offer sent');
+const seen = (await call('/social', b.token)).trades[0];
+check(seen && !seen.mine && seen.getGold === 10 && seen.name === an, 'b sees the offer from their side');
+const counter = await call('/trades', b.token, { to: an, getGold: 20, counter: tradeId });
+check(counter.social.trades.length === 1 && counter.social.trades[0].getGold === 20, 'countered replaces the offer');
+await expectError(call('/trades/accept', b.token, { id: tradeId }), 404);               // the countered one is closed
+check((await call('/trades/cancel', b.token, { id: counter.social.trades[0].id })).social.trades.length === 0, 'cancelled');
+const offer2 = await call('/trades', a.token, { to: bn, giveGold: 10 });
+const traded = await call('/trades/accept', b.token, { id: offer2.social.trades[0].id });
+check(traded.gold === 10 && traded.profile.gold === goldB + 10 && (await call('/me', a.token)).gold === goldA - 10, 'gold traded');
 const unf = await call('/friends/remove', b.token, { name: an });
 check(unf.social.friends.length === 0, 'unfriended');
 console.log('social OK');

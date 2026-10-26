@@ -370,7 +370,7 @@ const person = r => ({ name: r.username, level: levelFor(r.xp), avatar: avatarOf
   online: !!r.seen && now() - r.seen < ONLINE_MS, seen: r.seen || null });
 
 async function socialView(db, user) {
-  const [friends, requests, challenges] = await db.batch([
+  const [friends, requests, challenges, trades] = await db.batch([
     db.prepare(`SELECT ${PERSON} FROM friends f JOIN friends g ON g.user_id = f.friend_id AND g.friend_id = f.user_id
       JOIN users u ON u.id = f.friend_id LEFT JOIN presence p ON p.user_id = u.id WHERE f.user_id = ?1`).bind(user.id),
     db.prepare(`SELECT ${PERSON} FROM friends f JOIN users u ON u.id = f.user_id LEFT JOIN presence p ON p.user_id = u.id
@@ -378,6 +378,9 @@ async function socialView(db, user) {
       ORDER BY f.created DESC`).bind(user.id),
     db.prepare(`SELECT m.id AS match_id, m.code, ${PERSON} FROM challenges c JOIN matches m ON m.id = c.match_id AND m.status = 'waiting'
       JOIN users u ON u.id = m.p0 LEFT JOIN presence p ON p.user_id = u.id WHERE c.to_id = ?1 ORDER BY m.updated DESC`).bind(user.id),
+    db.prepare(`SELECT t.id AS trade_id, t.from_id, t.give, t.get, t.give_gold, t.get_gold, ${PERSON} FROM trades t
+      JOIN users u ON u.id = CASE WHEN t.from_id = ?1 THEN t.to_id ELSE t.from_id END LEFT JOIN presence p ON p.user_id = u.id
+      WHERE (t.from_id = ?1 OR t.to_id = ?1) AND t.status = 'open' ORDER BY t.created DESC`).bind(user.id),
   ]);
   const list = friends.results.map(person)
     .sort((a, b) => (b.online - a.online) || ((b.seen || 0) - (a.seen || 0)) || a.name.localeCompare(b.name));
@@ -385,7 +388,89 @@ async function socialView(db, user) {
     friends: list,
     requests: requests.results.map(person),
     challenges: challenges.results.map(r => ({ id: r.match_id, code: r.code, ...person(r) })),
+    trades: trades.results.map(tradeView(user.id)),
   };
+}
+
+// ---- trading ----
+// A trade seen by `me`: `mine` = I sent it; give/get are always from my side.
+const tradeView = me => r => {
+  const mine = r.from_id === me, give = JSON.parse(r.give), get = JSON.parse(r.get);
+  return { id: r.trade_id, mine, ...person(r),
+    give: mine ? give : get, get: mine ? get : give, giveGold: mine ? r.give_gold : r.get_gold, getGold: mine ? r.get_gold : r.give_gold };
+};
+// What a player can trade: everything they own, minus one copy of each card on their team.
+async function spareCards(db, u) {
+  const team = JSON.parse(u.team);
+  const rows = (await db.prepare('SELECT card_id, count FROM collection WHERE user_id = ?').bind(u.id).all()).results;
+  const spare = {};
+  for (const r of rows) { const n = r.count - (team.includes(r.card_id) ? 1 : 0); if (n > 0) spare[r.card_id] = n; }
+  return spare;
+}
+const covers = (spare, ids) => {
+  const need = {}; for (const id of ids) need[id] = (need[id] || 0) + 1;
+  return Object.entries(need).every(([id, n]) => (spare[id] || 0) >= n);
+};
+const tradeSide = (cards, gold) => {
+  if (!Array.isArray(cards) || cards.length > 3 || !cards.every(id => typeof id === 'string' && BY_ID[id])) throw new HttpError(400, 'Pick up to 3 cards each side.');
+  const g = Number(gold ?? 0);
+  if (!Number.isInteger(g) || g < 0 || g > 1e7) throw new HttpError(400, 'That gold amount is not valid.');
+  return [cards, g];
+};
+async function friendByName(db, user, name) {
+  const other = await db.prepare('SELECT * FROM users WHERE username = ?').bind(String(name).trim()).first();
+  if (!other || !(await areFriends(db, user.id, other.id))) throw new HttpError(404, 'You can only trade with friends.');
+  return other;
+}
+// Both players' tradeable cards, for building an offer.
+async function tradeCards(db, user, name) {
+  const other = await friendByName(db, user, name);
+  return json({ mine: await spareCards(db, user), theirs: await spareCards(db, other), gold: user.gold });
+}
+async function offerTrade(req, db, user) {
+  const b = await body(req);
+  const other = await friendByName(db, user, b.to ?? '');
+  const [give, giveGold] = tradeSide(b.give ?? [], b.giveGold);
+  const [get, getGold] = tradeSide(b.get ?? [], b.getGold);
+  if (!give.length && !get.length && !giveGold && !getGold) throw new HttpError(400, 'Add something to the trade.');
+  if (!covers(await spareCards(db, user), give)) throw new HttpError(400, "You don't have spare copies of those cards.");
+  if (!covers(await spareCards(db, other), get)) throw new HttpError(400, `${other.username} doesn't have spare copies of those cards.`);
+  if (giveGold > user.gold) throw new HttpError(400, "You don't have that much gold.");
+  const writes = [db.prepare('INSERT INTO trades (from_id, to_id, give, get, give_gold, get_gold, status, created) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+    .bind(user.id, other.id, JSON.stringify(give), JSON.stringify(get), giveGold, getGold, 'open', now())];
+  // a counter offer closes the one it answers
+  if (b.counter) writes.unshift(db.prepare("UPDATE trades SET status = 'countered' WHERE id = ? AND to_id = ? AND from_id = ? AND status = 'open'")
+    .bind(Number(b.counter), user.id, other.id));
+  await db.batch(writes);
+  return json({ message: `Trade offer sent to ${other.username}.`, social: await socialView(db, user) });
+}
+async function answerTrade(req, db, user, action) {
+  const { id } = await body(req);
+  const t = await db.prepare("SELECT * FROM trades WHERE id = ? AND status = 'open'").bind(Number(id)).first();
+  if (!t || (action === 'cancel' ? t.from_id : t.to_id) !== user.id) throw new HttpError(404, 'That trade is no longer open.');
+  if (action !== 'accept') {
+    await db.prepare('UPDATE trades SET status = ? WHERE id = ?').bind(action === 'cancel' ? 'cancelled' : 'declined', t.id).run();
+    return json({ message: null, social: await socialView(db, user) });
+  }
+  // claim it first so it can only be accepted once, then check both sides still have what they offered
+  const claim = await db.prepare("UPDATE trades SET status = 'done' WHERE id = ? AND status = 'open'").bind(t.id).run();
+  if (!claim.meta.changes) throw new HttpError(404, 'That trade is no longer open.');
+  const from = await freshUser(db, t.from_id), give = JSON.parse(t.give), get = JSON.parse(t.get);
+  const fail = msg => db.prepare("UPDATE trades SET status = 'open' WHERE id = ?").bind(t.id).run().then(() => { throw new HttpError(400, msg); });
+  if (!covers(await spareCards(db, from), give) || from.gold < t.give_gold) await fail(`${from.username} no longer has everything in this offer.`);
+  if (!covers(await spareCards(db, user), get) || user.gold < t.get_gold) await fail("You no longer have everything this offer asks for.");
+  // shortcut: checks and the swap are separate steps, so a pack bought in the same instant could overdraw; fine between friends, wrap in one guarded batch if it ever matters
+  const move = (ids, fromId, toId) => ids.flatMap(id => [
+    db.prepare('UPDATE collection SET count = count - 1 WHERE user_id = ? AND card_id = ?').bind(fromId, id),
+    addCard(db, toId, id)]);
+  await db.batch([
+    ...move(give, from.id, user.id), ...move(get, user.id, from.id),
+    db.prepare('DELETE FROM collection WHERE count <= 0 AND user_id IN (?, ?)').bind(from.id, user.id),
+    db.prepare('UPDATE users SET gold = gold - ? + ? WHERE id = ?').bind(t.give_gold, t.get_gold, from.id),
+    db.prepare('UPDATE users SET gold = gold - ? + ? WHERE id = ?').bind(t.get_gold, t.give_gold, user.id),
+  ]);
+  return json({ message: null, received: give, gold: t.give_gold, from: from.username,
+    social: await socialView(db, user), profile: await profile(db, await freshUser(db, user.id)) });
 }
 
 async function otherUser(req, db, user) {
@@ -611,6 +696,7 @@ async function deleteAccount(db, user) {
     db.prepare('DELETE FROM friends WHERE user_id = ?1 OR friend_id = ?1').bind(id),
     db.prepare('DELETE FROM challenges WHERE to_id = ?1 OR match_id IN (SELECT id FROM matches WHERE p0 = ?1 OR p1 = ?1)').bind(id),
     db.prepare('DELETE FROM matches WHERE p0 = ?1 OR p1 = ?1').bind(id),
+    db.prepare('DELETE FROM trades WHERE from_id = ?1 OR to_id = ?1').bind(id),
     ...['collection', 'sessions', 'progress', 'presence', 'spins', 'gauntlet'].map(t => db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(id)),
     db.prepare('DELETE FROM users WHERE id = ?').bind(id),
   ]);
@@ -662,6 +748,9 @@ async function route(req, env) {
   if (method === 'POST' && pathname === '/friends/remove') return removeFriend(req, db, user);
   if (method === 'POST' && pathname === '/friends/challenge') return challengeFriend(req, db, user);
   if (method === 'POST' && pathname === '/challenges/decline') return declineChallenge(req, db, user);
+  if (method === 'GET' && a === 'trades' && b === 'cards' && c) return tradeCards(db, user, decodeURIComponent(c));
+  if (method === 'POST' && pathname === '/trades') return offerTrade(req, db, user);
+  if (method === 'POST' && a === 'trades' && ['accept', 'decline', 'cancel'].includes(b)) return answerTrade(req, db, user, b);
   if (a === 'campaign') {
     if (method === 'GET' && b === 'current') return json(runView(JSON.parse((await getProgress(db, user.id)).run)));
     if (method === 'POST' && b === 'start') return startCampaign(db, user);

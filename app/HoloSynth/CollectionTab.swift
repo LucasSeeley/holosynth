@@ -9,8 +9,6 @@ struct CollectionTab: View {
     @State private var zoomed: Card?
     @AppStorage("collectionSort") private var sort = 0   // 0 Synth #, 1 HP, 2 Rarity; the button steps through them
 
-    private static let sortNames = ["Synth #", "HP", "Rarity"]
-    private static let rarityRank = ["Legendary": 0, "Epic": 1, "Rare": 2, "Common": 3]
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 10), count: 3)
     // A full team is 3; while the campaign is still handing out cards it is however many you own.
@@ -27,10 +25,10 @@ struct CollectionTab: View {
                         Text("Collection · \(owned.count) of \(CardBook.all.count)").sectionTitle()
                         Spacer()
                         Button { sort = (sort + 1) % 3 } label: {
-                            Label(Self.sortNames[sort % 3], systemImage: "arrow.up.arrow.down")
+                            Label(CardSort.names[sort % 3], systemImage: "arrow.up.arrow.down")
                         }
                         .buttonStyle(OutlineButton())
-                        .accessibilityLabel("Sort by \(Self.sortNames[sort % 3]), tap to change")
+                        .accessibilityLabel("Sort by \(CardSort.names[sort % 3]), tap to change")
                     }
                     .padding(.top, 8)
                     LazyVGrid(columns: columns, spacing: 10) {
@@ -52,16 +50,7 @@ struct CollectionTab: View {
         }
     }
 
-    // CardBook.all is already in number order, so ties keep number order.
-    private func sorted(_ cards: [Card]) -> [Card] {
-        switch sort % 3 {
-        case 1: return cards.enumerated().sorted { ($1.element.hp, $0.offset) < ($0.element.hp, $1.offset) }.map(\.element)
-        case 2: return cards.enumerated().sorted {
-            (Self.rarityRank[$0.element.rarity] ?? 9, $0.offset) < (Self.rarityRank[$1.element.rarity] ?? 9, $1.offset)
-        }.map(\.element)
-        default: return cards
-        }
-    }
+    private func sorted(_ cards: [Card]) -> [Card] { CardSort.apply(cards, sort) }
 
     private var teamSection: some View {
         VStack(alignment: .leading, spacing: 10) {

@@ -114,6 +114,35 @@ struct Social: Decodable, Equatable {
     let friends: [Person]
     let requests: [Person]
     let challenges: [Challenge]
+    let trades: [Trade]?
+}
+
+// An open trade, always seen from my side: `give` is what I hand over, `get` what I receive. `mine` = I sent it.
+struct Trade: Decodable, Equatable, Identifiable {
+    let id: Int
+    let mine: Bool
+    let name: String            // the other player
+    let avatar: String
+    let give: [String]          // card ids; a repeat is another copy
+    let get: [String]
+    let giveGold: Int
+    let getGold: Int
+}
+struct TradeCards: Decodable { let mine: [String: Int]; let theirs: [String: Int]; let gold: Int }   // spare copies each side can trade
+struct TradeDone: Decodable { let received: [String]; let gold: Int; let from: String; let social: Social; let profile: Profile }
+
+// Collection order, shared by the Cards tab and the trade picker: 0 Synth #, 1 HP (highest first), 2 Rarity (best first).
+enum CardSort {
+    static let names = ["Synth #", "HP", "Rarity"]
+    private static let rank = ["Legendary": 0, "Epic": 1, "Rare": 2, "Common": 3]
+    // `cards` must already be in number order so ties keep it.
+    static func apply(_ cards: [Card], _ mode: Int) -> [Card] {
+        switch mode % 3 {
+        case 1: return cards.enumerated().sorted { ($1.element.hp, $0.offset) < ($0.element.hp, $1.offset) }.map(\.element)
+        case 2: return cards.enumerated().sorted { (rank[$0.element.rarity] ?? 9, $0.offset) < (rank[$1.element.rarity] ?? 9, $1.offset) }.map(\.element)
+        default: return cards
+        }
+    }
 }
 // MARK: Gauntlet
 

@@ -133,7 +133,7 @@ struct HomeView: View {
             PackTab().tabItem { Label("Packs", systemImage: "gift.fill") }.tag(1)
             CollectionTab().tabItem { Label("Cards", systemImage: "square.grid.3x3.fill") }.tag(2)
             SocialTab().tabItem { Label("Social", systemImage: "person.2.fill") }.tag(3)
-                .badge((store.social?.requests.count ?? 0) + (store.social?.challenges.count ?? 0))
+                .badge((store.social?.requests.count ?? 0) + (store.social?.challenges.count ?? 0) + (store.social?.trades?.filter { !$0.mine }.count ?? 0))
             ProfileTab().tabItem { Label("Profile", systemImage: "person.crop.circle.fill") }.tag(4)
         }
         .toolbarBackground(Theme.ink, for: .tabBar)
