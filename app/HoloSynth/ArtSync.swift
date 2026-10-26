@@ -57,30 +57,48 @@ final class ArtSync: ObservableObject {
     }
 }
 
-// Shown on launch while card art downloads (only takes a moment after the first time).
+// Shown on launch while card art downloads (only takes a moment after the first time). Same look as the login screen.
 struct ArtLoadingView: View {
     @ObservedObject var sync = ArtSync.shared
 
     var body: some View {
         ZStack {
             ScreenBackground()
-            VStack(spacing: 18) {
+            VStack(spacing: 0) {
                 if let logo = Art.image("logo") {
-                    Image(uiImage: logo).resizable().scaledToFit().frame(maxWidth: 300)
+                    Image(uiImage: logo).resizable().scaledToFit().frame(maxWidth: 310)
+                        .shadow(color: Color(hex: 0xFFAA28).opacity(0.35), radius: 18)
+                }
+                Text("RIP · BUILD · BATTLE").font(.chakra(12, semibold: true)).tracking(3.8).foregroundColor(Theme.brass).padding(.top, 6)
+                if let pack = Art.image("pack") {
+                    Image(uiImage: pack).resizable().scaledToFit().frame(height: 250).rotationEffect(.degrees(-4))
+                        .shadow(color: Theme.backRed.opacity(0.8), radius: 30, y: 18)
+                        .padding(.top, 34).padding(.bottom, 40)
                 }
                 if sync.failed {
-                    Text("Couldn't download the cards. Check your connection.")
+                    Text("Couldn't download the cards.\nCheck your connection.")
                         .font(.barlow(15, semibold: true)).foregroundColor(Theme.pink).multilineTextAlignment(.center)
-                    Button("Try again") { Task { await sync.run() } }.buttonStyle(GoldButton(height: 50)).frame(width: 200)
+                    Button("Try again") { Task { await sync.run() } }.buttonStyle(GoldButton(height: 50)).frame(width: 200).padding(.top, 16)
                 } else if sync.total > 0 {
                     Text("Downloading cards").font(.chakra(13, semibold: true)).tracking(3).textCase(.uppercase).foregroundColor(Theme.brass)
-                    ProgressView(value: Double(sync.done), total: Double(max(sync.total, 1))).tint(Theme.brass).frame(width: 220)
+                    GeometryReader { g in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(Theme.brass.opacity(0.15))
+                            Capsule().fill(LinearGradient(colors: [Color(hex: 0xE0A12A), Color(hex: 0xFFD77A)], startPoint: .leading, endPoint: .trailing))
+                                .frame(width: g.size.width * CGFloat(sync.done) / CGFloat(max(sync.total, 1)))
+                                .shadow(color: Theme.brass.opacity(0.7), radius: 6)
+                                .animation(.easeOut(duration: 0.3), value: sync.done)
+                        }
+                    }
+                    .frame(width: 240, height: 8).padding(.top, 14).padding(.bottom, 10)
+                    .accessibilityLabel("Downloading cards, \(sync.done) of \(sync.total)")
                     Text("\(sync.done) of \(sync.total)").font(.barlow(13)).foregroundColor(Theme.muted).monospacedDigit()
                 } else {
                     ProgressView().tint(Theme.brass)
                 }
+                Spacer(minLength: 0)
             }
-            .padding(24)
+            .padding(.horizontal, 24).padding(.top, 60)
         }
     }
 }
