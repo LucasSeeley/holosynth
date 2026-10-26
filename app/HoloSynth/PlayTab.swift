@@ -98,7 +98,7 @@ struct PlayTab: View {
             LinearGradient(stops: [.init(color: Theme.ink.opacity(0.1), location: 0.3),
                                    .init(color: Theme.ink.opacity(0.92), location: 1)],
                            startPoint: .top, endPoint: .bottom)
-            Text("Campaign · Chapter 1").font(.chakra(11, semibold: true)).tracking(2).textCase(.uppercase)
+            Text("Campaign · Chapter \(c.chapterNum)").font(.chakra(11, semibold: true)).tracking(2).textCase(.uppercase)
                 .foregroundColor(Theme.brass)
                 .padding(.horizontal, 10).padding(.vertical, 5)
                 .background(Theme.ink.opacity(0.75), in: RoundedRectangle(cornerRadius: 8))

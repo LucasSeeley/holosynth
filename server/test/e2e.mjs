@@ -1,6 +1,6 @@
 // End-to-end check against a running server: node test/e2e.mjs http://localhost:8799
 // Two players sign up, pick a starter, play the campaign (computer opponent) to unlock friend battles,
-// play each other by invite code, then one finishes the chapter for the boss pack and buys a pack.
+// play each other by invite code, then one beats the level 10 boss for its pack and buys a pack.
 import { aiMove } from '../src/game.js';
 
 const base = process.argv[2] || 'http://localhost:8799';
@@ -67,8 +67,7 @@ const me = await call('/me', tokens[view.state.winner]);
 console.log(`player ${view.state.winner} won after ${moves} moves; gold ${me.gold}, wins ${me.wins}`);
 
 const done = await campaign(a.token, 10);
-check(done.campaign.next === null && done.gold >= 250, 'chapter complete with enough gold for a pack');
-await expectError(call('/campaign/start', a.token, {}), 400);
+check(done.campaign.next?.num === 11 && done.campaign.chapterNum === 1 && done.gold >= 250, 'boss beaten, on to level 11 with enough gold for a pack');
 const pack = await call('/packs', a.token, {});
 console.log('bought pack:', pack.cards, 'gold left', pack.profile.gold, 'packs opened', pack.profile.packs);
 console.log('E2E OK');

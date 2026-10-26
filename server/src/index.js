@@ -1,7 +1,7 @@
 // HoloSynth game server: a Cloudflare Worker over D1. Every reply is JSON; errors are { error: "message" }.
 // It also serves the iPhone app download (IPA + SideStore source) from the KV namespace bound as FILES.
 import {
-  STARTER_TEAM, START_GOLD, PACK_COST, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN, CHAPTER_TITLE, NEW_CARD_AFTER,
+  STARTER_TEAM, START_GOLD, PACK_COST, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN, CHAPTERS, NEW_CARD_AFTER,
   levelFor, openPack, newBattle, newCampaignBattle, applyMove, aiMove,
 } from './game.js';
 
@@ -54,6 +54,7 @@ async function profile(db, user) {
   const collection = Object.fromEntries(results.map(r => [r.card_id, r.count]));
   const prog = await getProgress(db, user.id);
   const next = CAMPAIGN[prog.cleared];
+  const chapter = next ? next.chapter : CHAPTERS.length - 1;
   return {
     username: user.username,
     gold: user.gold,
@@ -65,10 +66,11 @@ async function profile(db, user) {
     wins: prog.wins,
     packs: prog.packs,
     campaign: {
-      chapter: CHAPTER_TITLE,
+      chapter: CHAPTERS[chapter].title,
+      chapterNum: chapter + 1,
       cleared: prog.cleared,
       total: CAMPAIGN.length,
-      next: next ? { num: prog.cleared + 1, title: next.title, enemies: next.enemies, boss: !!next.boss } : null,
+      next: next ? { num: next.num, title: next.title, enemies: next.enemies, boss: !!next.boss } : null,
       choose: pendingChoice(prog, collection),
       friendsUnlocked: prog.cleared >= NEW_CARD_AFTER[1],
     },
@@ -156,14 +158,14 @@ async function pickReward(req, db, user) {
   return json(await profile(db, await freshUser(db, user.id)));
 }
 
-const runView = run => run && { level: run.level + 1, title: CAMPAIGN[run.level].title, boss: !!CAMPAIGN[run.level].boss, state: run.state };
+const runView = run => run && { level: CAMPAIGN[run.level].num, title: CAMPAIGN[run.level].title, boss: !!CAMPAIGN[run.level].boss, state: run.state };
 
 async function startCampaign(db, user) {
   const prof = await profile(db, user);
   if (prof.needsStarter) throw new HttpError(400, 'Pick your first card.');
   if (prof.campaign.choose) throw new HttpError(400, 'Pick your new card first.');
   const prog = await getProgress(db, user.id);
-  if (prog.cleared >= CAMPAIGN.length) throw new HttpError(400, 'You beat the whole chapter!');
+  if (prog.cleared >= CAMPAIGN.length) throw new HttpError(400, 'You beat the whole campaign!');
   const run = { level: prog.cleared, state: newCampaignBattle(prof.team, prog.cleared) };
   await db.prepare('INSERT INTO progress (user_id, run) VALUES (?, ?) ON CONFLICT (user_id) DO UPDATE SET run = excluded.run')
     .bind(user.id, JSON.stringify(run)).run();

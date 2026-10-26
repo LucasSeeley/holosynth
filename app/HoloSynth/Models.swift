@@ -48,9 +48,10 @@ struct Profile: Decodable, Equatable {
 struct Campaign: Decodable, Equatable {
     struct Level: Decodable, Equatable { let num: Int; let title: String; let enemies: [String]; let boss: Bool }
     let chapter: String
+    let chapterNum: Int
     let cleared: Int
     let total: Int
-    let next: Level?             // nil once the chapter is beaten
+    let next: Level?             // nil once every chapter is beaten
     let choose: [String]?        // starters on offer after level 3, until you pick one
     let friendsUnlocked: Bool
 }

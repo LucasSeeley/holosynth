@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, PITY_PACKS, CAMPAIGN, STARTER_TEAM } from '../src/game.js';
+import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, PITY_PACKS, CAMPAIGN, STARTER_TEAM, CHAPTERS } from '../src/game.js';
 
 const fixed = v => () => v;
 
@@ -80,4 +80,12 @@ test('every starter path can win every campaign level going first', () => {
     while (s.winner === null) { const m = aiMove(s, s.turn); applyMove(s, s.turn, m.from, m.move, m.to); }
     assert.equal(s.winner, 0, `level ${level + 1} with ${team.join('+')}`);
   }));
+});
+
+test('three chapters of 30 with a boss every 10th level, all with card art', () => {
+  assert.deepEqual(CHAPTERS.map(c => c.levels.length), [30, 30, 30]);
+  CAMPAIGN.forEach((l, i) => {
+    assert.equal(!!l.boss, (i + 1) % 10 === 0, `level ${i + 1}`);
+    for (const id of l.enemies) assert.ok(BY_ID[id] && !['apex', 'genesis'].includes(id), id);
+  });
 });
