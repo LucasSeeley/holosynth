@@ -9,6 +9,7 @@ struct SocialTab: View {
     @State private var busy = false
     @State private var battle = false
     @State private var viewing: Social.Person?    // a friend request opened as a profile sheet
+    @State private var friendCard: Social.Person? // a friend's profile, just to look at
 
     var body: some View {
         ZStack {
@@ -40,6 +41,7 @@ struct SocialTab: View {
                 act(accept ? "friends" : "friends/remove", ["name": p.name])
             }
         }
+        .sheet(item: $friendCard) { p in PlayerSheet(name: p.name, onAnswer: nil) }
         .fullScreenCover(isPresented: $battle) {
             FriendBattleView { battle = false; Task { await store.loadSocial() } }
         }
@@ -111,6 +113,8 @@ struct SocialTab: View {
                     Button { challenge(p) } label: { SwordsButton(gold: false) }
                         .accessibilityLabel("Battle \(p.name)")
                 }
+                .contentShape(Rectangle())
+                .onTapGesture { friendCard = p }
                 .contextMenu {
                     Button(role: .destructive) { act("friends/remove", ["name": p.name]) } label: {
                         Label("Remove friend", systemImage: "person.badge.minus")
@@ -301,7 +305,7 @@ struct PlayerSheet: View {
     }
     @EnvironmentObject var store: GameStore
     let name: String
-    let onAnswer: (_ accept: Bool) -> Void
+    let onAnswer: ((_ accept: Bool) -> Void)?   // nil: a friend's profile, nothing to answer
     @State private var player: Player?
     @State private var error: String?
 
@@ -319,7 +323,7 @@ struct PlayerSheet: View {
                     }
                     VStack(spacing: 3) {
                         Text(p.name).font(.chakra(26)).foregroundColor(Theme.fg).lineLimit(1).minimumScaleFactor(0.6)
-                        Text("wants to be friends · Playing since \(Date(timeIntervalSince1970: p.since / 1000).formatted(.dateTime.month(.abbreviated).year()))")
+                        Text("\(onAnswer == nil ? "" : "wants to be friends · ")Playing since \(Date(timeIntervalSince1970: p.since / 1000).formatted(.dateTime.month(.abbreviated).year()))")
                             .font(.barlow(14)).foregroundColor(Theme.muted).multilineTextAlignment(.center)
                     }
                     .padding(.top, 8)
@@ -345,7 +349,7 @@ struct PlayerSheet: View {
                     .padding(14)
                     .background(Theme.field, in: RoundedRectangle(cornerRadius: 18))
                     .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.brass.opacity(0.2), lineWidth: 1))
-                    HStack(spacing: 10) {
+                    if let onAnswer { HStack(spacing: 10) {
                         Button { onAnswer(false) } label: {
                             Text("Ignore").font(.chakra(14)).tracking(1.6).textCase(.uppercase).foregroundColor(Theme.muted)
                                 .frame(maxWidth: .infinity).frame(height: 44)
@@ -354,7 +358,7 @@ struct PlayerSheet: View {
                         }
                         Button("Accept") { onAnswer(true) }.buttonStyle(GoldButton(height: 44))
                     }
-                    .padding(.top, 4)
+                    .padding(.top, 4) }
                 }
                 .padding(.horizontal, 20).padding(.top, 24)
             } else if let error {
