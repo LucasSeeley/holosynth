@@ -346,8 +346,12 @@ struct PlayerSheet: View {
                     .background(Theme.field, in: RoundedRectangle(cornerRadius: 18))
                     .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.brass.opacity(0.2), lineWidth: 1))
                     HStack(spacing: 10) {
-                        Button { onAnswer(false) } label: { Text("Ignore").frame(maxWidth: .infinity) }
-                            .buttonStyle(OutlineButton(color: Theme.muted))
+                        Button { onAnswer(false) } label: {
+                            Text("Ignore").font(.chakra(14)).tracking(1.6).textCase(.uppercase).foregroundColor(Theme.muted)
+                                .frame(maxWidth: .infinity).frame(height: 44)
+                                .background(Theme.field, in: RoundedRectangle(cornerRadius: 12))
+                                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.muted.opacity(0.5), lineWidth: 1))
+                        }
                         Button("Accept") { onAnswer(true) }.buttonStyle(GoldButton(height: 44))
                     }
                     .padding(.top, 4)
