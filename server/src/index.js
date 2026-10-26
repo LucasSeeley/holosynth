@@ -218,8 +218,9 @@ async function campaignWin(db, user, level) {
   const res = await db.prepare('UPDATE progress SET cleared = cleared + 1, wins = wins + 1 WHERE user_id = ? AND cleared = ?')
     .bind(user.id, level).run();
   if (!res.meta.changes) return { won: true, gold: 0, xp: 0 };
-  await db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(CAMPAIGN_GOLD, WIN_XP, user.id).run();
-  const result = { won: true, gold: CAMPAIGN_GOLD, xp: WIN_XP };
+  const gold = CAMPAIGN_GOLD[CAMPAIGN[level].chapter];
+  await db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(gold, WIN_XP, user.id).run();
+  const result = { won: true, gold, xp: WIN_XP };
   const num = level + 1;
   const owned = (await profile(db, await freshUser(db, user.id))).collection;
   if (num === NEW_CARD_AFTER[0]) result.chooseCard = true;

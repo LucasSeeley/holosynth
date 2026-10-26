@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal } from '../src/game.js';
+import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal } from '../src/game.js';
 
 const fixed = v => () => v;
 
@@ -81,6 +81,7 @@ test('every starter path can win every campaign level going first', () => {
 });
 
 test('three chapters of 30 with a boss every 10th level, all real cards', () => {
+  assert.deepEqual([0, 30, 60].map(l => CAMPAIGN_GOLD[CAMPAIGN[l].chapter]), [25, 50, 100]);
   assert.deepEqual(CHAPTERS.map(c => c.levels.length), [30, 30, 30]);
   CAMPAIGN.forEach((l, i) => {
     assert.equal(!!l.boss, (i + 1) % 10 === 0, `level ${i + 1}`);
