@@ -105,7 +105,7 @@ test('five chapters of 30 with a boss every 10th level, all real cards', () => {
   assert.deepEqual([0, 30, 60, 90, 120].map(l => [CAMPAIGN_GOLD[CAMPAIGN[l].chapter], CAMPAIGN_XP[CAMPAIGN[l].chapter]]), [[25, 25], [50, 25], [100, 25], [100, 50], [100, 50]]);
   assert.deepEqual(CHAPTERS.map(c => c.levels.length), [30, 30, 30, 30, 30]);
   assert.equal(OPEN_LEVELS, CHAPTERS_OPEN * 30);
-  assert.deepEqual(CAMPAIGN.slice(90).filter(l => l.boss).map(l => l.pack), ['magic', 'magic', 'magic', 'cyber', 'magic', 'omni']);
+  assert.deepEqual(CAMPAIGN.filter(l => l.boss).map(l => l.pack), [...Array(9).fill('cyber'), 'magic', 'magic', 'magic', 'cyber', 'magic', 'omni']);
   CAMPAIGN.forEach((l, i) => {
     assert.equal(!!l.boss, (i + 1) % 10 === 0, `level ${i + 1}`);
     for (const id of l.enemies) assert.ok(BY_ID[id], id);
