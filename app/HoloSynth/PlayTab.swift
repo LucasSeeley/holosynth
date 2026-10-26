@@ -170,11 +170,11 @@ struct PlayTab: View {
     private var packTile: some View {
         Button { tab = 1 } label: {
             ZStack(alignment: .bottomLeading) {
-                // all three packs fanned out: Magic and Omni behind, Cyber in front
+                // all three packs fanned out: Cyber and Magic behind, Omni in front
                 ZStack {
-                    fanned("magic", angle: -16, x: -30, height: 88)
-                    fanned("omni", angle: 16, x: 28, height: 88)
-                    fanned("cyber", angle: 0, x: 0, height: 96)
+                    fanned("cyber", angle: -16, x: -30, height: 88)
+                    fanned("magic", angle: 16, x: 28, height: 88)
+                    fanned("omni", angle: 0, x: 0, height: 96)
                 }
                 .frame(width: 120, height: 120)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
