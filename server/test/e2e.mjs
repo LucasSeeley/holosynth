@@ -19,7 +19,12 @@ const check = (ok, msg) => { if (!ok) throw new Error(msg); };
 
 // card art the app downloads (uploaded by the build before this test; not there on a local server)
 if (!base.includes('localhost')) {
-  const man = await fetch(`${base}/art/manifest.json`).then(r => r.json());
+  // KV can serve a cached "missing" for up to a minute after the upload, so give it time
+  let man = null;
+  for (let i = 0; i < 12 && !man?.volt; i++) {
+    man = await fetch(`${base}/art/manifest.json`).then(r => (r.ok ? r.json() : null)).catch(() => null);
+    if (!man?.volt) await new Promise(r => setTimeout(r, 10000));
+  }
   check(Object.keys(man).length >= 114, 'card art uploaded');
   const img = await fetch(`${base}/art/volt.webp?v=${man.volt}`);
   check(img.ok && img.headers.get('content-type') === 'image/webp', 'card art served');
