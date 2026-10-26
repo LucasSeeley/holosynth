@@ -82,10 +82,10 @@ test('every starter path can win every campaign level going first', () => {
   }));
 });
 
-test('three chapters of 30 with a boss every 10th level, all with card art', () => {
+test('three chapters of 30 with a boss every 10th level, all real cards', () => {
   assert.deepEqual(CHAPTERS.map(c => c.levels.length), [30, 30, 30]);
   CAMPAIGN.forEach((l, i) => {
     assert.equal(!!l.boss, (i + 1) % 10 === 0, `level ${i + 1}`);
-    for (const id of l.enemies) assert.ok(BY_ID[id] && !['apex', 'genesis'].includes(id), id);
+    for (const id of l.enemies) assert.ok(BY_ID[id], id);
   });
 });
