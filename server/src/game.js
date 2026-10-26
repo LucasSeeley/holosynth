@@ -4,7 +4,7 @@ import CARDS from '../../shared/cards.json' with { type: 'json' };
 export const BY_ID = Object.fromEntries(CARDS.map(c => [c.id, c]));
 export const STARTER_TEAM = ['volt', 'fang', 'goliath'];
 export const START_GOLD = 0;           // gold comes from the campaign
-export const PACK_COST = 250;
+export const PACK_COST = 1000;
 export const PACK_SIZE = 3;
 export const WIN_GOLD = 50;            // friend battle win
 export const CAMPAIGN_GOLD = 25;       // first clear of a campaign level

@@ -73,11 +73,11 @@ struct PackTab: View {
                     buying = false
                 }
             } label: {
-                Label(buying ? "Opening…" : "Buy · 250", systemImage: "circle.hexagongrid.fill")
+                Label(buying ? "Opening…" : "Buy · 1,000", systemImage: "circle.hexagongrid.fill")
             }
             .buttonStyle(GoldButton())
-            .disabled(buying || (store.profile?.gold ?? 0) < 250)
-            if (store.profile?.gold ?? 0) < 250 {
+            .disabled(buying || (store.profile?.gold ?? 0) < 1000)
+            if (store.profile?.gold ?? 0) < 1000 {
                 Text("Clear campaign levels and win battles to earn gold.").font(.barlow(14)).foregroundColor(Theme.muted)
             }
             if let error = store.error { Text(error).font(.barlow(14, semibold: true)).foregroundColor(Theme.pink) }
