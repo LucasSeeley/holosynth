@@ -75,7 +75,7 @@ struct CampaignBattleView: View {
                     }
                     if let pack = r.pack {
                         Text("Boss reward: a free pack!").font(.barlow(15)).foregroundColor(Theme.fg)
-                        Button("Open your pack") { onClose(.pack(pack)) }.buttonStyle(GoldButton())
+                        Button("Open your pack") { store.pendingPackType = r.packType ?? "cyber"; onClose(.pack(pack)) }.buttonStyle(GoldButton())
                     } else if r.chooseCard == true {
                         Text("A new card wants to join you.").font(.barlow(15)).foregroundColor(Theme.fg)
                         Button("Pick your new card") { onClose(.chooseCard) }.buttonStyle(GoldButton())

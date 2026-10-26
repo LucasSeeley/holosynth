@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS } from '../src/game.js';
+import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack } from '../src/game.js';
 
 const fixed = v => () => v;
 
@@ -44,7 +44,7 @@ test('knocking out the whole team wins', () => {
 });
 
 test('no pity: a pack never forces a Legendary', () => {
-  const p = openPack(1000, fixed(0));                 // rand 0 -> all Common, however long since the last Legendary
+  const p = openPack(1000, 'cyber', fixed(0));                 // rand 0 -> all Common, however long since the last Legendary
   assert.ok(p.cards.every(id => BY_ID[id].rarity === 'Common'));
 });
 
@@ -86,6 +86,16 @@ test('the final boss beats the starter team but a strong team can win it', () =>
   assert.equal(CAMPAIGN.at(-1).enemies.length, 3);
   assert.equal(run(STARTER_TEAM), 1);
   assert.equal(run(['phoenix', 'dreadnought', 'nightblade']), 0);
+});
+
+test('packs only hold cards of their type, and only open types are free', () => {
+  for (const [type, classes] of Object.entries(PACK_TYPES)) {
+    for (let i = 0; i < 500; i++) for (const id of openPack(0, type).cards) if (classes) assert.ok(classes.includes(BY_ID[id].cls), `${id} in ${type}`);
+  }
+  assert.ok(PACKS_OPEN.includes(freePack()));
+  for (let d = 0; d < 30; d++) assert.ok(PACKS_OPEN.includes(dailyPack(d * 86400000)));
+  const magic = new Set(Object.values(BY_ID).filter(c => PACK_TYPES.magic.includes(c.cls)).map(c => c.id));
+  assert.ok(CAMPAIGN.every(l => l.enemies.every(id => !magic.has(id))), 'no magic cards in campaign levels');
 });
 
 test('three chapters of 30 with a boss every 10th level, all real cards', () => {

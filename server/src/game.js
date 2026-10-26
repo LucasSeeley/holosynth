@@ -29,16 +29,20 @@ function rollRarity(rand) {
   for (const [name, pct] of RATES) { if ((r -= pct) < 0) return name; }
   return 'Common';
 }
-const pickOf = (rarity, rand) => {
-  const pool = CARDS.filter(c => c.rarity === rarity);
+// Pack types and the classes each holds (omni = every card).
+export const PACK_TYPES = { cyber: ['Fighter', 'Beast', 'Mech'], magic: ['Arcanist', 'Spirit', 'Mystic'], omni: null };
+export const PACKS_OPEN = ['cyber'];   // magic and omni show "Coming soon" until they're added here
+const pickOf = (rarity, type, rand) => {
+  const classes = PACK_TYPES[type];
+  const pool = CARDS.filter(c => c.rarity === rarity && (!classes || classes.includes(c.cls)));
   return pool[Math.floor(rand() * pool.length)].id;
 };
 
-// Returns { cards: [ids], packsSinceLegend } for one pack.
-export function openPack(packsSinceLegend, rand = Math.random) {
+// Returns { cards: [ids], packsSinceLegend } for one pack of `type`.
+export function openPack(packsSinceLegend, type = 'cyber', rand = Math.random) {
   const rarities = Array.from({ length: PACK_SIZE }, () => rollRarity(rand));
   return {
-    cards: rarities.map(r => pickOf(r, rand)),
+    cards: rarities.map(r => pickOf(r, type, rand)),
     packsSinceLegend: rarities.includes('Legendary') ? 0 : packsSinceLegend + 1,
   };
 }
@@ -59,6 +63,13 @@ export const SPIN_SLOTS = [
 const DAY_MS = 24 * 60 * 60 * 1000;
 export const dayStart = t => Math.floor(t / DAY_MS) * DAY_MS;
 export const nextSpinAt = (last, t) => (last && last >= dayStart(t) ? dayStart(t) + DAY_MS : 0);   // 0 = can spin now
+// Free packs (wheel, campaign boss, gauntlet) are a random open type; the wheel's pack changes once a day.
+export const freePack = (rand = Math.random) => PACKS_OPEN[Math.floor(rand() * PACKS_OPEN.length)];
+export const dailyPack = t => {
+  let h = Math.floor(t / DAY_MS) * 2654435761 >>> 0;
+  h = Math.imul(h ^ (h >>> 15), 2246822519) >>> 0;
+  return PACKS_OPEN[(h ^ (h >>> 13)) % PACKS_OPEN.length];
+};
 export function spinWheel(rand = Math.random) {
   let r = rand() * 100;
   for (let i = 0; i < SPIN_SLOTS.length; i++) if ((r -= SPIN_SLOTS[i].weight) < 0) return i;

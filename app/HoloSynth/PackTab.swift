@@ -21,8 +21,17 @@ struct PackTab: View {
     @State private var sparkOut = false
     @State private var shakes: CGFloat = 0
     @State private var burst: Color?
+    @State private var shown = 0                  // which pack the shop carousel is on
+    @State private var swipeX: CGFloat = 0
+    @State private var openType = "cyber"         // wrapper of the pack being opened
 
-    private let tearLine: CGFloat = 0.095         // just under the crimped top of pack.webp
+    private let tearLine: CGFloat = 0.05          // just under the crimped top of the pack art
+    private static let packs: [(type: String, name: String, contents: String, glow: UInt32)] = [
+        ("cyber", "Cyber Pack", "Fighter, Beast and Mech cards", 0x3FF0FF),
+        ("magic", "Magic Pack", "Arcanist, Spirit and Mystic cards", 0xB46BFF),
+        ("omni", "Omni Pack", "Any card from both sets", 0xE8B85A),
+    ]
+    private static let open: Set<String> = ["cyber"]   // the others say "Coming soon" (server: PACKS_OPEN)
 
     var body: some View {
         VStack(spacing: 0) {
@@ -50,10 +59,11 @@ struct PackTab: View {
     private func openPending() {
         guard let cards = store.pendingPack else { return }
         store.pendingPack = nil
-        start(cards)
+        start(cards, type: store.pendingPackType)
     }
 
-    private func start(_ cards: [String]) {
+    private func start(_ cards: [String], type: String) {
+        openType = type
         tearProgress = 0; lastTick = 0
         torn = false; rising = false; dealt = false
         flipped = []; sparking = false; sparkOut = false
@@ -61,37 +71,80 @@ struct PackTab: View {
         pulled = cards
     }
 
+    // Swipe left/right between the packs; the neighbours peek in at the sides.
     private var shop: some View {
-        VStack(spacing: 20) {
-            Spacer()
-            packArt.frame(maxHeight: 360).shadow(color: Theme.backRed.opacity(0.7), radius: 24)
-            Text("HoloSynth pack · 3 cards").sectionTitle()
+        let pack = Self.packs[shown]
+        let gold = store.profile?.gold ?? 0
+        let isOpen = Self.open.contains(pack.type)
+        return VStack(spacing: 14) {
+            Spacer(minLength: 0)
+            GeometryReader { geo in
+                let w = min(geo.size.width * 0.62, geo.size.height * 631 / 1050)
+                ZStack {
+                    ForEach(Self.packs.indices, id: \.self) { i in
+                        let d = CGFloat(i - shown)
+                        packImage(Self.packs[i].type)
+                            .frame(width: w)
+                            .scaleEffect(i == shown ? 1 : 0.62)
+                            .opacity(i == shown ? 1 : 0.45)
+                            .shadow(color: Color(hex: Self.packs[i].glow).opacity(i == shown ? 0.55 : 0), radius: 26)
+                            .offset(x: d * w * 0.86 + swipeX)
+                            .zIndex(i == shown ? 1 : 0)
+                            .onTapGesture { withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) { shown = i } }
+                    }
+                }
+                .frame(width: geo.size.width, height: geo.size.height)
+                .contentShape(Rectangle())
+                .gesture(DragGesture()
+                    .onChanged { swipeX = $0.translation.width }
+                    .onEnded { v in
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                            if v.translation.width < -50 { shown = min(shown + 1, Self.packs.count - 1) }
+                            if v.translation.width > 50 { shown = max(shown - 1, 0) }
+                            swipeX = 0
+                        }
+                    })
+            }
+            .frame(maxHeight: 400)
+            HStack(spacing: 6) {
+                ForEach(Self.packs.indices, id: \.self) { i in
+                    Capsule().fill(i == shown ? Theme.brass : Theme.fg.opacity(0.3)).frame(width: i == shown ? 22 : 7, height: 7)
+                }
+            }
+            .accessibilityHidden(true)
+            VStack(spacing: 4) {
+                Text(pack.name).font(.chakra(22)).tracking(1.5).textCase(.uppercase).foregroundColor(Color(hex: pack.glow))
+                Text("3 cards · \(pack.contents)").font(.barlow(14)).foregroundColor(Theme.muted)
+            }
             Button {
                 buying = true
                 Task {
-                    if let cards = await store.buyPack() { start(cards) }
+                    if let cards = await store.buyPack(pack.type) { start(cards, type: pack.type) }
                     buying = false
                 }
             } label: {
-                Label(buying ? "Opening…" : "Buy · 1,000", systemImage: "circle.hexagongrid.fill")
+                if isOpen { Label(buying ? "Opening…" : "Buy · 1,000", systemImage: "circle.hexagongrid.fill") }
+                else { Text("Coming soon") }
             }
             .buttonStyle(GoldButton())
-            .disabled(buying || (store.profile?.gold ?? 0) < 1000)
-            if (store.profile?.gold ?? 0) < 1000 {
+            .disabled(!isOpen || buying || gold < 1000)
+            if isOpen && gold < 1000 {
                 Text("Clear campaign levels and win battles to earn gold.").font(.barlow(14)).foregroundColor(Theme.muted)
             }
             if let error = store.error { Text(error).font(.barlow(14, semibold: true)).foregroundColor(Theme.pink) }
-            Spacer()
+            Spacer(minLength: 0)
         }
         .padding(24)
     }
 
-    private var packArt: some View {
+    private func packImage(_ type: String) -> some View {
         Group {
-            if let img = Art.image("pack") { Image(uiImage: img).resizable().scaledToFit() }
-            else { RoundedRectangle(cornerRadius: 12).fill(Theme.backRed) }
+            if let img = Art.pack(type) { Image(uiImage: img).resizable().scaledToFit() }
+            else { RoundedRectangle(cornerRadius: 12).fill(Theme.backRed).aspectRatio(631 / 1050, contentMode: .fit) }
         }
     }
+
+    private var packArt: some View { packImage(openType) }
 
     // Colour of the best card in the pack: white-gold for all commons.
     private var leakColor: Color {
@@ -104,7 +157,7 @@ struct PackTab: View {
     private var opening: some View {
         GeometryReader { geo in
             let packW = min(geo.size.width * 0.7, 300)
-            let packH = packW * 1050 / 686
+            let packH = packW * 1050 / 631
             let smallW = min((geo.size.width - 48) / 3, 130)    // in the pack and in the final row
             let bigW = min(geo.size.width * 0.7, 320)           // revealing one at a time
             let finished = dealt && current >= pulled.count

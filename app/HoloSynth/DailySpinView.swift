@@ -60,7 +60,7 @@ struct DailySpinView: View {
         Text(pack ? "Free pack!" : gold ? "\(r.amount) gold!" : "\(r.amount) XP!")
             .font(.chakra(34)).textCase(.uppercase).foregroundColor(color).shadow(color: color.opacity(0.6), radius: 12)
         ZStack {
-            if pack, let img = Art.image("pack") {
+            if pack, let img = Art.pack(r.packType ?? "cyber") {
                 Image(uiImage: img).resizable().scaledToFit().frame(height: 250).rotationEffect(.degrees(-4))
                     .shadow(color: Theme.backRed.opacity(0.8), radius: 20, y: 14)
             } else if gold {
@@ -125,7 +125,7 @@ struct DailySpinView: View {
             Slice().fill(lit ? fg : bg).overlay(Slice().stroke(Theme.ink, lineWidth: 3))
             VStack(spacing: 1) {
                 if kind == "pack" {
-                    if let img = Art.image("pack") { Image(uiImage: img).resizable().scaledToFit().frame(height: size * 0.16) }
+                    if let img = Art.pack(store.profile?.spinPack ?? "cyber") { Image(uiImage: img).resizable().scaledToFit().frame(height: size * 0.16) }
                     Text("Pack").font(.chakra(size * 0.038)).tracking(1.5).textCase(.uppercase)
                 } else {
                     Text("\(amount)").font(.chakra(size * 0.075))
@@ -165,7 +165,7 @@ struct DailySpinView: View {
     }
 
     private func close() {
-        if let r = reply { store.profile = r.profile }
+        if let r = reply { store.profile = r.profile; store.pendingPackType = r.packType ?? "cyber" }
         onClose(reply?.kind == "pack" ? reply?.cards : nil)
     }
 

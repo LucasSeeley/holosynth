@@ -43,6 +43,7 @@ await call('/starter', a.token, { card: 'volt' });
 await call('/starter', b.token, { card: 'fang' });
 await expectError(call('/starter', a.token, { card: 'goliath' }), 400);   // only one free pick
 await expectError(call('/packs', a.token, {}), 400);   // no gold
+await expectError(call('/packs', a.token, { type: 'magic' }), 400);   // magic pack: coming soon
 await expectError(call('/matches', a.token, {}), 400);  // friend battles locked
 
 // Play campaign levels until `upTo` are cleared, retrying losses; picks the first offered card after level 3.

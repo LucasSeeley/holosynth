@@ -50,6 +50,7 @@ struct Profile: Decodable, Equatable {
     let since: Double           // account created, ms since 1970
     let friends: Int
     let nextSpin: Double        // when the daily spin is ready again, ms since 1970; 0 = ready now
+    let spinPack: String?       // which pack the wheel's pack slot gives today
     let gauntlet: GauntletStats
     let campaign: Campaign
 }
@@ -74,6 +75,7 @@ struct CampaignRun: Decodable, Equatable {
         let chooseCard: Bool?
         let newCard: String?
         let pack: [String]?
+        let packType: String?
     }
     let level: Int
     let title: String
@@ -147,6 +149,7 @@ struct SpinReply: Decodable {
     let kind: String            // gold | xp | pack
     let amount: Int
     let cards: [String]?        // the pack, when it's a pack
+    let packType: String?
     let profile: Profile
 }
 struct SocialReply: Decodable { let message: String?; let social: Social }
@@ -241,4 +244,6 @@ enum Art {
     }
     static func forget(_ name: String) { cache.removeObject(forKey: name as NSString) }
     static func classIcon(_ cls: String) -> UIImage? { image("class_" + cls.lowercased()) }
+    // cyber | magic | omni; the Cyber Pack is the plain "pack" image used everywhere else
+    static func pack(_ type: String) -> UIImage? { image(type == "cyber" ? "pack" : "pack_" + type) }
 }

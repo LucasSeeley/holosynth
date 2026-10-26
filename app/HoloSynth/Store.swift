@@ -44,6 +44,7 @@ final class GameStore: ObservableObject {
     @Published var profile: Profile?
     @Published var error: String?
     @Published var pendingPack: [String]?   // a pack won in the campaign, opened on the Packs tab
+    var pendingPackType = "cyber"           // which wrapper it opens in
     @Published var social: Social?
 
     func auth(username: String, password: String, newAccount: Bool) async {
@@ -87,9 +88,9 @@ final class GameStore: ObservableObject {
         catch { self.error = error.localizedDescription }
     }
 
-    func buyPack() async -> [String]? {
+    func buyPack(_ type: String) async -> [String]? {
         do {
-            let reply: PackReply = try await API.call("packs", token: token, body: [:])
+            let reply: PackReply = try await API.call("packs", token: token, body: ["type": type])
             profile = reply.profile
             return reply.cards
         } catch {

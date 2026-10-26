@@ -2,7 +2,7 @@
 // It also serves the iPhone app download (IPA + SideStore source) from the KV namespace bound as FILES.
 import {
   BY_ID, STARTER_TEAM, START_GOLD, PACK_COST, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN, CHAPTERS, NEW_CARD_AFTER,
-  levelFor, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt,
+  levelFor, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack,
   gauntletEnemies, gauntletBattle, gauntletHeal, gauntletGold, GAUNTLET_PACK_EVERY, newCampaignBattle, applyMove, aiMove,
 } from './game.js';
 
@@ -79,6 +79,7 @@ async function profile(db, user) {
     since: user.created,
     friends: extra.friends,
     nextSpin: nextSpinAt(extra.spun, now()),
+    spinPack: dailyPack(now()),   // which pack the wheel's pack slot gives today
     gauntlet: { best: extra.gbest || 0, rank: extra.gahead + 1 },   // rank among you and your friends   // ms when the wheel resets (midnight UTC); 0 = spin now
     wins: prog.wins,
     packs: prog.packs,
@@ -136,16 +137,18 @@ async function setTeam(req, db, user) {
   return json(await profile(db, { ...user, team: JSON.stringify(team) }));
 }
 
-async function buyPack(db, user) {
+async function buyPack(db, user, type = 'cyber') {
+  if (!(type in PACK_TYPES)) throw new HttpError(400, 'Unknown pack.');
+  if (!PACKS_OPEN.includes(type)) throw new HttpError(400, 'That pack is coming soon.');
   if (user.gold < PACK_COST) throw new HttpError(400, `You need ${PACK_COST} gold.`);
-  const pack = openPack(user.packs_since_legend);
+  const pack = openPack(user.packs_since_legend, type);
   // Guard on gold in the UPDATE so two quick taps can't both spend the same gold.
   const res = await db.prepare(
     'UPDATE users SET gold = gold - ?, packs_since_legend = ? WHERE id = ? AND gold >= ?',
   ).bind(PACK_COST, pack.packsSinceLegend, user.id, PACK_COST).run();
   if (!res.meta.changes) throw new HttpError(400, `You need ${PACK_COST} gold.`);
   await db.batch([...pack.cards.map(id => addCard(db, user.id, id)), bumpProgress(db, user.id, 'packs')]);
-  return json({ cards: pack.cards, profile: await profile(db, await freshUser(db, user.id)) });
+  return json({ cards: pack.cards, type, profile: await profile(db, await freshUser(db, user.id)) });
 }
 
 const bumpProgress = (db, userId, field) => db.prepare(
@@ -235,11 +238,13 @@ async function campaignWin(db, user, level) {
   }
   if (CAMPAIGN[level].boss) {
     const fresh = await freshUser(db, user.id);
-    const pack = openPack(fresh.packs_since_legend);
+    const packType = freePack();
+    const pack = openPack(fresh.packs_since_legend, packType);
     await db.batch([...pack.cards.map(id => addCard(db, user.id, id)),
       db.prepare('UPDATE users SET packs_since_legend = ? WHERE id = ?').bind(pack.packsSinceLegend, user.id),
       bumpProgress(db, user.id, 'packs')]);
     result.pack = pack.cards;
+    result.packType = packType;
   }
   return result;
 }
@@ -441,14 +446,16 @@ async function spin(db, user) {
   let cards = null;
   if (prize.kind === 'gold') await db.prepare('UPDATE users SET gold = gold + ? WHERE id = ?').bind(prize.amount, user.id).run();
   if (prize.kind === 'xp') await db.prepare('UPDATE users SET xp = xp + ? WHERE id = ?').bind(prize.amount, user.id).run();
+  let packType = null;
   if (prize.kind === 'pack') {
-    const pack = openPack(user.packs_since_legend);
+    packType = dailyPack(t);
+    const pack = openPack(user.packs_since_legend, packType);
     await db.batch([...pack.cards.map(id => addCard(db, user.id, id)),
       db.prepare('UPDATE users SET packs_since_legend = ? WHERE id = ?').bind(pack.packsSinceLegend, user.id),
       bumpProgress(db, user.id, 'packs')]);
     cards = pack.cards;
   }
-  return json({ slot, kind: prize.kind, amount: prize.amount, cards, profile: await profile(db, await freshUser(db, user.id)) });
+  return json({ slot, kind: prize.kind, amount: prize.amount, cards, packType, profile: await profile(db, await freshUser(db, user.id)) });
 }
 
 // Someone's public card, shown when you tap a friend request. Only between people linked by a request or friendship.
@@ -553,7 +560,7 @@ async function gauntletMove(req, db, user) {
   let pack = null;
   const writes = [db.prepare('UPDATE users SET gold = gold + ? WHERE id = ?').bind(gold, user.id), bumpProgress(db, user.id, 'wins')];
   if (next.wins % GAUNTLET_PACK_EVERY === 0) {
-    const opened = openPack(user.packs_since_legend);
+    const opened = openPack(user.packs_since_legend, freePack());
     pack = opened.cards;
     next.packs++;
     writes.push(...pack.map(id => addCard(db, user.id, id)),
@@ -641,7 +648,7 @@ async function route(req, env) {
   if (method === 'GET' && pathname === '/me') return json(await profile(db, user));
   if (method === 'POST' && pathname === '/me/delete') return deleteAccount(db, user);
   if (method === 'POST' && pathname === '/team') return setTeam(req, db, user);
-  if (method === 'POST' && pathname === '/packs') return buyPack(db, user);
+  if (method === 'POST' && pathname === '/packs') return buyPack(db, user, String((await body(req)).type ?? 'cyber'));
   if (method === 'POST' && pathname === '/starter') return pickStarter(req, db, user);
   if (method === 'POST' && pathname === '/avatar') return setAvatar(req, db, user);
   if (method === 'POST' && pathname === '/spin') return spin(db, user);
