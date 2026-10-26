@@ -1,8 +1,9 @@
 // HoloSynth game server: a Cloudflare Worker over D1. Every reply is JSON; errors are { error: "message" }.
 // It also serves the iPhone app download (IPA + SideStore source) from the KV namespace bound as FILES.
 import {
-  STARTER_TEAM, START_GOLD, PACK_COST, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN, CHAPTERS, NEW_CARD_AFTER,
-  levelFor, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, newCampaignBattle, applyMove, aiMove,
+  BY_ID, STARTER_TEAM, START_GOLD, PACK_COST, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN, CHAPTERS, NEW_CARD_AFTER,
+  levelFor, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt,
+  gauntletEnemies, gauntletBattle, gauntletHeal, gauntletGold, GAUNTLET_PACK_EVERY, newCampaignBattle, applyMove, aiMove,
 } from './game.js';
 
 class HttpError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
@@ -58,6 +59,10 @@ async function profile(db, user) {
   const prog = await getProgress(db, user.id);
   const extra = await db.prepare(`SELECT (SELECT avatar FROM presence WHERE user_id = ?1) AS avatar,
     (SELECT last FROM spins WHERE user_id = ?1) AS spun,
+    (SELECT best FROM gauntlet WHERE user_id = ?1) AS gbest,
+    (SELECT COUNT(*) FROM friends f JOIN friends g ON g.user_id = f.friend_id AND g.friend_id = f.user_id
+       JOIN gauntlet x ON x.user_id = f.friend_id
+       WHERE f.user_id = ?1 AND x.best > COALESCE((SELECT best FROM gauntlet WHERE user_id = ?1), 0)) AS gahead,
     (SELECT COUNT(*) FROM friends f JOIN friends g ON g.user_id = f.friend_id AND g.friend_id = f.user_id WHERE f.user_id = ?1) AS friends`)
     .bind(user.id).first();
   const next = CAMPAIGN[prog.cleared];
@@ -73,7 +78,8 @@ async function profile(db, user) {
     avatar: avatarOf(extra.avatar, user.team),
     since: user.created,
     friends: extra.friends,
-    nextSpin: nextSpinAt(extra.spun, now()),   // ms when the wheel resets (midnight UTC); 0 = spin now
+    nextSpin: nextSpinAt(extra.spun, now()),
+    gauntlet: { best: extra.gbest || 0, rank: extra.gahead + 1 },   // rank among you and your friends   // ms when the wheel resets (midnight UTC); 0 = spin now
     wins: prog.wins,
     packs: prog.packs,
     campaign: {
@@ -468,6 +474,124 @@ async function setAvatar(req, db, user) {
   return json(await profile(db, user));
 }
 
+// ---- gauntlet ----
+// run: { team, hp, fight (the fight in progress or up next), wins, gold, packs, enemies, state (null between fights) }
+const getGauntlet = async (db, userId) =>
+  await db.prepare('SELECT * FROM gauntlet WHERE user_id = ?').bind(userId).first() ?? { best: 0, run: null };
+const gauntletView = run => run && { ...run, nextGold: gauntletGold(run.fight),
+  nextPack: Math.ceil((run.wins + 1) / GAUNTLET_PACK_EVERY) * GAUNTLET_PACK_EVERY };
+
+async function saveGauntlet(db, userId, oldRun, run, best) {
+  const res = await db.prepare(`INSERT INTO gauntlet (user_id, best, run) VALUES (?1, ?2, ?3)
+    ON CONFLICT (user_id) DO UPDATE SET best = MAX(best, ?2), run = ?3 WHERE run IS ?4`)
+    .bind(userId, best, run && JSON.stringify(run), oldRun).run();
+  if (!res.meta.changes) throw new HttpError(409, 'The run changed. Refreshing.');
+}
+
+async function gauntletHome(db, user) {
+  const g = await getGauntlet(db, user.id);
+  return json({ best: g.best, run: gauntletView(JSON.parse(g.run)), top: (await leaderboard(db, user, 'friends')).slice(0, 3) });
+}
+
+async function startGauntlet(db, user) {
+  const g = await getGauntlet(db, user.id);
+  if (g.run) return json(gauntletView(JSON.parse(g.run)));   // already running: pick it up
+  if (JSON.parse(user.team).length < 3) throw new HttpError(400, 'Clear campaign level 6 to play the Gauntlet.');
+  const team = JSON.parse(user.team);
+  const hp = team.map(id => BY_ID[id].hp);
+  const enemies = gauntletEnemies(1);
+  const run = { team, hp, fight: 1, wins: 0, gold: 0, packs: 0, startBest: g.best, enemies, state: gauntletBattle(team, hp, enemies) };
+  await saveGauntlet(db, user.id, g.run, run, g.best);
+  return json(gauntletView(run));
+}
+
+async function nextGauntletFight(db, user) {
+  const g = await getGauntlet(db, user.id);
+  const run = JSON.parse(g.run);
+  if (!run) throw new HttpError(400, 'No Gauntlet run in progress.');
+  if (!run.state) {
+    run.state = gauntletBattle(run.team, run.hp, run.enemies);
+    await saveGauntlet(db, user.id, g.run, run, g.best);
+  }
+  return json(gauntletView(run));
+}
+
+// The run ends (lost or quit): bank the streak. The final state is kept in the reply so the last hits can play out.
+async function endGauntlet(db, user, g, run) {
+  await saveGauntlet(db, user.id, g.run, null, run.wins);
+  return { streak: run.wins, newBest: run.wins > (run.startBest ?? g.best), gold: run.gold, packs: run.packs,
+    rank: (await leaderboard(db, user, 'friends')).find(r => r.me)?.rank ?? 1 };
+}
+
+async function gauntletMove(req, db, user) {
+  const g = await getGauntlet(db, user.id);
+  const run = JSON.parse(g.run);
+  if (!run?.state) throw new HttpError(400, 'No Gauntlet fight in progress.');
+  const { from, move: kind, to } = await body(req);
+  try {
+    applyMove(run.state, 0, from, kind, to);
+    while (run.state.winner === null && run.state.turn === 1) {
+      const m = aiMove(run.state, 1);
+      applyMove(run.state, 1, m.from, m.move, m.to);
+    }
+  } catch (e) { throw new HttpError(400, e.message); }
+
+  const view = gauntletView(run);
+  if (run.state.winner === 1) {
+    const over = await endGauntlet(db, user, g, run);
+    return json({ run: view, result: { won: false, ...over }, profile: await profile(db, await freshUser(db, user.id)) });
+  }
+  if (run.state.winner === null) {
+    await saveGauntlet(db, user.id, g.run, run, g.best);
+    return json({ run: view, result: null, profile: null });
+  }
+  // won: pay out, heal, line up the next fight
+  const gold = gauntletGold(run.fight);
+  const next = { ...run, wins: run.wins + 1, gold: run.gold + gold, fight: run.fight + 1,
+    hp: gauntletHeal(run.state.teams[0]), enemies: gauntletEnemies(run.fight + 1), state: null };
+  let pack = null;
+  const writes = [db.prepare('UPDATE users SET gold = gold + ? WHERE id = ?').bind(gold, user.id), bumpProgress(db, user.id, 'wins')];
+  if (next.wins % GAUNTLET_PACK_EVERY === 0) {
+    const opened = openPack(user.packs_since_legend);
+    pack = opened.cards;
+    next.packs++;
+    writes.push(...pack.map(id => addCard(db, user.id, id)),
+      db.prepare('UPDATE users SET packs_since_legend = ? WHERE id = ?').bind(opened.packsSinceLegend, user.id),
+      bumpProgress(db, user.id, 'packs'));
+  }
+  await saveGauntlet(db, user.id, g.run, next, next.wins);   // claim the win first so a double-submit can't pay twice
+  await db.batch(writes);
+  return json({ run: { ...view, ...gauntletView(next), state: run.state }, result: { won: true, gold, pack },
+    profile: await profile(db, await freshUser(db, user.id)) });
+}
+
+async function leaveGauntlet(db, user) {
+  const g = await getGauntlet(db, user.id);
+  const run = JSON.parse(g.run);
+  if (!run) return json({ result: null });
+  const over = await endGauntlet(db, user, g, run);
+  return json({ result: { won: false, ...over }, profile: await profile(db, await freshUser(db, user.id)) });
+}
+
+// Best Gauntlet streaks: you and your friends, or everyone (top 50, plus you if you're further down).
+async function leaderboard(db, user, scope) {
+  const q = scope === 'friends'
+    ? db.prepare(`SELECT u.id, u.username, u.team, p.avatar, COALESCE(x.best, 0) AS best FROM users u
+        LEFT JOIN gauntlet x ON x.user_id = u.id LEFT JOIN presence p ON p.user_id = u.id
+        WHERE u.id = ?1 OR u.id IN (SELECT f.friend_id FROM friends f JOIN friends g ON g.user_id = f.friend_id AND g.friend_id = f.user_id WHERE f.user_id = ?1)
+        ORDER BY best DESC, u.username`).bind(user.id)
+    : db.prepare(`SELECT u.id, u.username, u.team, p.avatar, x.best FROM gauntlet x JOIN users u ON u.id = x.user_id
+        LEFT JOIN presence p ON p.user_id = u.id WHERE x.best > 0 ORDER BY x.best DESC, u.username LIMIT 50`);
+  const rows = (await q.all()).results.map((r, i) => ({ rank: i + 1, name: r.username, avatar: avatarOf(r.avatar, r.team), best: r.best, me: r.id === user.id }));
+  if (scope !== 'friends' && !rows.some(r => r.me)) {
+    const mine = (await getGauntlet(db, user.id)).best;
+    const r = await db.prepare(`SELECT (SELECT COUNT(*) FROM gauntlet WHERE best > ?2) AS ahead,
+      (SELECT avatar FROM presence WHERE user_id = ?1) AS avatar`).bind(user.id, mine).first();
+    rows.push({ rank: r.ahead + 1, name: user.username, avatar: avatarOf(r.avatar, user.team), best: mine, me: true });
+  }
+  return rows;
+}
+
 // ---- app download (SideStore) ----
 async function file(env, key, type) {
   const body = await env.FILES.get(key, { type: 'stream' });
@@ -512,6 +636,14 @@ async function route(req, env) {
     if (method === 'POST' && b === 'leave') return leaveCampaign(db, user);
     if (method === 'POST' && b === 'reward') return pickReward(req, db, user);
   }
+  if (a === 'gauntlet') {
+    if (method === 'GET' && !b) return gauntletHome(db, user);
+    if (method === 'POST' && b === 'start') return startGauntlet(db, user);
+    if (method === 'POST' && b === 'next') return nextGauntletFight(db, user);
+    if (method === 'POST' && b === 'move') return gauntletMove(req, db, user);
+    if (method === 'POST' && b === 'leave') return leaveGauntlet(db, user);
+  }
+  if (method === 'GET' && a === 'leaderboard' && (b === 'friends' || b === 'everyone')) return json(await leaderboard(db, user, b));
   if (a === 'matches') {
     if (method === 'POST' && !b) return createMatch(db, user);
     if (method === 'GET' && b === 'current') return currentMatch(db, user);

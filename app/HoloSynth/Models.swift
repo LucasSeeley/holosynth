@@ -46,6 +46,7 @@ struct Profile: Decodable, Equatable {
     let since: Double           // account created, ms since 1970
     let friends: Int
     let nextSpin: Double        // when the daily spin is ready again, ms since 1970; 0 = ready now
+    let gauntlet: GauntletStats
     let campaign: Campaign
 }
 
@@ -100,6 +101,43 @@ struct Social: Decodable, Equatable {
     let requests: [Person]
     let challenges: [Challenge]
 }
+// MARK: Gauntlet
+
+struct GauntletStats: Decodable, Equatable { let best: Int; let rank: Int }   // rank among you and your friends
+
+// An endless run: `fight` is the one in progress or up next; `state` is nil between fights.
+struct GauntletRun: Decodable, Equatable {
+    let team: [String]
+    let hp: [Int]               // your cards' HP going into the next fight (0 = knocked out for the run)
+    let fight: Int
+    let wins: Int
+    let gold: Int
+    let packs: Int
+    let enemies: [String]
+    let state: BattleState?
+    let nextGold: Int
+    let nextPack: Int
+}
+struct GauntletResult: Decodable, Equatable {
+    let won: Bool
+    let gold: Int?              // won a fight: gold for it
+    let pack: [String]?         // …and a pack every 10th win
+    let streak: Int?            // run over: final streak and totals
+    let newBest: Bool?
+    let packs: Int?
+    let rank: Int?
+}
+struct GauntletReply: Decodable { let run: GauntletRun?; let result: GauntletResult?; let profile: Profile? }
+struct GauntletHome: Decodable { let best: Int; let run: GauntletRun?; let top: [LeaderRow] }
+struct LeaderRow: Decodable, Equatable, Identifiable {
+    let rank: Int
+    let name: String
+    let avatar: String
+    let best: Int
+    let me: Bool
+    var id: String { name }
+}
+
 struct SpinReply: Decodable {
     let slot: Int               // which of the wheel's 8 slots it landed on (clockwise from the top)
     let kind: String            // gold | xp | pack

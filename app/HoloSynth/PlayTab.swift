@@ -5,18 +5,19 @@ struct PlayTab: View {
     @EnvironmentObject var store: GameStore
     @Binding var tab: Int
 
-    enum Screen: Identifiable { case campaign, friend, reward, spin; var id: Self { self } }
+    enum Screen: Identifiable { case campaign, friend, reward, spin, gauntlet; var id: Self { self } }
     @State var screen: Screen?
 
     var body: some View {
         ZStack {
             ScreenBackground()
             if let p = store.profile {
-                ScrollView {
+                ScrollView(showsIndicators: false) {
                     VStack(spacing: 12) {
                         header(p)
                         campaignTile(p)
                         SpinTile(nextSpin: p.nextSpin) { screen = .spin }
+                        GauntletTile(stats: p.gauntlet, unlocked: p.campaign.friendsUnlocked) { screen = .gauntlet }
                         HStack(spacing: 12) { friendTile(p); packTile }
                         teamPanel(p)
                         stats(p)
@@ -39,6 +40,11 @@ struct PlayTab: View {
                 }
             case .friend:
                 FriendBattleView { screen = nil }
+            case .gauntlet:
+                GauntletView { packs in
+                    screen = nil
+                    if let packs { store.pendingPack = packs; tab = 1 }
+                }
             case .spin:
                 DailySpinView { pack in
                     screen = nil

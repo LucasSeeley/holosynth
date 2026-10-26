@@ -59,6 +59,30 @@ export function spinWheel(rand = Math.random) {
   return 0;
 }
 
+// ---- gauntlet ----
+// Endless run: fight after fight with the same team, damage carries over, each win heals 20%. One loss ends it.
+export const GAUNTLET_HEAL = 0.2;
+export const GAUNTLET_PACK_EVERY = 10;
+export const gauntletGold = fight => 5 + 5 * fight;   // fight 1 pays 10, fight 2 pays 15…
+const TIERS = ['Common', 'Rare', 'Epic', 'Legendary'];
+const POOLS = TIERS.map(r => CARDS.filter(c => c.rarity === r).map(c => c.id));
+// One enemy for fights 1–10, two for 11–20, then three; rarer cards creep in as the streak grows.
+// Tuned with the computer playing both sides: the starter team averages about 6 wins, epics about 15.
+export function gauntletEnemies(fight, rand = Math.random) {
+  const size = fight <= 10 ? 1 : fight <= 20 ? 2 : 3;
+  return Array.from({ length: size }, (_, i) => {
+    const pool = POOLS[Math.min(3, Math.floor((fight + 10 * i) / 30))];
+    return pool[Math.floor(rand() * pool.length)];
+  });
+}
+// Fight `fight` against `enemies`, your cards starting at `hp` (knocked-out cards stay at 0). You move first.
+export function gauntletBattle(team, hp, enemies) {
+  const s = newBattle(team, enemies, () => 0);
+  s.teams[0].forEach((u, i) => { u.hp = hp[i]; });
+  return s;
+}
+export const gauntletHeal = team => team.map(u => (u.hp === 0 ? 0 : Math.min(BY_ID[u.id].hp, u.hp + Math.round(BY_ID[u.id].hp * GAUNTLET_HEAL))));
+
 // ---- battles ----
 // state: { teams: [[{id,hp,cd}] x2], acted: [[bool] x2], turn, winner, log }. Teams hold 1–3 cards.
 export function newBattle(teamA, teamB, rand = Math.random) {

@@ -15,7 +15,7 @@ struct CollectionTab: View {
     var body: some View {
         VStack(spacing: 0) {
             PlayerBar()
-            ScrollView {
+            ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 14) {
                     teamSection
                     let owned = store.profile?.collection ?? [:]

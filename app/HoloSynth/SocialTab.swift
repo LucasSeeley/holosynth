@@ -13,7 +13,7 @@ struct SocialTab: View {
     var body: some View {
         ZStack {
             ScreenBackground()
-            ScrollView {
+            ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Social").font(.chakra(28)).foregroundColor(Theme.fg)
                     addField

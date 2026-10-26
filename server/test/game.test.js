@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, PITY_PACKS, CAMPAIGN, STARTER_TEAM, CHAPTERS, SPIN_SLOTS, spinWheel, nextSpinAt } from '../src/game.js';
+import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, PITY_PACKS, CAMPAIGN, STARTER_TEAM, CHAPTERS, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal } from '../src/game.js';
 
 const fixed = v => () => v;
 
@@ -103,4 +103,16 @@ test('the wheel resets at midnight UTC', () => {
   assert.equal(nextSpinAt(null, t), 0);
   assert.equal(nextSpinAt(Date.UTC(2026, 9, 25, 23, 59), t), 0, 'spun yesterday');
   assert.equal(nextSpinAt(Date.UTC(2026, 9, 26, 0, 1), t), Date.UTC(2026, 9, 27), 'spun today: next midnight');
+});
+
+test('gauntlet: enemies grow with the streak, damage carries over, wins heal 20%', () => {
+  assert.equal(gauntletEnemies(1).length, 1);
+  assert.equal(gauntletEnemies(15).length, 2);
+  assert.equal(gauntletEnemies(25).length, 3);
+  assert.ok(gauntletEnemies(5).every(id => BY_ID[id].rarity === 'Common'));
+  const s = gauntletBattle(['volt', 'fang', 'goliath'], [30, 0, 70], ['crow']);
+  assert.deepEqual(s.teams[0].map(u => u.hp), [30, 0, 70]);
+  assert.equal(s.turn, 0);
+  assert.throws(() => applyMove(s, 0, 1, 'basic', 0), /knocked out/);
+  assert.deepEqual(gauntletHeal(s.teams[0]), [42, 0, 70]);   // +20% of 60, KO stays out, capped at full
 });

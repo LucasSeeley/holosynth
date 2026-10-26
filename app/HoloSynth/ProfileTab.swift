@@ -12,7 +12,7 @@ struct ProfileTab: View {
         ZStack {
             ScreenBackground()
             if let p = store.profile {
-                ScrollView {
+                ScrollView(showsIndicators: false) {
                     VStack(spacing: 12) {
                         header(p)
                         HStack(spacing: 8) {
@@ -136,7 +136,7 @@ struct AvatarPicker: View {
     var body: some View {
         ZStack {
             ScreenBackground()
-            ScrollView {
+            ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Choose your picture").font(.chakra(22)).foregroundColor(Theme.fg)
                     LazyVGrid(columns: columns, spacing: 14) {

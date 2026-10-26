@@ -32,7 +32,7 @@ struct AuthView: View {
     var body: some View {
         ZStack {
             ScreenBackground()
-            ScrollView {
+            ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
                     if let logo = Art.image("logo") {
                         Image(uiImage: logo).resizable().scaledToFit().frame(maxWidth: 330)

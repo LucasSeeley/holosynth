@@ -98,6 +98,27 @@ check(sp.slot >= 0 && sp.slot < 8 && sp.profile.nextSpin > Date.now(), 'spun');
 await expectError(call('/spin', a.token, {}), 400);
 console.log('spin', sp.kind, sp.amount, sp.cards || '');
 
+// gauntlet: a run, the lobby, the leaderboard
+let g = await call('/gauntlet/start', a.token, {});
+check(g.fight === 1 && g.state && g.enemies.length === 1, 'gauntlet started');
+let fights = 0, out;
+for (;;) {
+  out = await call('/gauntlet/move', a.token, aiMove(g.state, 0));
+  if (!out.result) { g = out.run; continue; }
+  if (!out.result.won) break;
+  fights++;
+  check(out.run.wins === fights && out.run.state.winner === 0, 'win counted');
+  g = await call('/gauntlet/next', a.token, {});
+  check(g.fight === fights + 1, 'next fight');
+}
+check(out.result.streak === fights && out.result.newBest === (fights > 0), 'run over');
+const lobby = await call('/gauntlet', a.token);
+check(lobby.best === fights && lobby.run === null && lobby.top.some(r => r.me), 'lobby');
+const everyone = await call('/leaderboard/everyone', a.token);
+check(everyone.some(r => r.me && r.best === fights), 'everyone leaderboard');
+check((await call('/me', a.token)).gauntlet.best === fights, 'profile best');
+console.log('gauntlet streak', fights);
+
 const done = await campaign(a.token, 10);
 check(done.campaign.next?.num === 11 && done.campaign.chapterNum === 1 && done.gold >= 250, 'boss beaten, on to level 11 with enough gold for a pack');
 const pack = await call('/packs', a.token, {});

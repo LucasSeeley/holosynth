@@ -65,3 +65,10 @@ CREATE TABLE IF NOT EXISTS spins (
   user_id INTEGER PRIMARY KEY,
   last INTEGER NOT NULL
 );
+-- Gauntlet: best streak ever and the run in progress (JSON, null when none).
+CREATE TABLE IF NOT EXISTS gauntlet (
+  user_id INTEGER PRIMARY KEY,
+  best INTEGER NOT NULL DEFAULT 0,
+  run TEXT
+);
+CREATE INDEX IF NOT EXISTS gauntlet_best ON gauntlet (best);
