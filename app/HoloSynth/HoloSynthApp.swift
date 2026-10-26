@@ -127,13 +127,20 @@ struct HomeView: View {
     @State private var tab = 0
     @State private var spinClosed = false   // closed the daily spin this session: it comes back next launch
 
+    // Social tab badge: friend requests, challenges, offers to answer, and accepted offers to claim.
+    private var socialBadge: Int {
+        guard let s = store.social else { return 0 }
+        let trades = (s.trades ?? []).filter { t in !t.mine || t.status == "accepted" }.count
+        return s.requests.count + s.challenges.count + trades
+    }
+
     var body: some View {
         TabView(selection: $tab) {
             PlayTab(tab: $tab).tabItem { Label("Play", systemImage: "bolt.fill") }.tag(0)
             PackTab().tabItem { Label("Packs", systemImage: "gift.fill") }.tag(1)
             CollectionTab().tabItem { Label("Cards", systemImage: "square.grid.3x3.fill") }.tag(2)
             SocialTab().tabItem { Label("Social", systemImage: "person.2.fill") }.tag(3)
-                .badge((store.social?.requests.count ?? 0) + (store.social?.challenges.count ?? 0) + (store.social?.trades?.filter { !$0.mine || $0.status == "accepted" }.count ?? 0))
+                .badge(socialBadge)
             ProfileTab().tabItem { Label("Profile", systemImage: "person.crop.circle.fill") }.tag(4)
         }
         .toolbarBackground(Theme.ink, for: .tabBar)
