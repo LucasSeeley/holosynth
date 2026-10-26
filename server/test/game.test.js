@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack } from '../src/game.js';
+import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS } from '../src/game.js';
 
 const fixed = v => () => v;
 
@@ -71,7 +71,7 @@ test('computer takes the knockout over a bigger hit', () => {
 test('every starter path can win every campaign level but the final boss, going first', () => {
   const paths = [];
   for (const a of STARTER_TEAM) for (const b of STARTER_TEAM) if (a !== b) paths.push([a, b]);
-  CAMPAIGN.slice(0, -1).forEach((_, level) => paths.forEach(path => {
+  CAMPAIGN.slice(0, 89).forEach((_, level) => paths.forEach(path => {   // chapters 1-3, except chapter 3's last boss
     const team = level < 3 ? [path[0]] : level < 6 ? path : STARTER_TEAM;
     const s = newCampaignBattle(team, level);
     assert.equal(s.turn, 0);
@@ -81,9 +81,9 @@ test('every starter path can win every campaign level but the final boss, going 
 });
 
 test('the final boss beats the starter team but a strong team can win it', () => {
-  const run = team => { const s = newCampaignBattle(team, CAMPAIGN.length - 1);
+  const run = team => { const s = newCampaignBattle(team, 89);
     while (s.winner === null) { const m = aiMove(s, s.turn); applyMove(s, s.turn, m.from, m.move, m.to); } return s.winner; };
-  assert.equal(CAMPAIGN.at(-1).enemies.length, 3);
+  assert.equal(CAMPAIGN[89].enemies.length, 3);
   assert.equal(run(STARTER_TEAM), 1);
   assert.equal(run(['phoenix', 'dreadnought', 'nightblade']), 0);
 });
@@ -95,16 +95,26 @@ test('packs only hold cards of their type, and only open types are free', () => 
   assert.ok(PACKS_OPEN.includes(freePack()));
   for (let d = 0; d < 30; d++) assert.ok(PACKS_OPEN.includes(dailyPack(d * 86400000)));
   const magic = new Set(Object.values(BY_ID).filter(c => PACK_TYPES.magic.includes(c.cls)).map(c => c.id));
-  assert.ok(CAMPAIGN.every(l => l.enemies.every(id => !magic.has(id))), 'no magic cards in campaign levels');
+  assert.ok(CAMPAIGN.slice(0, 90).every(l => l.enemies.every(id => !magic.has(id))), 'no magic cards in chapters 1-3');
+  assert.ok(CHAPTERS[3].levels.every(l => l.enemies.every(id => magic.has(id))), 'chapter 4 is all magic');
+  assert.ok(CHAPTERS[4].levels.every(l => l.enemies.some(id => magic.has(id)) && l.enemies.some(id => !magic.has(id))), 'chapter 5 mixes');
 });
 
-test('three chapters of 30 with a boss every 10th level, all real cards', () => {
-  assert.deepEqual([0, 30, 60].map(l => CAMPAIGN_GOLD[CAMPAIGN[l].chapter]), [25, 50, 100]);
-  assert.deepEqual(CHAPTERS.map(c => c.levels.length), [30, 30, 30]);
+test('five chapters of 30 with a boss every 10th level, all real cards', () => {
+  assert.deepEqual([0, 30, 60, 90, 120].map(l => [CAMPAIGN_GOLD[CAMPAIGN[l].chapter], CAMPAIGN_XP[CAMPAIGN[l].chapter]]), [[25, 25], [50, 25], [100, 25], [100, 50], [100, 50]]);
+  assert.deepEqual(CHAPTERS.map(c => c.levels.length), [30, 30, 30, 30, 30]);
+  assert.equal(OPEN_LEVELS, CHAPTERS_OPEN * 30);
+  assert.deepEqual(CAMPAIGN.slice(90).filter(l => l.boss).map(l => l.pack), ['magic', 'magic', 'magic', 'cyber', 'magic', 'omni']);
   CAMPAIGN.forEach((l, i) => {
     assert.equal(!!l.boss, (i + 1) % 10 === 0, `level ${i + 1}`);
     for (const id of l.enemies) assert.ok(BY_ID[id], id);
   });
+});
+
+test('chapters 4 and 5 get harder but a strong team can win every level', () => {
+  const run = (team, level) => { const s = newCampaignBattle(team, level);
+    while (s.winner === null) { const m = aiMove(s, s.turn); applyMove(s, s.turn, m.from, m.move, m.to); } return s.winner; };
+  for (let level = 90; level < 150; level++) assert.equal(run(['paragon', 'phoenix', 'eternity'], level), 0, `level ${level + 1}`);
 });
 
 test('daily spin odds add up and the pack is rare', () => {

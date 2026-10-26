@@ -1,7 +1,7 @@
 // HoloSynth game server: a Cloudflare Worker over D1. Every reply is JSON; errors are { error: "message" }.
 // It also serves the iPhone app download (IPA + SideStore source) from the KV namespace bound as FILES.
 import {
-  BY_ID, STARTER_TEAM, START_GOLD, PACK_COST, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN, CHAPTERS, NEW_CARD_AFTER,
+  BY_ID, STARTER_TEAM, START_GOLD, PACK_COST, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN_XP, CAMPAIGN, CHAPTERS, NEW_CARD_AFTER, OPEN_LEVELS,
   levelFor, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack,
   gauntletEnemies, gauntletBattle, gauntletHeal, gauntletGold, GAUNTLET_PACK_EVERY, newCampaignBattle, applyMove, aiMove,
 } from './game.js';
@@ -65,8 +65,8 @@ async function profile(db, user) {
        WHERE f.user_id = ?1 AND x.best > COALESCE((SELECT best FROM gauntlet WHERE user_id = ?1), 0)) AS gahead,
     (SELECT COUNT(*) FROM friends f JOIN friends g ON g.user_id = f.friend_id AND g.friend_id = f.user_id WHERE f.user_id = ?1) AS friends`)
     .bind(user.id).first();
-  const next = CAMPAIGN[prog.cleared];
-  const chapter = next ? next.chapter : CHAPTERS.length - 1;
+  const next = prog.cleared < OPEN_LEVELS ? CAMPAIGN[prog.cleared] : null;   // locked chapters count as done for now
+  const chapter = next ? next.chapter : CAMPAIGN[OPEN_LEVELS - 1].chapter;
   return {
     username: user.username,
     gold: user.gold,
@@ -78,17 +78,17 @@ async function profile(db, user) {
     avatar: avatarOf(extra.avatar, user.team),
     since: user.created,
     friends: extra.friends,
-    nextSpin: nextSpinAt(extra.spun, now()),
-    spinPack: dailyPack(now()),
-    packsOpen: PACKS_OPEN,        // packs on sale; the rest say "Coming soon"   // which pack the wheel's pack slot gives today
-    gauntlet: { best: extra.gbest || 0, rank: extra.gahead + 1 },   // rank among you and your friends   // ms when the wheel resets (midnight UTC); 0 = spin now
+    nextSpin: nextSpinAt(extra.spun, now()),   // ms when the wheel resets (midnight UTC); 0 = spin now
+    spinPack: dailyPack(now()),   // which pack the wheel's pack slot gives today
+    packsOpen: PACKS_OPEN,        // packs on sale; the rest say "Coming soon"
+    gauntlet: { best: extra.gbest || 0, rank: extra.gahead + 1 },   // rank among you and your friends
     wins: prog.wins,
     packs: prog.packs,
     campaign: {
       chapter: CHAPTERS[chapter].title,
       chapterNum: chapter + 1,
       cleared: prog.cleared,
-      total: CAMPAIGN.length,
+      total: OPEN_LEVELS,
       next: next ? { num: next.num, title: next.title, enemies: next.enemies, boss: !!next.boss } : null,
       choose: pendingChoice(prog, collection),
       friendsUnlocked: prog.cleared >= NEW_CARD_AFTER[1],
@@ -186,7 +186,7 @@ async function startCampaign(db, user) {
   if (prof.needsStarter) throw new HttpError(400, 'Pick your first card.');
   if (prof.campaign.choose) throw new HttpError(400, 'Pick your new card first.');
   const prog = await getProgress(db, user.id);
-  if (prog.cleared >= CAMPAIGN.length) throw new HttpError(400, 'You beat the whole campaign!');
+  if (prog.cleared >= OPEN_LEVELS) throw new HttpError(400, OPEN_LEVELS < CAMPAIGN.length ? 'The next chapter is coming soon!' : 'You beat the whole campaign!');
   const run = { level: prog.cleared, state: newCampaignBattle(prof.team, prog.cleared) };
   await db.prepare('INSERT INTO progress (user_id, run) VALUES (?, ?) ON CONFLICT (user_id) DO UPDATE SET run = excluded.run')
     .bind(user.id, JSON.stringify(run)).run();
@@ -222,9 +222,9 @@ async function campaignWin(db, user, level) {
   const res = await db.prepare('UPDATE progress SET cleared = cleared + 1, wins = wins + 1 WHERE user_id = ? AND cleared = ?')
     .bind(user.id, level).run();
   if (!res.meta.changes) return { won: true, gold: 0, xp: 0 };
-  const gold = CAMPAIGN_GOLD[CAMPAIGN[level].chapter];
-  await db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(gold, WIN_XP, user.id).run();
-  const result = { won: true, gold, xp: WIN_XP };
+  const gold = CAMPAIGN_GOLD[CAMPAIGN[level].chapter], xp = CAMPAIGN_XP[CAMPAIGN[level].chapter];
+  await db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(gold, xp, user.id).run();
+  const result = { won: true, gold, xp };
   const num = level + 1;
   const owned = (await profile(db, await freshUser(db, user.id))).collection;
   if (num === NEW_CARD_AFTER[0]) result.chooseCard = true;
@@ -239,7 +239,7 @@ async function campaignWin(db, user, level) {
   }
   if (CAMPAIGN[level].boss) {
     const fresh = await freshUser(db, user.id);
-    const packType = freePack();
+    const packType = CAMPAIGN[level].pack ?? freePack();
     const pack = openPack(fresh.packs_since_legend, packType);
     await db.batch([...pack.cards.map(id => addCard(db, user.id, id)),
       db.prepare('UPDATE users SET packs_since_legend = ? WHERE id = ?').bind(pack.packsSinceLegend, user.id),

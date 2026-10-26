@@ -7,7 +7,9 @@ export const START_GOLD = 0;           // gold comes from the campaign
 export const PACK_COST = 1000;
 export const PACK_SIZE = 3;
 export const WIN_GOLD = 50;            // friend battle win
-export const CAMPAIGN_GOLD = [25, 50, 100];   // first clear of a campaign level, by chapter
+export const CAMPAIGN_GOLD = [25, 50, 100, 100, 100];   // first clear of a campaign level, by chapter
+export const CAMPAIGN_XP = [25, 25, 25, 50, 50];
+export const CHAPTERS_OPEN = 3;   // chapters past this show "More chapters are on the way"
 export const WIN_XP = 25;
 export const XP_PER_LEVEL = 100;
 export const RATES = [['Common', 85], ['Rare', 10], ['Epic', 4], ['Legendary', 1]];
@@ -297,12 +299,78 @@ export const CHAPTERS = [
     { title: 'The old guard', enemies: ['rook', 'bastion', 'warden'] },
     { title: 'Beast mode', enemies: ['leviathan', 'specter'] },
     { title: 'Last light', enemies: ['nightblade', 'rook'] },
-    { title: 'The champion', enemies: ['paragon', 'hex', 'shogun'], boss: true }   // final boss: needs pack cards, the starter team can't win it,
+    { title: 'The champion', enemies: ['paragon', 'hex', 'shogun'], boss: true },   // chapter 3's last boss: needs pack cards, the starter team can't win it
+  ] },
+  // Chapters 4 and 5 are tuned for pack cards: a typical collection wins ~70% of chapter 4's first level, ~25% of chapter 5's last.
+  { title: 'The Arcane Rift', levels: [
+    { title: 'Through the rift', enemies: ['choir', 'mistwyrm', 'moonhare'] },
+    { title: 'Glowing welcome', enemies: ['halo', 'rune', 'bloom'] },
+    { title: 'Northern lights', enemies: ['aurora', 'lantern', 'tide'] },
+    { title: 'Crystal storm', enemies: ['hexblade', 'geode', 'tempest'] },
+    { title: 'Stone circle', enemies: ['sanctum', 'geode', 'totem'] },
+    { title: 'Lantern watch', enemies: ['archon', 'lantern', 'vital'] },
+    { title: 'Thunder over the temple', enemies: ['thunderbird', 'lantern', 'halo'] },
+    { title: 'The healers\' guard', enemies: ['lifeline', 'archon', 'geode'] },
+    { title: 'Haunted chorus', enemies: ['choir', 'wraithhound', 'emberkoi'] },
+    { title: 'Starwyrm', enemies: ['starwyrm', 'choir', 'geode'], boss: true, pack: 'magic' },
+    { title: 'The quiet library', enemies: ['sanctum', 'wisp', 'tome'] },
+    { title: 'Burning glyphs', enemies: ['sanctum', 'glyph', 'lantern'] },
+    { title: 'Borrowed time', enemies: ['chronos', 'mender', 'mistwyrm'] },
+    { title: 'Paper tigers', enemies: ['solmane', 'origami', 'tempest'] },
+    { title: 'Lost pages', enemies: ['chronos', 'tome', 'glyph'] },
+    { title: 'Wisps in the wind', enemies: ['thunderbird', 'wisp', 'rune'] },
+    { title: 'Spring eternal', enemies: ['chronos', 'bloom', 'halo'] },
+    { title: 'Second wind', enemies: ['lifeline', 'emberkoi', 'vital'] },
+    { title: 'Alchemy lab', enemies: ['archon', 'flask', 'plume'] },
+    { title: 'Petalcore', enemies: ['petalcore', 'glyph', 'wisp'], boss: true, pack: 'magic' },
+    { title: 'Cursed edge', enemies: ['hexblade', 'glyph', 'mender'] },
+    { title: 'Storm hounds', enemies: ['chronos', 'tempest', 'wraithhound'] },
+    { title: 'Moonlit study', enemies: ['archon', 'moonhare', 'tome'] },
+    { title: 'Rune lightning', enemies: ['thunderbird', 'glyph', 'rune'] },
+    { title: 'Sun and moon', enemies: ['solmane', 'nocturne', 'mender'] },
+    { title: 'Wild garden', enemies: ['aurora', 'bloom', 'flask'] },
+    { title: 'Hex marks the spot', enemies: ['hexblade', 'flask', 'hexcoil'] },
+    { title: 'Seeing double', enemies: ['lifeline', 'mirage', 'vital'] },
+    { title: 'Edge of the rift', enemies: ['solmane', 'flask', 'wisp'] },
+    { title: 'Voidweaver', enemies: ['voidweaver', 'thunderbird', 'tide'], boss: true, pack: 'magic' },
+  ] },
+  { title: 'Convergence', levels: [
+    { title: 'Worlds collide', enemies: ['colossus', 'bounty', 'mistwyrm'] },
+    { title: 'Sun and steel', enemies: ['solmane', 'shredder', 'hexcoil'] },
+    { title: 'Black feathers', enemies: ['thunderbird', 'specter', 'crow'] },
+    { title: 'Static and storm', enemies: ['vanta', 'tempest', 'dynamo'] },
+    { title: 'Hellhounds', enemies: ['hellfire', 'wraithhound', 'tome'] },
+    { title: 'Dragon song', enemies: ['wyvern', 'choir', 'mistwyrm'] },
+    { title: 'Drifting blades', enemies: ['shogun', 'overclock', 'drift'] },
+    { title: 'Deep water', enemies: ['lifeline', 'narwhal', 'hexcoil'] },
+    { title: 'Thunder sharks', enemies: ['thunderbird', 'shark', 'overclock'] },
+    { title: 'Twin blades', enemies: ['nightblade', 'hexblade', 'brick'], boss: true, pack: 'cyber' },
+    { title: 'Watchtower lights', enemies: ['aurora', 'hex', 'watchtower'] },
+    { title: 'Live current', enemies: ['aurora', 'volt', 'wirelash'] },
+    { title: 'Fireworks', enemies: ['aurora', 'mortar', 'vandal'] },
+    { title: 'Time beasts', enemies: ['chronos', 'wyvern', 'silverback'] },
+    { title: 'Ghost fleet', enemies: ['shogun', 'kraken', 'wraithhound'] },
+    { title: 'Siege of the sanctum', enemies: ['sanctum', 'thunderhide', 'mortar'] },
+    { title: 'Riot hour', enemies: ['chronos', 'wyvern', 'riot'] },
+    { title: 'Monster hymn', enemies: ['choir', 'chimera', 'sanctum'] },
+    { title: 'Hex waters', enemies: ['hexblade', 'hexcoil', 'shark'] },
+    { title: 'The void hunt', enemies: ['voidweaver', 'sanctum', 'bounty'], boss: true, pack: 'magic' },
+    { title: 'Shadow flight', enemies: ['thunderbird', 'vanta', 'flutter'] },
+    { title: 'Meltdown', enemies: ['reactor', 'lifeline', 'mistwyrm'] },
+    { title: 'Night stampede', enemies: ['vanta', 'boar', 'glimmerstag'] },
+    { title: 'Cursed beasts', enemies: ['hexblade', 'manticore', 'wick'] },
+    { title: 'Web of time', enemies: ['thunderhide', 'chronos', 'arachne'] },
+    { title: 'Sabre dance', enemies: ['choir', 'solmane', 'sabre'] },
+    { title: 'High noon', enemies: ['solmane', 'archon', 'sentry'] },
+    { title: 'Masters', enemies: ['shogun', 'archon', 'mongoose'] },
+    { title: 'The last stand', enemies: ['thunderhide', 'lifeline', 'fang'] },
+    { title: 'Sovereign', enemies: ['sovereign', 'colossus', 'archon'], boss: true, pack: 'omni' },
   ] },
 ];
 // One flat list for progress (`cleared` counts across chapters); `chapter` is 0-based, `num` is the level within its chapter.
 export const CAMPAIGN = CHAPTERS.flatMap((c, chapter) => c.levels.map((l, i) => ({ ...l, chapter, num: i + 1 })));
 export const NEW_CARD_AFTER = [3, 6];   // levels that unlock your 2nd and 3rd card
+export const OPEN_LEVELS = CAMPAIGN.filter(l => l.chapter < CHAPTERS_OPEN).length;
 
 // A campaign battle: your team against the level's enemies, and you go first.
 export const newCampaignBattle = (team, level) => newBattle(team, CAMPAIGN[level].enemies, () => 0);
