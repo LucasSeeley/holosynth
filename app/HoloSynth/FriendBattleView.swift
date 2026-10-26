@@ -80,23 +80,34 @@ struct FriendBattleView: View {
     private func waiting(_ m: MatchView) -> some View {
         VStack(spacing: 16) {
             Spacer()
-            Text("Send this code to a friend").sectionTitle()
-            Text(m.code).font(.chakra(54)).tracking(6).foregroundColor(Theme.fg)
-                .shadow(color: Theme.brass.opacity(0.5), radius: 14)
-                .textSelection(.enabled)
-                .padding(.horizontal, 24).padding(.vertical, 8)
-                .goldPanel(16, lit: true)
-            ShareLink(item: "Battle me in HoloSynth! Code: \(m.code)") {
-                Label("Share code", systemImage: "square.and.arrow.up")
+            if let friend = m.invitee {   // a challenge from the Social tab: they answer it there
+                Text("Challenge sent").sectionTitle()
+                Text(friend).font(.chakra(36)).foregroundColor(Theme.fg).lineLimit(1).minimumScaleFactor(0.5)
+                ProgressView().tint(Theme.brass)
+                Text("Waiting for \(friend) to accept…").font(.barlow(14)).foregroundColor(Theme.muted)
+            } else {
+                code(m)
             }
-            .buttonStyle(GoldButton(height: 50)).frame(width: 220)
-            ProgressView().tint(Theme.brass)
-            Text("Waiting for them to join…").font(.barlow(14)).foregroundColor(Theme.muted)
             Button("Cancel") { Task { await leave() } }.buttonStyle(OutlineButton(color: Theme.pink))
             errorText
             Spacer()
         }
         .padding(20)
+    }
+
+    @ViewBuilder private func code(_ m: MatchView) -> some View {
+        Text("Send this code to a friend").sectionTitle()
+        Text(m.code).font(.chakra(54)).tracking(6).foregroundColor(Theme.fg)
+            .shadow(color: Theme.brass.opacity(0.5), radius: 14)
+            .textSelection(.enabled)
+            .padding(.horizontal, 24).padding(.vertical, 8)
+            .goldPanel(16, lit: true)
+        ShareLink(item: "Battle me in HoloSynth! Code: \(m.code)") {
+            Label("Share code", systemImage: "square.and.arrow.up")
+        }
+        .buttonStyle(GoldButton(height: 50)).frame(width: 220)
+        ProgressView().tint(Theme.brass)
+        Text("Waiting for them to join…").font(.barlow(14)).foregroundColor(Theme.muted)
     }
 
     // MARK: board

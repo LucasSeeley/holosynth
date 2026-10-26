@@ -42,6 +42,9 @@ struct Profile: Decodable, Equatable {
     let needsStarter: Bool
     let wins: Int
     let packs: Int
+    let avatar: String          // card shown as your picture
+    let since: Double           // account created, ms since 1970
+    let friends: Int
     let campaign: Campaign
 }
 
@@ -75,6 +78,28 @@ struct CampaignRun: Decodable, Equatable {
 }
 
 struct AuthReply: Decodable { let token: String; let profile: Profile }
+
+// The Social tab: friends, requests waiting for your answer, and battles friends sent you.
+struct Social: Decodable, Equatable {
+    struct Person: Decodable, Equatable, Identifiable {
+        let name: String
+        let level: Int
+        let avatar: String
+        let online: Bool
+        let seen: Double?       // ms since 1970, nil if never
+        var id: String { name }
+    }
+    struct Challenge: Decodable, Equatable, Identifiable {
+        let id: Int             // the match
+        let code: String
+        let name: String
+        let avatar: String
+    }
+    let friends: [Person]
+    let requests: [Person]
+    let challenges: [Challenge]
+}
+struct SocialReply: Decodable { let message: String?; let social: Social }
 struct PackReply: Decodable { let cards: [String]; let profile: Profile }
 
 struct Unit: Decodable, Equatable { let id: String; var hp: Int; var cd: Int }
@@ -102,6 +127,7 @@ struct MatchView: Decodable, Equatable {
     let status: String          // waiting | active | done
     let you: Int
     let players: [String?]
+    let invitee: String?        // a challenge sent straight to this friend
     let state: BattleState?
 }
 

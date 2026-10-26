@@ -44,6 +44,7 @@ final class GameStore: ObservableObject {
     @Published var profile: Profile?
     @Published var error: String?
     @Published var pendingPack: [String]?   // a pack won in the campaign, opened on the Packs tab
+    @Published var social: Social?
 
     func auth(username: String, password: String, newAccount: Bool) async {
         do {
@@ -65,6 +66,25 @@ final class GameStore: ObservableObject {
     func logout() {
         token = nil
         profile = nil
+        social = nil
+    }
+
+    func loadSocial() async {
+        guard let token else { return }
+        if let s: Social = try? await API.call("social", token: token) { social = s }
+    }
+
+    // Friend actions (add / remove / decline): returns the server's message, or throws its error.
+    @discardableResult
+    func socialAction(_ path: String, _ body: [String: Any]) async throws -> String? {
+        let reply: SocialReply = try await API.call(path, token: token, body: body)
+        social = reply.social
+        return reply.message
+    }
+
+    func setAvatar(_ id: String) async {
+        do { profile = try await API.call("avatar", token: token, body: ["card": id]) }
+        catch { self.error = error.localizedDescription }
     }
 
     func buyPack() async -> [String]? {

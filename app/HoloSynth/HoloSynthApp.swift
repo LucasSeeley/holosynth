@@ -129,10 +129,20 @@ struct HomeView: View {
             PlayTab(tab: $tab).tabItem { Label("Play", systemImage: "bolt.fill") }.tag(0)
             PackTab().tabItem { Label("Packs", systemImage: "gift.fill") }.tag(1)
             CollectionTab().tabItem { Label("Cards", systemImage: "square.grid.3x3.fill") }.tag(2)
+            SocialTab().tabItem { Label("Social", systemImage: "person.2.fill") }.tag(3)
+                .badge((store.social?.requests.count ?? 0) + (store.social?.challenges.count ?? 0))
+            ProfileTab().tabItem { Label("Profile", systemImage: "person.crop.circle.fill") }.tag(4)
         }
         .toolbarBackground(Theme.ink, for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)
-        .task { await store.refresh() }
+        .task {
+            await store.refresh()
+            // keeps friend requests, challenges and who's online fresh (and marks you online to friends)
+            while !Task.isCancelled {
+                await store.loadSocial()
+                try? await Task.sleep(nanoseconds: 15_000_000_000)
+            }
+        }
         .onAppear { Music.play(.menu) }
         // New accounts pick their first card before anything else.
         .fullScreenCover(isPresented: Binding(get: { store.profile?.needsStarter == true }, set: { _ in })) {

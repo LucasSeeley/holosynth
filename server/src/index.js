@@ -39,6 +39,9 @@ async function body(req) {
 }
 
 // ---- player profile ----
+// The card shown as someone's picture: the one they chose, else their team leader.
+const avatarOf = (chosen, team) => chosen || JSON.parse(team || '[]')[0] || 'volt';
+
 const getProgress = async (db, userId) =>
   await db.prepare('SELECT * FROM progress WHERE user_id = ?').bind(userId).first()
   ?? { user_id: userId, cleared: 0, wins: 0, packs: 0, run: null };
@@ -53,6 +56,9 @@ async function profile(db, user) {
   const { results } = await db.prepare('SELECT card_id, count FROM collection WHERE user_id = ?').bind(user.id).all();
   const collection = Object.fromEntries(results.map(r => [r.card_id, r.count]));
   const prog = await getProgress(db, user.id);
+  const extra = await db.prepare(`SELECT (SELECT avatar FROM presence WHERE user_id = ?1) AS avatar,
+    (SELECT COUNT(*) FROM friends f JOIN friends g ON g.user_id = f.friend_id AND g.friend_id = f.user_id WHERE f.user_id = ?1) AS friends`)
+    .bind(user.id).first();
   const next = CAMPAIGN[prog.cleared];
   const chapter = next ? next.chapter : CHAPTERS.length - 1;
   return {
@@ -63,6 +69,9 @@ async function profile(db, user) {
     team: JSON.parse(user.team),
     collection,
     needsStarter: results.length === 0,
+    avatar: avatarOf(extra.avatar, user.team),
+    since: user.created,
+    friends: extra.friends,
     wins: prog.wins,
     packs: prog.packs,
     campaign: {
@@ -247,11 +256,18 @@ async function matchView(db, m, user) {
     status: m.status,
     you: m.p0 === user.id ? 0 : 1,
     players: [nameOf(m.p0), nameOf(m.p1)],
+    invitee: m.status === 'waiting' ? (await db.prepare(
+      'SELECT u.username FROM challenges c JOIN users u ON u.id = c.to_id WHERE c.match_id = ?').bind(m.id).first())?.username ?? null : null,
     state: m.state ? JSON.parse(m.state) : null,
   };
 }
 
 async function createMatch(db, user) {
+  return json(await matchView(db, await openInvite(db, user), user));
+}
+
+// A waiting match with a fresh code; any older invite of yours closes.
+async function openInvite(db, user) {
   needFullTeam(user);
   await db.prepare("UPDATE matches SET status = 'done', updated = ? WHERE p0 = ? AND status = 'waiting'")
     .bind(now(), user.id).run();  // only one open invite per player
@@ -259,7 +275,7 @@ async function createMatch(db, user) {
     const m = await db.prepare(
       "INSERT INTO matches (code, p0, team0, status, updated) VALUES (?, ?, ?, 'waiting', ?) ON CONFLICT (code) DO NOTHING RETURNING *",
     ).bind(makeCode(), user.id, user.team, now()).first();
-    if (m) return json(await matchView(db, m, user));
+    if (m) return m;
   }
   throw new HttpError(500, 'Could not make an invite code. Try again.');
 }
@@ -330,6 +346,90 @@ async function leaveMatch(db, user, id) {
   return json({ ok: true });
 }
 
+// ---- social ----
+const ONLINE_MS = 5 * 60 * 1000;
+const PERSON = `u.id, u.username, u.xp, u.team, p.seen, p.avatar`;
+const person = r => ({ name: r.username, level: levelFor(r.xp), avatar: avatarOf(r.avatar, r.team),
+  online: !!r.seen && now() - r.seen < ONLINE_MS, seen: r.seen || null });
+
+async function socialView(db, user) {
+  const [friends, requests, challenges] = await db.batch([
+    db.prepare(`SELECT ${PERSON} FROM friends f JOIN friends g ON g.user_id = f.friend_id AND g.friend_id = f.user_id
+      JOIN users u ON u.id = f.friend_id LEFT JOIN presence p ON p.user_id = u.id WHERE f.user_id = ?1`).bind(user.id),
+    db.prepare(`SELECT ${PERSON} FROM friends f JOIN users u ON u.id = f.user_id LEFT JOIN presence p ON p.user_id = u.id
+      WHERE f.friend_id = ?1 AND NOT EXISTS (SELECT 1 FROM friends g WHERE g.user_id = ?1 AND g.friend_id = f.user_id)
+      ORDER BY f.created DESC`).bind(user.id),
+    db.prepare(`SELECT m.id AS match_id, m.code, ${PERSON} FROM challenges c JOIN matches m ON m.id = c.match_id AND m.status = 'waiting'
+      JOIN users u ON u.id = m.p0 LEFT JOIN presence p ON p.user_id = u.id WHERE c.to_id = ?1 ORDER BY m.updated DESC`).bind(user.id),
+  ]);
+  const list = friends.results.map(person)
+    .sort((a, b) => (b.online - a.online) || ((b.seen || 0) - (a.seen || 0)) || a.name.localeCompare(b.name));
+  return {
+    friends: list,
+    requests: requests.results.map(person),
+    challenges: challenges.results.map(r => ({ id: r.match_id, code: r.code, ...person(r) })),
+  };
+}
+
+async function otherUser(req, db, user) {
+  const { name = '' } = await body(req);
+  const other = await db.prepare('SELECT * FROM users WHERE username = ?').bind(String(name).trim()).first();
+  if (!other) throw new HttpError(404, `No player called "${String(name).trim()}".`);
+  if (other.id === user.id) throw new HttpError(400, "That's you!");
+  return other;
+}
+
+const areFriends = async (db, a, b) => (await db.prepare(
+  'SELECT COUNT(*) AS n FROM friends WHERE (user_id = ?1 AND friend_id = ?2) OR (user_id = ?2 AND friend_id = ?1)').bind(a, b).first()).n === 2;
+
+// Sends a request, or accepts theirs if they already asked you.
+async function addFriend(req, db, user) {
+  const other = await otherUser(req, db, user);
+  if (await areFriends(db, user.id, other.id)) throw new HttpError(400, `You're already friends with ${other.username}.`);
+  await db.prepare('INSERT INTO friends (user_id, friend_id, created) VALUES (?, ?, ?) ON CONFLICT DO NOTHING')
+    .bind(user.id, other.id, now()).run();
+  const message = await areFriends(db, user.id, other.id)
+    ? `You and ${other.username} are now friends.` : `Friend request sent to ${other.username}.`;
+  return json({ message, social: await socialView(db, user) });
+}
+
+// Unfriend, or ignore their request.
+async function removeFriend(req, db, user) {
+  const other = await otherUser(req, db, user);
+  await db.prepare('DELETE FROM friends WHERE (user_id = ?1 AND friend_id = ?2) OR (user_id = ?2 AND friend_id = ?1)')
+    .bind(user.id, other.id).run();
+  return json({ message: null, social: await socialView(db, user) });
+}
+
+async function challengeFriend(req, db, user) {
+  const other = await otherUser(req, db, user);
+  if (!await areFriends(db, user.id, other.id)) throw new HttpError(400, `Add ${other.username} as a friend first.`);
+  if (JSON.parse(other.team).length < 3) throw new HttpError(400, `${other.username} can battle once they clear campaign level 6.`);
+  const m = await openInvite(db, user);
+  await db.prepare('INSERT INTO challenges (match_id, to_id) VALUES (?, ?)').bind(m.id, other.id).run();
+  return json(await matchView(db, m, user));
+}
+
+async function declineChallenge(req, db, user) {
+  const { id } = await body(req);
+  const c = await db.prepare('SELECT * FROM challenges WHERE match_id = ? AND to_id = ?').bind(Number(id), user.id).first();
+  if (c) {
+    await db.batch([db.prepare("UPDATE matches SET status = 'done', updated = ? WHERE id = ? AND status = 'waiting'").bind(now(), c.match_id),
+      db.prepare('DELETE FROM challenges WHERE match_id = ?').bind(c.match_id)]);
+  }
+  return json({ message: null, social: await socialView(db, user) });
+}
+
+async function setAvatar(req, db, user) {
+  const { card = '' } = await body(req);
+  if (!await db.prepare('SELECT 1 FROM collection WHERE user_id = ? AND card_id = ?').bind(user.id, String(card)).first()) {
+    throw new HttpError(400, "You don't own that card.");
+  }
+  await db.prepare('INSERT INTO presence (user_id, avatar) VALUES (?, ?) ON CONFLICT (user_id) DO UPDATE SET avatar = excluded.avatar')
+    .bind(user.id, String(card)).run();
+  return json(await profile(db, user));
+}
+
 // ---- app download (SideStore) ----
 async function file(env, key, type) {
   const body = await env.FILES.get(key, { type: 'stream' });
@@ -352,10 +452,19 @@ async function route(req, env) {
   if (method === 'POST' && pathname === '/login') return login(req, db);
 
   const user = await currentUser(req, db);
+  // last seen, for "online" on friends lists (written at most every 30 s)
+  await db.prepare(`INSERT INTO presence (user_id, seen) VALUES (?1, ?2)
+    ON CONFLICT (user_id) DO UPDATE SET seen = ?2 WHERE presence.seen < ?2 - 30000`).bind(user.id, now()).run();
   if (method === 'GET' && pathname === '/me') return json(await profile(db, user));
   if (method === 'POST' && pathname === '/team') return setTeam(req, db, user);
   if (method === 'POST' && pathname === '/packs') return buyPack(db, user);
   if (method === 'POST' && pathname === '/starter') return pickStarter(req, db, user);
+  if (method === 'POST' && pathname === '/avatar') return setAvatar(req, db, user);
+  if (method === 'GET' && pathname === '/social') return json(await socialView(db, user));
+  if (method === 'POST' && pathname === '/friends') return addFriend(req, db, user);
+  if (method === 'POST' && pathname === '/friends/remove') return removeFriend(req, db, user);
+  if (method === 'POST' && pathname === '/friends/challenge') return challengeFriend(req, db, user);
+  if (method === 'POST' && pathname === '/challenges/decline') return declineChallenge(req, db, user);
   if (a === 'campaign') {
     if (method === 'GET' && b === 'current') return json(runView(JSON.parse((await getProgress(db, user.id)).run)));
     if (method === 'POST' && b === 'start') return startCampaign(db, user);

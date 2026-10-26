@@ -40,3 +40,23 @@ CREATE TABLE IF NOT EXISTS progress (
   packs INTEGER NOT NULL DEFAULT 0,
   run TEXT
 );
+-- Friends: one row per "user_id added friend_id". Both directions present = friends; one direction = a pending request.
+CREATE TABLE IF NOT EXISTS friends (
+  user_id INTEGER NOT NULL,
+  friend_id INTEGER NOT NULL,
+  created INTEGER NOT NULL,
+  PRIMARY KEY (user_id, friend_id)
+);
+CREATE INDEX IF NOT EXISTS friends_to ON friends (friend_id);
+-- Per-player extras added after launch: when they were last seen (for "online") and their avatar card (null = team leader).
+CREATE TABLE IF NOT EXISTS presence (
+  user_id INTEGER PRIMARY KEY,
+  seen INTEGER NOT NULL DEFAULT 0,
+  avatar TEXT
+);
+-- A friend match sent straight to one friend (the match itself is an ordinary waiting match with a code).
+CREATE TABLE IF NOT EXISTS challenges (
+  match_id INTEGER PRIMARY KEY,
+  to_id INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS challenges_to ON challenges (to_id);
