@@ -41,12 +41,7 @@ struct CollectionTab: View {
             }
         }
         .background(ScreenBackground())
-        .sheet(item: $zoomed) { card in
-            ZStack {
-                ScreenBackground()
-                CardView(card: card).padding(.horizontal, 40)
-            }
-        }
+        .sheet(item: $zoomed) { card in FuseSheet(card: card) { zoomed = nil } }
     }
 
     // MARK: team bar (pinned)
@@ -132,7 +127,7 @@ struct CollectionTab: View {
     private func cell(_ card: Card, count: Int) -> some View {
         if count > 0 {
             let onTeam = team.contains(card.id)
-            CardView(card: card)
+            CardView(card: card, fusion: store.profile?.fusion(card.id))
                 .overlay(alignment: .topTrailing) {
                     if count > 1 {
                         Text("×\(count)").font(.chakra(9)).monospacedDigit()

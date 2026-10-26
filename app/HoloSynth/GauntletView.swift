@@ -207,7 +207,7 @@ struct GauntletView: View {
     }
 
     private func hpCard(_ id: String, hp: Int, healed: Int) -> some View {
-        let max = CardBook.card(id)?.hp ?? 1
+        let max = CardBook.card(id)?.maxHP(store.profile?.fusion(id)) ?? 1   // shortcut: uses today's best fused copy, not the one the run started with
         let ko = hp == 0
         let pct = CGFloat(hp - healed) / CGFloat(max), heal = CGFloat(healed) / CGFloat(max)
         return VStack(alignment: .leading, spacing: 6) {

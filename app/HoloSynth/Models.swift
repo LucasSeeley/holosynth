@@ -18,6 +18,7 @@ struct Card: Decodable, Identifiable, Hashable {
     let hp: Int
     let basic: Attack
     let special: Special
+    let special2: Special?      // Epic & Legendary: a stronger second special, unlocked by fusion
     let look: String
     let color: String   // character's neon colour, "#rrggbb"; tints the card face
     let quip: String    // one-line joke printed small at the bottom of the card
@@ -37,6 +38,8 @@ enum CardBook {
 // MARK: - Server replies
 
 extension Profile {
+    // The copy your battles use: your most-fused copy of that card.
+    func fusion(_ id: String) -> Fusion? { fused?.filter { $0.card == id }.max { $0.fusion.total < $1.fusion.total }?.fusion }
     var xpInto: Int { levelXp ?? xp % 100 }
     var xpNeed: Int { max(levelNeed ?? 100, 1) }
 }
@@ -59,6 +62,7 @@ struct Profile: Decodable, Equatable {
     let nextSpin: Double        // when the daily spin is ready again, ms since 1970; 0 = ready now
     let spinPack: String?       // which pack the wheel's pack slot gives today
     let packsOpen: [String]?    // packs on sale (server decides); the rest say "Coming soon"
+    let fused: [FusedCopy]?     // fused copies you own
     let gauntlet: GauntletStats
     let campaign: Campaign
 }
@@ -128,8 +132,19 @@ struct Trade: Decodable, Equatable, Identifiable {
     let get: [String]
     let giveGold: Int
     let getGold: Int
+    let fusions: [String: FusedCopy]?   // fused copies in this trade, by copy id
 }
-struct TradeCards: Decodable { let mine: [String: Int]; let theirs: [String: Int]; let gold: Int }   // spare copies each side can trade
+// Trade items are card ids, or "card#12" for fused copy 12 (it keeps its fusion).
+enum TradeItem {
+    static func card(_ token: String) -> Card? { CardBook.card(String(token.split(separator: "#").first ?? "")) }
+    static func fusedId(_ token: String) -> String? { token.contains("#") ? String(token.split(separator: "#").last ?? "") : nil }
+    static func token(_ copy: FusedCopy) -> String { "\(copy.card)#\(copy.id)" }
+}
+// Plain spare copies each side can trade, plus their fused copies.
+struct TradeCards: Decodable {
+    let mine: [String: Int]; let theirs: [String: Int]; let gold: Int
+    let mineFused: [FusedCopy]?; let theirsFused: [FusedCopy]?
+}
 struct TradeDone: Decodable { let received: [String]; let gold: Int; let from: String; let social: Social; let profile: Profile }
 
 // Collection order, shared by the Cards tab and the trade picker: 0 Synth #, 1 HP (highest first), 2 Rarity (best first).
@@ -194,7 +209,42 @@ struct SpinReply: Decodable {
 struct SocialReply: Decodable { let message: String?; let social: Social }
 struct PackReply: Decodable { let cards: [String]; let profile: Profile }
 
-struct Unit: Decodable, Equatable { let id: String; var hp: Int; var cd: Int }
+// A card in battle. Fused cards also carry their max HP, fusion levels and the second special's cooldown.
+struct Unit: Decodable, Equatable {
+    let id: String
+    var hp: Int
+    var cd: Int
+    let max: Int?
+    let f: Fusion?
+    var cd2: Int?
+}
+
+// Fusion levels: h/b/s = HP, basic, special (0-3 each); x = second special unlocked.
+struct Fusion: Decodable, Equatable, Hashable {
+    var h = 0, b = 0, s = 0
+    var x = false
+    var total: Int { h + b + s + (x ? 1 : 0) }
+}
+// One fused copy a player owns (each counts as one of their copies of that card).
+struct FusedCopy: Decodable, Equatable, Identifiable, Hashable {
+    let id: Int
+    let card: String
+    let h: Int, b: Int, s: Int
+    let x: Bool
+    var fusion: Fusion { Fusion(h: h, b: b, s: s, x: x) }
+}
+
+// Same sums as the server: HP +10%, basic +20%, special (and second special) +10% per level.
+extension Card {
+    func maxHP(_ f: Fusion?) -> Int { Int((Double(hp) * (1 + 0.1 * Double(f?.h ?? 0))).rounded()) }
+    func dmg(_ move: String, _ f: Fusion?) -> Int {
+        switch move {
+        case "basic": return Int((Double(basic.dmg) * (1 + 0.2 * Double(f?.b ?? 0))).rounded())
+        case "special2": return Int((Double(special2?.dmg ?? 0) * (1 + 0.1 * Double(f?.s ?? 0))).rounded())
+        default: return Int((Double(special.dmg) * (1 + 0.1 * Double(f?.s ?? 0))).rounded())
+        }
+    }
+}
 
 struct LogEntry: Decodable, Equatable {
     let p: Int, from: Int, to: Int

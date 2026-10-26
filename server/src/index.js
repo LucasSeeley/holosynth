@@ -3,7 +3,7 @@
 import {
   BY_ID, STARTER_TEAM, START_GOLD, PACK_COST, PACK_COSTS, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN_XP, CAMPAIGN, CHAPTERS, NEW_CARD_AFTER, OPEN_LEVELS,
   levelFor, levelStart, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack,
-  gauntletEnemies, gauntletBattle, gauntletHeal, gauntletGold, GAUNTLET_PACK_EVERY, newCampaignBattle, applyMove, aiMove,
+  gauntletEnemies, gauntletBattle, gauntletHeal, fusedHp, FUSE_COST, FUSE_MAX, SECOND, SECOND_COST, gauntletGold, GAUNTLET_PACK_EVERY, newCampaignBattle, applyMove, aiMove,
 } from './game.js';
 
 class HttpError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
@@ -53,6 +53,44 @@ const pendingChoice = (prog, owned) => {
   return prog.cleared >= NEW_CARD_AFTER[0] && have.length === 1 ? STARTER_TEAM.filter(id => !owned[id]) : null;
 };
 
+// ---- fusion ----
+const fusedRows = async (db, userId, cardId) => (await (cardId
+  ? db.prepare('SELECT * FROM fused WHERE user_id = ? AND card_id = ?').bind(userId, cardId)
+  : db.prepare('SELECT * FROM fused WHERE user_id = ?').bind(userId)).all()).results;
+const fusionScore = r => r.h + r.b + r.s + r.x * 3;
+const fusedView = r => ({ id: r.id, card: r.card_id, h: r.h, b: r.b, s: r.s, x: !!r.x });
+// The best fused copy of each card a player owns: what their battles use.
+async function fusionsFor(db, userId) {
+  const best = {};
+  for (const r of await fusedRows(db, userId)) if (!best[r.card_id] || fusionScore(r) > fusionScore(best[r.card_id])) best[r.card_id] = r;
+  return Object.fromEntries(Object.entries(best).map(([id, r]) => [id, { h: r.h, b: r.b, s: r.s, x: !!r.x }]));
+}
+// Fuse spare copies into your best copy of a card (making it a fused copy the first time).
+async function fuseCard(req, db, user) {
+  const { card = '', stat = '' } = await body(req);
+  if (!BY_ID[card] || !['h', 'b', 's', 'x'].includes(stat)) throw new HttpError(400, 'Pick a card and a stat to fuse.');
+  const count = (await db.prepare('SELECT count FROM collection WHERE user_id = ? AND card_id = ?').bind(user.id, card).first())?.count ?? 0;
+  const rows = await fusedRows(db, user.id, card);
+  const target = rows.sort((a, b) => fusionScore(b) - fusionScore(a))[0];
+  const need = stat === 'x' ? SECOND_COST.copies : FUSE_COST;
+  const plain = count - rows.length;                  // copies not already fused
+  if (plain < need + (target ? 0 : 1)) throw new HttpError(400, `You need ${need} spare copies to fuse.`);
+  if (stat === 'x') {
+    if (!SECOND[card]) throw new HttpError(400, 'Only Epic and Legendary cards have a second special.');
+    if (target?.x) throw new HttpError(400, 'Already unlocked.');
+    if (user.gold < SECOND_COST.gold) throw new HttpError(400, `You need ${SECOND_COST.gold.toLocaleString('en-US')} gold.`);
+  } else if ((target?.[stat] ?? 0) >= FUSE_MAX) throw new HttpError(400, 'That stat is already maxed.');
+  const take = await db.prepare('UPDATE collection SET count = count - ? WHERE user_id = ? AND card_id = ? AND count >= ?')
+    .bind(need, user.id, card, need + rows.length + (target ? 0 : 1)).run();
+  if (!take.meta.changes) throw new HttpError(400, `You need ${need} spare copies to fuse.`);
+  const writes = [];
+  if (stat === 'x') writes.push(db.prepare('UPDATE users SET gold = gold - ? WHERE id = ?').bind(SECOND_COST.gold, user.id));
+  if (target) writes.push(db.prepare(`UPDATE fused SET ${stat} = ${stat === 'x' ? 1 : `${stat} + 1`} WHERE id = ?`).bind(target.id));
+  else writes.push(db.prepare(`INSERT INTO fused (user_id, card_id, ${stat}) VALUES (?, ?, 1)`).bind(user.id, card));
+  await db.batch(writes);
+  return json(await profile(db, await freshUser(db, user.id)));
+}
+
 async function profile(db, user) {
   const { results } = await db.prepare('SELECT card_id, count FROM collection WHERE user_id = ?').bind(user.id).all();
   const collection = Object.fromEntries(results.map(r => [r.card_id, r.count]));
@@ -83,6 +121,7 @@ async function profile(db, user) {
     nextSpin: nextSpinAt(extra.spun, now()),   // ms when the wheel resets (midnight UTC); 0 = spin now
     spinPack: dailyPack(now()),   // which pack the wheel's pack slot gives today
     packsOpen: PACKS_OPEN,        // packs on sale; the rest say "Coming soon"
+    fused: (await fusedRows(db, user.id)).map(fusedView),
     gauntlet: { best: extra.gbest || 0, rank: extra.gahead + 1 },   // rank among you and your friends
     wins: prog.wins,
     packs: prog.packs,
@@ -190,7 +229,7 @@ async function startCampaign(db, user) {
   if (prof.campaign.choose) throw new HttpError(400, 'Pick your new card first.');
   const prog = await getProgress(db, user.id);
   if (prog.cleared >= OPEN_LEVELS) throw new HttpError(400, OPEN_LEVELS < CAMPAIGN.length ? 'The next chapter is coming soon!' : 'You beat the whole campaign!');
-  const run = { level: prog.cleared, state: newCampaignBattle(prof.team, prog.cleared) };
+  const run = { level: prog.cleared, state: newCampaignBattle(prof.team, prog.cleared, await fusionsFor(db, user.id)) };
   await db.prepare('INSERT INTO progress (user_id, run) VALUES (?, ?) ON CONFLICT (user_id) DO UPDATE SET run = excluded.run')
     .bind(user.id, JSON.stringify(run)).run();
   return json(runView(run));
@@ -305,7 +344,7 @@ async function joinMatch(req, db, user) {
     .bind(String(code).trim().toUpperCase()).first();
   if (!m) throw new HttpError(404, 'No open match with that code.');
   if (m.p0 === user.id) throw new HttpError(400, "That's your own invite. Send the code to a friend.");
-  const state = newBattle(JSON.parse(m.team0), JSON.parse(user.team));
+  const state = newBattle(JSON.parse(m.team0), JSON.parse(user.team), Math.random, await fusionsFor(db, m.p0), await fusionsFor(db, user.id));
   const res = await db.prepare(
     "UPDATE matches SET p1 = ?, state = ?, status = 'active', updated = ? WHERE id = ? AND status = 'waiting'",
   ).bind(user.id, JSON.stringify(state), now(), m.id).run();
@@ -390,31 +429,58 @@ async function socialView(db, user) {
     friends: list,
     requests: requests.results.map(person),
     challenges: challenges.results.map(r => ({ id: r.match_id, code: r.code, ...person(r) })),
-    trades: trades.results.map(tradeView(user.id)),
+    trades: await withFusions(db, trades.results.map(tradeView(user.id))),
   };
 }
 
 // ---- trading ----
+// Adds each trade's fused copies' levels ({ "12": {h,b,s,x} }) so the app can draw them.
+async function withFusions(db, list) {
+  const ids = [...new Set(list.flatMap(t => [...t.give, ...t.get]).filter(x => x.includes('#')).map(fusedIdOf))];
+  if (!ids.length) return list;
+  const rows = (await db.prepare(`SELECT * FROM fused WHERE id IN (${ids.map(() => '?').join(',')})`).bind(...ids).all()).results;
+  const map = Object.fromEntries(rows.map(r => [String(r.id), fusedView(r)]));
+  return list.map(t => ({ ...t, fusions: map }));
+}
 // A trade seen by `me`: `mine` = I sent it; give/get are always from my side.
 const tradeView = me => r => {
   const mine = r.from_id === me, give = JSON.parse(r.give), get = JSON.parse(r.get);
   return { id: r.trade_id, mine, status: r.status, ...person(r),
     give: mine ? give : get, get: mine ? get : give, giveGold: mine ? r.give_gold : r.get_gold, getGold: mine ? r.get_gold : r.give_gold };
 };
-// What a player can trade: everything they own, minus one copy of each card on their team.
-async function spareCards(db, u) {
-  const team = JSON.parse(u.team);
+// Trade items: "apex" is a plain copy, "apex#12" is fused copy 12 (it keeps its fusion when traded).
+const cardOf = tok => tok.split('#')[0];
+const fusedIdOf = tok => (tok.includes('#') ? Number(tok.split('#')[1]) : null);
+// What a player can trade: plain copies beyond the fused ones, and their fused copies; one copy of each team card stays
+// (ignoreTeam: what they could trade once they change their team).
+async function tradeable(db, u, ignoreTeam = false) {
+  const team = ignoreTeam ? [] : JSON.parse(u.team);
   const rows = (await db.prepare('SELECT card_id, count FROM collection WHERE user_id = ?').bind(u.id).all()).results;
-  const spare = {};
-  for (const r of rows) { const n = r.count - (team.includes(r.card_id) ? 1 : 0); if (n > 0) spare[r.card_id] = n; }
-  return spare;
+  const fused = await fusedRows(db, u.id);
+  const plain = {}, total = {};
+  for (const r of rows) {
+    const nf = fused.filter(f => f.card_id === r.card_id).length;
+    total[r.card_id] = r.count - (team.includes(r.card_id) ? 1 : 0);
+    const n = Math.min(r.count - nf, total[r.card_id]);
+    if (n > 0) plain[r.card_id] = n;
+  }
+  return { plain, total, fused };
 }
-const covers = (spare, ids) => {
-  const need = {}; for (const id of ids) need[id] = (need[id] || 0) + 1;
-  return Object.entries(need).every(([id, n]) => (spare[id] || 0) >= n);
+const covers = (t, toks) => {
+  const plain = {}, all = {};
+  for (const tok of toks) {
+    const c = cardOf(tok), fid = fusedIdOf(tok);
+    if (fid !== null && !t.fused.some(f => f.id === fid && f.card_id === c)) return false;
+    if (fid === null) plain[c] = (plain[c] || 0) + 1;
+    all[c] = (all[c] || 0) + 1;
+  }
+  return new Set(toks.filter(x => x.includes('#'))).size === toks.filter(x => x.includes('#')).length
+    && Object.entries(plain).every(([c, n]) => (t.plain[c] || 0) >= n)
+    && Object.entries(all).every(([c, n]) => (t.total[c] || 0) >= n);
 };
 const tradeSide = (cards, gold) => {
-  if (!Array.isArray(cards) || cards.length > 3 || !cards.every(id => typeof id === 'string' && BY_ID[id])) throw new HttpError(400, 'Pick up to 3 cards each side.');
+  if (!Array.isArray(cards) || cards.length > 3 || !cards.every(t => typeof t === 'string' && BY_ID[cardOf(t)] && (!t.includes('#') || Number.isInteger(fusedIdOf(t)))))
+    throw new HttpError(400, 'Pick up to 3 cards each side.');
   const g = Number(gold ?? 0);
   if (!Number.isInteger(g) || g < 0 || g > 1e7) throw new HttpError(400, 'That gold amount is not valid.');
   return [cards, g];
@@ -432,31 +498,61 @@ async function claimTrade(req, db, user) {
   const claim = await db.prepare("UPDATE trades SET status = 'done' WHERE id = ? AND status = 'accepted'").bind(t.id).run();
   if (!claim.meta.changes) throw new HttpError(404, 'Nothing to claim.');
   const get = JSON.parse(t.get), other = await freshUser(db, t.to_id);
-  await db.batch([...get.map(id => addCard(db, user.id, id)),
-    db.prepare('UPDATE users SET gold = gold + ? WHERE id = ?').bind(t.get_gold, user.id)]);
-  return json({ received: get, gold: t.get_gold, from: other?.username ?? 'your friend',
+  await batch(db, handTo(db, user.id, get, t.get_gold));
+  return json({ received: get.map(cardOf), gold: t.get_gold, from: other?.username ?? 'your friend',
     social: await socialView(db, user), profile: await profile(db, await freshUser(db, user.id)) });
 }
 
 // Both players' tradeable cards, for building an offer.
 async function tradeCards(db, user, name) {
   const other = await friendByName(db, user, name);
-  return json({ mine: await spareCards(db, user), theirs: await spareCards(db, other), gold: user.gold });
+  const mine = await tradeable(db, user), theirs = await tradeable(db, other, true);   // you may ask for their team cards; they'd have to swap them out to accept
+  return json({ mine: mine.plain, theirs: theirs.plain, mineFused: mine.fused.map(fusedView), theirsFused: theirs.fused.map(fusedView), gold: user.gold });
 }
+// While an offer is open the sender's side is held: those cards leave their collection (fused copies go to user 0) and the gold
+// leaves their balance. Declined, cancelled or countered offers hand it all back.
+const holdOut = (db, uid, toks) => [
+  ...toks.map(tok => db.prepare('UPDATE collection SET count = count - 1 WHERE user_id = ? AND card_id = ?').bind(uid, cardOf(tok))),
+  ...toks.filter(tok => tok.includes('#')).map(tok => db.prepare('UPDATE fused SET user_id = 0 WHERE id = ? AND user_id = ?').bind(fusedIdOf(tok), uid)),
+  db.prepare('DELETE FROM collection WHERE count <= 0 AND user_id = ?').bind(uid)];
+const handTo = (db, uid, toks, gold = 0) => [
+  ...toks.map(tok => addCard(db, uid, cardOf(tok))),
+  ...toks.filter(tok => tok.includes('#')).map(tok => db.prepare('UPDATE fused SET user_id = ? WHERE id = ? AND user_id = 0').bind(uid, fusedIdOf(tok))),
+  ...(gold ? [db.prepare('UPDATE users SET gold = gold + ? WHERE id = ?').bind(gold, uid)] : [])];
+const giveBack = (db, t) => handTo(db, t.from_id, JSON.parse(t.give), t.give_gold);
+const batch = (db, writes) => (writes.length ? db.batch(writes) : null);   // D1 refuses an empty batch
+
 async function offerTrade(req, db, user) {
   const b = await body(req);
   const other = await friendByName(db, user, b.to ?? '');
   const [give, giveGold] = tradeSide(b.give ?? [], b.giveGold);
   const [get, getGold] = tradeSide(b.get ?? [], b.getGold);
   if (!give.length && !get.length && !giveGold && !getGold) throw new HttpError(400, 'Add something to the trade.');
-  if (!covers(await spareCards(db, user), give)) throw new HttpError(400, "You don't have spare copies of those cards.");
-  if (!covers(await spareCards(db, other), get)) throw new HttpError(400, `${other.username} doesn't have spare copies of those cards.`);
-  if (giveGold > user.gold) throw new HttpError(400, "You don't have that much gold.");
+  // a counter offer answers one of theirs: what they put in it is held, so count it as theirs again
+  const old = b.counter ? await db.prepare("SELECT * FROM trades WHERE id = ? AND to_id = ? AND from_id = ? AND status = 'open'")
+    .bind(Number(b.counter), user.id, other.id).first() : null;
+  const theirs = await tradeable(db, other, true);
+  if (old) {
+    const held = JSON.parse(old.give);
+    for (const tok of held) {
+      const c = cardOf(tok);
+      theirs.total[c] = (theirs.total[c] || 0) + 1;
+      if (!tok.includes('#')) theirs.plain[c] = (theirs.plain[c] || 0) + 1;
+    }
+    const ids = held.filter(tok => tok.includes('#')).map(fusedIdOf);
+    if (ids.length) theirs.fused.push(...(await db.prepare(`SELECT * FROM fused WHERE id IN (${ids.map(() => '?').join(',')})`).bind(...ids).all()).results);
+  }
+  if (!covers(await tradeable(db, user), give)) throw new HttpError(400, "You don't have spare copies of those cards.");
+  if (!covers(theirs, get)) throw new HttpError(400, `${other.username} doesn't have spare copies of those cards.`);
+  const paid = await db.prepare('UPDATE users SET gold = gold - ? WHERE id = ? AND gold >= ?').bind(giveGold, user.id, giveGold).run();
+  if (!paid.meta.changes) throw new HttpError(400, "You don't have that much gold.");
   const writes = [db.prepare('INSERT INTO trades (from_id, to_id, give, get, give_gold, get_gold, status, created) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-    .bind(user.id, other.id, JSON.stringify(give), JSON.stringify(get), giveGold, getGold, 'open', now())];
-  // a counter offer closes the one it answers
-  if (b.counter) writes.unshift(db.prepare("UPDATE trades SET status = 'countered' WHERE id = ? AND to_id = ? AND from_id = ? AND status = 'open'")
-    .bind(Number(b.counter), user.id, other.id));
+    .bind(user.id, other.id, JSON.stringify(give), JSON.stringify(get), giveGold, getGold, 'open', now()), ...holdOut(db, user.id, give)];
+  // the counter closes the offer it answers and hands its sender back what they put in
+  if (old) {
+    const closed = await db.prepare("UPDATE trades SET status = 'countered' WHERE id = ? AND status = 'open'").bind(old.id).run();
+    if (closed.meta.changes) writes.push(...giveBack(db, old));
+  }
   await db.batch(writes);
   return json({ message: `Trade offer sent to ${other.username}.`, social: await socialView(db, user) });
 }
@@ -464,27 +560,26 @@ async function answerTrade(req, db, user, action) {
   const { id } = await body(req);
   const t = await db.prepare("SELECT * FROM trades WHERE id = ? AND status = 'open'").bind(Number(id)).first();
   if (!t || (action === 'cancel' ? t.from_id : t.to_id) !== user.id) throw new HttpError(404, 'That trade is no longer open.');
+  const status = { cancel: 'cancelled', decline: 'declined', accept: 'accepted' }[action];
+  // close it first so it can only be answered once
+  const closed = await db.prepare('UPDATE trades SET status = ? WHERE id = ? AND status = ?').bind(status, t.id, 'open').run();
+  if (!closed.meta.changes) throw new HttpError(404, 'That trade is no longer open.');
   if (action !== 'accept') {
-    await db.prepare('UPDATE trades SET status = ? WHERE id = ?').bind(action === 'cancel' ? 'cancelled' : 'declined', t.id).run();
+    await batch(db, giveBack(db, t));
     return json({ message: null, social: await socialView(db, user) });
   }
-  // claim it first so it can only be accepted once, then check both sides still have what they offered
-  const claim = await db.prepare("UPDATE trades SET status = 'accepted' WHERE id = ? AND status = 'open'").bind(t.id).run();
-  if (!claim.meta.changes) throw new HttpError(404, 'That trade is no longer open.');
   const from = await freshUser(db, t.from_id), give = JSON.parse(t.give), get = JSON.parse(t.get);
   const fail = msg => db.prepare("UPDATE trades SET status = 'open' WHERE id = ?").bind(t.id).run().then(() => { throw new HttpError(400, msg); });
-  if (!covers(await spareCards(db, from), give) || from.gold < t.give_gold) await fail(`${from.username} no longer has everything in this offer.`);
-  if (!covers(await spareCards(db, user), get) || user.gold < t.get_gold) await fail("You no longer have everything this offer asks for.");
-  // shortcut: checks and the swap are separate steps, so a pack bought in the same instant could overdraw; fine between friends, wrap in one guarded batch if it ever matters
-  // both sides leave now; I get mine now, the sender claims theirs from the Social tab
-  const take = (ids, fromId) => ids.map(id => db.prepare('UPDATE collection SET count = count - 1 WHERE user_id = ? AND card_id = ?').bind(fromId, id));
-  await db.batch([
-    ...take(give, from.id), ...take(get, user.id), ...give.map(id => addCard(db, user.id, id)),
-    db.prepare('DELETE FROM collection WHERE count <= 0 AND user_id IN (?, ?)').bind(from.id, user.id),
-    db.prepare('UPDATE users SET gold = gold - ? WHERE id = ?').bind(t.give_gold, from.id),
-    db.prepare('UPDATE users SET gold = gold - ? + ? WHERE id = ?').bind(t.get_gold, t.give_gold, user.id),
-  ]);
-  return json({ message: null, received: give, gold: t.give_gold, from: from.username,
+  if (!covers(await tradeable(db, user), get)) {
+    const team = JSON.parse(user.team);
+    const blocked = covers(await tradeable(db, user, true), get) && get.map(cardOf).find(c => team.includes(c));
+    await fail(blocked ? `Can't accept: ${BY_ID[blocked].name} is on your team. Take it off your team first.` : 'You no longer have everything this offer asks for.');
+  }
+  if (user.gold < t.get_gold) await fail("You don't have the gold this offer asks for.");
+  // I get their held side now; mine is held for them until they claim it from the Social tab
+  await db.batch([...handTo(db, user.id, give, t.give_gold), ...holdOut(db, user.id, get),
+    db.prepare('UPDATE users SET gold = gold - ? WHERE id = ?').bind(t.get_gold, user.id)]);
+  return json({ message: null, received: give.map(cardOf), gold: t.give_gold, from: from.username,
     social: await socialView(db, user), profile: await profile(db, await freshUser(db, user.id)) });
 }
 
@@ -608,10 +703,10 @@ async function startGauntlet(db, user) {
   const g = await getGauntlet(db, user.id);
   if (g.run) return json(gauntletView(JSON.parse(g.run)));   // already running: pick it up
   if (JSON.parse(user.team).length < 3) throw new HttpError(400, 'Clear campaign level 6 to play the Gauntlet.');
-  const team = JSON.parse(user.team);
-  const hp = team.map(id => BY_ID[id].hp);
+  const team = JSON.parse(user.team), fus = await fusionsFor(db, user.id);
+  const hp = team.map(id => fusedHp(id, fus[id]));
   const enemies = gauntletEnemies(1);
-  const run = { team, hp, fight: 1, wins: 0, gold: 0, packs: 0, startBest: g.best, enemies, state: gauntletBattle(team, hp, enemies) };
+  const run = { team, hp, fus, fight: 1, wins: 0, gold: 0, packs: 0, startBest: g.best, enemies, state: gauntletBattle(team, hp, enemies, fus) };
   await saveGauntlet(db, user.id, g.run, run, g.best);
   return json(gauntletView(run));
 }
@@ -621,7 +716,7 @@ async function nextGauntletFight(db, user) {
   const run = JSON.parse(g.run);
   if (!run) throw new HttpError(400, 'No Gauntlet run in progress.');
   if (!run.state) {
-    run.state = gauntletBattle(run.team, run.hp, run.enemies);
+    run.state = gauntletBattle(run.team, run.hp, run.enemies, run.fus || {});
     await saveGauntlet(db, user.id, g.run, run, g.best);
   }
   return json(gauntletView(run));
@@ -712,6 +807,7 @@ async function deleteAccount(db, user) {
     db.prepare('DELETE FROM challenges WHERE to_id = ?1 OR match_id IN (SELECT id FROM matches WHERE p0 = ?1 OR p1 = ?1)').bind(id),
     db.prepare('DELETE FROM matches WHERE p0 = ?1 OR p1 = ?1').bind(id),
     db.prepare('DELETE FROM trades WHERE from_id = ?1 OR to_id = ?1').bind(id),
+    db.prepare('DELETE FROM fused WHERE user_id = ?1').bind(id),
     ...['collection', 'sessions', 'progress', 'presence', 'spins', 'gauntlet'].map(t => db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(id)),
     db.prepare('DELETE FROM users WHERE id = ?').bind(id),
   ]);
@@ -753,6 +849,7 @@ async function route(req, env) {
   if (method === 'GET' && pathname === '/me') return json(await profile(db, user));
   if (method === 'POST' && pathname === '/me/delete') return deleteAccount(db, user);
   if (method === 'POST' && pathname === '/team') return setTeam(req, db, user);
+  if (method === 'POST' && pathname === '/fuse') return fuseCard(req, db, user);
   if (method === 'POST' && pathname === '/packs') return buyPack(db, user, String((await body(req)).type ?? 'cyber'));
   if (method === 'POST' && pathname === '/starter') return pickStarter(req, db, user);
   if (method === 'POST' && pathname === '/avatar') return setAvatar(req, db, user);

@@ -145,7 +145,7 @@ struct BattleBoard: View {
         let isTarget = myTurn && selected != nil && move != nil && !ko && (healing ? mine : !mine)
         let w = cardWidth
         let artH = (w / 1.3).rounded()
-        let pct = CGFloat(unit.hp) / CGFloat(card.hp)
+        let pct = CGFloat(unit.hp) / CGFloat(unit.max ?? card.hp)
         let look = (healing && isTarget) || (f.flash && f.heal) ? outline(green: true)
             : outline(red: f.flash || isTarget, gold: (isSelected && !isTarget) || f.lunge != 0, ready: ready)
         let small: CGFloat = w > 150 ? 13 : (w > 112 ? 12 : 11)
@@ -201,7 +201,7 @@ struct BattleBoard: View {
                         Capsule().fill(Color.white.opacity(0.1))
                         if let ghost = f.ghostHP {
                             Capsule().fill(Color(hex: 0xFF4D5E).opacity(0.6))
-                                .frame(width: geo.size.width * CGFloat(ghost) / CGFloat(card.hp))
+                                .frame(width: geo.size.width * CGFloat(ghost) / CGFloat(unit.max ?? card.hp))
                         }
                         Capsule().fill(pct > 0.5 ? Color(hex: 0x3DFF8A) : (pct > 0.25 ? Color(hex: 0xFFB03D) : Color(hex: 0xFF4D5E)))
                             .frame(width: geo.size.width * pct)
@@ -274,6 +274,7 @@ struct BattleBoard: View {
             HStack(spacing: 10) {
                 moveButton("basic", card: card, unit: unit)
                 moveButton("special", card: card, unit: unit)
+                if unit?.cd2 != nil { moveButton("special2", card: card, unit: unit) }   // fused Epic/Legendary
             }
         }
         .padding(.horizontal, 16).padding(.top, 14).padding(.bottom, 12)
@@ -286,12 +287,15 @@ struct BattleBoard: View {
         let name: String, sub: String
         var enabled = false
         if let card, let unit, myTurn {
-            name = kind == "basic" ? card.basic.name : card.special.name
-            if kind == "special" && unit.cd > 0 { sub = "Ready in \(unit.cd) turn\(unit.cd == 1 ? "" : "s")" }
+            let wait = kind == "special2" ? (unit.cd2 ?? 0) : unit.cd
+            name = kind == "basic" ? card.basic.name : kind == "special2" ? (card.special2?.name ?? "Special") : card.special.name
+            if kind != "basic" && wait > 0 { sub = "Ready in \(wait) turn\(wait == 1 ? "" : "s")" }
             else {
-                sub = kind == "basic" ? "\(card.basic.dmg) damage"
-                    : card.special.heals ? "Heals \(card.special.dmg) · then waits \(card.special.cd)"
-                    : "\(card.special.dmg) damage · then waits \(card.special.cd)"
+                let dmg = card.dmg(kind, unit.f)
+                sub = kind == "basic" ? "\(dmg) damage"
+                    : kind == "special2" ? "\(dmg) damage · then waits \(card.special2?.cd ?? 0)"
+                    : card.special.heals ? "Heals \(dmg) · then waits \(card.special.cd)"
+                    : "\(dmg) damage · then waits \(card.special.cd)"
                 enabled = !sending
             }
         } else {
@@ -331,7 +335,7 @@ struct BattleBoard: View {
         if s.turn != you { return "Waiting for \(foeName)…" }
         if let card, let mv = move {
             if healing { return "Tap one of your cards to heal it with \(card.special.name)" }
-            return "Tap an enemy to hit it with \(mv == "special" ? card.special.name : card.basic.name)"
+            return "Tap an enemy to hit it with \(mv == "special" ? card.special.name : mv == "special2" ? (card.special2?.name ?? "") : card.basic.name)"
         }
         if let card { return "\(card.name) is up. Choose a move." }
         let ready = s.teams[you].indices.filter { s.teams[you][$0].hp > 0 && !s.acted[you][$0] }
@@ -357,8 +361,9 @@ struct BattleBoard: View {
     // Same sum as the server: +20% when the attacker's class beats the target's.
     private func previewDamage(to target: Unit) -> Int? {
         guard let sel = selected, let mv = move, let a = CardBook.card(s.teams[you][sel].id), let t = CardBook.card(target.id) else { return nil }
-        let base = Double(mv == "special" ? a.special.dmg : a.basic.dmg)
-        if healing { return min(a.special.dmg, t.hp - target.hp) }
+        let f = s.teams[you][sel].f
+        let base = Double(a.dmg(mv, f))
+        if healing { return min(a.dmg("special", f), (target.max ?? t.hp) - target.hp) }
         return Int((base * (Self.beats[a.cls, default: []].contains(t.cls) ? 1.2 : 1)).rounded())
     }
 
@@ -438,7 +443,7 @@ struct BattleBoard: View {
                 await pause(0.16)
                 // impact
                 UIImpactFeedbackGenerator(style: e.ko ? .heavy : .medium).impactOccurred()
-                let sound = e.ko ? Sound.ko : e.move == "special" ? Sound.crit : Sound.hit
+                let sound = e.ko ? Sound.ko : e.move != "basic" ? Sound.crit : Sound.hit
                 sound.play()
                 fx[t, default: HitFX()].ghostHP = cur.teams[1 - e.p][e.to].hp
                 cur.teams[1 - e.p][e.to].hp = max(0, cur.teams[1 - e.p][e.to].hp - e.dmg)

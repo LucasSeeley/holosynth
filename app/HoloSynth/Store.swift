@@ -80,6 +80,7 @@ final class GameStore: ObservableObject {
     func socialAction(_ path: String, _ body: [String: Any]) async throws -> String? {
         let reply: SocialReply = try await API.call(path, token: token, body: body)
         social = reply.social
+        if path.hasPrefix("trades") { await refresh() }   // offered cards and gold are held, so the collection changed
         return reply.message
     }
 

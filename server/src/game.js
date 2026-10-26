@@ -102,19 +102,40 @@ export function gauntletEnemies(fight, rand = Math.random) {
   });
 }
 // Fight `fight` against `enemies`, your cards starting at `hp` (knocked-out cards stay at 0). You move first.
-export function gauntletBattle(team, hp, enemies) {
-  const s = newBattle(team, enemies, () => 0);
+export function gauntletBattle(team, hp, enemies, fus = {}) {
+  const s = newBattle(team, enemies, () => 0, fus);
   s.teams[0].forEach((u, i) => { u.hp = hp[i]; });
   return s;
 }
-export const gauntletHeal = team => team.map(u => (u.hp === 0 ? 0 : Math.min(BY_ID[u.id].hp, u.hp + Math.round(BY_ID[u.id].hp * GAUNTLET_HEAL))));
+export const gauntletHeal = team => team.map(u => (u.hp === 0 ? 0 : Math.min(unitMax(u), u.hp + Math.round(unitMax(u) * GAUNTLET_HEAL))));
+
+// ---- fusion ----
+// Fuse 5 spare copies into one copy for +10% HP, +20% basic or +10% special (max 3 each).
+// Epic and Legendary cards can also unlock a second, stronger special (10 copies + 10,000 gold); the special bonus applies to it too.
+export const FUSE_COST = 5, FUSE_MAX = 3, SECOND_COST = { copies: 10, gold: 10000 };
+export const SECOND = Object.fromEntries(CARDS.filter(c => c.special2).map(c => [c.id, c.special2]));   // Epic & Legendary only
+// f = { h, b, s, x }: fusion levels for HP, basic, special, and whether the second special is unlocked.
+export const fusedHp = (id, f) => Math.round(BY_ID[id].hp * (1 + 0.1 * (f?.h || 0)));
+export const fusedDmg = (id, f, move) => {
+  const c = BY_ID[id];
+  if (move === 'basic') return Math.round(c.basic.dmg * (1 + 0.2 * (f?.b || 0)));
+  const base = move === 'special2' ? SECOND[id].dmg : c.special.dmg;
+  return Math.round(base * (1 + 0.1 * (f?.s || 0)));
+};
+const unitMax = u => u.max ?? BY_ID[u.id].hp;
 
 // ---- battles ----
-// state: { teams: [[{id,hp,cd}] x2], acted: [[bool] x2], turn, winner, log }. Teams hold 1–3 cards.
-export function newBattle(teamA, teamB, rand = Math.random) {
-  const side = ids => ids.map(id => ({ id, hp: BY_ID[id].hp, cd: 0 }));
+// state: { teams: [[{id,hp,cd,max?,f?,cd2?}] x2], acted: [[bool] x2], turn, winner, log }. Teams hold 1–3 cards.
+// fusA / fusB: { cardId: f } for fused cards on each side; fused units carry their max HP, levels and second-special cooldown.
+export function newBattle(teamA, teamB, rand = Math.random, fusA = {}, fusB = {}) {
+  const side = (ids, fus) => ids.map(id => {
+    const f = fus[id];
+    if (!f) return { id, hp: BY_ID[id].hp, cd: 0 };
+    const max = fusedHp(id, f);
+    return { id, hp: max, cd: 0, max, f, ...(f.x && SECOND[id] ? { cd2: 0 } : {}) };
+  });
   return {
-    teams: [side(teamA), side(teamB)],
+    teams: [side(teamA, fusA), side(teamB, fusB)],
     acted: [teamA.map(() => false), teamB.map(() => false)],
     turn: rand() < 0.5 ? 0 : 1,
     winner: null,
@@ -138,19 +159,20 @@ export function applyMove(state, p, from, move, to) {
   const attacker = me[from];
   if (!attacker || !alive(attacker)) throw new Error('That card is knocked out.');
   if (state.acted[p][from]) throw new Error('That card already acted this round.');
-  if (move !== 'basic' && move !== 'special') throw new Error('Unknown move.');
+  if (move !== 'basic' && move !== 'special' && !(move === 'special2' && attacker.cd2 !== undefined)) throw new Error('Unknown move.');
   const card = BY_ID[attacker.id];
   if (move === 'special' && attacker.cd > 0) throw new Error(`${card.special.name} is cooling down.`);
+  if (move === 'special2' && attacker.cd2 > 0) throw new Error(`${SECOND[attacker.id].name} is cooling down.`);
   const heal = heals(card, move);
   const target = heal ? me[to] : foe[to];
   if (!target || !alive(target)) throw new Error(heal ? 'Pick one of your cards that is still standing.' : 'Pick a target that is still standing.');
 
   let dmg = 0, healed = 0, adv = false;
   if (heal) {
-    healed = Math.min(card.special.dmg, BY_ID[target.id].hp - target.hp);   // never above full HP
+    healed = Math.min(fusedDmg(attacker.id, attacker.f, 'special'), unitMax(target) - target.hp);   // never above full HP
     target.hp += healed;
   } else {
-    const base = move === 'basic' ? card.basic.dmg : card.special.dmg;
+    const base = fusedDmg(attacker.id, attacker.f, move);
     adv = beats(card.cls, BY_ID[target.id].cls);
     dmg = Math.round(base * (adv ? 1.2 : 1));
     target.hp = Math.max(0, target.hp - dmg);
@@ -158,6 +180,7 @@ export function applyMove(state, p, from, move, to) {
 
   // Cooldown counts the card's own later actions.
   attacker.cd = move === 'special' ? card.special.cd : Math.max(0, attacker.cd - 1);
+  if (attacker.cd2 !== undefined) attacker.cd2 = move === 'special2' ? SECOND[attacker.id].cd : Math.max(0, attacker.cd2 - 1);
 
   state.acted[p][from] = true;
   refreshActed(state, p);
@@ -178,14 +201,14 @@ function moveDamage(state, p, from, move, to) {
   if (!a || !alive(a) || state.acted[p][from] || !t || !alive(t)) return null;
   const card = BY_ID[a.id];
   if (move === 'special' && (a.cd > 0 || heals(card, move))) return null;
-  const base = move === 'basic' ? card.basic.dmg : card.special.dmg;
-  return Math.round(base * (beats(card.cls, BY_ID[t.id].cls) ? 1.2 : 1));
+  if (move === 'special2' && !(a.cd2 === 0)) return null;
+  return Math.round(fusedDmg(a.id, a.f, move) * (beats(card.cls, BY_ID[t.id].cls) ? 1.2 : 1));
 }
 
 // Computer opponent: knocks a card out if it can, otherwise deals the most damage it can, hitting the weakest card on ties.
 export function aiMove(state, p) {
   let best = null;
-  state.teams[p].forEach((_, from) => ['special', 'basic'].forEach(move => state.teams[1 - p].forEach((t, to) => {
+  state.teams[p].forEach((_, from) => ['special2', 'special', 'basic'].forEach(move => state.teams[1 - p].forEach((t, to) => {
     const dmg = moveDamage(state, p, from, move, to);
     if (dmg === null) return;
     // a knockout beats everything, using the weakest move that does it so the special stays ready
@@ -198,8 +221,8 @@ export function aiMove(state, p) {
       const card = BY_ID[a.id];
       if (!alive(a) || state.acted[p][from] || a.cd > 0 || !card.special.heal) return;
       state.teams[p].forEach((t, to) => {
-        const max = BY_ID[t.id].hp, missing = max - t.hp;
-        if (!alive(t) || t.hp * 2 >= max || missing < card.special.dmg * 0.8) return;
+        const max = unitMax(t), missing = max - t.hp;
+        if (!alive(t) || t.hp * 2 >= max || missing < fusedDmg(a.id, a.f, 'special') * 0.8) return;
         const score = 6000 + missing;
         if (!best || score > best.score) best = { from, move: 'special', to, score };
       });
@@ -380,4 +403,4 @@ export const NEW_CARD_AFTER = [3, 6];   // levels that unlock your 2nd and 3rd c
 export const OPEN_LEVELS = CAMPAIGN.filter(l => l.chapter < CHAPTERS_OPEN).length;
 
 // A campaign battle: your team against the level's enemies, and you go first.
-export const newCampaignBattle = (team, level) => newBattle(team, CAMPAIGN[level].enemies, () => 0);
+export const newCampaignBattle = (team, level, fus = {}) => newBattle(team, CAMPAIGN[level].enemies, () => 0, fus);

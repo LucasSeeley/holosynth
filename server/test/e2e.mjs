@@ -103,6 +103,8 @@ await call(`/matches/${fight.id}/leave`, a.token, {});
 await expectError(call('/avatar', a.token, { card: 'sovereign' }), 400);
 check((await call('/avatar', a.token, { card: 'goliath' })).avatar === 'goliath', 'avatar set');
 check((await call('/me', b.token)).friends === 1 && (await call('/social', b.token)).friends[0].avatar === 'goliath', 'avatar shows to friends');
+await expectError(call('/fuse', a.token, { card: 'volt', stat: 'h' }), 400);   // one copy: nothing to fuse
+check(Array.isArray((await call('/me', a.token)).fused), 'profile lists fused copies');
 // trades: team cards are locked, gold-only offers, counter, cancel, accept
 await expectError(call('/trades', a.token, { to: bn, give: ['volt'] }), 400);           // on a's team, no spare copy
 await expectError(call('/trades', a.token, { to: bn, giveGold: 1e9 }), 400);             // not that much gold
@@ -110,9 +112,11 @@ const goldA = (await call('/me', a.token)).gold, goldB = (await call('/me', b.to
 const offer = await call('/trades', a.token, { to: bn, giveGold: 10 });
 const tradeId = offer.social.trades[0].id;
 check(offer.social.trades[0].mine && offer.social.trades[0].giveGold === 10, 'offer sent');
+check((await call('/me', a.token)).gold === goldA - 10, 'offered gold is held while the offer is open');
 const seen = (await call('/social', b.token)).trades[0];
 check(seen && !seen.mine && seen.getGold === 10 && seen.name === an, 'b sees the offer from their side');
 const counter = await call('/trades', b.token, { to: an, getGold: 20, counter: tradeId });
+check((await call('/me', a.token)).gold === goldA, 'countered: held gold goes back');
 check(counter.social.trades.length === 1 && counter.social.trades[0].getGold === 20, 'countered replaces the offer');
 await expectError(call('/trades/accept', b.token, { id: tradeId }), 404);               // the countered one is closed
 check((await call('/trades/cancel', b.token, { id: counter.social.trades[0].id })).social.trades.length === 0, 'cancelled');

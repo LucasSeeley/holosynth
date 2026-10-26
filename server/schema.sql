@@ -87,3 +87,15 @@ CREATE TABLE IF NOT EXISTS trades (
 );
 CREATE INDEX IF NOT EXISTS trades_to ON trades (to_id, status);
 CREATE INDEX IF NOT EXISTS trades_from ON trades (from_id, status);
+-- Fused copies: each row is one of the player's copies of card_id (it counts in collection.count) with its fusion levels.
+-- h/b/s: HP, basic, special levels (0-3); x: second special unlocked. user_id 0 = held in a trade until the other side claims it.
+CREATE TABLE IF NOT EXISTS fused (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  card_id TEXT NOT NULL,
+  h INTEGER NOT NULL DEFAULT 0,
+  b INTEGER NOT NULL DEFAULT 0,
+  s INTEGER NOT NULL DEFAULT 0,
+  x INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS fused_user ON fused (user_id, card_id);

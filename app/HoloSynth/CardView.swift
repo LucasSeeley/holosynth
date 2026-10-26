@@ -6,6 +6,8 @@ struct CardView: View {
     let card: Card
     var hpNow: Int? = nil        // in battle: current HP
     var cooldown: Int = 0        // in battle: turns left before the special is ready
+    var fusion: Fusion? = nil    // fused copy: boosted stats in gold, ✦ crest, maybe a second special
+    private static let goldText = Color(hex: 0xFFD77A)
 
     var body: some View {
         GeometryReader { geo in
@@ -17,10 +19,18 @@ struct CardView: View {
                             .accessibilityLabel(card.cls)
                     }
                     Text(card.name).font(.system(size: w * 0.055, weight: .bold))
+                    if let f = fusion, f.total > 0 {
+                        Text("✦ \(f.total)").font(.chakra(w * 0.04)).foregroundColor(Self.goldText)
+                            .padding(.horizontal, w * 0.024).padding(.vertical, w * 0.006)
+                            .background(Theme.ink.opacity(0.6), in: RoundedRectangle(cornerRadius: w * 0.03))
+                            .overlay(RoundedRectangle(cornerRadius: w * 0.03).stroke(Self.goldText, lineWidth: 1))
+                            .accessibilityLabel("Fused \(f.total) times")
+                    }
                     Spacer(minLength: 2)
-                    Text(hpNow.map { "\($0)/\(card.hp) HP" } ?? "\(card.hp) HP")
+                    let maxHP = card.maxHP(fusion)
+                    Text(hpNow.map { "\($0)/\(maxHP) HP" } ?? "\(maxHP) HP")
                         .font(.system(size: w * 0.055, weight: .bold, design: .monospaced))
-                        .foregroundColor(Theme.pink)
+                        .foregroundColor((fusion?.h ?? 0) > 0 ? Self.goldText : Theme.pink)
                 }
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
@@ -37,9 +47,13 @@ struct CardView: View {
                 .clipShape(RoundedRectangle(cornerRadius: w * 0.07, style: .continuous))
 
                 VStack(spacing: w * 0.02) {
-                    moveRow(card.basic.name, dmg: card.basic.dmg, cd: nil, w: w)
-                    moveRow(card.special.name, dmg: card.special.dmg, cd: cooldown > 0 ? cooldown : card.special.cd, w: w,
-                            ready: cooldown == 0, heal: card.special.heals)
+                    moveRow(card.basic.name, dmg: card.dmg("basic", fusion), cd: nil, w: w, boosted: (fusion?.b ?? 0) > 0)
+                    moveRow(card.special.name, dmg: card.dmg("special", fusion), cd: cooldown > 0 ? cooldown : card.special.cd, w: w,
+                            ready: cooldown == 0, heal: card.special.heals, boosted: (fusion?.s ?? 0) > 0)
+                    if fusion?.x == true, let s2 = card.special2 {
+                        moveRow(s2.name, dmg: card.dmg("special2", fusion), cd: s2.cd, w: w, boosted: true)
+                            .foregroundColor(Self.goldText)
+                    }
                 }
                 Spacer(minLength: 0)
                 Text(card.quip)
@@ -54,12 +68,13 @@ struct CardView: View {
             .background(card.face)
             .clipShape(RoundedRectangle(cornerRadius: w * 0.06, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: w * 0.06, style: .continuous)
-                .stroke(Theme.rarityColor(card.rarity), lineWidth: max(1, w * 0.008)))
+                .stroke((fusion?.total ?? 0) > 0 ? Self.goldText : Theme.rarityColor(card.rarity), lineWidth: max(1, w * ((fusion?.total ?? 0) > 0 ? 0.012 : 0.008))))
+            .shadow(color: (fusion?.total ?? 0) > 0 ? Self.goldText.opacity(0.45) : .clear, radius: w * 0.06)
         }
         .aspectRatio(5.0 / 7.0, contentMode: .fit)
     }
 
-    private func moveRow(_ name: String, dmg: Int, cd: Int?, w: CGFloat, ready: Bool = true, heal: Bool = false) -> some View {
+    private func moveRow(_ name: String, dmg: Int, cd: Int?, w: CGFloat, ready: Bool = true, heal: Bool = false, boosted: Bool = false) -> some View {
         HStack(spacing: w * 0.02) {
             Text(name).font(.system(size: w * 0.046, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.6)
             if let cd {
@@ -69,8 +84,8 @@ struct CardView: View {
                     .background(Circle().fill(Theme.classColor(card.cls).opacity(ready ? 0.28 : 0.6)))
             }
             Spacer(minLength: 2)
-            Text(heal ? "+\(dmg) HP" : "\(dmg)").font(.system(size: w * 0.043, design: .monospaced))
-                .foregroundColor(heal ? Color(hex: 0x3DFF8A) : Theme.fg)
+            Text(heal ? "+\(dmg) HP" : "\(dmg)").font(.system(size: w * 0.043, weight: boosted ? .bold : .regular, design: .monospaced))
+                .foregroundColor(heal ? Color(hex: 0x3DFF8A) : boosted ? Self.goldText : Theme.fg)
         }
     }
 }

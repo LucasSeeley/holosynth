@@ -48,12 +48,21 @@ struct TradeBuilder: View {
             TradePicker(title: p.mine ? "Pick cards to give" : "Pick from \(friend)'s cards",
                         avatar: p.mine ? (store.profile?.avatar ?? "volt") : avatar,
                         spare: (p.mine ? cards?.mine : cards?.theirs) ?? [:],
+                        fused: (p.mine ? cards?.mineFused : cards?.theirsFused) ?? [],
                         owned: p.mine ? (store.profile?.collection ?? [:]) : [:],
+                        team: p.mine ? Set(store.profile?.team ?? []) : [],
                         picked: p.mine ? $give : $get) { picking = nil }
         }
     }
 
     private struct PickSide: Identifiable { let mine: Bool; var id: Bool { mine } }
+
+    // Fusion levels of a fused copy in this offer ("card#12"), wherever we know it from.
+    private func fusion(_ token: String) -> Fusion? {
+        guard let id = TradeItem.fusedId(token) else { return nil }
+        let all = (cards?.mineFused ?? []) + (cards?.theirsFused ?? []) + Array((counter?.fusions ?? [:]).values)
+        return all.first { String($0.id) == id }?.fusion
+    }
 
     private func side(_ title: String, cards list: Binding<[String]>, gold: Binding<Int>, goldLabel: String, maxGold: Int, mine: Bool) -> some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -64,8 +73,8 @@ struct TradeBuilder: View {
             }
             HStack(spacing: 10) {
                 ForEach(0..<3, id: \.self) { i in
-                    if i < list.wrappedValue.count, let card = CardBook.card(list.wrappedValue[i]) {
-                        CardView(card: card)
+                    if i < list.wrappedValue.count, let card = TradeItem.card(list.wrappedValue[i]) {
+                        CardView(card: card, fusion: fusion(list.wrappedValue[i]))
                             .overlay(alignment: .topTrailing) {
                                 Button { list.wrappedValue.remove(at: i) } label: {
                                     Image(systemName: "xmark").font(.system(size: 9, weight: .bold)).foregroundColor(Theme.brass)
@@ -124,8 +133,10 @@ struct TradeBuilder: View {
 struct TradePicker: View {
     let title: String
     let avatar: String
-    let spare: [String: Int]          // copies that can be traded
+    let spare: [String: Int]          // plain copies that can be traded
+    let fused: [FusedCopy]            // fused copies that can be traded (each its own item)
     let owned: [String: Int]          // my whole collection, to show team cards as locked; empty for their side
+    let team: Set<String>
     @Binding var picked: [String]
     let onDone: () -> Void
     @AppStorage("collectionSort") private var sort = 0
@@ -133,8 +144,11 @@ struct TradePicker: View {
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 10), count: 3)
 
     var body: some View {
-        let ids = Set(spare.keys).union(owned.keys)
+        // plain copies you have (or team cards, shown locked); cards whose every copy is fused only appear as fused copies
+        let ids = Set(spare.keys).union(owned.keys.filter { team.contains($0) })
         let cards = CardSort.apply(CardBook.all.filter { ids.contains($0.id) }, sort)
+        let order = Dictionary(uniqueKeysWithValues: CardSort.apply(CardBook.all, sort).enumerated().map { ($1.id, $0) })
+        let fusedSorted = fused.sorted { (order[$0.card] ?? 0, $1.fusion.total) < (order[$1.card] ?? 0, $0.fusion.total) }
         ZStack {
             ScreenBackground()
             VStack(spacing: 12) {
@@ -153,6 +167,7 @@ struct TradePicker: View {
                 }
                 ScrollView(showsIndicators: false) {
                     LazyVGrid(columns: columns, spacing: 10) {
+                        ForEach(fusedSorted) { fusedCell($0) }
                         ForEach(cards) { cell($0) }
                     }
                     .padding(.horizontal, 16).padding(.vertical, 4)
@@ -204,6 +219,22 @@ struct TradePicker: View {
                 else if free == 1 { remove(card.id) }
             }
             .accessibilityAddTraits(chosen > 0 ? .isSelected : [])
+    }
+
+    // A fused copy is one item: tap to add or remove it.
+    @ViewBuilder private func fusedCell(_ copy: FusedCopy) -> some View {
+        let token = TradeItem.token(copy)
+        let chosen = picked.contains(token)
+        if let card = CardBook.card(copy.card) {
+            CardView(card: card, fusion: copy.fusion)
+                .overlay {
+                    if chosen { RoundedRectangle(cornerRadius: 8).stroke(Theme.brass, lineWidth: 3).shadow(color: Theme.brass, radius: 8) }
+                }
+                .onTapGesture {
+                    if chosen { picked.removeAll { $0 == token } } else if picked.count < 3 { picked.append(token) }
+                }
+                .accessibilityAddTraits(chosen ? .isSelected : [])
+        }
     }
 
     private func copyButton(_ icon: String, action: @escaping () -> Void) -> some View {
@@ -288,7 +319,9 @@ struct TradeOfferView: View {
             .frame(height: 22)
             HStack(spacing: 10) {
                 ForEach(0..<3, id: \.self) { i in
-                    if i < ids.count, let c = CardBook.card(ids[i]) { CardView(card: c) }
+                    if i < ids.count, let c = TradeItem.card(ids[i]) {
+                        CardView(card: c, fusion: TradeItem.fusedId(ids[i]).flatMap { trade.fusions?[$0]?.fusion })
+                    }
                     else { Color.clear.aspectRatio(5.0 / 7.0, contentMode: .fit) }
                 }
             }

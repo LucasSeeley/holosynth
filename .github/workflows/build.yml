@@ -97,7 +97,7 @@ jobs:
           xcodegen generate
           xcodebuild -project HoloSynth.xcodeproj -scheme HoloSynth -configuration Release \
             -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build \
-            API_BASE="$URL" BUILD_NUMBER="${{ github.run_number }}" MARKETING_VERSION="1.1.${{ github.run_number }}" \
+            API_BASE="$URL" BUILD_NUMBER="${{ github.run_number }}" MARKETING_VERSION="1.2.${{ github.run_number }}" \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
             build 2>&1 | tee build.log | grep -E "error:|warning: .*deprecated|BUILD (SUCCEEDED|FAILED)" || true
           grep -q "BUILD SUCCEEDED" build.log
@@ -110,7 +110,7 @@ jobs:
         run: |
           SIZE=$(stat -f%z HoloSynth.ipa)
           DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-          VERSION="1.1.${{ github.run_number }}"
+          VERSION="1.2.${{ github.run_number }}"
           cat > source.json <<JSON
           {
             "name": "HoloSynth",

@@ -2117,7 +2117,12 @@
   },
   "look": "Golden android with a sun reactor in its chest.",
   "color": "#ffd23d",
-  "quip": "Has a sun in his chest. Never needs a nightlight."
+  "quip": "Has a sun in his chest. Never needs a nightlight.",
+  "special2": {
+   "name": "Supernova",
+   "dmg": 55,
+   "cd": 4
+  }
  },
  {
   "id": "leviathan",
@@ -2137,7 +2142,12 @@
   },
   "look": "Colossal cyber-sea-serpent from the flooded districts.",
   "color": "#2fe3c4",
-  "quip": "Floods your district. Asks why you're wet."
+  "quip": "Floods your district. Asks why you're wet.",
+  "special2": {
+   "name": "Maelstrom",
+   "dmg": 55,
+   "cd": 4
+  }
  },
  {
   "id": "dreadnought",
@@ -2157,7 +2167,12 @@
   },
   "look": "Flying battleship mech bristling with cannons.",
   "color": "#ff4d5e",
-  "quip": "A battleship that learned to fly. Nobody stopped it."
+  "quip": "A battleship that learned to fly. Nobody stopped it.",
+  "special2": {
+   "name": "Orbital Strike",
+   "dmg": 55,
+   "cd": 4
+  }
  },
  {
   "id": "nightblade",
@@ -2177,7 +2192,12 @@
   },
   "look": "Assassin android whose blade swallows light.",
   "color": "#8f7bff",
-  "quip": "His sword eats light. Hates birthday candles."
+  "quip": "His sword eats light. Hates birthday candles.",
+  "special2": {
+   "name": "New Moon",
+   "dmg": 55,
+   "cd": 4
+  }
  },
  {
   "id": "phoenix",
@@ -2197,7 +2217,12 @@
   },
   "look": "Firebird made of burning neon.",
   "color": "#ff8a3d",
-  "quip": "Dies, comes back, does it again. Show-off."
+  "quip": "Dies, comes back, does it again. Show-off.",
+  "special2": {
+   "name": "Inferno Dive",
+   "dmg": 50,
+   "cd": 3
+  }
  },
  {
   "id": "omega",
@@ -2217,7 +2242,12 @@
   },
   "look": "AI war machine with one all-seeing lens.",
   "color": "#3ff0ff",
-  "quip": "One eye, all-seeing. Saw what you did."
+  "quip": "One eye, all-seeing. Saw what you did.",
+  "special2": {
+   "name": "Deletion",
+   "dmg": 55,
+   "cd": 4
+  }
  },
  {
   "id": "sovereign",
@@ -2237,7 +2267,12 @@
   },
   "look": "Ruler android of the neon city, crowned in hardlight.",
   "color": "#ffd23d",
-  "quip": "Rules the neon city. The crown is mostly for show."
+  "quip": "Rules the neon city. The crown is mostly for show.",
+  "special2": {
+   "name": "Royal Decree",
+   "dmg": 70,
+   "cd": 4
+  }
  },
  {
   "id": "apex",
@@ -2257,7 +2292,12 @@
   },
   "look": "Ancient alpha predator rebuilt in chrome.",
   "color": "#ff4d5e",
-  "quip": "At the top of the food chain. Ate the rest of the chain."
+  "quip": "At the top of the food chain. Ate the rest of the chain.",
+  "special2": {
+   "name": "Alpha Howl",
+   "dmg": 70,
+   "cd": 4
+  }
  },
  {
   "id": "genesis",
@@ -2277,7 +2317,12 @@
   },
   "look": "Self-building mech that grows new parts mid-fight.",
   "color": "#ff3df0",
-  "quip": "Builds itself mid-fight. Never finishes. Always upgrading."
+  "quip": "Builds itself mid-fight. Never finishes. Always upgrading.",
+  "special2": {
+   "name": "Big Bang",
+   "dmg": 75,
+   "cd": 4
+  }
  },
  {
   "id": "rune",
@@ -3090,7 +3135,12 @@
   },
   "look": "Obsidian android sorceress weaving a tiny ultraviolet black hole between her hands.",
   "color": "#8a2eff",
-  "quip": "Knits with gravity. Your scarf is now a star."
+  "quip": "Knits with gravity. Your scarf is now a star.",
+  "special2": {
+   "name": "Event Horizon",
+   "dmg": 55,
+   "cd": 4
+  }
  },
  {
   "id": "starwyrm",
@@ -3110,7 +3160,12 @@
   },
   "look": "Serpent dragon made of a living galaxy, gold constellations tracing its cosmic-teal body.",
   "color": "#ffd36b",
-  "quip": "Was a zodiac sign once. Got bored."
+  "quip": "Was a zodiac sign once. Got bored.",
+  "special2": {
+   "name": "Meteor Shower",
+   "dmg": 55,
+   "cd": 4
+  }
  },
  {
   "id": "petalcore",
@@ -3131,7 +3186,12 @@
   },
   "look": "Giant mechanical lotus of rose-gold petals that unfold to pour out jade healing light.",
   "color": "#ff9fb0",
-  "quip": "Opens up slowly. Like your friend who does therapy."
+  "quip": "Opens up slowly. Like your friend who does therapy.",
+  "special2": {
+   "name": "Thorn Storm",
+   "dmg": 55,
+   "cd": 4
+  }
  },
  {
   "id": "omnis",
@@ -3151,7 +3211,12 @@
   },
   "look": "The first android to learn magic: a towering platinum sorcerer crowned by orbiting rune planets of every colour.",
   "color": "#e8e8ff",
-  "quip": "Invented magic. Wants royalties."
+  "quip": "Invented magic. Wants royalties.",
+  "special2": {
+   "name": "Final Word",
+   "dmg": 70,
+   "cd": 4
+  }
  },
  {
   "id": "dawnbringer",
@@ -3171,7 +3236,12 @@
   },
   "look": "Colossal stag-dragon made of sunrise light, sky-orange to pink, trailing a dawn sky behind it.",
   "color": "#ff8a5c",
-  "quip": "Hits snooze for no one."
+  "quip": "Hits snooze for no one.",
+  "special2": {
+   "name": "Solar Crown",
+   "dmg": 70,
+   "cd": 4
+  }
  },
  {
   "id": "eternity",
@@ -3192,6 +3262,11 @@
   },
   "look": "Vast floating crystal heart ringed by spinning halos that throw full-spectrum healing light.",
   "color": "#ffffff",
-  "quip": "Has been around forever. Still has not seen it all."
+  "quip": "Has been around forever. Still has not seen it all.",
+  "special2": {
+   "name": "Endless Light",
+   "dmg": 70,
+   "cd": 4
+  }
  }
 ]
