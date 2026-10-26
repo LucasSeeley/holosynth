@@ -23,7 +23,9 @@ const beats = (a, b) => BEATS[a].includes(b);
 // A Mystic's special heals one of its own team (special.heal); everything else hits an enemy.
 const heals = (card, move) => move === 'special' && !!card.special.heal;
 
-export const levelFor = xp => Math.floor(xp / XP_PER_LEVEL) + 1;
+// Each level needs twice the XP of the one before: 100 to reach level 2, 200 more for 3, 400 more for 4...
+export const levelStart = level => XP_PER_LEVEL * (2 ** (level - 1) - 1);   // total XP at the start of `level`
+export const levelFor = xp => { let l = 1; while (levelStart(l + 1) <= xp) l++; return l; };
 
 // ---- packs ----
 function rollRarity(rand) {

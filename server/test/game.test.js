@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS } from '../src/game.js';
+import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS, levelFor, levelStart } from '../src/game.js';
 
 const fixed = v => () => v;
 
@@ -115,6 +115,11 @@ test('chapters 4 and 5 get harder but a strong team can win every level', () => 
   const run = (team, level) => { const s = newCampaignBattle(team, level);
     while (s.winner === null) { const m = aiMove(s, s.turn); applyMove(s, s.turn, m.from, m.move, m.to); } return s.winner; };
   for (let level = 90; level < 150; level++) assert.equal(run(['paragon', 'phoenix', 'eternity'], level), 0, `level ${level + 1}`);
+});
+
+test('each level needs double the XP of the last', () => {
+  assert.deepEqual([0, 99, 100, 299, 300, 699, 700, 1500].map(levelFor), [1, 1, 2, 2, 3, 3, 4, 5]);
+  assert.deepEqual([1, 2, 3, 4].map(levelStart), [0, 100, 300, 700]);
 });
 
 test('daily spin odds add up and the pack is rare', () => {

@@ -36,10 +36,17 @@ enum CardBook {
 
 // MARK: - Server replies
 
+extension Profile {
+    var xpInto: Int { levelXp ?? xp % 100 }
+    var xpNeed: Int { max(levelNeed ?? 100, 1) }
+}
+
 struct Profile: Decodable, Equatable {
     let username: String
     let gold: Int
     let xp: Int
+    let levelXp: Int?           // XP into the current level
+    let levelNeed: Int?         // XP the current level takes (doubles every level)
     let level: Int
     let team: [String]
     let collection: [String: Int]

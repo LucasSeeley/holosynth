@@ -36,7 +36,7 @@ struct ProfileTab: View {
         VStack(spacing: 6) {
             ZStack {
                 Circle().stroke(Theme.brass.opacity(0.15), lineWidth: 6)
-                Circle().trim(from: 0, to: CGFloat(p.xp % 100) / 100)
+                Circle().trim(from: 0, to: CGFloat(p.xpInto) / CGFloat(p.xpNeed))
                     .stroke(Theme.brass, style: StrokeStyle(lineWidth: 6, lineCap: .round)).rotationEffect(.degrees(-90))
                 Avatar(id: p.avatar, size: 94)
                 Text("LV \(p.level)").font(.chakra(13)).foregroundColor(Theme.brass)
@@ -54,7 +54,7 @@ struct ProfileTab: View {
             .frame(width: 108, height: 108)
             .shadow(color: Theme.brass.opacity(0.2), radius: 15)
             Text(p.username).font(.chakra(26)).foregroundColor(Theme.fg).padding(.top, 12)
-            Text("\(100 - p.xp % 100) XP to level \(p.level + 1) · Playing since \(since(p.since))")
+            Text("\(p.xpNeed - p.xpInto) XP to level \(p.level + 1) · Playing since \(since(p.since))")
                 .font(.barlow(13)).foregroundColor(Theme.muted).multilineTextAlignment(.center)
         }
         .padding(.top, 4)

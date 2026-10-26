@@ -180,7 +180,7 @@ struct PlayerBar: View {
                         GeometryReader { geo in
                             ZStack(alignment: .leading) {
                                 Capsule().fill(Theme.brass.opacity(0.15))
-                                Capsule().fill(Theme.brass).frame(width: geo.size.width * CGFloat(p.xp % 100) / 100)
+                                Capsule().fill(Theme.brass).frame(width: geo.size.width * CGFloat(p.xpInto) / CGFloat(p.xpNeed))
                             }
                         }
                         .frame(width: 90, height: 5)

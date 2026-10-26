@@ -73,7 +73,7 @@ struct PlayTab: View {
         HStack(spacing: 14) {
             ZStack {
                 Circle().stroke(Theme.brass.opacity(0.15), lineWidth: 5)
-                Circle().trim(from: 0, to: CGFloat(p.xp % 100) / 100)
+                Circle().trim(from: 0, to: CGFloat(p.xpInto) / CGFloat(p.xpNeed))
                     .stroke(Theme.brass, style: StrokeStyle(lineWidth: 5, lineCap: .round))
                     .rotationEffect(.degrees(-90))
                 VStack(spacing: 0) {
@@ -85,7 +85,7 @@ struct PlayTab: View {
             .accessibilityElement(children: .combine)
             VStack(alignment: .leading, spacing: 3) {
                 Text(p.username).font(.chakra(24)).foregroundColor(Theme.fg).lineLimit(1).minimumScaleFactor(0.6)
-                Text("\(100 - p.xp % 100) XP to level \(p.level + 1)").font(.barlow(13)).foregroundColor(Theme.muted)
+                Text("\(p.xpNeed - p.xpInto) XP to level \(p.level + 1)").font(.barlow(13)).foregroundColor(Theme.muted)
             }
             Spacer(minLength: 4)
             HStack(spacing: 6) {
