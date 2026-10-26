@@ -43,7 +43,7 @@ struct PlayTab: View {
             case .gauntlet:
                 GauntletView { packs in
                     screen = nil
-                    if let packs { store.pendingPackType = "cyber"; store.pendingPack = packs; tab = 1 }   // shortcut: gauntlet packs open as Cyber; send the type once more packs are free
+                    if let packs { store.pendingPack = packs; tab = 1 }
                 }
             case .spin:
                 DailySpinView { pack in

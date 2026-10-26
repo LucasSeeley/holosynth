@@ -31,7 +31,6 @@ struct PackTab: View {
         ("magic", "Magic Pack", "Arcanist, Spirit and Mystic cards", 0xB46BFF),
         ("omni", "Omni Pack", "Any card from both sets", 0xE8B85A),
     ]
-    private static let open: Set<String> = ["cyber"]   // the others say "Coming soon" (server: PACKS_OPEN)
 
     var body: some View {
         VStack(spacing: 0) {
@@ -75,7 +74,7 @@ struct PackTab: View {
     private var shop: some View {
         let pack = Self.packs[shown]
         let gold = store.profile?.gold ?? 0
-        let isOpen = Self.open.contains(pack.type)
+        let isOpen = (store.profile?.packsOpen ?? ["cyber"]).contains(pack.type)
         return VStack(spacing: 14) {
             Spacer(minLength: 0)
             GeometryReader { geo in

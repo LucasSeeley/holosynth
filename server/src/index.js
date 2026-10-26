@@ -79,7 +79,8 @@ async function profile(db, user) {
     since: user.created,
     friends: extra.friends,
     nextSpin: nextSpinAt(extra.spun, now()),
-    spinPack: dailyPack(now()),   // which pack the wheel's pack slot gives today
+    spinPack: dailyPack(now()),
+    packsOpen: PACKS_OPEN,        // packs on sale; the rest say "Coming soon"   // which pack the wheel's pack slot gives today
     gauntlet: { best: extra.gbest || 0, rank: extra.gahead + 1 },   // rank among you and your friends   // ms when the wheel resets (midnight UTC); 0 = spin now
     wins: prog.wins,
     packs: prog.packs,
@@ -557,10 +558,11 @@ async function gauntletMove(req, db, user) {
   const gold = gauntletGold(run.fight);
   const next = { ...run, wins: run.wins + 1, gold: run.gold + gold, fight: run.fight + 1,
     hp: gauntletHeal(run.state.teams[0]), enemies: gauntletEnemies(run.fight + 1), state: null };
-  let pack = null;
+  let pack = null, packType = null;
   const writes = [db.prepare('UPDATE users SET gold = gold + ? WHERE id = ?').bind(gold, user.id), bumpProgress(db, user.id, 'wins')];
   if (next.wins % GAUNTLET_PACK_EVERY === 0) {
-    const opened = openPack(user.packs_since_legend, freePack());
+    packType = freePack();
+    const opened = openPack(user.packs_since_legend, packType);
     pack = opened.cards;
     next.packs++;
     writes.push(...pack.map(id => addCard(db, user.id, id)),
@@ -569,7 +571,7 @@ async function gauntletMove(req, db, user) {
   }
   await saveGauntlet(db, user.id, g.run, next, next.wins);   // claim the win first so a double-submit can't pay twice
   await db.batch(writes);
-  return json({ run: { ...view, ...gauntletView(next), state: run.state }, result: { won: true, gold, pack },
+  return json({ run: { ...view, ...gauntletView(next), state: run.state }, result: { won: true, gold, pack, packType },
     profile: await profile(db, await freshUser(db, user.id)) });
 }
 

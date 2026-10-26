@@ -51,6 +51,7 @@ struct Profile: Decodable, Equatable {
     let friends: Int
     let nextSpin: Double        // when the daily spin is ready again, ms since 1970; 0 = ready now
     let spinPack: String?       // which pack the wheel's pack slot gives today
+    let packsOpen: [String]?    // packs on sale (server decides); the rest say "Coming soon"
     let gauntlet: GauntletStats
     let campaign: Campaign
 }
@@ -128,6 +129,7 @@ struct GauntletResult: Decodable, Equatable {
     let won: Bool
     let gold: Int?              // won a fight: gold for it
     let pack: [String]?         // …and a pack every 10th win
+    let packType: String?
     let streak: Int?            // run over: final streak and totals
     let newBest: Bool?
     let packs: Int?

@@ -14,6 +14,7 @@ struct GauntletView: View {
     @State private var pending: GauntletResult?     // result waiting for the last hits to play out
     @State private var before: [Int] = []           // HP at the end of the last fight, before the heal
     @State private var packCards: [String] = []
+    @State private var packType = "cyber"   // shortcut: several packs in one visit all open in the last one's wrapper
     @State private var settled = true
     @State private var error: String?
     @State private var busy = false
@@ -132,7 +133,7 @@ struct GauntletView: View {
         pending = nil
         if r.won {
             if let run, let last = run.state { before = last.teams[0].map(\.hp) }
-            if let p = r.pack { packCards += p }
+            if let p = r.pack { packCards += p; packType = r.packType ?? "cyber" }
             won = r
             UINotificationFeedbackGenerator().notificationOccurred(.success)
             Sound.victory.play()
@@ -356,7 +357,7 @@ struct GauntletView: View {
         close()
     }
 
-    private func close() { onClose(packCards.isEmpty ? nil : packCards) }
+    private func close() { store.pendingPackType = packType; onClose(packCards.isEmpty ? nil : packCards) }
 }
 
 // Best Gauntlet streaks, friends or everyone.
