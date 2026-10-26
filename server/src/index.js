@@ -592,6 +592,19 @@ async function leaderboard(db, user, scope) {
   return rows;
 }
 
+// Deletes your account and everything tied to it (the build's live test uses this to clean up after itself).
+async function deleteAccount(db, user) {
+  const id = user.id;
+  await db.batch([
+    db.prepare('DELETE FROM friends WHERE user_id = ?1 OR friend_id = ?1').bind(id),
+    db.prepare('DELETE FROM challenges WHERE to_id = ?1 OR match_id IN (SELECT id FROM matches WHERE p0 = ?1 OR p1 = ?1)').bind(id),
+    db.prepare('DELETE FROM matches WHERE p0 = ?1 OR p1 = ?1').bind(id),
+    ...['collection', 'sessions', 'progress', 'presence', 'spins', 'gauntlet'].map(t => db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(id)),
+    db.prepare('DELETE FROM users WHERE id = ?').bind(id),
+  ]);
+  return json({ ok: true });
+}
+
 // ---- app download (SideStore) ----
 async function file(env, key, type) {
   const body = await env.FILES.get(key, { type: 'stream' });
@@ -618,6 +631,7 @@ async function route(req, env) {
   await db.prepare(`INSERT INTO presence (user_id, seen) VALUES (?1, ?2)
     ON CONFLICT (user_id) DO UPDATE SET seen = ?2 WHERE presence.seen < ?2 - 30000`).bind(user.id, now()).run();
   if (method === 'GET' && pathname === '/me') return json(await profile(db, user));
+  if (method === 'POST' && pathname === '/me/delete') return deleteAccount(db, user);
   if (method === 'POST' && pathname === '/team') return setTeam(req, db, user);
   if (method === 'POST' && pathname === '/packs') return buyPack(db, user);
   if (method === 'POST' && pathname === '/starter') return pickStarter(req, db, user);

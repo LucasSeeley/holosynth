@@ -123,4 +123,7 @@ const done = await campaign(a.token, 10);
 check(done.campaign.next?.num === 11 && done.campaign.chapterNum === 1 && done.gold >= 250, 'boss beaten, on to level 11 with enough gold for a pack');
 const pack = await call('/packs', a.token, {});
 console.log('bought pack:', pack.cards, 'gold left', pack.profile.gold, 'packs opened', pack.profile.packs);
+// leave no test players behind (they'd show up on the live leaderboard)
+for (const t of [a.token, b.token]) await call('/me/delete', t, {});
+await expectError(call('/me', a.token), 401);
 console.log('E2E OK');
