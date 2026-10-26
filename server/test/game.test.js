@@ -68,16 +68,24 @@ test('computer takes the knockout over a bigger hit', () => {
   assert.deepEqual(aiMove(s, 1), { from: 0, move: 'basic', to: 0 });
 });
 
-test('every starter path can win every campaign level going first', () => {
+test('every starter path can win every campaign level but the final boss, going first', () => {
   const paths = [];
   for (const a of STARTER_TEAM) for (const b of STARTER_TEAM) if (a !== b) paths.push([a, b]);
-  CAMPAIGN.forEach((_, level) => paths.forEach(path => {
+  CAMPAIGN.slice(0, -1).forEach((_, level) => paths.forEach(path => {
     const team = level < 3 ? [path[0]] : level < 6 ? path : STARTER_TEAM;
     const s = newCampaignBattle(team, level);
     assert.equal(s.turn, 0);
     while (s.winner === null) { const m = aiMove(s, s.turn); applyMove(s, s.turn, m.from, m.move, m.to); }
     assert.equal(s.winner, 0, `level ${level + 1} with ${team.join('+')}`);
   }));
+});
+
+test('the final boss beats the starter team but a strong team can win it', () => {
+  const run = team => { const s = newCampaignBattle(team, CAMPAIGN.length - 1);
+    while (s.winner === null) { const m = aiMove(s, s.turn); applyMove(s, s.turn, m.from, m.move, m.to); } return s.winner; };
+  assert.equal(CAMPAIGN.at(-1).enemies.length, 3);
+  assert.equal(run(STARTER_TEAM), 1);
+  assert.equal(run(['phoenix', 'dreadnought', 'nightblade']), 0);
 });
 
 test('three chapters of 30 with a boss every 10th level, all real cards', () => {

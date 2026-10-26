@@ -257,7 +257,7 @@ export const CHAPTERS = [
     { title: 'The old guard', enemies: ['rook', 'bastion', 'warden'] },
     { title: 'Beast mode', enemies: ['leviathan', 'specter'] },
     { title: 'Last light', enemies: ['nightblade', 'rook'] },
-    { title: 'The champion', enemies: ['paragon', 'hex'], boss: true },
+    { title: 'The champion', enemies: ['paragon', 'hex', 'shogun'], boss: true }   // final boss: needs pack cards, the starter team can't win it,
   ] },
 ];
 // One flat list for progress (`cleared` counts across chapters); `chapter` is 0-based, `num` is the level within its chapter.
