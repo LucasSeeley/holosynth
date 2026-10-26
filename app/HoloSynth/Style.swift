@@ -65,6 +65,7 @@ struct OutlineButton: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.chakra(14)).tracking(1.6).textCase(.uppercase)
+            .lineLimit(1).fixedSize()  // never wrap a button label; the row's name gives way instead
             .foregroundColor(color)
             .padding(.horizontal, 18).frame(height: 44)
             .background(Theme.field, in: RoundedRectangle(cornerRadius: 12))
