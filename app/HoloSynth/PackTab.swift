@@ -171,7 +171,8 @@ struct PackTab: View {
                 // sparks when it rips
                 if sparking { sparks(at: tearY) }
 
-                hint.offset(y: finished ? smallW * 0.7 + 60 : (dealt ? bigW * 0.7 + 60 : packH / 2 + 36))
+                hint.offset(y: finished ? CGFloat((pulled.count + 2) / 3) * (smallW * 7 / 5 + 10) / 2 + 40
+                                       : (dealt ? bigW * 0.7 + 60 : packH / 2 + 36))
             }
             .frame(width: geo.size.width, height: geo.size.height)
             .contentShape(Rectangle())
@@ -204,7 +205,12 @@ struct PackTab: View {
         -> (offset: CGSize, angle: Double, small: Bool) {
         let side = CGFloat(i - 1)
         if !dealt { return (CGSize(width: side * 8, height: rising ? tearY - smallW * 0.25 : 0), Double(side) * 5, true) }
-        if finished { return (CGSize(width: side * (smallW + 10), height: 0), 0, true) }
+        if finished {   // rows of 3 (more than one pack, e.g. from the Gauntlet, wraps onto more rows), centred
+            let n = pulled.count, rows = (n + 2) / 3, row = i / 3, inRow = min(3, n - row * 3)
+            let x = (CGFloat(i % 3) - CGFloat(inRow - 1) / 2) * (smallW + 10)
+            let y = (CGFloat(row) - CGFloat(rows - 1) / 2) * (smallW * 7 / 5 + 10)
+            return (CGSize(width: x, height: y), 0, true)
+        }
         if i < current {
             let dir = throwDir[i] ?? 1
             return (CGSize(width: dir * width * 1.3, height: -40), Double(dir) * 25, false)
