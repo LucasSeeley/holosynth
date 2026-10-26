@@ -6,7 +6,6 @@ export const STARTER_TEAM = ['volt', 'fang', 'goliath'];
 export const START_GOLD = 0;           // gold comes from the campaign
 export const PACK_COST = 250;
 export const PACK_SIZE = 3;
-export const PITY_PACKS = 30;          // guaranteed Legendary every 30 packs
 export const WIN_GOLD = 50;            // friend battle win
 export const CAMPAIGN_GOLD = 25;       // first clear of a campaign level
 export const WIN_XP = 25;
@@ -30,7 +29,6 @@ const pickOf = (rarity, rand) => {
 // Returns { cards: [ids], packsSinceLegend } for one pack.
 export function openPack(packsSinceLegend, rand = Math.random) {
   const rarities = Array.from({ length: PACK_SIZE }, () => rollRarity(rand));
-  if (!rarities.includes('Legendary') && packsSinceLegend + 1 >= PITY_PACKS) rarities[PACK_SIZE - 1] = 'Legendary';
   return {
     cards: rarities.map(r => pickOf(r, rand)),
     packsSinceLegend: rarities.includes('Legendary') ? 0 : packsSinceLegend + 1,

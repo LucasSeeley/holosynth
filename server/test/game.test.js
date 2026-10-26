@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, PITY_PACKS, CAMPAIGN, STARTER_TEAM, CHAPTERS, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal } from '../src/game.js';
+import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal } from '../src/game.js';
 
 const fixed = v => () => v;
 
@@ -43,11 +43,9 @@ test('knocking out the whole team wins', () => {
   assert.throws(() => applyMove(s, 1, 2, 'basic', 0), /over/);
 });
 
-test('pity gives a Legendary on the 30th pack without one', () => {
-  const p = openPack(PITY_PACKS - 1, fixed(0));       // rand 0 -> all Common otherwise
-  assert.equal(BY_ID[p.cards[2]].rarity, 'Legendary');
-  assert.equal(p.packsSinceLegend, 0);
-  assert.equal(openPack(0, fixed(0)).packsSinceLegend, 1);
+test('no pity: a pack never forces a Legendary', () => {
+  const p = openPack(1000, fixed(0));                 // rand 0 -> all Common, however long since the last Legendary
+  assert.ok(p.cards.every(id => BY_ID[id].rarity === 'Common'));
 });
 
 test('drop rates roughly match 85/10/4/1', () => {
