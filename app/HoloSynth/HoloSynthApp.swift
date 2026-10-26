@@ -3,13 +3,15 @@ import SwiftUI
 @main
 struct HoloSynthApp: App {
     @StateObject private var store = GameStore()
+    @StateObject private var art = ArtSync.shared
     @Environment(\.scenePhase) private var phase
 
     var body: some Scene {
         WindowGroup {
             Group {
-                if store.token == nil { AuthView() } else { HomeView() }
+                if store.token == nil { AuthView() } else if !art.ready { ArtLoadingView() } else { HomeView() }
             }
+            .task { await art.run() }
             .environmentObject(store)
             .preferredColorScheme(.dark)
             .tint(Theme.brass)

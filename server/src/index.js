@@ -624,6 +624,13 @@ async function route(req, env) {
   if (method === 'GET' && pathname === '/source.json') return file(env, 'source.json', 'application/json');
   if (method === 'GET' && pathname === '/icon.png') return file(env, 'icon.png', 'image/png');
   if (method === 'GET' && pathname === '/build.txt') return file(env, 'build.txt', 'text/plain');
+  // card art the app downloads (and keeps); the ?v=hash in the app's request makes a long cache safe
+  if (method === 'GET' && pathname === '/art/manifest.json') return file(env, 'art/manifest.json', 'application/json');
+  if (method === 'GET' && /^\/art\/[a-z0-9_]+\.webp$/.test(pathname)) {
+    const res = await file(env, pathname.slice(1), 'image/webp');
+    if (res.ok) res.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+    return res;
+  }
   if (method === 'POST' && pathname === '/signup') return signup(req, db);
   if (method === 'POST' && pathname === '/login') return login(req, db);
 

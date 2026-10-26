@@ -211,18 +211,22 @@ extension Color {
 }
 
 // Bundled pictures live in the "Art" folder: card art, class symbols, pack, card back.
+// Images: the few UI pictures ship in the app (Resources/Art); card art is downloaded by ArtSync and kept on the phone.
 enum Art {
     private static let cache = NSCache<NSString, UIImage>()
+    static let folder: URL = {
+        let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("CardArt")
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }()
     static func image(_ name: String) -> UIImage? {
         if let hit = cache.object(forKey: name as NSString) { return hit }
-        for ext in ["webp", "png"] {
-            if let path = Bundle.main.path(forResource: name, ofType: ext, inDirectory: "Art"),
-               let img = UIImage(contentsOfFile: path) {
-                cache.setObject(img, forKey: name as NSString)
-                return img
-            }
-        }
-        return nil
+        let bundled = ["webp", "png"].lazy.compactMap { Bundle.main.path(forResource: name, ofType: $0, inDirectory: "Art") }.first
+        let path = bundled ?? folder.appendingPathComponent(name + ".webp").path
+        guard let img = UIImage(contentsOfFile: path) else { return nil }
+        cache.setObject(img, forKey: name as NSString)
+        return img
     }
+    static func forget(_ name: String) { cache.removeObject(forKey: name as NSString) }
     static func classIcon(_ cls: String) -> UIImage? { image("class_" + cls.lowercased()) }
 }

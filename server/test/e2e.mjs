@@ -17,6 +17,14 @@ const call = async (path, token, body) => {
 const expectError = async (p, status) => { try { await p; } catch (e) { if (e.message.includes(` ${status} `)) return; throw e; } throw new Error(`expected ${status}`); };
 const check = (ok, msg) => { if (!ok) throw new Error(msg); };
 
+// card art the app downloads (uploaded by the build before this test; not there on a local server)
+if (!base.includes('localhost')) {
+  const man = await fetch(`${base}/art/manifest.json`).then(r => r.json());
+  check(Object.keys(man).length >= 114, 'card art uploaded');
+  const img = await fetch(`${base}/art/volt.webp?v=${man.volt}`);
+  check(img.ok && img.headers.get('content-type') === 'image/webp', 'card art served');
+}
+
 const tag = Date.now().toString(36).slice(-6);
 const a = await call('/signup', null, { username: `ana_${tag}`, password: 'secret1' });
 const b = await call('/signup', null, { username: `ben_${tag}`, password: 'secret2' });
