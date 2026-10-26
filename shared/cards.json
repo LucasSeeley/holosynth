@@ -2278,5 +2278,920 @@
   "look": "Self-building mech that grows new parts mid-fight.",
   "color": "#ff3df0",
   "quip": "Builds itself mid-fight. Never finishes. Always upgrading."
+ },
+ {
+  "id": "rune",
+  "num": 115,
+  "name": "Rune",
+  "rarity": "Common",
+  "cls": "Arcanist",
+  "hp": 55,
+  "basic": {
+   "name": "Rune Bolt",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Arcane Burst",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Chrome android sorcerer in an armoured coat, violet rune circles spinning around both hands.",
+  "color": "#9b6bff",
+  "quip": "Read the manual. Then rewrote it in ancient runes."
+ },
+ {
+  "id": "wisp",
+  "num": 116,
+  "name": "Wisp",
+  "rarity": "Common",
+  "cls": "Spirit",
+  "hp": 60,
+  "basic": {
+   "name": "Spirit Bite",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Will-o'-Wisp",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "A three-tailed fox made of living teal spirit-flame.",
+  "color": "#2fe3c4",
+  "quip": "Follow the light. It's probably fine."
+ },
+ {
+  "id": "halo",
+  "num": 117,
+  "name": "Halo",
+  "rarity": "Common",
+  "cls": "Mystic",
+  "hp": 70,
+  "basic": {
+   "name": "Light Ray",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Mend",
+   "dmg": 25,
+   "cd": 2,
+   "heal": true
+  },
+  "look": "Floating crystal construct with a golden halo and healing light in its hands.",
+  "color": "#ffc53d",
+  "quip": "Turns you off and on again. Works every time."
+ },
+ {
+  "id": "glyph",
+  "num": 118,
+  "name": "Glyph",
+  "rarity": "Common",
+  "cls": "Arcanist",
+  "hp": 50,
+  "basic": {
+   "name": "Ink Strike",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Living Script",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Matte-black android scribe covered in glowing scarlet glyph tattoos, writing spells in the air with a stylus finger.",
+  "color": "#ff5a2e",
+  "quip": "Has terrible handwriting. The spells work anyway."
+ },
+ {
+  "id": "moonhare",
+  "num": 119,
+  "name": "Moonhare",
+  "rarity": "Common",
+  "cls": "Spirit",
+  "hp": 50,
+  "basic": {
+   "name": "Moon Kick",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Crescent Leap",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "A hare made of silver moonlight with crescent-moon ears and drifting lilac motes.",
+  "color": "#c9b8ff",
+  "quip": "Only comes out at night. Mostly to steal your carrots."
+ },
+ {
+  "id": "lantern",
+  "num": 120,
+  "name": "Lantern",
+  "rarity": "Common",
+  "cls": "Mystic",
+  "hp": 65,
+  "basic": {
+   "name": "Spark Flick",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Warm Glow",
+   "dmg": 20,
+   "cd": 1,
+   "heal": true
+  },
+  "look": "Small floating paper-lantern bot with a crimson shell, gold tassels and a soft glowing heart.",
+  "color": "#e0283c",
+  "quip": "Lights the way home. Will not stop talking about it."
+ },
+ {
+  "id": "hexcoil",
+  "num": 121,
+  "name": "Hexcoil",
+  "rarity": "Common",
+  "cls": "Arcanist",
+  "hp": 60,
+  "basic": {
+   "name": "Coil Snap",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Hexfire",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Warlock android wound in serpentine copper coils that spit acid-green hexfire.",
+  "color": "#b8ff2e",
+  "quip": "Curses you, then apologises. Then curses you again."
+ },
+ {
+  "id": "emberkoi",
+  "num": 122,
+  "name": "Emberkoi",
+  "rarity": "Common",
+  "cls": "Spirit",
+  "hp": 55,
+  "basic": {
+   "name": "Fin Slap",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Koi Current",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "A pair of koi fish made of tangerine-gold flame, swimming through the air in a loop.",
+  "color": "#ff9a1f",
+  "quip": "Two fish, one brain cell, infinite swagger."
+ },
+ {
+  "id": "bloom",
+  "num": 123,
+  "name": "Bloom",
+  "rarity": "Common",
+  "cls": "Mystic",
+  "hp": 70,
+  "basic": {
+   "name": "Thorn Toss",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Blossom",
+   "dmg": 25,
+   "cd": 2,
+   "heal": true
+  },
+  "look": "Flower construct of glowing spring-green leaves with pink blossoms opening across its body.",
+  "color": "#5cff7a",
+  "quip": "Heals you with petals. Mildly allergic to itself."
+ },
+ {
+  "id": "rime",
+  "num": 124,
+  "name": "Rime",
+  "rarity": "Common",
+  "cls": "Arcanist",
+  "hp": 55,
+  "basic": {
+   "name": "Frost Needle",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Glacier Spike",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Frost-mage android with crystalline ice-blue armour and snowflake sigils orbiting its head.",
+  "color": "#9fe8ff",
+  "quip": "Cool under pressure. And everywhere else."
+ },
+ {
+  "id": "wraithhound",
+  "num": 125,
+  "name": "Wraithhound",
+  "rarity": "Common",
+  "cls": "Spirit",
+  "hp": 65,
+  "basic": {
+   "name": "Ghost Fang",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Haunting Howl",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Lean hound of ghost-green fire with a black smoke body and hollow glowing eyes.",
+  "color": "#6bff9e",
+  "quip": "Fetches souls. Will not fetch sticks."
+ },
+ {
+  "id": "chime",
+  "num": 126,
+  "name": "Chime",
+  "rarity": "Common",
+  "cls": "Mystic",
+  "hp": 65,
+  "basic": {
+   "name": "Ring Out",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Soothing Toll",
+   "dmg": 20,
+   "cd": 1,
+   "heal": true
+  },
+  "look": "Floating wind-chime construct of hanging silver bells that ripple sky-blue sound waves.",
+  "color": "#7cc8ff",
+  "quip": "Heals with music. Only knows one song."
+ },
+ {
+  "id": "tome",
+  "num": 127,
+  "name": "Tome",
+  "rarity": "Common",
+  "cls": "Arcanist",
+  "hp": 60,
+  "basic": {
+   "name": "Page Cut",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Chapter Close",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Librarian android with emerald plating, reading from a floating cream-paged spellbook that glows.",
+  "color": "#1fd17a",
+  "quip": "Spoilers are a spell. A very evil one."
+ },
+ {
+  "id": "nocturne",
+  "num": 128,
+  "name": "Nocturne",
+  "rarity": "Common",
+  "cls": "Spirit",
+  "hp": 50,
+  "basic": {
+   "name": "Talon Swipe",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Starfall",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Great owl made of midnight-blue night sky, its feathers dotted with constellations.",
+  "color": "#3b5bff",
+  "quip": "Asks 'who' a lot. Already knows the answer."
+ },
+ {
+  "id": "tide",
+  "num": 129,
+  "name": "Tide",
+  "rarity": "Common",
+  "cls": "Mystic",
+  "hp": 75,
+  "basic": {
+   "name": "Splash",
+   "dmg": 5
+  },
+  "special": {
+   "name": "Healing Wave",
+   "dmg": 30,
+   "cd": 3,
+   "heal": true
+  },
+  "look": "Flowing water construct shaped like a fountain, deep ocean blue with seafoam crests.",
+  "color": "#1f7aff",
+  "quip": "Go with the flow. Or get washed away. Your call."
+ },
+ {
+  "id": "tempest",
+  "num": 130,
+  "name": "Tempest",
+  "rarity": "Common",
+  "cls": "Arcanist",
+  "hp": 55,
+  "basic": {
+   "name": "Gust",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Thunderhead",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Storm-caller android in a navy cloak, holding a floating orb of electric-yellow lightning.",
+  "color": "#ffe62e",
+  "quip": "Brings an umbrella to every fight. For you."
+ },
+ {
+  "id": "glimmerstag",
+  "num": 131,
+  "name": "Glimmerstag",
+  "rarity": "Common",
+  "cls": "Spirit",
+  "hp": 70,
+  "basic": {
+   "name": "Antler Jab",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Crystal Charge",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Stag spirit with a pearl-white glowing body and branching antlers of peach-coral crystal.",
+  "color": "#ff9a7a",
+  "quip": "Majestic until it gets its antlers stuck in a doorway."
+ },
+ {
+  "id": "vital",
+  "num": 132,
+  "name": "Vital",
+  "rarity": "Common",
+  "cls": "Mystic",
+  "hp": 60,
+  "basic": {
+   "name": "Defib Zap",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Triage",
+   "dmg": 20,
+   "cd": 1,
+   "heal": true
+  },
+  "look": "Rounded white medical drone with a neon-red cross visor and heartbeat lights pulsing down its arms.",
+  "color": "#ff2e4d",
+  "quip": "Your vitals are fine. Your choices are not."
+ },
+ {
+  "id": "mirage",
+  "num": 133,
+  "name": "Mirage",
+  "rarity": "Common",
+  "cls": "Arcanist",
+  "hp": 50,
+  "basic": {
+   "name": "Heat Shimmer",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Phantom Copy",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Desert illusionist android with sand-gold plates, flickering turquoise mirror-copies of itself around it.",
+  "color": "#2ee6d6",
+  "quip": "Which one is the real one? Not that one."
+ },
+ {
+  "id": "mistwyrm",
+  "num": 134,
+  "name": "Mistwyrm",
+  "rarity": "Common",
+  "cls": "Spirit",
+  "hp": 55,
+  "basic": {
+   "name": "Mist Bite",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Fog Coil",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Small eel-like dragon made of swirling lavender mist with mint-green glowing whiskers.",
+  "color": "#c39bff",
+  "quip": "Mostly fog. Partly attitude."
+ },
+ {
+  "id": "geode",
+  "num": 135,
+  "name": "Geode",
+  "rarity": "Common",
+  "cls": "Mystic",
+  "hp": 80,
+  "basic": {
+   "name": "Pebble Toss",
+   "dmg": 5
+  },
+  "special": {
+   "name": "Crystal Mend",
+   "dmg": 25,
+   "cd": 3,
+   "heal": true
+  },
+  "look": "Stocky slate-grey rock golem split open to show glowing citrine crystals inside.",
+  "color": "#ffd21f",
+  "quip": "Hard on the outside. Also hard on the inside."
+ },
+ {
+  "id": "sigil",
+  "num": 136,
+  "name": "Sigil",
+  "rarity": "Common",
+  "cls": "Arcanist",
+  "hp": 55,
+  "basic": {
+   "name": "Mark",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Seal Break",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Android with a hexagonal lens in its chest projecting spinning magenta sigils with teal edges.",
+  "color": "#ff2ec4",
+  "quip": "Signs everything with a magic circle. Including takeout orders."
+ },
+ {
+  "id": "flutter",
+  "num": 137,
+  "name": "Flutter",
+  "rarity": "Common",
+  "cls": "Spirit",
+  "hp": 45,
+  "basic": {
+   "name": "Wing Dust",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Glass Swarm",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "A swirling swarm of iridescent glass butterflies that catch and split the light.",
+  "color": "#ff7ae0",
+  "quip": "Beautiful, fragile and absolutely furious."
+ },
+ {
+  "id": "plume",
+  "num": 138,
+  "name": "Plume",
+  "rarity": "Common",
+  "cls": "Mystic",
+  "hp": 65,
+  "basic": {
+   "name": "Feather Dart",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Downy Shield",
+   "dmg": 20,
+   "cd": 1,
+   "heal": true
+  },
+  "look": "Floating construct of layered white feathers around a cobalt-blue light ring.",
+  "color": "#2e6bff",
+  "quip": "Softest healer in the game. Sheds everywhere."
+ },
+ {
+  "id": "origami",
+  "num": 139,
+  "name": "Origami",
+  "rarity": "Common",
+  "cls": "Arcanist",
+  "hp": 50,
+  "basic": {
+   "name": "Paper Cut",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Crane Flock",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Slim android whose body folds like paper, conjuring a flock of rose-pink paper cranes.",
+  "color": "#ff8ab8",
+  "quip": "Paper cuts, but make it magic."
+ },
+ {
+  "id": "drift",
+  "num": 140,
+  "name": "Drift",
+  "rarity": "Common",
+  "cls": "Spirit",
+  "hp": 60,
+  "basic": {
+   "name": "Sting Tendril",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Bioglow",
+   "dmg": 25,
+   "cd": 2
+  },
+  "look": "Floating jellyfish spirit with an aqua bell and long hot-pink bioluminescent tendrils.",
+  "color": "#ff3da8",
+  "quip": "No brain, no heart, no problem."
+ },
+ {
+  "id": "wick",
+  "num": 141,
+  "name": "Wick",
+  "rarity": "Common",
+  "cls": "Mystic",
+  "hp": 60,
+  "basic": {
+   "name": "Wax Drip",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Calm Flame",
+   "dmg": 25,
+   "cd": 2,
+   "heal": true
+  },
+  "look": "Small ivory candle golem with a calm cyan flame for a head and melted-wax drips.",
+  "color": "#3df2ff",
+  "quip": "Burns the midnight oil. Also itself."
+ },
+ {
+  "id": "flask",
+  "num": 142,
+  "name": "Flask",
+  "rarity": "Common",
+  "cls": "Arcanist",
+  "hp": 60,
+  "basic": {
+   "name": "Vial Toss",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Volatile Brew",
+   "dmg": 30,
+   "cd": 3
+  },
+  "look": "Alchemist android with a bandolier of bubbling lime and purple potion vials.",
+  "color": "#a8ff3d",
+  "quip": "Labels are for people who want to live."
+ },
+ {
+  "id": "totem",
+  "num": 143,
+  "name": "Totem",
+  "rarity": "Common",
+  "cls": "Spirit",
+  "hp": 75,
+  "basic": {
+   "name": "Paw Swipe",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Ancestor Roar",
+   "dmg": 25,
+   "cd": 3
+  },
+  "look": "Big bear spirit of amber light, carved with glowing patterns like a living totem pole.",
+  "color": "#ffae3d",
+  "quip": "Hugs are free. Escaping costs extra."
+ },
+ {
+  "id": "mender",
+  "num": 144,
+  "name": "Mender",
+  "rarity": "Common",
+  "cls": "Mystic",
+  "hp": 65,
+  "basic": {
+   "name": "Needle Jab",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Stitch Up",
+   "dmg": 25,
+   "cd": 2,
+   "heal": true
+  },
+  "look": "Spider-like bronze repair drone whose eight arms stitch wounds closed with glowing teal thread.",
+  "color": "#2ec7b4",
+  "quip": "Fixes anything. Bills you in compliments."
+ },
+ {
+  "id": "archon",
+  "num": 145,
+  "name": "Archon",
+  "rarity": "Rare",
+  "cls": "Arcanist",
+  "hp": 75,
+  "basic": {
+   "name": "Decree",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Six Tomes",
+   "dmg": 35,
+   "cd": 3
+  },
+  "look": "Tall high-mage android with a crown of six spellbooks orbiting its head.",
+  "color": "#3d6bff",
+  "quip": "Has read every book. Has opinions about all of them."
+ },
+ {
+  "id": "thunderbird",
+  "num": 146,
+  "name": "Thunderbird",
+  "rarity": "Rare",
+  "cls": "Spirit",
+  "hp": 70,
+  "basic": {
+   "name": "Storm Wing",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Sky Splitter",
+   "dmg": 35,
+   "cd": 3
+  },
+  "look": "Huge bird of storm light with lightning crackling along violet-white wings.",
+  "color": "#d9b8ff",
+  "quip": "Every flap is a weather warning."
+ },
+ {
+  "id": "sanctum",
+  "num": 147,
+  "name": "Sanctum",
+  "rarity": "Rare",
+  "cls": "Mystic",
+  "hp": 90,
+  "basic": {
+   "name": "Bell Strike",
+   "dmg": 10
+  },
+  "special": {
+   "name": "Holy Spring",
+   "dmg": 35,
+   "cd": 3,
+   "heal": true
+  },
+  "look": "Walking shrine construct of white marble with a glowing jade healing pool on its back.",
+  "color": "#3dd9a0",
+  "quip": "Open 24/7. No appointment needed."
+ },
+ {
+  "id": "hexblade",
+  "num": 148,
+  "name": "Hexblade",
+  "rarity": "Rare",
+  "cls": "Arcanist",
+  "hp": 80,
+  "basic": {
+   "name": "Cursed Edge",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Void Rend",
+   "dmg": 30,
+   "cd": 2
+  },
+  "look": "Spellsword android in black plate with a rune-etched blade dripping blood-red void magic.",
+  "color": "#ff1f3d",
+  "quip": "The sword talks. Mostly trash."
+ },
+ {
+  "id": "aurora",
+  "num": 149,
+  "name": "Aurora",
+  "rarity": "Rare",
+  "cls": "Spirit",
+  "hp": 85,
+  "basic": {
+   "name": "Sky Song",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Northern Lights",
+   "dmg": 30,
+   "cd": 2
+  },
+  "look": "A sky whale made of aurora borealis, its body rippling green, pink and purple light.",
+  "color": "#7affc0",
+  "quip": "Hums in frequencies only dogs and wizards hear."
+ },
+ {
+  "id": "choir",
+  "num": 150,
+  "name": "Choir",
+  "rarity": "Rare",
+  "cls": "Mystic",
+  "hp": 75,
+  "basic": {
+   "name": "Sharp Note",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Harmony",
+   "dmg": 30,
+   "cd": 2,
+   "heal": true
+  },
+  "look": "Ring of floating pearl crystal tuning forks that hum healing harmonies in prismatic light.",
+  "color": "#f0e6ff",
+  "quip": "Practises 24 hours a day. Neighbours hate it."
+ },
+ {
+  "id": "chronos",
+  "num": 151,
+  "name": "Chronos",
+  "rarity": "Rare",
+  "cls": "Arcanist",
+  "hp": 70,
+  "basic": {
+   "name": "Tick",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Rewind",
+   "dmg": 35,
+   "cd": 3
+  },
+  "look": "Time-mage android with a clockwork halo and glowing aquamarine sand falling through an hourglass chest.",
+  "color": "#4dffd2",
+  "quip": "Always on time. Usually yesterday's."
+ },
+ {
+  "id": "solmane",
+  "num": 152,
+  "name": "Solmane",
+  "rarity": "Rare",
+  "cls": "Spirit",
+  "hp": 80,
+  "basic": {
+   "name": "Sun Claw",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Solar Roar",
+   "dmg": 35,
+   "cd": 3
+  },
+  "look": "Lion spirit with a mane of erupting solar flares and white-hot eyes.",
+  "color": "#ff6a1f",
+  "quip": "King of the jungle. And the sun. Ask him."
+ },
+ {
+  "id": "lifeline",
+  "num": 153,
+  "name": "Lifeline",
+  "rarity": "Rare",
+  "cls": "Mystic",
+  "hp": 80,
+  "basic": {
+   "name": "Scalpel",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Surgery",
+   "dmg": 35,
+   "cd": 3,
+   "heal": true
+  },
+  "look": "Slim charcoal android surgeon with six coral-light arms and a halo of tiny med-drones.",
+  "color": "#ff6f61",
+  "quip": "Steady hands. All six of them."
+ },
+ {
+  "id": "voidweaver",
+  "num": 154,
+  "name": "Voidweaver",
+  "rarity": "Epic",
+  "cls": "Arcanist",
+  "hp": 90,
+  "basic": {
+   "name": "Gravity Pull",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Singularity Weave",
+   "dmg": 40,
+   "cd": 3
+  },
+  "look": "Obsidian android sorceress weaving a tiny ultraviolet black hole between her hands.",
+  "color": "#8a2eff",
+  "quip": "Knits with gravity. Your scarf is now a star."
+ },
+ {
+  "id": "starwyrm",
+  "num": 155,
+  "name": "Starwyrm",
+  "rarity": "Epic",
+  "cls": "Spirit",
+  "hp": 95,
+  "basic": {
+   "name": "Comet Bite",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Constellation",
+   "dmg": 40,
+   "cd": 3
+  },
+  "look": "Serpent dragon made of a living galaxy, gold constellations tracing its cosmic-teal body.",
+  "color": "#ffd36b",
+  "quip": "Was a zodiac sign once. Got bored."
+ },
+ {
+  "id": "petalcore",
+  "num": 156,
+  "name": "Petalcore",
+  "rarity": "Epic",
+  "cls": "Mystic",
+  "hp": 100,
+  "basic": {
+   "name": "Petal Blade",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Full Bloom",
+   "dmg": 40,
+   "cd": 3,
+   "heal": true
+  },
+  "look": "Giant mechanical lotus of rose-gold petals that unfold to pour out jade healing light.",
+  "color": "#ff9fb0",
+  "quip": "Opens up slowly. Like your friend who does therapy."
+ },
+ {
+  "id": "omnis",
+  "num": 157,
+  "name": "Omnis",
+  "rarity": "Legendary",
+  "cls": "Arcanist",
+  "hp": 115,
+  "basic": {
+   "name": "Prime Word",
+   "dmg": 25
+  },
+  "special": {
+   "name": "All Runes",
+   "dmg": 50,
+   "cd": 3
+  },
+  "look": "The first android to learn magic: a towering platinum sorcerer crowned by orbiting rune planets of every colour.",
+  "color": "#e8e8ff",
+  "quip": "Invented magic. Wants royalties."
+ },
+ {
+  "id": "dawnbringer",
+  "num": 158,
+  "name": "Dawnbringer",
+  "rarity": "Legendary",
+  "cls": "Spirit",
+  "hp": 120,
+  "basic": {
+   "name": "First Light",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Sunrise",
+   "dmg": 50,
+   "cd": 3
+  },
+  "look": "Colossal stag-dragon made of sunrise light, sky-orange to pink, trailing a dawn sky behind it.",
+  "color": "#ff8a5c",
+  "quip": "Hits snooze for no one."
+ },
+ {
+  "id": "eternity",
+  "num": 159,
+  "name": "Eternity",
+  "rarity": "Legendary",
+  "cls": "Mystic",
+  "hp": 125,
+  "basic": {
+   "name": "Pure Beam",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Rebirth",
+   "dmg": 50,
+   "cd": 3,
+   "heal": true
+  },
+  "look": "Vast floating crystal heart ringed by spinning halos that throw full-spectrum healing light.",
+  "color": "#ffffff",
+  "quip": "Has been around forever. Still has not seen it all."
  }
 ]

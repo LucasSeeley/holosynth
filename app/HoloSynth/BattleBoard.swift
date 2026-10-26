@@ -36,6 +36,7 @@ struct BattleBoard: View {
         var flash = false
         var pop: Int?
         var ghostHP: Int?
+        var heal = false             // the flash and number are a heal (green, +) rather than a hit
     }
 
     private var s: BattleState { shown ?? state }
@@ -141,20 +142,21 @@ struct BattleBoard: View {
         let acted = s.acted[side][i]
         let ready = mine && myTurn && !ko && !acted
         let isSelected = mine && selected == i && myTurn
-        let isTarget = !mine && myTurn && selected != nil && move != nil && !ko
+        let isTarget = myTurn && selected != nil && move != nil && !ko && (healing ? mine : !mine)
         let w = cardWidth
         let artH = (w / 1.3).rounded()
         let pct = CGFloat(unit.hp) / CGFloat(card.hp)
-        let look = outline(red: f.flash || isTarget, gold: isSelected || f.lunge != 0, ready: ready)
+        let look = (healing && isTarget) || (f.flash && f.heal) ? outline(green: true)
+            : outline(red: f.flash || isTarget, gold: (isSelected && !isTarget) || f.lunge != 0, ready: ready)
         let small: CGFloat = w > 150 ? 13 : (w > 112 ? 12 : 11)
 
         return VStack(spacing: 0) {
             ZStack {
                 if let img = Art.image(card.id) { Image(uiImage: img).resizable().scaledToFill() } else { Theme.panel }
-                if f.flash { Color(hex: 0xFF4D5E).opacity(0.35) }
+                if f.flash { Color(hex: f.heal ? 0x3DFF8A : 0xFF4D5E).opacity(f.heal ? 0.25 : 0.35) }
                 if let dmg = f.pop {
-                    Text("−\(dmg)").font(.chakra(w > 150 ? 40 : (w > 112 ? 34 : 28))).foregroundColor(.white)
-                        .shadow(color: Color(hex: 0xFF4D5E), radius: 8).shadow(color: .black, radius: 1, y: 2)
+                    Text(f.heal ? "+\(dmg)" : "−\(dmg)").font(.chakra(w > 150 ? 40 : (w > 112 ? 34 : 28))).foregroundColor(.white)
+                        .shadow(color: Color(hex: f.heal ? 0x3DFF8A : 0xFF4D5E), radius: 8).shadow(color: .black, radius: 1, y: 2)
                         .transition(.asymmetric(insertion: .scale(scale: 0.3).combined(with: .opacity),
                                                 removal: .opacity.combined(with: .offset(y: -26))))
                 }
@@ -165,9 +167,9 @@ struct BattleBoard: View {
                 }
                 if isTarget, let dmg = previewDamage(to: unit) {
                     VStack { Spacer()
-                        Text("−\(dmg)").font(.chakra(small)).foregroundColor(.white)
+                        Text(healing ? "+\(dmg)" : "−\(dmg)").font(.chakra(small)).foregroundColor(healing ? Color(hex: 0x06210F) : .white)
                             .frame(maxWidth: .infinity).padding(.vertical, 3)
-                            .background(Color(hex: 0xFF4D5E).opacity(0.92), in: RoundedRectangle(cornerRadius: 8))
+                            .background(Color(hex: healing ? 0x3DFF8A : 0xFF4D5E).opacity(0.92), in: RoundedRectangle(cornerRadius: 8))
                             .padding(6)
                     }
                 }
@@ -227,6 +229,10 @@ struct BattleBoard: View {
     }
 
     // Card outline: red when targeted or hit, bright gold when selected or attacking, soft pulsing gold when ready.
+    private func outline(green: Bool) -> (ring: Color, glow: Color, width: CGFloat, radius: CGFloat) {
+        (Color(hex: 0x3DFF8A), Color(hex: 0x3DFF8A).opacity(0.7), 2, 16)
+    }
+
     private func outline(red: Bool, gold: Bool, ready: Bool) -> (ring: Color, glow: Color, width: CGFloat, radius: CGFloat) {
         if red { return (Color(hex: 0xFF4D5E), Color(hex: 0xFF4D5E).opacity(0.7), 2, 16) }
         if gold { return (Color(hex: 0xFFD77A), Theme.brass.opacity(0.8), 2, 18) }
@@ -283,7 +289,9 @@ struct BattleBoard: View {
             name = kind == "basic" ? card.basic.name : card.special.name
             if kind == "special" && unit.cd > 0 { sub = "Ready in \(unit.cd) turn\(unit.cd == 1 ? "" : "s")" }
             else {
-                sub = kind == "basic" ? "\(card.basic.dmg) damage" : "\(card.special.dmg) damage · then waits \(card.special.cd)"
+                sub = kind == "basic" ? "\(card.basic.dmg) damage"
+                    : card.special.heals ? "Heals \(card.special.dmg) · then waits \(card.special.cd)"
+                    : "\(card.special.dmg) damage · then waits \(card.special.cd)"
                 enabled = !sending
             }
         } else {
@@ -322,6 +330,7 @@ struct BattleBoard: View {
         if s.winner != nil { return "" }
         if s.turn != you { return "Waiting for \(foeName)…" }
         if let card, let mv = move {
+            if healing { return "Tap one of your cards to heal it with \(card.special.name)" }
             return "Tap an enemy to hit it with \(mv == "special" ? card.special.name : card.basic.name)"
         }
         if let card { return "\(card.name) is up. Choose a move." }
@@ -332,20 +341,34 @@ struct BattleBoard: View {
         return "Tap one of your glowing cards"
     }
 
-    private static let beats = ["Fighter": "Beast", "Beast": "Mech", "Mech": "Fighter"]
+    // Same table as the server: each class beats two others.
+    private static let beats: [String: [String]] = [
+        "Fighter": ["Beast", "Arcanist"], "Beast": ["Mech", "Mystic"], "Mech": ["Fighter", "Spirit"],
+        "Arcanist": ["Spirit", "Beast"], "Spirit": ["Mystic", "Fighter"], "Mystic": ["Arcanist", "Mech"],
+    ]
+
+    // The selected card is about to use a healing special: targets are your own cards.
+    private var healing: Bool {
+        guard move == "special", let sel = selected, s.teams[you].indices.contains(sel),
+              let c = CardBook.card(s.teams[you][sel].id) else { return false }
+        return c.special.heals
+    }
 
     // Same sum as the server: +20% when the attacker's class beats the target's.
     private func previewDamage(to target: Unit) -> Int? {
         guard let sel = selected, let mv = move, let a = CardBook.card(s.teams[you][sel].id), let t = CardBook.card(target.id) else { return nil }
         let base = Double(mv == "special" ? a.special.dmg : a.basic.dmg)
-        return Int((base * (Self.beats[a.cls] == t.cls ? 1.2 : 1)).rounded())
+        if healing { return min(a.special.dmg, t.hp - target.hp) }
+        return Int((base * (Self.beats[a.cls, default: []].contains(t.cls) ? 1.2 : 1)).rounded())
     }
 
     // MARK: input
 
     private func tap(side: Int, index i: Int, unit: Unit) {
         guard myTurn, !sending, unit.hp > 0 else { return }
-        if side == you {
+        if side == you, healing, let from = selected {
+            send(from: from, move: "special", to: i)
+        } else if side == you {
             guard !s.acted[you][i] else { return }
             UISelectionFeedbackGenerator().selectionChanged()
             Sound.select.play()
@@ -361,8 +384,9 @@ struct BattleBoard: View {
         UISelectionFeedbackGenerator().selectionChanged()
         Sound.move.play()
         move = kind
-        // one enemy left standing: no need to tap it
-        let living = s.teams[1 - you].indices.filter { s.teams[1 - you][$0].hp > 0 }
+        // only one possible target: no need to tap it
+        let side = healing ? you : 1 - you
+        let living = s.teams[side].indices.filter { s.teams[side][$0].hp > 0 }
         if living.count == 1 { send(from: from, move: kind, to: living[0]) }
     }
 
@@ -390,6 +414,23 @@ struct BattleBoard: View {
             var cur = from
             selected = nil; move = nil
             for e in target.log.suffix(fresh) {
+                if let amount = e.heal {   // a Mystic healing its own side: green glow and a +number, no lunge
+                    guard cur.teams[e.p].indices.contains(e.to) else { continue }
+                    let t = key(e.p, e.to)
+                    if acting != e.p { withAnimation { acting = e.p }; await pause(0.35) }
+                    UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+                    Sound.heal.play()
+                    cur.teams[e.p][e.to].hp += amount
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { fx[t, default: HitFX()].heal = true; fx[t]?.flash = true; fx[t]?.pop = amount }
+                    withAnimation(.easeOut(duration: 0.45)) { shown = cur }
+                    await pause(0.5)
+                    withAnimation(.easeOut(duration: 0.3)) { fx[t]?.flash = false }
+                    await pause(0.35)
+                    withAnimation(.easeOut(duration: 0.5)) { fx[t]?.pop = nil }
+                    await pause(max(0.45, Sound.heal.duration - 0.65 + 0.1))
+                    fx[t]?.heal = false
+                    continue
+                }
                 guard cur.teams.indices.contains(1 - e.p), cur.teams[1 - e.p].indices.contains(e.to) else { continue }
                 let a = key(e.p, e.from), t = key(1 - e.p, e.to)
                 if acting != e.p { withAnimation { acting = e.p }; await pause(0.35) }

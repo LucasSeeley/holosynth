@@ -5,7 +5,11 @@ import UIKit
 
 struct Card: Decodable, Identifiable, Hashable {
     struct Attack: Decodable, Hashable { let name: String; let dmg: Int }
-    struct Special: Decodable, Hashable { let name: String; let dmg: Int; let cd: Int }
+    struct Special: Decodable, Hashable {
+        let name: String; let dmg: Int; let cd: Int
+        let heal: Bool?          // Mystics: heals a teammate by `dmg` instead of hitting an enemy
+        var heals: Bool { heal == true }
+    }
     let id: String
     let num: Int
     let name: String
@@ -154,6 +158,7 @@ struct LogEntry: Decodable, Equatable {
     let p: Int, from: Int, to: Int
     let move: String
     let dmg: Int
+    let heal: Int?              // a Mystic's heal: `to` is on the mover's own side
     let adv: Bool
     let ko: Bool
 }
@@ -192,7 +197,14 @@ enum Theme {
     static let backRed = Color(hex: 0x9E1024)
 
     static func classColor(_ cls: String) -> Color {
-        switch cls { case "Fighter": return cyan; case "Beast": return pink; default: return orange }
+        switch cls {
+        case "Fighter": return cyan
+        case "Beast": return pink
+        case "Arcanist": return Color(hex: 0x9B6BFF)
+        case "Spirit": return Color(hex: 0x2FE3C4)
+        case "Mystic": return Color(hex: 0xFFC53D)
+        default: return orange
+        }
     }
     static func rarityColor(_ rarity: String) -> Color {
         switch rarity {

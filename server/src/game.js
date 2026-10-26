@@ -11,7 +11,15 @@ export const CAMPAIGN_GOLD = [25, 50, 100];   // first clear of a campaign level
 export const WIN_XP = 25;
 export const XP_PER_LEVEL = 100;
 export const RATES = [['Common', 85], ['Rare', 10], ['Epic', 4], ['Legendary', 1]];
-const BEATS = { Fighter: 'Beast', Beast: 'Mech', Mech: 'Fighter' };  // +20% damage
+// +20% damage. Tech and magic each have a triangle, and every class also beats one class from the other side:
+// each class beats 2, is weak to 2 and is even with 1.
+export const BEATS = {
+  Fighter: ['Beast', 'Arcanist'], Beast: ['Mech', 'Mystic'], Mech: ['Fighter', 'Spirit'],
+  Arcanist: ['Spirit', 'Beast'], Spirit: ['Mystic', 'Fighter'], Mystic: ['Arcanist', 'Mech'],
+};
+const beats = (a, b) => BEATS[a].includes(b);
+// A Mystic's special heals one of its own team (special.heal); everything else hits an enemy.
+const heals = (card, move) => move === 'special' && !!card.special.heal;
 
 export const levelFor = xp => Math.floor(xp / XP_PER_LEVEL) + 1;
 
@@ -107,19 +115,26 @@ export function applyMove(state, p, from, move, to) {
   if (state.winner !== null) throw new Error('The match is over.');
   if (state.turn !== p) throw new Error("It's not your turn.");
   const me = state.teams[p], foe = state.teams[1 - p];
-  const attacker = me[from], target = foe[to];
+  const attacker = me[from];
   if (!attacker || !alive(attacker)) throw new Error('That card is knocked out.');
   if (state.acted[p][from]) throw new Error('That card already acted this round.');
-  if (!target || !alive(target)) throw new Error('Pick a target that is still standing.');
   if (move !== 'basic' && move !== 'special') throw new Error('Unknown move.');
-
   const card = BY_ID[attacker.id];
   if (move === 'special' && attacker.cd > 0) throw new Error(`${card.special.name} is cooling down.`);
+  const heal = heals(card, move);
+  const target = heal ? me[to] : foe[to];
+  if (!target || !alive(target)) throw new Error(heal ? 'Pick one of your cards that is still standing.' : 'Pick a target that is still standing.');
 
-  const base = move === 'basic' ? card.basic.dmg : card.special.dmg;
-  const adv = BEATS[card.cls] === BY_ID[target.id].cls;
-  const dmg = Math.round(base * (adv ? 1.2 : 1));
-  target.hp = Math.max(0, target.hp - dmg);
+  let dmg = 0, healed = 0, adv = false;
+  if (heal) {
+    healed = Math.min(card.special.dmg, BY_ID[target.id].hp - target.hp);   // never above full HP
+    target.hp += healed;
+  } else {
+    const base = move === 'basic' ? card.basic.dmg : card.special.dmg;
+    adv = beats(card.cls, BY_ID[target.id].cls);
+    dmg = Math.round(base * (adv ? 1.2 : 1));
+    target.hp = Math.max(0, target.hp - dmg);
+  }
 
   // Cooldown counts the card's own later actions.
   attacker.cd = move === 'special' ? card.special.cd : Math.max(0, attacker.cd - 1);
@@ -128,7 +143,8 @@ export function applyMove(state, p, from, move, to) {
   refreshActed(state, p);
   refreshActed(state, 1 - p);
   state.moves = (state.moves || 0) + 1;   // total so far; the log is capped, so the app uses this to spot new moves
-  state.log.push({ p, from, to, move, dmg, adv, ko: target.hp === 0 });
+  state.log.push(heal ? { p, from, to, move, dmg: 0, heal: healed, adv: false, ko: false }
+                      : { p, from, to, move, dmg, adv, ko: target.hp === 0 });
   if (state.log.length > 30) state.log.shift();
 
   if (!foe.some(alive)) state.winner = p;
@@ -141,9 +157,9 @@ function moveDamage(state, p, from, move, to) {
   const a = state.teams[p][from], t = state.teams[1 - p][to];
   if (!a || !alive(a) || state.acted[p][from] || !t || !alive(t)) return null;
   const card = BY_ID[a.id];
-  if (move === 'special' && a.cd > 0) return null;
+  if (move === 'special' && (a.cd > 0 || heals(card, move))) return null;
   const base = move === 'basic' ? card.basic.dmg : card.special.dmg;
-  return Math.round(base * (BEATS[card.cls] === BY_ID[t.id].cls ? 1.2 : 1));
+  return Math.round(base * (beats(card.cls, BY_ID[t.id].cls) ? 1.2 : 1));
 }
 
 // Computer opponent: knocks a card out if it can, otherwise deals the most damage it can, hitting the weakest card on ties.
@@ -156,6 +172,19 @@ export function aiMove(state, p) {
     const score = dmg >= t.hp ? 10000 - dmg : dmg * 10 - t.hp / 100;
     if (!best || score > best.score) best = { from, move, to, score };
   })));
+  // Heal instead when a teammate is under half HP and the heal would be mostly used, unless a knockout is on offer.
+  if (!best || best.score < 5000) {
+    state.teams[p].forEach((a, from) => {
+      const card = BY_ID[a.id];
+      if (!alive(a) || state.acted[p][from] || a.cd > 0 || !card.special.heal) return;
+      state.teams[p].forEach((t, to) => {
+        const max = BY_ID[t.id].hp, missing = max - t.hp;
+        if (!alive(t) || t.hp * 2 >= max || missing < card.special.dmg * 0.8) return;
+        const score = 6000 + missing;
+        if (!best || score > best.score) best = { from, move: 'special', to, score };
+      });
+    });
+  }
   return best && { from: best.from, move: best.move, to: best.to };
 }
 

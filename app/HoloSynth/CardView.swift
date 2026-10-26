@@ -39,7 +39,7 @@ struct CardView: View {
                 VStack(spacing: w * 0.02) {
                     moveRow(card.basic.name, dmg: card.basic.dmg, cd: nil, w: w)
                     moveRow(card.special.name, dmg: card.special.dmg, cd: cooldown > 0 ? cooldown : card.special.cd, w: w,
-                            ready: cooldown == 0)
+                            ready: cooldown == 0, heal: card.special.heals)
                 }
                 Spacer(minLength: 0)
                 Text(card.quip)
@@ -59,7 +59,7 @@ struct CardView: View {
         .aspectRatio(5.0 / 7.0, contentMode: .fit)
     }
 
-    private func moveRow(_ name: String, dmg: Int, cd: Int?, w: CGFloat, ready: Bool = true) -> some View {
+    private func moveRow(_ name: String, dmg: Int, cd: Int?, w: CGFloat, ready: Bool = true, heal: Bool = false) -> some View {
         HStack(spacing: w * 0.02) {
             Text(name).font(.system(size: w * 0.046, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.6)
             if let cd {
@@ -69,7 +69,8 @@ struct CardView: View {
                     .background(Circle().fill(Theme.classColor(card.cls).opacity(ready ? 0.28 : 0.6)))
             }
             Spacer(minLength: 2)
-            Text("\(dmg)").font(.system(size: w * 0.043, design: .monospaced))
+            Text(heal ? "+\(dmg) HP" : "\(dmg)").font(.system(size: w * 0.043, design: .monospaced))
+                .foregroundColor(heal ? Color(hex: 0x3DFF8A) : Theme.fg)
         }
     }
 }

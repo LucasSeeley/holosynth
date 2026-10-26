@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal } from '../src/game.js';
+import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS } from '../src/game.js';
 
 const fixed = v => () => v;
 
@@ -122,4 +122,55 @@ test('gauntlet: enemies grow with the streak, damage carries over, wins heal 20%
   assert.equal(s.turn, 0);
   assert.throws(() => applyMove(s, 0, 1, 'basic', 0), /knocked out/);
   assert.deepEqual(gauntletHeal(s.teams[0]), [42, 0, 70]);   // +20% of 60, KO stays out, capped at full
+});
+
+test('six classes: each beats 2, is weak to 2, even with 1', () => {
+  const classes = Object.keys(BEATS);
+  assert.equal(classes.length, 6);
+  for (const c of classes) {
+    const weak = classes.filter(o => BEATS[o].includes(c));
+    assert.equal(BEATS[c].length, 2, c);
+    assert.equal(weak.length, 2, c);
+    assert.ok(BEATS[c].every(o => !weak.includes(o)), c);
+  }
+  const s = newBattle(['rune'], ['volt'], () => 0);   // Arcanist vs Fighter: Fighter has the edge, not Rune
+  applyMove(s, 0, 0, 'basic', 0);
+  assert.equal(s.teams[1][0].hp, BY_ID.volt.hp - 15);
+  const t = newBattle(['volt'], ['rune'], () => 0);    // Fighter beats Arcanist: 10 -> 12
+  applyMove(t, 0, 0, 'basic', 0);
+  assert.equal(t.teams[1][0].hp, BY_ID.rune.hp - 12);
+});
+
+test('a Mystic heals a teammate, never above full, never a knocked-out card', () => {
+  const s = newBattle(['halo', 'volt', 'fang'], ['crow'], () => 0);
+  s.teams[0][1].hp = 20; s.teams[0][2].hp = 0;
+  applyMove(s, 0, 0, 'special', 1);                    // Mend 25
+  assert.equal(s.teams[0][1].hp, 45);
+  assert.equal(s.teams[1][0].hp, BY_ID.crow.hp, 'the enemy is untouched');
+  assert.equal(s.log.at(-1).heal, 25);
+  assert.equal(s.teams[0][0].cd, BY_ID.halo.special.cd);
+  const t = newBattle(['halo', 'volt', 'fang'], ['crow'], () => 0);
+  t.teams[0][1].hp = 55;
+  applyMove(t, 0, 0, 'special', 1);
+  assert.equal(t.teams[0][1].hp, BY_ID.volt.hp, 'capped at full');
+  const u = newBattle(['halo', 'volt', 'fang'], ['crow'], () => 0);
+  u.teams[0][2].hp = 0;
+  assert.throws(() => applyMove(u, 0, 0, 'special', 2), /still standing/);
+});
+
+test('computer heals a teammate in trouble, but takes a knockout first', () => {
+  const s = newBattle(['volt'], ['halo', 'goliath'], () => 0.9);   // computer is side 1 and moves first
+  s.teams[1][1].hp = 20;
+  assert.deepEqual(aiMove(s, 1), { from: 0, move: 'special', to: 1 });
+  s.teams[0][0].hp = 5;                                            // Volt is one hit from KO
+  assert.equal(aiMove(s, 1).move === 'special' && aiMove(s, 1).to === 1, false);
+});
+
+test('every magic card is complete', () => {
+  const magic = Object.values(BY_ID).filter(c => ['Arcanist', 'Spirit', 'Mystic'].includes(c.cls));
+  assert.equal(magic.length, 45);
+  for (const c of magic) {
+    assert.ok(c.hp > 0 && c.basic.dmg > 0 && c.special.dmg > 0 && c.special.cd >= 1 && c.quip && c.color, c.id);
+    assert.equal(!!c.special.heal, c.cls === 'Mystic', c.id);
+  }
 });
