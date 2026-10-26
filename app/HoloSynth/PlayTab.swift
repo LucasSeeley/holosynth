@@ -5,7 +5,7 @@ struct PlayTab: View {
     @EnvironmentObject var store: GameStore
     @Binding var tab: Int
 
-    enum Screen: Identifiable { case campaign, friend, reward; var id: Self { self } }
+    enum Screen: Identifiable { case campaign, friend, reward, spin; var id: Self { self } }
     @State var screen: Screen?
 
     var body: some View {
@@ -16,6 +16,7 @@ struct PlayTab: View {
                     VStack(spacing: 12) {
                         header(p)
                         campaignTile(p)
+                        SpinTile(nextSpin: p.nextSpin) { screen = .spin }
                         HStack(spacing: 12) { friendTile(p); packTile }
                         teamPanel(p)
                         stats(p)
@@ -38,6 +39,11 @@ struct PlayTab: View {
                 }
             case .friend:
                 FriendBattleView { screen = nil }
+            case .spin:
+                DailySpinView { pack in
+                    screen = nil
+                    if let pack { store.pendingPack = pack; tab = 1 }
+                }
             case .reward:
                 CardPicker(eyebrow: "Level 3 cleared", title: "A new card joins you",
                            subtitle: "The other one joins after level 6.",

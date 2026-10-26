@@ -2,7 +2,7 @@
 // It also serves the iPhone app download (IPA + SideStore source) from the KV namespace bound as FILES.
 import {
   STARTER_TEAM, START_GOLD, PACK_COST, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN, CHAPTERS, NEW_CARD_AFTER,
-  levelFor, openPack, newBattle, newCampaignBattle, applyMove, aiMove,
+  levelFor, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, newCampaignBattle, applyMove, aiMove,
 } from './game.js';
 
 class HttpError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
@@ -57,6 +57,7 @@ async function profile(db, user) {
   const collection = Object.fromEntries(results.map(r => [r.card_id, r.count]));
   const prog = await getProgress(db, user.id);
   const extra = await db.prepare(`SELECT (SELECT avatar FROM presence WHERE user_id = ?1) AS avatar,
+    (SELECT last FROM spins WHERE user_id = ?1) AS spun,
     (SELECT COUNT(*) FROM friends f JOIN friends g ON g.user_id = f.friend_id AND g.friend_id = f.user_id WHERE f.user_id = ?1) AS friends`)
     .bind(user.id).first();
   const next = CAMPAIGN[prog.cleared];
@@ -72,6 +73,7 @@ async function profile(db, user) {
     avatar: avatarOf(extra.avatar, user.team),
     since: user.created,
     friends: extra.friends,
+    nextSpin: nextSpinAt(extra.spun, now()),   // ms when the wheel resets (midnight UTC); 0 = spin now
     wins: prog.wins,
     packs: prog.packs,
     campaign: {
@@ -420,6 +422,28 @@ async function declineChallenge(req, db, user) {
   return json({ message: null, social: await socialView(db, user) });
 }
 
+// Daily spin: the server picks the slot; the app spins the wheel to land on it.
+async function spin(db, user) {
+  const t = now();
+  // claim today's spin first so two quick taps can't both win
+  const res = await db.prepare(`INSERT INTO spins (user_id, last) VALUES (?1, ?2)
+    ON CONFLICT (user_id) DO UPDATE SET last = ?2 WHERE spins.last < ?3`).bind(user.id, t, dayStart(t)).run();
+  if (!res.meta.changes) throw new HttpError(400, 'You already spun today. Come back tomorrow!');
+  const slot = spinWheel();
+  const prize = SPIN_SLOTS[slot];
+  let cards = null;
+  if (prize.kind === 'gold') await db.prepare('UPDATE users SET gold = gold + ? WHERE id = ?').bind(prize.amount, user.id).run();
+  if (prize.kind === 'xp') await db.prepare('UPDATE users SET xp = xp + ? WHERE id = ?').bind(prize.amount, user.id).run();
+  if (prize.kind === 'pack') {
+    const pack = openPack(user.packs_since_legend);
+    await db.batch([...pack.cards.map(id => addCard(db, user.id, id)),
+      db.prepare('UPDATE users SET packs_since_legend = ? WHERE id = ?').bind(pack.packsSinceLegend, user.id),
+      bumpProgress(db, user.id, 'packs')]);
+    cards = pack.cards;
+  }
+  return json({ slot, kind: prize.kind, amount: prize.amount, cards, profile: await profile(db, await freshUser(db, user.id)) });
+}
+
 // Someone's public card, shown when you tap a friend request. Only between people linked by a request or friendship.
 async function playerCard(db, user, name) {
   const other = await db.prepare('SELECT * FROM users WHERE username = ?').bind(name).first();
@@ -474,6 +498,7 @@ async function route(req, env) {
   if (method === 'POST' && pathname === '/packs') return buyPack(db, user);
   if (method === 'POST' && pathname === '/starter') return pickStarter(req, db, user);
   if (method === 'POST' && pathname === '/avatar') return setAvatar(req, db, user);
+  if (method === 'POST' && pathname === '/spin') return spin(db, user);
   if (method === 'GET' && pathname === '/social') return json(await socialView(db, user));
   if (method === 'GET' && a === 'players' && b) return playerCard(db, user, decodeURIComponent(b));
   if (method === 'POST' && pathname === '/friends') return addFriend(req, db, user);

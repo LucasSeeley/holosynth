@@ -123,6 +123,7 @@ struct AuthView: View {
 struct HomeView: View {
     @EnvironmentObject var store: GameStore
     @State private var tab = 0
+    @State private var spinClosed = false   // closed the daily spin this session: it comes back next launch
 
     var body: some View {
         TabView(selection: $tab) {
@@ -144,6 +145,14 @@ struct HomeView: View {
             }
         }
         .onAppear { Music.play(.menu) }
+        .fullScreenCover(isPresented: Binding(get: {
+            !spinClosed && store.profile.map { !$0.needsStarter && $0.nextSpin == 0 } == true
+        }, set: { if !$0 { spinClosed = true } })) {
+            DailySpinView { pack in
+                spinClosed = true
+                if let pack { store.pendingPack = pack; tab = 1 }
+            }
+        }
         // New accounts pick their first card before anything else.
         .fullScreenCover(isPresented: Binding(get: { store.profile?.needsStarter == true }, set: { _ in })) {
             CardPicker(eyebrow: "Welcome to HoloSynth", title: "Choose your first card",

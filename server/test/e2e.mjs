@@ -92,6 +92,11 @@ check((await call('/me', b.token)).friends === 1 && (await call('/social', b.tok
 const unf = await call('/friends/remove', b.token, { name: an });
 check(unf.social.friends.length === 0, 'unfriended');
 console.log('social OK');
+check((await call('/me', a.token)).nextSpin === 0, 'spin ready');
+const sp = await call('/spin', a.token, {});
+check(sp.slot >= 0 && sp.slot < 8 && sp.profile.nextSpin > Date.now(), 'spun');
+await expectError(call('/spin', a.token, {}), 400);
+console.log('spin', sp.kind, sp.amount, sp.cards || '');
 
 const done = await campaign(a.token, 10);
 check(done.campaign.next?.num === 11 && done.campaign.chapterNum === 1 && done.gold >= 250, 'boss beaten, on to level 11 with enough gold for a pack');

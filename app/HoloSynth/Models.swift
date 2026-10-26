@@ -45,6 +45,7 @@ struct Profile: Decodable, Equatable {
     let avatar: String          // card shown as your picture
     let since: Double           // account created, ms since 1970
     let friends: Int
+    let nextSpin: Double        // when the daily spin is ready again, ms since 1970; 0 = ready now
     let campaign: Campaign
 }
 
@@ -98,6 +99,13 @@ struct Social: Decodable, Equatable {
     let friends: [Person]
     let requests: [Person]
     let challenges: [Challenge]
+}
+struct SpinReply: Decodable {
+    let slot: Int               // which of the wheel's 8 slots it landed on (clockwise from the top)
+    let kind: String            // gold | xp | pack
+    let amount: Int
+    let cards: [String]?        // the pack, when it's a pack
+    let profile: Profile
 }
 struct SocialReply: Decodable { let message: String?; let social: Social }
 struct PackReply: Decodable { let cards: [String]; let profile: Profile }

@@ -37,6 +37,28 @@ export function openPack(packsSinceLegend, rand = Math.random) {
   };
 }
 
+// ---- daily spin ----
+// The wheel's 8 slots clockwise from the top, as drawn in the app, with their chance out of 100.
+export const SPIN_SLOTS = [
+  { kind: 'gold', amount: 50, weight: 18 },
+  { kind: 'xp', amount: 25, weight: 17 },
+  { kind: 'gold', amount: 100, weight: 12 },
+  { kind: 'pack', amount: 1, weight: 5 },
+  { kind: 'gold', amount: 25, weight: 20 },
+  { kind: 'xp', amount: 50, weight: 11 },
+  { kind: 'gold', amount: 250, weight: 5 },
+  { kind: 'xp', amount: 25, weight: 12 },
+];
+// The wheel resets at midnight UTC: one spin per UTC day.
+const DAY_MS = 24 * 60 * 60 * 1000;
+export const dayStart = t => Math.floor(t / DAY_MS) * DAY_MS;
+export const nextSpinAt = (last, t) => (last && last >= dayStart(t) ? dayStart(t) + DAY_MS : 0);   // 0 = can spin now
+export function spinWheel(rand = Math.random) {
+  let r = rand() * 100;
+  for (let i = 0; i < SPIN_SLOTS.length; i++) if ((r -= SPIN_SLOTS[i].weight) < 0) return i;
+  return 0;
+}
+
 // ---- battles ----
 // state: { teams: [[{id,hp,cd}] x2], acted: [[bool] x2], turn, winner, log }. Teams hold 1–3 cards.
 export function newBattle(teamA, teamB, rand = Math.random) {

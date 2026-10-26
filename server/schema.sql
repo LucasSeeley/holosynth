@@ -60,3 +60,8 @@ CREATE TABLE IF NOT EXISTS challenges (
   to_id INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS challenges_to ON challenges (to_id);
+-- Daily spin: when each player last spun (one spin per 24 hours).
+CREATE TABLE IF NOT EXISTS spins (
+  user_id INTEGER PRIMARY KEY,
+  last INTEGER NOT NULL
+);

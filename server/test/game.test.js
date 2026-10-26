@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, PITY_PACKS, CAMPAIGN, STARTER_TEAM, CHAPTERS } from '../src/game.js';
+import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, PITY_PACKS, CAMPAIGN, STARTER_TEAM, CHAPTERS, SPIN_SLOTS, spinWheel, nextSpinAt } from '../src/game.js';
 
 const fixed = v => () => v;
 
@@ -88,4 +88,19 @@ test('three chapters of 30 with a boss every 10th level, all real cards', () => 
     assert.equal(!!l.boss, (i + 1) % 10 === 0, `level ${i + 1}`);
     for (const id of l.enemies) assert.ok(BY_ID[id], id);
   });
+});
+
+test('daily spin odds add up and the pack is rare', () => {
+  assert.equal(SPIN_SLOTS.reduce((a, s) => a + s.weight, 0), 100);
+  const n = Array(8).fill(0);
+  for (let i = 0; i < 20000; i++) n[spinWheel()]++;
+  assert.ok(Math.abs(n[3] / 200 - 5) < 1, `pack ${n[3] / 200}%`);
+  assert.equal(spinWheel(() => 0.999), 7);
+});
+
+test('the wheel resets at midnight UTC', () => {
+  const t = Date.UTC(2026, 9, 26, 23, 30);
+  assert.equal(nextSpinAt(null, t), 0);
+  assert.equal(nextSpinAt(Date.UTC(2026, 9, 25, 23, 59), t), 0, 'spun yesterday');
+  assert.equal(nextSpinAt(Date.UTC(2026, 9, 26, 0, 1), t), Date.UTC(2026, 9, 27), 'spun today: next midnight');
 });
