@@ -135,8 +135,8 @@ struct CollectionTab: View {
             CardView(card: card)
                 .overlay(alignment: .topTrailing) {
                     if count > 1 {
-                        Text("×\(count)").font(.chakra(11)).monospacedDigit()
-                            .padding(.horizontal, 6).padding(.vertical, 1)
+                        Text("×\(count)").font(.chakra(9)).monospacedDigit()
+                            .padding(.horizontal, 4).padding(.vertical, 1)
                             .background(Theme.brass, in: Capsule()).foregroundColor(Color(hex: 0x1A0D05))
                             .offset(x: 3, y: -3)
                             .accessibilityLabel("\(count) copies")
