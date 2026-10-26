@@ -9,7 +9,7 @@ export const PACK_SIZE = 3;
 export const WIN_GOLD = 50;            // friend battle win
 export const CAMPAIGN_GOLD = [25, 50, 100, 100, 100];   // first clear of a campaign level, by chapter
 export const CAMPAIGN_XP = [25, 25, 25, 50, 50];
-export const CHAPTERS_OPEN = 3;   // chapters past this show "More chapters are on the way"
+export const CHAPTERS_OPEN = 5;   // chapters past this show "More chapters are on the way"
 export const WIN_XP = 25;
 export const XP_PER_LEVEL = 100;
 export const RATES = [['Common', 85], ['Rare', 10], ['Epic', 4], ['Legendary', 1]];
@@ -39,7 +39,7 @@ export const PACK_TYPES = { cyber: ['Fighter', 'Beast', 'Mech'], magic: ['Arcani
 export const PACK_SIZES = { overload: 8 };
 export const PACK_COSTS = { overload: 2500 };
 const FREE_TYPES = ['cyber', 'magic', 'omni'];   // free packs are never Overload
-export const PACKS_OPEN = ['cyber'];   // magic and omni show "Coming soon" until they're added here
+export const PACKS_OPEN = ['cyber', 'magic', 'omni', 'overload'];   // packs on sale; any left out show "Coming soon"
 const pickOf = (rarity, type, rand) => {
   const classes = PACK_TYPES[type];
   const pool = CARDS.filter(c => c.rarity === rarity && (!classes || classes.includes(c.cls)));
@@ -77,7 +77,7 @@ export const freePack = (rand = Math.random) => freeOpen()[Math.floor(rand() * f
 export const dailyPack = t => {
   let h = Math.floor(t / DAY_MS) * 2654435761 >>> 0;
   h = Math.imul(h ^ (h >>> 15), 2246822519) >>> 0;
-  return freeOpen()[(h ^ (h >>> 13)) % freeOpen().length];
+  return freeOpen()[((h ^ (h >>> 13)) >>> 0) % freeOpen().length];
 };
 export function spinWheel(rand = Math.random) {
   let r = rand() * 100;
