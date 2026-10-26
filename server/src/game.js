@@ -34,7 +34,11 @@ function rollRarity(rand) {
   return 'Common';
 }
 // Pack types and the classes each holds (omni = every card).
-export const PACK_TYPES = { cyber: ['Fighter', 'Beast', 'Mech'], magic: ['Arcanist', 'Spirit', 'Mystic'], omni: null };
+export const PACK_TYPES = { cyber: ['Fighter', 'Beast', 'Mech'], magic: ['Arcanist', 'Spirit', 'Mystic'], omni: null, overload: null };
+// The Overload Pack is a big Omni: 8 cards for 2,500. Everything else is 3 cards for PACK_COST.
+export const PACK_SIZES = { overload: 8 };
+export const PACK_COSTS = { overload: 2500 };
+const FREE_TYPES = ['cyber', 'magic', 'omni'];   // free packs are never Overload
 export const PACKS_OPEN = ['cyber'];   // magic and omni show "Coming soon" until they're added here
 const pickOf = (rarity, type, rand) => {
   const classes = PACK_TYPES[type];
@@ -44,7 +48,7 @@ const pickOf = (rarity, type, rand) => {
 
 // Returns { cards: [ids], packsSinceLegend } for one pack of `type`.
 export function openPack(packsSinceLegend, type = 'cyber', rand = Math.random) {
-  const rarities = Array.from({ length: PACK_SIZE }, () => rollRarity(rand));
+  const rarities = Array.from({ length: PACK_SIZES[type] ?? PACK_SIZE }, () => rollRarity(rand));
   return {
     cards: rarities.map(r => pickOf(r, type, rand)),
     packsSinceLegend: rarities.includes('Legendary') ? 0 : packsSinceLegend + 1,
@@ -68,11 +72,12 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export const dayStart = t => Math.floor(t / DAY_MS) * DAY_MS;
 export const nextSpinAt = (last, t) => (last && last >= dayStart(t) ? dayStart(t) + DAY_MS : 0);   // 0 = can spin now
 // Free packs (wheel, campaign boss, gauntlet) are a random open type; the wheel's pack changes once a day.
-export const freePack = (rand = Math.random) => PACKS_OPEN[Math.floor(rand() * PACKS_OPEN.length)];
+const freeOpen = () => PACKS_OPEN.filter(t => FREE_TYPES.includes(t));
+export const freePack = (rand = Math.random) => freeOpen()[Math.floor(rand() * freeOpen().length)];
 export const dailyPack = t => {
   let h = Math.floor(t / DAY_MS) * 2654435761 >>> 0;
   h = Math.imul(h ^ (h >>> 15), 2246822519) >>> 0;
-  return PACKS_OPEN[(h ^ (h >>> 13)) % PACKS_OPEN.length];
+  return freeOpen()[(h ^ (h >>> 13)) % freeOpen().length];
 };
 export function spinWheel(rand = Math.random) {
   let r = rand() * 100;

@@ -1,7 +1,7 @@
 // HoloSynth game server: a Cloudflare Worker over D1. Every reply is JSON; errors are { error: "message" }.
 // It also serves the iPhone app download (IPA + SideStore source) from the KV namespace bound as FILES.
 import {
-  BY_ID, STARTER_TEAM, START_GOLD, PACK_COST, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN_XP, CAMPAIGN, CHAPTERS, NEW_CARD_AFTER, OPEN_LEVELS,
+  BY_ID, STARTER_TEAM, START_GOLD, PACK_COST, PACK_COSTS, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN_XP, CAMPAIGN, CHAPTERS, NEW_CARD_AFTER, OPEN_LEVELS,
   levelFor, levelStart, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack,
   gauntletEnemies, gauntletBattle, gauntletHeal, gauntletGold, GAUNTLET_PACK_EVERY, newCampaignBattle, applyMove, aiMove,
 } from './game.js';
@@ -143,13 +143,14 @@ async function setTeam(req, db, user) {
 async function buyPack(db, user, type = 'cyber') {
   if (!(type in PACK_TYPES)) throw new HttpError(400, 'Unknown pack.');
   if (!PACKS_OPEN.includes(type)) throw new HttpError(400, 'That pack is coming soon.');
-  if (user.gold < PACK_COST) throw new HttpError(400, `You need ${PACK_COST} gold.`);
+  const cost = PACK_COSTS[type] ?? PACK_COST;
+  if (user.gold < cost) throw new HttpError(400, `You need ${cost} gold.`);
   const pack = openPack(user.packs_since_legend, type);
   // Guard on gold in the UPDATE so two quick taps can't both spend the same gold.
   const res = await db.prepare(
     'UPDATE users SET gold = gold - ?, packs_since_legend = ? WHERE id = ? AND gold >= ?',
-  ).bind(PACK_COST, pack.packsSinceLegend, user.id, PACK_COST).run();
-  if (!res.meta.changes) throw new HttpError(400, `You need ${PACK_COST} gold.`);
+  ).bind(cost, pack.packsSinceLegend, user.id, cost).run();
+  if (!res.meta.changes) throw new HttpError(400, `You need ${cost} gold.`);
   await db.batch([...pack.cards.map(id => addCard(db, user.id, id)), bumpProgress(db, user.id, 'packs')]);
   return json({ cards: pack.cards, type, profile: await profile(db, await freshUser(db, user.id)) });
 }

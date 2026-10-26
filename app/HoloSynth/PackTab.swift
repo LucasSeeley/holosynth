@@ -26,10 +26,11 @@ struct PackTab: View {
     @State private var openType = "cyber"         // wrapper of the pack being opened
 
     private let tearLine: CGFloat = 0.05          // just under the crimped top of the pack art
-    private static let packs: [(type: String, name: String, contents: String, glow: UInt32)] = [
-        ("cyber", "Cyber Pack", "Fighter, Beast and Mech cards", 0x3FF0FF),
-        ("magic", "Magic Pack", "Arcanist, Spirit and Mystic cards", 0xB46BFF),
-        ("omni", "Omni Pack", "Any card from both sets", 0xE8B85A),
+    private static let packs: [(type: String, name: String, contents: String, glow: UInt32, cards: Int, price: Int)] = [
+        ("cyber", "Cyber Pack", "Fighter, Beast and Mech cards", 0x3FF0FF, 3, 1000),
+        ("magic", "Magic Pack", "Arcanist, Spirit and Mystic cards", 0xB46BFF, 3, 1000),
+        ("omni", "Omni Pack", "Any card from both sets", 0xE8B85A, 3, 1000),
+        ("overload", "Overload Pack", "Any card from both sets", 0xFFD77A, 8, 2500),
     ]
 
     var body: some View {
@@ -113,7 +114,7 @@ struct PackTab: View {
             .accessibilityHidden(true)
             VStack(spacing: 4) {
                 Text(pack.name).font(.chakra(22)).tracking(1.5).textCase(.uppercase).foregroundColor(Color(hex: pack.glow))
-                Text("3 cards · \(pack.contents)").font(.barlow(14)).foregroundColor(Theme.muted)
+                Text("\(pack.cards) cards · \(pack.contents)").font(.barlow(14)).foregroundColor(Theme.muted)
             }
             Button {
                 buying = true
@@ -122,12 +123,12 @@ struct PackTab: View {
                     buying = false
                 }
             } label: {
-                if isOpen { Label(buying ? "Opening…" : "Buy · 1,000", systemImage: "circle.hexagongrid.fill") }
+                if isOpen { Label(buying ? "Opening…" : "Buy · \(pack.price.formatted())", systemImage: "circle.hexagongrid.fill") }
                 else { Text("Coming soon") }
             }
             .buttonStyle(GoldButton())
-            .disabled(!isOpen || buying || gold < 1000)
-            if isOpen && gold < 1000 {
+            .disabled(!isOpen || buying || gold < pack.price)
+            if isOpen && gold < pack.price {
                 Text("Clear campaign levels and win battles to earn gold.").font(.barlow(14)).foregroundColor(Theme.muted)
             }
             if let error = store.error { Text(error).font(.barlow(14, semibold: true)).foregroundColor(Theme.pink) }

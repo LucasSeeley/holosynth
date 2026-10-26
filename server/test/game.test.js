@@ -93,6 +93,7 @@ test('packs only hold cards of their type, and only open types are free', () => 
     for (let i = 0; i < 500; i++) for (const id of openPack(0, type).cards) if (classes) assert.ok(classes.includes(BY_ID[id].cls), `${id} in ${type}`);
   }
   assert.ok(PACKS_OPEN.includes(freePack()));
+  assert.equal(openPack(0, 'overload').cards.length, 8);
   for (let d = 0; d < 30; d++) assert.ok(PACKS_OPEN.includes(dailyPack(d * 86400000)));
   const magic = new Set(Object.values(BY_ID).filter(c => PACK_TYPES.magic.includes(c.cls)).map(c => c.id));
   assert.ok(CAMPAIGN.slice(0, 90).every(l => l.enemies.every(id => !magic.has(id))), 'no magic cards in chapters 1-3');
