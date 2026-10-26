@@ -80,9 +80,10 @@ struct CollectionTab: View {
             CardView(card: card)
                 .overlay(alignment: .topTrailing) {
                     if count > 1 {
-                        Text("×\(count)").font(.caption2.bold().monospacedDigit())
-                            .padding(.horizontal, 5).padding(.vertical, 2)
-                            .background(Theme.brass, in: Capsule()).foregroundColor(Color(hex: 0x1A0D05)).offset(x: 4, y: -6)
+                        Text("×\(count)").font(.chakra(9)).monospacedDigit()
+                            .padding(.horizontal, 4).padding(.vertical, 1)
+                            .background(Theme.brass, in: Capsule()).foregroundColor(Color(hex: 0x1A0D05)).offset(x: 3, y: -4)
+                            .accessibilityLabel("\(count) copies")
                     }
                 }
                 .overlay {
