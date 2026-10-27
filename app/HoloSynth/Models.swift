@@ -25,6 +25,28 @@ struct Card: Decodable, Identifiable, Hashable {
     let passive: String?    // passive kind (see Passives), switched on by fusion
 }
 
+// Power cards: one-use battle cards (same table as the server's POWERS). Playing one is a move by one of your cards.
+// target: ally = one of your standing cards, ko = a knocked-out one, acted = another of yours that already acted, none.
+struct Power: Identifiable, Hashable {
+    let id: String, name: String, rarity: String, target: String, effect: String, short: String, symbol: String
+    static let all: [Power] = [
+        Power(id: "repair", name: "Repair Kit", rarity: "Common", target: "ally", effect: "Heal one of your cards 25 HP", short: "+25 HP", symbol: "wrench.and.screwdriver.fill"),
+        Power(id: "overclock", name: "Overclock", rarity: "Common", target: "ally", effect: "One card's next attack +40%", short: "Next attack +40%", symbol: "bolt.fill"),
+        Power(id: "shield", name: "Shield", rarity: "Common", target: "ally", effect: "One card takes no damage from the next hit", short: "Blocks a hit", symbol: "shield.fill"),
+        Power(id: "recharge", name: "Recharge", rarity: "Rare", target: "ally", effect: "One card's specials are ready right now", short: "Special ready", symbol: "arrow.clockwise.circle.fill"),
+        Power(id: "emp", name: "EMP", rarity: "Rare", target: "none", effect: "Every enemy special +1 turn of cooldown", short: "Enemy specials +1", symbol: "dot.radiowaves.left.and.right"),
+        Power(id: "nanoswarm", name: "Nanoswarm", rarity: "Rare", target: "none", effect: "20 damage to every enemy", short: "20 to all enemies", symbol: "aqi.medium"),
+        Power(id: "revive", name: "Revive Chip", rarity: "Epic", target: "ko", effect: "Bring back a knocked-out card at 30% HP", short: "Back at 30% HP", symbol: "heart.circle.fill"),
+        Power(id: "timeskip", name: "Time Skip", rarity: "Epic", target: "acted", effect: "One card can act again this round", short: "Act again", symbol: "clock.arrow.circlepath"),
+        Power(id: "mirror", name: "Mirror", rarity: "Epic", target: "ally", effect: "The next hit on one card bounces back at the attacker", short: "Bounces a hit", symbol: "arrow.left.arrow.right"),
+        Power(id: "overdrive", name: "Overdrive", rarity: "Legendary", target: "none", effect: "Every card's next attack +30%", short: "Team +30%", symbol: "flame.fill"),
+        Power(id: "restore", name: "Full Restore", rarity: "Legendary", target: "ally", effect: "Fully heal one card", short: "Full HP", symbol: "cross.fill"),
+        Power(id: "singularity", name: "Singularity", rarity: "Legendary", target: "none", effect: "Every enemy loses 25% of its max HP", short: "−25% to all", symbol: "circle.circle.fill"),
+    ]
+    static func of(_ id: String) -> Power? { all.first { $0.id == id || "pw:" + $0.id == id } }
+    static let violet = Color(hex: 0xB46BFF)
+}
+
 // Same table as the server's PASSIVES: name, what it does ("{}" = the value), values by rarity (Common, Rare, Epic, Legendary).
 enum Passives {
     static let all: [String: (name: String, text: String, values: [Int])] = [
@@ -93,6 +115,8 @@ struct Profile: Decodable, Equatable {
     let wins: Int
     let packs: Int
     let unopened: [UnopenedPack]?   // packs waiting to be opened, oldest first
+    let powers: [String: Int]?      // power cards you own: id → copies
+    let powerTeam: [String]?        // the (up to) 2 you take into battle
     let avatar: String          // card shown as your picture
     let since: Double           // account created, ms since 1970
     let friends: Int
@@ -339,6 +363,8 @@ struct Unit: Decodable, Equatable {
     let hit: Bool?              // has attacked (First Strike)
     let mom: Int?               // Momentum stacks
     let ph: Bool?               // Phase Shift used
+    let oc: Bool?, od: Bool?     // power cards: Overclock / Overdrive waiting on its next attack
+    let sh: Bool?, mi: Bool?     // power cards: Shield / Mirror waiting for the next hit
 }
 
 // Fusion levels: h/b/s = HP, basic, special (0-3 each); x = second special unlocked.
@@ -389,7 +415,10 @@ struct LogEntry: Decodable, Equatable {
     let adv: Bool
     let ko: Bool
     let pas: [PassiveHit]?      // passives that kicked in on this move
+    let pw: String?             // a power card played (move is "pw:<id>")
+    let fx: [PowerFX]?          // cards it touched, with their HP afterwards
 }
+struct PowerFX: Decodable, Equatable { let p: Int; let i: Int; let hp: Int }
 // A passive kicking in: card `i` on side `p`; `v` = HP it gained (+) or lost (−), or for Rebirth the HP it came back with.
 struct PassiveHit: Decodable, Equatable { let p: Int; let i: Int; let n: String; let v: Int }
 
@@ -400,6 +429,7 @@ struct BattleState: Decodable, Equatable {
     var winner: Int?
     var log: [LogEntry]
     var moves: Int?             // moves made so far (older matches don't have it)
+    var pw: [[String]]?         // power cards each side still has to play
 }
 
 struct MatchView: Decodable, Equatable {

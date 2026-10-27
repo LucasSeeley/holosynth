@@ -29,6 +29,7 @@ struct BattleBoard: View {
     @State var error: String?
     @State var confirmLeave = false
     @State var pulse = false
+    @State var powerOpen = false     // the power card tray is showing
 
     struct HitFX: Equatable {
         var lunge: CGFloat = 0
@@ -37,7 +38,8 @@ struct BattleBoard: View {
         var pop: Int?
         var ghostHP: Int?
         var heal = false             // the flash and number are a heal (green, +) rather than a hit
-        var callout: String?         // a passive kicking in: "◆ LIFESTEAL +13"
+        var callout: String?         // a passive kicking in: "◆ LIFESTEAL +13", or a power card played
+        var calloutPower = false     // violet (power card) rather than cyan (passive)
     }
 
     private var s: BattleState { shown ?? state }
@@ -143,7 +145,8 @@ struct BattleBoard: View {
         let acted = s.acted[side][i]
         let ready = mine && myTurn && !ko && !acted
         let isSelected = mine && selected == i && myTurn
-        let isTarget = myTurn && selected != nil && move != nil && !ko && (healing ? mine : !mine)
+        let isTarget = myTurn && selected != nil && move != nil && (powerMove.map { mine && powerCanTarget($0, unit: unit, index: i) }
+                                                                       ?? (!ko && (healing ? mine : !mine)))
         let w = cardWidth
         let artH = (w / 1.3).rounded()
         let pct = CGFloat(unit.hp) / CGFloat(unit.max ?? card.hp)
@@ -162,12 +165,13 @@ struct BattleBoard: View {
                                                 removal: .opacity.combined(with: .offset(y: -26))))
                 }
                 if let c = f.callout {
+                    let tint = f.calloutPower ? Power.violet : Theme.cyan
                     VStack {
-                        Text(c).font(.chakra(small)).tracking(1).foregroundColor(Theme.cyan).lineLimit(1).minimumScaleFactor(0.6)
+                        Text(c).font(.chakra(small)).tracking(1).foregroundColor(tint).lineLimit(1).minimumScaleFactor(0.6)
                             .padding(.horizontal, 7).padding(.vertical, 3)
                             .background(Theme.ink.opacity(0.9), in: RoundedRectangle(cornerRadius: 8))
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.cyan, lineWidth: 1))
-                            .shadow(color: Theme.cyan.opacity(0.6), radius: 6)
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(tint, lineWidth: 1))
+                            .shadow(color: tint.opacity(0.6), radius: 6)
                         Spacer()
                     }
                     .padding(.top, 8).padding(.horizontal, 4)
@@ -193,6 +197,14 @@ struct BattleBoard: View {
                         if unit.cd > 0 && !ko { chip("⟳ \(unit.cd)", size: small - 2) }
                     }
                     Spacer()
+                    HStack(spacing: 3) {   // power cards waiting on this card
+                        ForEach([(unit.sh, "shield.fill"), (unit.mi, "arrow.left.arrow.right"), (unit.oc, "bolt.fill"), (unit.od, "flame.fill")]
+                                    .filter { $0.0 == true }.map { $0.1 }, id: \.self) { sym in
+                            Image(systemName: sym).font(.system(size: small - 1, weight: .bold)).foregroundColor(Power.violet)
+                                .padding(3).background(Theme.ink.opacity(0.85), in: Circle())
+                        }
+                        Spacer()
+                    }
                 }
                 .padding(5)
             }
@@ -280,7 +292,9 @@ struct BattleBoard: View {
     private var moveBar: some View {
         let card = selected.flatMap { s.teams[you].indices.contains($0) ? CardBook.card(s.teams[you][$0].id) : nil }
         let unit = selected.flatMap { s.teams[you].indices.contains($0) ? s.teams[you][$0] : nil }
+        let powers = s.pw?[you] ?? []
         return VStack(spacing: 10) {
+            if powerOpen && !powers.isEmpty { powerTray(powers) }
             Text(error ?? prompt(card)).font(.barlow(15, semibold: true))
                 .foregroundColor(error != nil ? Theme.pink : (myTurn || playing ? Theme.fg : Color(hex: 0xFF7884)))
                 .multilineTextAlignment(.center).lineLimit(2).frame(minHeight: 20)
@@ -288,12 +302,56 @@ struct BattleBoard: View {
                 moveButton("basic", card: card, unit: unit)
                 moveButton("special", card: card, unit: unit)
                 if unit?.cd2 != nil { moveButton("special2", card: card, unit: unit) }   // fused Epic/Legendary
+                if !powers.isEmpty { powerButton(enabled: card != nil && myTurn && !sending) }
             }
         }
         .padding(.horizontal, 16).padding(.top, 14).padding(.bottom, 12)
         .frame(maxWidth: .infinity)
         .background(Theme.ink.opacity(0.92).ignoresSafeArea(edges: .bottom))
         .overlay(alignment: .top) { Rectangle().fill(Theme.brass.opacity(0.25)).frame(height: 1) }
+    }
+
+    private func powerButton(enabled: Bool) -> some View {
+        let on = powerOpen || powerMove != nil
+        return Button { powerOpen.toggle(); move = nil; UISelectionFeedbackGenerator().selectionChanged() } label: {
+            VStack(spacing: 3) {
+                Image(systemName: "bolt.square.fill").font(.system(size: 20))
+                Text("Power").font(.chakra(13))
+            }
+            .foregroundColor(on ? Color(hex: 0x12081F) : (enabled ? Power.violet : Color(hex: 0x6E6A88)))
+            .frame(width: 70, height: 66)
+            .background(RoundedRectangle(cornerRadius: 14).fill(on ? AnyShapeStyle(LinearGradient(colors: [Color(hex: 0xD49BFF), Color(hex: 0x8A4FE0)], startPoint: .top, endPoint: .bottom)) : AnyShapeStyle(Theme.field)))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Power.violet.opacity(enabled ? 0.7 : 0.2), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
+        .accessibilityLabel("Power cards")
+    }
+
+    // The power cards left in this battle; tapping one plays it with the selected card.
+    private func powerTray(_ powers: [String]) -> some View {
+        HStack(spacing: 8) {
+            ForEach(Array(Set(powers)).sorted(), id: \.self) { id in
+                if let p = Power.of(id) {
+                    let n = powers.filter { $0 == id }.count
+                    Button { choosePower(p) } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: p.symbol).font(.system(size: 20)).foregroundColor(Theme.cyan)
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(n > 1 ? "\(p.name) ×\(n)" : p.name).font(.chakra(13)).foregroundColor(Theme.fg).lineLimit(1).minimumScaleFactor(0.7)
+                                Text(p.short).font(.barlow(11)).foregroundColor(Theme.muted).lineLimit(1).minimumScaleFactor(0.7)
+                            }
+                            Spacer(minLength: 0)
+                        }
+                        .padding(.horizontal, 10).frame(maxWidth: .infinity).frame(height: 50)
+                        .background(LinearGradient(colors: [Power.violet.opacity(0.3), Theme.field], startPoint: .leading, endPoint: .trailing), in: RoundedRectangle(cornerRadius: 12))
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.rarityColor(p.rarity), lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .transition(.move(edge: .bottom).combined(with: .opacity))
     }
 
     private func moveButton(_ kind: String, card: Card?, unit: Unit?) -> some View {
@@ -346,6 +404,11 @@ struct BattleBoard: View {
         if playing { return acting == you ? "Hit!" : "\(foeName) attacks…" }
         if s.winner != nil { return "" }
         if s.turn != you { return "Waiting for \(foeName)…" }
+        if let p = powerMove {
+            return p.target == "ko" ? "Tap a knocked-out card to revive it" : p.target == "acted" ? "Tap a card that already went to let it act again"
+                : "Tap one of your cards for \(p.name)"
+        }
+        if powerOpen { return "Pick a power card. It uses this card's move." }
         if let card, let mv = move {
             if healing { return "Tap one of your cards to heal it with \(card.special.name)" }
             return "Tap an enemy to hit it with \(mv == "special" ? card.special.name : mv == "special2" ? (card.special2?.name ?? "") : card.basic.name)"
@@ -365,6 +428,16 @@ struct BattleBoard: View {
     ]
 
     // The selected card is about to use a healing special: targets are your own cards.
+    // The power card picked and waiting for a target, if any.
+    private var powerMove: Power? { move.flatMap { $0.hasPrefix("pw:") ? Power.of($0) : nil } }
+    private func powerCanTarget(_ p: Power, unit: Unit, index i: Int) -> Bool {
+        switch p.target {
+        case "ko": return unit.hp == 0
+        case "acted": return unit.hp > 0 && i != selected && s.acted[you][i]
+        default: return unit.hp > 0
+        }
+    }
+
     private var healing: Bool {
         guard move == "special", let sel = selected, s.teams[you].indices.contains(sel),
               let c = CardBook.card(s.teams[you][sel].id) else { return false }
@@ -373,7 +446,7 @@ struct BattleBoard: View {
 
     // Same sum as the server's hitFor: passives, then +20% when the attacker's class beats the target's, then the target's guard.
     private func previewDamage(to target: Unit) -> Int? {
-        guard let sel = selected, let mv = move, let a = CardBook.card(s.teams[you][sel].id), let t = CardBook.card(target.id) else { return nil }
+        guard powerMove == nil, let sel = selected, let mv = move, let a = CardBook.card(s.teams[you][sel].id), let t = CardBook.card(target.id) else { return nil }
         let u = s.teams[you][sel], f = u.f
         if healing {
             let amount = Double(a.dmg("special", f)) * (u.ps == "blessing" ? 1 + Passives.value(a) / 100 : 1)
@@ -396,7 +469,12 @@ struct BattleBoard: View {
     // MARK: input
 
     private func tap(side: Int, index i: Int, unit: Unit) {
-        guard myTurn, !sending, unit.hp > 0 else { return }
+        guard myTurn, !sending else { return }
+        if side == you, let p = powerMove, let from = selected {
+            if powerCanTarget(p, unit: unit, index: i) { send(from: from, move: "pw:" + p.id, to: i) }
+            return
+        }
+        guard unit.hp > 0 else { return }
         if side == you, healing, let from = selected {
             send(from: from, move: "special", to: i)
         } else if side == you {
@@ -404,14 +482,28 @@ struct BattleBoard: View {
             UISelectionFeedbackGenerator().selectionChanged()
             Sound.select.play()
             if selected == i { selected = nil; move = nil } else { selected = i; move = nil }
+            powerOpen = false
             error = nil
         } else if let from = selected, let mv = move {
             send(from: from, move: mv, to: i)
         }
     }
 
+    // Picked a power card from the tray: no target needed plays it straight away.
+    private func choosePower(_ p: Power) {
+        guard let from = selected else { return }
+        UISelectionFeedbackGenerator().selectionChanged()
+        Sound.move.play()
+        powerOpen = false
+        if p.target == "none" { send(from: from, move: "pw:" + p.id, to: 0); return }
+        move = "pw:" + p.id
+        let ok = s.teams[you].indices.filter { powerCanTarget(p, unit: s.teams[you][$0], index: $0) }
+        if ok.count == 1 { send(from: from, move: move!, to: ok[0]) }
+    }
+
     private func choose(_ kind: String) {
         guard let from = selected else { return }
+        powerOpen = false
         UISelectionFeedbackGenerator().selectionChanged()
         Sound.move.play()
         move = kind
@@ -459,6 +551,23 @@ struct BattleBoard: View {
             var cur = from
             selected = nil; move = nil
             for e in target.log.suffix(fresh) {
+                if let id = e.pw, let p = Power.of(id) {   // a power card: a violet callout on each card it touched
+                    if acting != e.p { withAnimation { acting = e.p }; await pause(0.35) }
+                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                    Sound.rare.play()
+                    let spots = (e.fx ?? []).filter { cur.teams.indices.contains($0.p) && cur.teams[$0.p].indices.contains($0.i) }
+                    let keys = spots.isEmpty ? [key(e.p, e.from)] : spots.map { key($0.p, $0.i) }
+                    for x in spots { cur.teams[x.p][x.i].hp = x.hp }
+                    if var pw = cur.pw, pw.indices.contains(e.p), let k = pw[e.p].firstIndex(of: id) { pw[e.p].remove(at: k); cur.pw = pw }
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                        for k in keys { fx[k, default: HitFX()].callout = "◆ " + p.name.uppercased(); fx[k]?.calloutPower = true }
+                        shown = cur
+                    }
+                    await pause(0.9)
+                    withAnimation(.easeOut(duration: 0.3)) { for k in keys { fx[k]?.callout = nil; fx[k]?.calloutPower = false } }
+                    await pause(0.25)
+                    continue
+                }
                 if let amount = e.heal {   // a Mystic healing its own side: green glow and a +number, no lunge
                     guard cur.teams[e.p].indices.contains(e.to) else { continue }
                     let t = key(e.p, e.to)

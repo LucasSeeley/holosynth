@@ -156,6 +156,11 @@ final class GameStore: ObservableObject {
         catch { self.error = error.localizedDescription }
     }
 
+    func setPowerTeam(_ ids: [String]) async {
+        do { profile = try await API.call("powers/team", token: token, body: ["powers": ids]); error = nil }
+        catch { self.error = error.localizedDescription }
+    }
+
     func setTeam(_ ids: [String]) async {
         do { profile = try await API.call("team", token: token, body: ["team": ids]) }
         catch { self.error = error.localizedDescription }

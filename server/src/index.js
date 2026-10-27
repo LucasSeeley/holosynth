@@ -3,7 +3,7 @@
 import {
   BY_ID, STARTER_TEAM, START_GOLD, PACK_COST, PACK_COSTS, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN_XP, CAMPAIGN, CHAPTERS, NEW_CARD_AFTER, OPEN_LEVELS,
   levelFor, levelStart, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, dailyShop, SHOP_PRICES, huntFoes, huntStart, HUNT_MS, huntBattle, huntPack, HUNT_GOLD, HUNT_XP, QUESTS, QUEST_PAY, QUEST_BONUS, pickQuests, RANKS, RANK_REWARDS, RANKED_WIN, RANKED_LOSS, RANKED_GOLD, RANKED_XP, WEEK_MS, weekStart, seasonOf, seasonEnd, rankMove, rankTable, rankedTeam, botName, rankedFusions,
-  gauntletEnemies, gauntletBattle, gauntletHeal, fusedHp, FUSE_COPIES, FUSE_GOLD, FUSE_MAX, SECOND, SECOND_COST, PASSIVE_COST, gauntletGold, GAUNTLET_PACK_EVERY, newCampaignBattle, applyMove, aiMove,
+  gauntletEnemies, gauntletBattle, gauntletHeal, fusedHp, FUSE_COPIES, FUSE_GOLD, FUSE_MAX, SECOND, SECOND_COST, PASSIVE_COST, POWERS, POWER_SLOTS, rankedPowers, gauntletGold, GAUNTLET_PACK_EVERY, newCampaignBattle, applyMove, aiMove,
 } from './game.js';
 
 class HttpError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
@@ -213,7 +213,9 @@ async function profile(db, user) {
     gauntlet: { best: extra.gbest || 0, rank: extra.gahead + 1 },   // rank among you and your friends
     wins: prog.wins,
     packs: prog.packs,
-    unopened: JSON.parse(extra.unopened ?? '[]'),   // packs waiting to be opened, oldest first: [{ type, n }]
+    unopened: JSON.parse(extra.unopened ?? '[]'),
+    powers: await powerCounts(db, user.id),        // power cards you own: { id: count }
+    powerTeam: await powerTeam(db, user.id),       // the (up to) 2 you take into battle   // packs waiting to be opened, oldest first: [{ type, n }]
     campaign: {
       chapter: CHAPTERS[chapter].title,
       chapterNum: chapter + 1,
@@ -228,7 +230,7 @@ async function profile(db, user) {
 
 const freshUser = (db, id) => db.prepare('SELECT * FROM users WHERE id = ?').bind(id).first();
 // A pack's cards go into the collection; each holo one also gets its own copy row (a fused row with o = 1).
-const cardWrites = (db, userId, pack) => [...pack.cards.map(id => addCard(db, userId, id)),
+const cardWrites = (db, userId, pack) => [...pack.cards.map(id => (id.startsWith('pw:') ? addPower(db, userId, id.slice(3)) : addCard(db, userId, id))),
   ...pack.holo.map(i => db.prepare('INSERT INTO fused (user_id, card_id, o) VALUES (?, ?, 1)').bind(userId, pack.cards[i]))];
 // Won or bought packs wait unopened (contents already rolled) until you open them from the Play tab.
 const packWrites = (db, userId, pack, type) => [db.prepare('INSERT INTO pack_inv (user_id, type, cards, holo) VALUES (?, ?, ?, ?)')
@@ -243,6 +245,34 @@ async function openInv(req, db, user) {
   const pack = { cards: JSON.parse(row.cards), holo: JSON.parse(row.holo) };
   await db.batch([...cardWrites(db, user.id, pack), bumpProgress(db, user.id, 'packs')]);
   return json({ cards: pack.cards, holo: pack.holo, type: row.type, profile: await profile(db, await freshUser(db, user.id)) });
+}
+const addPower = (db, userId, id) => db.prepare(
+  'INSERT INTO powers (user_id, power, count) VALUES (?, ?, 1) ON CONFLICT (user_id, power) DO UPDATE SET count = count + 1',
+).bind(userId, id);
+
+// ---- power cards ----
+const powerCounts = async (db, userId) => Object.fromEntries((await db.prepare('SELECT power, count FROM powers WHERE user_id = ? AND count > 0')
+  .bind(userId).all()).results.map(r => [r.power, r.count]));
+const powerTeam = async (db, userId) => JSON.parse((await db.prepare('SELECT team FROM power_team WHERE user_id = ?').bind(userId).first())?.team ?? '[]');
+// The power cards a player takes into a battle: their picks, as far as their copies go.
+async function loadout(db, userId) {
+  const have = await powerCounts(db, userId), out = [];
+  for (const id of await powerTeam(db, userId)) if ((have[id] || 0) > out.filter(x => x === id).length) out.push(id);
+  return out;
+}
+async function setPowerTeam(req, db, user) {
+  const { powers } = await body(req);
+  if (!Array.isArray(powers) || powers.length > POWER_SLOTS || !powers.every(id => typeof id === 'string' && POWERS[id])) throw new HttpError(400, 'Pick up to 2 power cards.');
+  const have = await powerCounts(db, user.id);
+  if (!powers.every(id => (have[id] || 0) >= powers.filter(x => x === id).length)) throw new HttpError(400, "You don't have enough of those power cards.");
+  await db.prepare('INSERT INTO power_team (user_id, team) VALUES (?1, ?2) ON CONFLICT (user_id) DO UPDATE SET team = ?2').bind(user.id, JSON.stringify(powers)).run();
+  return json(await profile(db, user));
+}
+// After a player's move: power cards they played are used up.
+// shortcut: spent before the battle is saved, so a rare double-submit can cost a card; move into the save batch if it matters.
+async function spendPowers(db, userId, before, after = []) {
+  const left = [...after];
+  for (const id of before) { const i = left.indexOf(id); if (i >= 0) left.splice(i, 1); else await db.prepare('UPDATE powers SET count = count - 1 WHERE user_id = ? AND power = ? AND count > 0').bind(userId, id).run(); }
 }
 const addCard = (db, userId, id) => db.prepare(
   'INSERT INTO collection (user_id, card_id, count) VALUES (?, ?, 1) ON CONFLICT (user_id, card_id) DO UPDATE SET count = count + 1',
@@ -354,7 +384,7 @@ async function startCampaign(db, user) {
   if (prof.campaign.choose) throw new HttpError(400, 'Pick your new card first.');
   const prog = await getProgress(db, user.id);
   if (prog.cleared >= OPEN_LEVELS) throw new HttpError(400, OPEN_LEVELS < CAMPAIGN.length ? 'The next chapter is coming soon!' : 'You beat the whole campaign!');
-  const run = { level: prog.cleared, state: newCampaignBattle(prof.team, prog.cleared, await fusionsFor(db, user.id)) };
+  const run = { level: prog.cleared, state: newCampaignBattle(prof.team, prog.cleared, await fusionsFor(db, user.id), await loadout(db, user.id)) };
   await db.prepare('INSERT INTO progress (user_id, run) VALUES (?, ?) ON CONFLICT (user_id) DO UPDATE SET run = excluded.run')
     .bind(user.id, JSON.stringify(run)).run();
   return json(runView(run));
@@ -365,6 +395,7 @@ async function campaignMove(req, db, user) {
   if (!prog.run) throw new HttpError(400, 'No campaign battle in progress.');
   const run = JSON.parse(prog.run);
   const { from, move: kind, to } = await body(req);
+  const had = [...(run.state.pw?.[0] ?? [])];
   try {
     applyMove(run.state, 0, from, kind, to);
     while (run.state.winner === null && run.state.turn === 1) {
@@ -372,6 +403,7 @@ async function campaignMove(req, db, user) {
       applyMove(run.state, 1, m.from, m.move, m.to);
     }
   } catch (e) { throw new HttpError(400, e.message); }
+  await spendPowers(db, user.id, had, run.state.pw?.[0]);
 
   const done = run.state.winner !== null;
   // Save only if the run hasn't changed since we read it (stops double-submitted moves).
@@ -470,6 +502,7 @@ async function joinMatch(req, db, user) {
   if (!m) throw new HttpError(404, 'No open match with that code.');
   if (m.p0 === user.id) throw new HttpError(400, "That's your own invite. Send the code to a friend.");
   const state = newBattle(JSON.parse(m.team0), JSON.parse(user.team), Math.random, await fusionsFor(db, m.p0), await fusionsFor(db, user.id));
+  state.pw = [await loadout(db, m.p0), await loadout(db, user.id)];
   const res = await db.prepare(
     "UPDATE matches SET p1 = ?, state = ?, status = 'active', updated = ? WHERE id = ? AND status = 'waiting'",
   ).bind(user.id, JSON.stringify(state), now(), m.id).run();
@@ -495,8 +528,10 @@ async function move(req, db, user, id) {
   if (m.status !== 'active') throw new HttpError(400, 'This match is not in progress.');
   const { from, move: kind, to } = await body(req);
   const state = JSON.parse(m.state);
-  try { applyMove(state, m.p0 === user.id ? 0 : 1, from, kind, to); }
+  const side = m.p0 === user.id ? 0 : 1, had = [...(state.pw?.[side] ?? [])];
+  try { applyMove(state, side, from, kind, to); }
   catch (e) { throw new HttpError(400, e.message); }
+  await spendPowers(db, user.id, had, state.pw?.[side]);
 
   const done = state.winner !== null;
   // Only save if nobody else changed the match since we read it (stops double-submitted moves).
@@ -907,6 +942,7 @@ async function rankedSearch(db, user) {
     const claimed = await db.prepare('DELETE FROM ranked_queue WHERE user_id = ?').bind(other.user_id).run();
     if (claimed.meta.changes) {
       const state = newBattle(JSON.parse(other.team), JSON.parse(user.team), Math.random, await fusionsFor(db, other.user_id), await fusionsFor(db, user.id));
+      state.pw = [await loadout(db, other.user_id), await loadout(db, user.id)];
       await db.batch([db.prepare('DELETE FROM ranked_queue WHERE user_id = ?').bind(user.id),
         db.prepare("INSERT INTO matches (code, p0, p1, team0, state, status, updated) VALUES (?, ?, ?, ?, ?, 'active', ?)")
           .bind('#' + makeCode() + makeCode(), other.user_id, user.id, other.team, JSON.stringify(state), now())]);
@@ -942,6 +978,7 @@ async function rankedGhost(db, user) {
   opp.avatar ??= opp.team[0];
   // you move first (like the Gauntlet), so no computer move happens before the board is on screen
   const run = { opp, state: newBattle(JSON.parse(user.team), opp.team, () => 0, await fusionsFor(db, user.id), opp.fus) };
+  run.state.pw = [await loadout(db, user.id), rankedPowers(me.rank)];   // computer-played opponents (and ghosts) get powers by rank
   await db.prepare(`INSERT INTO ranked (user_id, rank, week, points, best, run) VALUES (?1, ?2, ?3, ?4, ?5, ?6)
     ON CONFLICT (user_id) DO UPDATE SET run = ?6`).bind(user.id, me.rank, me.week, me.points, me.best, JSON.stringify(run)).run();
   return json({ view: await rankedView(db, user) });
@@ -953,10 +990,12 @@ async function rankedMove(req, db, user) {
   const run = me.run && JSON.parse(me.run);
   if (!run) throw new HttpError(400, 'No ranked fight in progress.');
   const { from, move: kind, to } = await body(req);
+  const had = [...(run.state.pw?.[0] ?? [])];
   try {
     applyMove(run.state, 0, from, kind, to);
     while (run.state.winner === null && run.state.turn === 1) { const m = aiMove(run.state, 1); applyMove(run.state, 1, m.from, m.move, m.to); }
   } catch (e) { throw new HttpError(400, e.message); }
+  await spendPowers(db, user.id, had, run.state.pw?.[0]);
   if (run.state.winner === null) {
     const res = await db.prepare('UPDATE ranked SET run = ? WHERE user_id = ? AND run = ?').bind(JSON.stringify(run), user.id, me.run).run();
     if (!res.meta.changes) throw new HttpError(409, 'The fight changed. Refreshing.');
@@ -1028,7 +1067,7 @@ async function startHunt(db, user) {
   const team = JSON.parse(user.team);
   if (team.length < 3) throw new HttpError(400, 'Clear campaign level 6 to hunt legends.');
   const foes = huntFoes(period);
-  const state = JSON.stringify(huntBattle(team, foes, await fusionsFor(db, user.id)));
+  const state = JSON.stringify(huntBattle(team, foes, await fusionsFor(db, user.id), await loadout(db, user.id), period));
   const res = await db.prepare(`INSERT INTO hunts (user_id, day, legend, state, result) VALUES (?1, ?2, ?3, ?4, NULL)
     ON CONFLICT (user_id) DO UPDATE SET day = ?2, legend = ?3, state = ?4, result = NULL WHERE hunts.day < ?2`)
     .bind(user.id, period, foes.legend, state).run();
@@ -1049,6 +1088,7 @@ async function huntMove(req, db, user) {
   if (!h || !h.state) throw new HttpError(400, 'No hunt in progress.');
   const state = JSON.parse(h.state);
   const { from, move: kind, to } = await body(req);
+  const had = [...(state.pw?.[0] ?? [])];
   try {
     applyMove(state, 0, from, kind, to);
     while (state.winner === null && state.turn === 1) {
@@ -1056,6 +1096,7 @@ async function huntMove(req, db, user) {
       applyMove(state, 1, m.from, m.move, m.to);
     }
   } catch (e) { throw new HttpError(400, e.message); }
+  await spendPowers(db, user.id, had, state.pw?.[0]);
   if (state.winner === null) {
     await saveHunt(db, user.id, h, state, null);
     return json({ legend: h.legend, state, result: null, profile: null });
@@ -1107,7 +1148,7 @@ async function startGauntlet(db, user) {
   const team = JSON.parse(user.team), fus = await fusionsFor(db, user.id);
   const hp = team.map(id => fusedHp(id, fus[id]));
   const enemies = gauntletEnemies(1);
-  const run = { team, hp, fus, fight: 1, wins: 0, gold: 0, packs: 0, startBest: g.best, enemies, state: gauntletBattle(team, hp, enemies, fus) };
+  const run = { team, hp, fus, fight: 1, wins: 0, gold: 0, packs: 0, startBest: g.best, enemies, state: gauntletBattle(team, hp, enemies, fus, await loadout(db, user.id), 1) };
   await saveGauntlet(db, user.id, g.run, run, g.best);
   return json(gauntletView(run));
 }
@@ -1117,7 +1158,7 @@ async function nextGauntletFight(db, user) {
   const run = JSON.parse(g.run);
   if (!run) throw new HttpError(400, 'No Gauntlet run in progress.');
   if (!run.state) {
-    run.state = gauntletBattle(run.team, run.hp, run.enemies, run.fus || {});
+    run.state = gauntletBattle(run.team, run.hp, run.enemies, run.fus || {}, await loadout(db, user.id), run.fight);
     await saveGauntlet(db, user.id, g.run, run, g.best);
   }
   return json(gauntletView(run));
@@ -1135,6 +1176,7 @@ async function gauntletMove(req, db, user) {
   const run = JSON.parse(g.run);
   if (!run?.state) throw new HttpError(400, 'No Gauntlet fight in progress.');
   const { from, move: kind, to } = await body(req);
+  const had = [...(run.state.pw?.[0] ?? [])];
   try {
     applyMove(run.state, 0, from, kind, to);
     while (run.state.winner === null && run.state.turn === 1) {
@@ -1142,6 +1184,7 @@ async function gauntletMove(req, db, user) {
       applyMove(run.state, 1, m.from, m.move, m.to);
     }
   } catch (e) { throw new HttpError(400, e.message); }
+  await spendPowers(db, user.id, had, run.state.pw?.[0]);
 
   const view = gauntletView(run);
   if (run.state.winner === 1) {
@@ -1253,6 +1296,7 @@ async function route(req, env) {
   if (method === 'POST' && pathname === '/fuse') return fuseCard(req, db, user);
   if (method === 'POST' && pathname === '/shop') return buyShop(req, db, user);
   if (method === 'POST' && pathname === '/packs/open') return openInv(req, db, user);
+  if (method === 'POST' && pathname === '/powers/team') return setPowerTeam(req, db, user);
   if (method === 'POST' && pathname === '/packs') return buyPack(db, user, String((await body(req)).type ?? 'cyber'));
   if (method === 'POST' && pathname === '/starter') return pickStarter(req, db, user);
   if (method === 'POST' && pathname === '/avatar') return setAvatar(req, db, user);

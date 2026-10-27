@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS, levelFor, levelStart, fusedHp, fusedDmg, SECOND, FUSE_GOLD, dailyShop, huntFoes, HUNT_MS, huntBattle, huntPack, HUNT_FUSION, pickQuests, QUESTS, QUEST_PAY, weekStart, seasonOf, seasonEnd, rankMove, rankTable, rankBots, rankedTeam, rankedFusions, RANKS, RANK_REWARDS, WEEK_MS } from '../src/game.js';
+import { rarityOf, newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS, levelFor, levelStart, fusedHp, fusedDmg, SECOND, FUSE_GOLD, dailyShop, huntFoes, HUNT_MS, huntBattle, huntPack, HUNT_FUSION, pickQuests, QUESTS, QUEST_PAY, weekStart, seasonOf, seasonEnd, rankMove, rankTable, rankBots, rankedTeam, rankedFusions, RANKS, RANK_REWARDS, WEEK_MS } from '../src/game.js';
 
 const fixed = v => () => v;
 
@@ -45,12 +45,12 @@ test('knocking out the whole team wins', () => {
 
 test('no pity: a pack never forces a Legendary', () => {
   const p = openPack(1000, 'cyber', fixed(0));                 // rand 0 -> all Common, however long since the last Legendary
-  assert.ok(p.cards.every(id => BY_ID[id].rarity === 'Common'));
+  assert.ok(p.cards.every(id => rarityOf(id) === 'Common'));
 });
 
 test('drop rates roughly match 85/10/4/1', () => {
   const n = { Common: 0, Rare: 0, Epic: 0, Legendary: 0 };
-  for (let i = 0; i < 20000; i++) for (const id of openPack(0).cards) n[BY_ID[id].rarity]++;
+  for (let i = 0; i < 20000; i++) for (const id of openPack(0).cards) n[rarityOf(id)]++;
   const pct = r => (100 * n[r]) / 60000;
   assert.ok(Math.abs(pct('Common') - 85) < 1.5 && Math.abs(pct('Legendary') - 1) < 0.5, JSON.stringify(n));
 });
@@ -68,10 +68,10 @@ test('computer takes the knockout over a bigger hit', () => {
   assert.deepEqual(aiMove(s, 1), { from: 0, move: 'basic', to: 0 });
 });
 
-test('every starter path can win every campaign level but the final boss, going first', () => {
+test('every starter path can win every chapter 1 level (no enemy power cards there), going first', () => {
   const paths = [];
   for (const a of STARTER_TEAM) for (const b of STARTER_TEAM) if (a !== b) paths.push([a, b]);
-  CAMPAIGN.slice(0, 89).forEach((_, level) => paths.forEach(path => {   // chapters 1-3, except chapter 3's last boss
+  CAMPAIGN.slice(0, 30).forEach((_, level) => paths.forEach(path => {
     const team = level < 3 ? [path[0]] : level < 6 ? path : STARTER_TEAM;
     const s = newCampaignBattle(team, level);
     assert.equal(s.turn, 0);
@@ -90,7 +90,7 @@ test('the final boss beats the starter team but a strong team can win it', () =>
 
 test('packs only hold cards of their type, and only open types are free', () => {
   for (const [type, classes] of Object.entries(PACK_TYPES)) {
-    for (let i = 0; i < 500; i++) for (const id of openPack(0, type).cards) if (classes) assert.ok(classes.includes(BY_ID[id].cls), `${id} in ${type}`);
+    for (let i = 0; i < 500; i++) for (const id of openPack(0, type).cards) if (classes && !id.startsWith('pw:')) assert.ok(classes.includes(BY_ID[id].cls), `${id} in ${type}`);
   }
   assert.ok(PACKS_OPEN.includes(freePack()));
   assert.equal(openPack(0, 'overload').cards.length, 8);
@@ -115,9 +115,11 @@ test('five chapters of 30 with a boss every 10th level, all real cards', () => {
   });
 });
 
-test('chapters 4 and 5 get harder but a strong team can win every level', () => {
-  const run = (team, level) => { const s = newCampaignBattle(team, level);
+test('from chapter 2 enemies play power cards (a grind): fused teams can still win every level', () => {
+  const fus = team => Object.fromEntries(team.map(id => [id, { h: 3, b: 3, s: 3, x: !!SECOND[id], p: true }]));
+  const run = (team, level) => { const s = newCampaignBattle(team, level, fus(team));
     while (s.winner === null) { const m = aiMove(s, s.turn); applyMove(s, s.turn, m.from, m.move, m.to); } return s.winner; };
+  for (let level = 30; level < 90; level++) assert.equal(run(['phoenix', 'dreadnought', 'nightblade'], level), 0, `level ${level + 1}`);
   for (let level = 90; level < 150; level++) assert.equal(run(['paragon', 'phoenix', 'eternity'], level), 0, `level ${level + 1}`);
 });
 
@@ -260,7 +262,7 @@ test('legend hunt: every 8 hours a fully fused Legendary and two medium fused su
     const p = huntPack(5, f.legend);
     assert.equal(p.cards.length, 8);
     if (p.cards.includes(f.legend)) hits++;
-    else assert.ok(p.cards.some(id => BY_ID[id].rarity === 'Epic'), 'no legend means a guaranteed Epic');
+    else assert.ok(p.cards.some(id => BY_ID[id]?.rarity === 'Epic'), 'no legend means a guaranteed Epic');
   }
   assert.ok(hits / 4000 > 0.17 && hits / 4000 < 0.26, `legend in ${hits / 40}% of packs`);
 });
@@ -365,4 +367,42 @@ test('passives: only with f.p, and each one does its job', async () => {
   assert.equal(70 - st.teams[1][0].hp, Math.round(second * 0.92));
   // every card has a known passive with 4 rarity values
   for (const id of Object.keys(BY_ID)) assert.ok(PASSIVES[BY_ID[id].passive] && passiveOf(id).v > 0, id);
+});
+
+test('power cards: each does its job, is used up, and counts as the card\'s move', async () => {
+  const { POWERS, openPack: op, campaignPowers } = await import('../src/game.js');
+  const fresh = (mine, theirs = []) => { const s = newBattle(['razor', 'fang'], ['sentry', 'goliath'], () => 0); s.pw = [[...mine], [...theirs]]; return s; };
+  const play = (s, id, to = 0, from = 0) => { s.turn = 0; return applyMove(s, 0, from, 'pw:' + id, to); };
+  let s = fresh(['repair', 'repair']);
+  s.teams[0][1].hp = 10;
+  play(s, 'repair', 1);
+  assert.equal(s.teams[0][1].hp, 35);
+  assert.deepEqual(s.pw[0], ['repair']);
+  assert.ok(s.acted[0][0] && s.turn === 1, 'uses the card\'s move');
+  assert.throws(() => { s.turn = 0; applyMove(s, 0, 1, 'pw:shield', 1); }, /don't have/);
+  // shield: the next hit does nothing
+  s = fresh(['shield']); play(s, 'shield', 0); s.turn = 1; s.acted = [[false, false], [false, false]];
+  applyMove(s, 1, 0, 'basic', 0);
+  assert.equal(s.teams[0][0].hp, 50);
+  // mirror: the hit goes back at the attacker
+  s = fresh(['mirror']); play(s, 'mirror', 1); s.turn = 1; s.acted = [[false, false], [false, false]];
+  const before = s.teams[1][0].hp; applyMove(s, 1, 0, 'basic', 1);
+  assert.equal(s.teams[0][1].hp, 55); assert.ok(s.teams[1][0].hp < before);
+  // nanoswarm / singularity hit every enemy; revive needs a knocked-out card
+  s = fresh(['nanoswarm']); play(s, 'nanoswarm');
+  assert.deepEqual(s.teams[1].map(u => u.hp), [60, 50]);
+  s = fresh(['revive']); assert.throws(() => play(s, 'revive', 1), /knocked-out/);
+  s.teams[0][1].hp = 0; play(s, 'revive', 1); assert.equal(s.teams[0][1].hp, Math.round(55 * 0.3));
+  // overclock: next attack +40%
+  s = fresh(['overclock']); play(s, 'overclock', 1); s.turn = 0; applyMove(s, 0, 1, 'basic', 0);
+  assert.equal(80 - s.teams[1][0].hp, Math.round(Math.round(15 * 1.2) * 1.4));
+  // the computer plays its powers
+  s = fresh([], ['nanoswarm', 'repair']); s.turn = 1;
+  const m = aiMove(s, 1); assert.ok(m.move.startsWith('pw:'));
+  // packs: power cards turn up in normal packs, Power Packs are all power cards; campaign chapter 1 enemies have none
+  let found = 0; for (let i = 0; i < 2000; i++) found += op(0).cards.filter(c => c.startsWith('pw:')).length;
+  assert.ok(found > 150 && found < 450, `${found} power cards in 6000 pack cards`);
+  assert.ok(op(0, 'power').cards.every(c => POWERS[c.slice(3)]));
+  assert.deepEqual(campaignPowers(0), []);
+  assert.ok(campaignPowers(31).length >= 1);
 });

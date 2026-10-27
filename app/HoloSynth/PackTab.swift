@@ -37,6 +37,7 @@ struct PackTab: View {
         ("omni", "Omni Pack", "Any card from both sets", 0xE8B85A, 3, 5000),
         ("overload", "Overload Pack", "A guaranteed Rare or better + 7 more", 0xFFD77A, 8, 12000),
         ("legends", "Legends Pack", "A guaranteed Legendary + 4 more cards", 0xFFF3C4, 5, 25000),
+        ("power", "Power Pack", "3 power cards", 0xB46BFF, 3, 5000),
     ]
 
     var body: some View {
@@ -311,7 +312,7 @@ struct PackTab: View {
     // Colour of the best card in the pack: white-gold for all commons.
     private var leakColor: Color {
         let order = ["Legendary", "Epic", "Rare"]
-        let rarities = pulled.compactMap { CardBook.card($0)?.rarity }
+        let rarities = pulled.map { packRarity($0) }
         if let best = order.first(where: rarities.contains) { return Theme.rarityColor(best) }
         return Color(hex: 0xFFE7A8)
     }
@@ -336,7 +337,7 @@ struct PackTab: View {
                 // cards: hidden in the pack, rise out of the opening, then stack up big to reveal one by one
                 ForEach(Array(pulled.enumerated()), id: \.offset) { i, id in
                     let slot = cardSlot(i, finished: finished, width: geo.size.width, tearY: tearY, smallW: smallW)
-                    FlipCard(card: CardBook.card(id), flipped: flipped.contains(i), holo: pulledHolo.contains(i))
+                    FlipCard(card: CardBook.card(id), power: Power.of(id), flipped: flipped.contains(i), holo: pulledHolo.contains(i))
                         .frame(width: bigW, height: bigW * 7 / 5)
                         .scaleEffect(slot.small ? smallW / bigW : 1 - CGFloat(max(0, i - current)) * 0.05)
                         .rotationEffect(.degrees(slot.angle))
@@ -459,7 +460,7 @@ struct PackTab: View {
         throwDir[i] = dir
         guard flipped.contains(i) else {
             flip(i, id)
-            let rarity = CardBook.card(id)?.rarity ?? "Common"
+            let rarity = packRarity(id)
             let wait = ["Epic": 2.6, "Legendary": 3.4][rarity] ?? 1.6
             DispatchQueue.main.asyncAfter(deadline: .now() + wait) {
                 if current == i { advance() }
@@ -530,7 +531,7 @@ struct PackTab: View {
         guard !flipped.contains(i) else { return }
         withAnimation(.easeInOut(duration: 0.45)) { _ = flipped.insert(i) }
         Sound.flip.play()
-        let rarity = CardBook.card(id)?.rarity ?? "Common"
+        let rarity = packRarity(id)
         if pulledHolo.contains(i) {   // holo beats any rarity: rainbow flash, the big sound
             UINotificationFeedbackGenerator().notificationOccurred(.success)
             DispatchQueue.main.asyncAfter(deadline: .now() + Sound.flip.duration) {
@@ -554,9 +555,13 @@ struct PackTab: View {
     }
 }
 
+// A pack card's rarity: a character card or a power card ("pw:<id>").
+func packRarity(_ id: String) -> String { CardBook.card(id)?.rarity ?? Power.of(id)?.rarity ?? "Common" }
+
 // Card back that turns over to its face. Epic and Legendary cards glow and shake when revealed.
 struct FlipCard: View {
     let card: Card?
+    var power: Power? = nil      // a power card ("pw:<id>") pulled from the pack
     let flipped: Bool
     var holo = false
     @State private var shake: CGFloat = 0
@@ -565,7 +570,7 @@ struct FlipCard: View {
         ZStack {
             CardBack().opacity(flipped ? 0 : 1)
             Group {
-                if let card { CardView(card: card, fusion: holo ? .holoCopy : nil) } else { CardBack() }
+                if let card { CardView(card: card, fusion: holo ? .holoCopy : nil) } else if let power { PowerCardView(power: power) } else { CardBack() }
             }
             .rotation3DEffect(.degrees(180), axis: (x: 0, y: 1, z: 0))
             .opacity(flipped ? 1 : 0)
@@ -574,15 +579,15 @@ struct FlipCard: View {
         .shadow(color: glow.opacity(flipped ? 0.9 : 0), radius: 16)
         .offset(x: shake)
         .onChange(of: flipped) { isFlipped in
-            guard isFlipped, let r = card?.rarity, r == "Epic" || r == "Legendary" else { return }
+            guard isFlipped, let r = card?.rarity ?? power?.rarity, r == "Epic" || r == "Legendary" else { return }
             withAnimation(.default.repeatCount(4, autoreverses: true).delay(0.35)) { shake = 6 }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) { shake = 0 }
         }
     }
 
     private var glow: Color {
-        guard let card, card.rarity != "Common" else { return .clear }
-        return Theme.rarityColor(card.rarity)
+        guard let r = card?.rarity ?? power?.rarity, r != "Common" else { return .clear }
+        return Theme.rarityColor(r)
     }
 }
 

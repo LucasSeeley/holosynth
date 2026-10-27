@@ -166,3 +166,15 @@ CREATE TABLE IF NOT EXISTS pack_inv (
   holo TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS pack_inv_user ON pack_inv (user_id);
+
+-- Power cards each player owns (used up when played in battle), and the (up to) 2 they take into battle.
+CREATE TABLE IF NOT EXISTS powers (
+  user_id INTEGER NOT NULL,
+  power TEXT NOT NULL,
+  count INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (user_id, power)
+);
+CREATE TABLE IF NOT EXISTS power_team (
+  user_id INTEGER PRIMARY KEY,
+  team TEXT NOT NULL DEFAULT '[]'
+);

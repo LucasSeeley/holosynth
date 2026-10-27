@@ -34,14 +34,14 @@ function rollRarity(rand, rates = RATES) {
   return 'Common';
 }
 // Pack types and the classes each holds (omni = every card).
-export const PACK_TYPES = { cyber: ['Fighter', 'Beast', 'Mech'], magic: ['Arcanist', 'Spirit', 'Mystic'], omni: null, overload: null, legends: null };
+export const PACK_TYPES = { cyber: ['Fighter', 'Beast', 'Mech'], magic: ['Arcanist', 'Spirit', 'Mystic'], omni: null, overload: null, legends: null, power: null };
 // The Overload Pack is a big Omni: 8 cards for 12,000, the last always Rare or better (OVERLOAD_BEST). The Legends Pack: a guaranteed Legendary plus 4 cards at the
 // normal odds, 25,000. Everything else is 3 cards for PACK_COST.
-export const PACK_SIZES = { overload: 8, legends: 5 };
-export const PACK_COSTS = { overload: 12000, legends: 25000 };
+export const PACK_SIZES = { overload: 8, legends: 5, power: 3 };
+export const PACK_COSTS = { overload: 12000, legends: 25000, power: 5000 };
 export const OVERLOAD_BEST = [['Rare', 50], ['Epic', 48], ['Legendary', 2]];
 const FREE_TYPES = ['cyber', 'magic', 'omni'];   // free packs are never Overload
-export const PACKS_OPEN = ['cyber', 'magic', 'omni', 'overload', 'legends'];   // packs on sale; any left out show "Coming soon"
+export const PACKS_OPEN = ['cyber', 'magic', 'omni', 'overload', 'legends', 'power'];   // packs on sale; any left out show "Coming soon"
 const pickOf = (rarity, type, rand) => {
   const classes = PACK_TYPES[type];
   const pool = CARDS.filter(c => c.rarity === rarity && (!classes || classes.includes(c.cls)));
@@ -53,11 +53,16 @@ export function openPack(packsSinceLegend, type = 'cyber', rand = Math.random) {
   const size = PACK_SIZES[type] ?? PACK_SIZE;
   // a pack's guaranteed card (Overload's Rare-or-better, Legends' Legendary) is the last one, so it's revealed last
   const last = { legends: () => 'Legendary', overload: () => rollRarity(rand, OVERLOAD_BEST) }[type];
+  if (type === 'power') {   // the Power Pack: power cards only
+    const cards = Array.from({ length: POWER_PACK.size }, () => { const r = RARITY_I[rollRarity(rand, POWER_PACK.rates)]; return 'pw:' + POWER_POOLS[r][Math.floor(rand() * POWER_POOLS[r].length)]; });
+    return { cards, holo: [], packsSinceLegend };
+  }
   const rarities = Array.from({ length: size }, (_, i) => (last && i === size - 1 ? last() : rollRarity(rand)));
-  const cards = rarities.map(r => pickOf(r, type, rand));
+  const cards = rarities.map((r, i) => (!(last && i === size - 1) && rand() < POWER_IN_PACK
+    ? 'pw:' + POWER_POOLS[RARITY_I[r]][Math.floor(rand() * POWER_POOLS[RARITY_I[r]].length)] : pickOf(r, type, rand)));
   return {
     cards,
-    holo: cards.map((_, i) => i).filter(() => rand() < HOLO_CHANCE),   // which of them came out holo
+    holo: cards.map((_, i) => i).filter(i => !cards[i].startsWith('pw:') && rand() < HOLO_CHANCE),   // which of them came out holo
     packsSinceLegend: rarities.includes('Legendary') ? 0 : packsSinceLegend + 1,
   };
 }
@@ -132,8 +137,9 @@ export function gauntletEnemies(fight, rand = Math.random) {
   });
 }
 // Fight `fight` against `enemies`, your cards starting at `hp` (knocked-out cards stay at 0). You move first.
-export function gauntletBattle(team, hp, enemies, fus = {}) {
+export function gauntletBattle(team, hp, enemies, fus = {}, powers = [], fight = 1) {
   const s = newBattle(team, enemies, () => 0, fus);
+  s.pw = [[...powers], gauntletPowers(fight)];
   s.teams[0].forEach((u, i) => { u.hp = hp[i]; });
   return s;
 }
@@ -190,8 +196,8 @@ export function huntFoes(t) {
   return { legend, support, supportFusion, support2, support2Fusion };
 }
 // You move first. Tuned with the computer playing both sides (see scratch sim): hard on purpose.
-export const huntBattle = (team, foes, fus = {}) => newBattle(team, [foes.legend, foes.support, foes.support2], () => 0, fus,
-  { [foes.legend]: HUNT_FUSION, [foes.support]: foes.supportFusion, [foes.support2]: foes.support2Fusion });
+export const huntBattle = (team, foes, fus = {}, powers = [], t = 0) => ({ ...newBattle(team, [foes.legend, foes.support, foes.support2], () => 0, fus,
+  { [foes.legend]: HUNT_FUSION, [foes.support]: foes.supportFusion, [foes.support2]: foes.support2Fusion }), pw: [[...powers], huntPowers(t)] });
 export const HUNT_LEGEND_CHANCE = 0.2;
 const EPICS = CARDS.filter(c => c.rarity === 'Epic').map(c => c.id);
 // The win's Overload pack: 1 in 5 has the Legendary in it; otherwise it always holds at least one Epic.
@@ -201,8 +207,8 @@ export function huntPack(packsSinceLegend, legend, rand = Math.random) {
   if (rand() < HUNT_LEGEND_CHANCE) {
     pack.cards[slot] = legend;
     pack.packsSinceLegend = 0;
-  } else if (!pack.cards.some(id => BY_ID[id].rarity === 'Epic')) {
-    const plain = pack.cards.map((id, i) => i).filter(i => BY_ID[pack.cards[i]].rarity !== 'Legendary');
+  } else if (!pack.cards.some(id => BY_ID[id]?.rarity === 'Epic')) {
+    const plain = pack.cards.map((id, i) => i).filter(i => BY_ID[pack.cards[i]]?.rarity !== 'Legendary');
     pack.cards[plain[Math.floor(rand() * plain.length)]] = EPICS[Math.floor(rand() * EPICS.length)];
   }
   return pack;
@@ -284,6 +290,42 @@ export const PASSIVES = {
   regen: ['Regen', [4, 5, 6, 8]], blessing: ['Blessing', [15, 20, 25, 30]],
 };
 const RARITY_I = { Common: 0, Rare: 1, Epic: 2, Legendary: 3 };
+
+// Power cards: one-use battle cards (used up when played). Bring up to 2; playing one is a move made by one of your cards.
+// target: 'ally' = one of your standing cards, 'ko' = one of your knocked-out cards, 'acted' = one of yours that already acted,
+// 'none' = no target. In packs and inventories they're "pw:<id>".
+export const POWERS = {
+  repair: { name: 'Repair Kit', rarity: 'Common', target: 'ally' },        // heal 25 HP
+  overclock: { name: 'Overclock', rarity: 'Common', target: 'ally' },      // its next attack +40%
+  shield: { name: 'Shield', rarity: 'Common', target: 'ally' },            // the next hit on it does nothing
+  recharge: { name: 'Recharge', rarity: 'Rare', target: 'ally' },          // its specials are ready now
+  emp: { name: 'EMP', rarity: 'Rare', target: 'none' },                    // every enemy special +1 cooldown
+  nanoswarm: { name: 'Nanoswarm', rarity: 'Rare', target: 'none' },        // 20 damage to every enemy
+  revive: { name: 'Revive Chip', rarity: 'Epic', target: 'ko' },           // back at 30% HP
+  timeskip: { name: 'Time Skip', rarity: 'Epic', target: 'acted' },        // it can act again this round
+  mirror: { name: 'Mirror', rarity: 'Epic', target: 'ally' },              // the next hit on it bounces back at the attacker
+  overdrive: { name: 'Overdrive', rarity: 'Legendary', target: 'none' },   // every card's next attack +30%
+  restore: { name: 'Full Restore', rarity: 'Legendary', target: 'ally' },  // full HP
+  singularity: { name: 'Singularity', rarity: 'Legendary', target: 'none' }, // every enemy loses 25% of its max HP
+};
+export const POWER_SLOTS = 2;
+export const rarityOf = id => (id.startsWith('pw:') ? POWERS[id.slice(3)].rarity : BY_ID[id].rarity);   // a pack card's rarity
+export const POWER_PACK = { cost: 5000, size: 3, rates: [['Common', 70], ['Rare', 22], ['Epic', 7], ['Legendary', 1]] };
+export const POWER_IN_PACK = 0.05;   // chance any normal pack card (not the guaranteed one) is a power card instead
+const POWER_POOLS = TIERS.map(r => Object.keys(POWERS).filter(k => POWERS[k].rarity === r));
+// Two power cards for a computer opponent, from rarity tiers a and b (0 = Common ... 3 = Legendary).
+export const botPowers = (a, b, rand = Math.random) => [a, b].map(t => POWER_POOLS[t][Math.floor(rand() * POWER_POOLS[t].length)]);
+// Campaign enemies: none in chapter 1, then stronger ones chapter by chapter (the same for every player).
+export function campaignPowers(level) {
+  const c = CAMPAIGN[level].chapter;
+  if (c === 0) return [];
+  const tiers = [[0, 0], [0, 1], [1, 1], [1, 2]][Math.min(3, c - 1)];   // meant to be a grind: power up to keep winning
+  const rand = seeded(level * 40503 + 11);
+  return tiers.map(t => POWER_POOLS[t][Math.floor(rand() * POWER_POOLS[t].length)]);
+}
+export const gauntletPowers = (fight, rand = Math.random) => { const t = Math.min(3, Math.floor(fight / 15)); return botPowers(Math.max(0, t - 1), t, rand); };
+export const rankedPowers = (rank, rand = Math.random) => botPowers([0, 0, 0, 1, 1, 2, 2, 3][rank], [0, 1, 1, 1, 2, 2, 3, 3][rank], rand);
+export const huntPowers = t => botPowers(2, 3, seeded(Math.floor(t / HUNT_MS) * 7919 + 3));
 export const passiveOf = id => { const c = BY_ID[id]; return { kind: c.passive, name: PASSIVES[c.passive][0], v: PASSIVES[c.passive][1][RARITY_I[c.rarity]] }; };
 // f = { h, b, s, x, o, p }: fusion levels for HP, basic, special, whether the second special is unlocked, holo, passive on.
 // f.o = holo: +20% on top.
@@ -313,6 +355,7 @@ export function newBattle(teamA, teamB, rand = Math.random, fusA = {}, fusB = {}
     turn: rand() < 0.5 ? 0 : 1,
     winner: null,
     log: [],
+    pw: [[], []],   // power cards each side still has to play
   };
 }
 
@@ -320,10 +363,12 @@ const alive = u => u.hp > 0;
 const pv = u => PASSIVES[u.ps][1][RARITY_I[BY_ID[u.id].rarity]];   // the unit's passive value (only call when u.ps is set)
 const low = u => u.hp < unitMax(u) * 0.3;
 
-// Damage `a` would deal to `t` with `move` right now, passives included. No side effects (the AI uses it too).
-function hitFor(a, t, move) {
+// Damage `a` would deal to `t` with `move` right now, passives and power cards included. No side effects (the AI uses it too).
+// raw: ignore the target's Shield / Mirror (for working out what Mirror sends back).
+function hitFor(a, t, move, raw = false) {
+  if (!raw && (t.sh || t.mi)) return 0;
   const card = BY_ID[a.id];
-  let pct = 100;
+  let pct = 100 + (a.oc ? 40 : 0) + (a.od ? 30 : 0);
   if (a.ps === 'firststrike' && !a.hit) pct += pv(a);
   if (a.ps === 'momentum' && move === 'basic') pct += pv(a) * (a.mom || 0);
   if (a.ps === 'executioner' && low(t)) pct += pv(a);
@@ -348,6 +393,7 @@ export function applyMove(state, p, from, move, to) {
   const attacker = me[from];
   if (!attacker || !alive(attacker)) throw new Error('That card is knocked out.');
   if (state.acted[p][from]) throw new Error('That card already acted this round.');
+  if (typeof move === 'string' && move.startsWith('pw:')) return playPower(state, p, from, move.slice(3), to);
   if (move !== 'basic' && move !== 'special' && !(move === 'special2' && attacker.cd2 !== undefined)) throw new Error('Unknown move.');
   const card = BY_ID[attacker.id];
   if (move === 'special' && attacker.cd > 0) throw new Error(`${card.special.name} is cooling down.`);
@@ -371,7 +417,15 @@ export function applyMove(state, p, from, move, to) {
     const guarded = target.ps === 'armor' || (target.ps === 'phaseshift' && !target.ph);
     dmg = hitFor(attacker, target, move);
     if (boosted) mine(attacker, p, from, 0);
-    if (guarded) mine(target, 1 - p, to, 0);
+    if (guarded && !target.sh && !target.mi) mine(target, 1 - p, to, 0);
+    if (target.sh) { target.sh = false; pas.push({ p: 1 - p, i: to, n: 'Shield', v: 0 }); }
+    else if (target.mi) {   // Mirror: the hit goes back at the attacker instead
+      target.mi = false;
+      const back = Math.min(hitFor(attacker, target, move, true), attacker.hp);
+      attacker.hp -= back;
+      pas.push({ p, i: from, n: 'Mirror', v: -back });
+    }
+    attacker.oc = false; attacker.od = false;
     if (target.ps === 'phaseshift') target.ph = true;
     target.hp = Math.max(0, target.hp - dmg);
     if (target.hp === 0 && target.ps === 'rebirth' && !target.rb) {
@@ -403,8 +457,82 @@ export function applyMove(state, p, from, move, to) {
   if (state.log.length > 30) state.log.shift();
 
   if (!foe.some(alive)) state.winner = p;
+  else if (!me.some(alive)) state.winner = 1 - p;   // knocked out by a Mirror
   else state.turn = 1 - p;
   return state;
+}
+
+// Playing a power card: a move made by card `from` (it counts as that card's action). Used up once played.
+function playPower(state, p, from, id, to) {
+  const me = state.teams[p], foe = state.teams[1 - p], pw = POWERS[id];
+  const left = state.pw?.[p] ?? [];
+  if (!pw || !left.includes(id)) throw new Error("You don't have that power card in this battle.");
+  const t = me[to];
+  const ok = { ally: t && alive(t), ko: t && !alive(t), acted: t && alive(t) && to !== from && state.acted[p][to], none: true }[pw.target];
+  if (!ok) throw new Error({ ko: 'Pick one of your knocked-out cards.', acted: 'Pick another of your cards that already acted.' }[pw.target] ?? 'Pick one of your cards that is still standing.');
+  const fx = [];   // cards it touched: { p, i, hp } with their HP afterwards
+  const touch = (side, i) => fx.push({ p: side, i, hp: state.teams[side][i].hp });
+  const each = (team, side, f) => team.forEach((u, i) => { if (alive(u)) { f(u); touch(side, i); } });
+  switch (id) {
+    case 'repair': t.hp = Math.min(unitMax(t), t.hp + 25); break;
+    case 'overclock': t.oc = true; break;
+    case 'shield': t.sh = true; break;
+    case 'recharge': t.cd = 0; if (t.cd2 !== undefined) t.cd2 = 0; break;
+    case 'revive': t.hp = Math.max(1, Math.round(unitMax(t) * 0.3)); state.acted[p][to] = true; break;
+    case 'timeskip': state.acted[p][to] = false; break;
+    case 'mirror': t.mi = true; break;
+    case 'restore': t.hp = unitMax(t); break;
+    case 'emp': each(foe, 1 - p, u => { u.cd += 1; if (u.cd2 !== undefined) u.cd2 += 1; }); break;
+    case 'nanoswarm': each(foe, 1 - p, u => { u.hp = Math.max(0, u.hp - 20); }); break;
+    case 'singularity': each(foe, 1 - p, u => { u.hp = Math.max(0, u.hp - Math.round(unitMax(u) * 0.25)); }); break;
+    case 'overdrive': each(me, p, u => { u.od = true; }); break;
+  }
+  if (pw.target !== 'none') touch(p, to);
+  left.splice(left.indexOf(id), 1);
+  const caster = me[from];
+  if (id !== 'recharge' || to !== from) caster.cd = Math.max(0, caster.cd - 1);   // an action, so cooldowns tick
+  if (caster.cd2 !== undefined && (id !== 'recharge' || to !== from)) caster.cd2 = Math.max(0, caster.cd2 - 1);
+  state.acted[p][from] = true;
+  refreshActed(state, p);
+  refreshActed(state, 1 - p);
+  state.moves = (state.moves || 0) + 1;
+  state.log.push({ p, from, to, move: 'pw:' + id, dmg: 0, adv: false, ko: false, pw: id, fx });
+  if (state.log.length > 30) state.log.shift();
+  if (!foe.some(alive)) state.winner = p;
+  else state.turn = 1 - p;
+  return state;
+}
+
+// The computer's power card, if one is worth playing now: { from, move, to, score } or null.
+function powerChoice(state, p) {
+  const left = [...new Set(state.pw?.[p] ?? [])];
+  if (!left.length) return null;
+  const me = state.teams[p], foe = state.teams[1 - p];
+  const free = me.map((u, i) => i).filter(i => alive(me[i]) && !state.acted[p][i]);
+  if (!free.length) return null;
+  const from = free.reduce((a, b) => (fusedDmg(me[a].id, me[a].f, 'basic') <= fusedDmg(me[b].id, me[b].f, 'basic') ? a : b));   // the weakest hitter plays it
+  const living = me.map((u, i) => i).filter(i => alive(me[i]));
+  const hurt = living.reduce((a, b) => (a === null || me[b].hp / unitMax(me[b]) < me[a].hp / unitMax(me[a]) ? b : a), null);
+  const hurtPct = hurt === null ? 1 : me[hurt].hp / unitMax(me[hurt]);
+  const foesUp = foe.filter(alive);
+  let best = null;
+  const consider = (id, to, score) => { if (score > 0 && (!best || score > best.score)) best = { from, move: 'pw:' + id, to, score }; };
+  for (const id of left) {
+    if (id === 'revive') { const ko = me.findIndex(u => !alive(u)); if (ko >= 0) consider(id, ko, 9000); }
+    if (id === 'restore' && hurtPct < 0.4) consider(id, hurt, 7000 + unitMax(me[hurt]) - me[hurt].hp);
+    if (id === 'repair' && hurtPct < 0.5 && unitMax(me[hurt]) - me[hurt].hp >= 20) consider(id, hurt, 6500);
+    if (id === 'shield' || id === 'mirror') { if (hurtPct < 0.6 && !me[hurt].sh && !me[hurt].mi) consider(id, hurt, 5300); }
+    if (id === 'nanoswarm' || id === 'singularity') {
+      const kos = foesUp.filter(u => u.hp <= (id === 'nanoswarm' ? 20 : Math.round(unitMax(u) * 0.25))).length;
+      consider(id, from, kos ? 9500 : foesUp.length >= 2 ? 6000 : 0);
+    }
+    if (id === 'emp' && foesUp.filter(u => u.cd === 0).length >= 2) consider(id, from, 5500);
+    if (id === 'overdrive' && living.length >= 2) consider(id, from, 5200);
+    if (id === 'overclock') { const t = free.find(i => i !== from) ?? from; if (!me[t].oc) consider(id, t, 5100); }
+    if (id === 'recharge') { const t = living.find(i => me[i].cd > 0); if (t !== undefined) consider(id, t, 5000); }
+    if (id === 'timeskip') { const t = living.find(i => i !== from && state.acted[p][i]); if (t !== undefined) consider(id, t, 5000); }
+  }
+  return best;
 }
 
 // Damage a move would do right now (null if it can't be used).
@@ -440,6 +568,8 @@ export function aiMove(state, p) {
       });
     });
   }
+  const power = powerChoice(state, p);
+  if (power && (!best || power.score > best.score)) best = power;
   return best && { from: best.from, move: best.move, to: best.to };
 }
 
@@ -616,4 +746,5 @@ export const NEW_CARD_AFTER = [3, 6];   // levels that unlock your 2nd and 3rd c
 export const OPEN_LEVELS = CAMPAIGN.filter(l => l.chapter < CHAPTERS_OPEN).length;
 
 // A campaign battle: your team against the level's enemies, and you go first.
-export const newCampaignBattle = (team, level, fus = {}) => newBattle(team, CAMPAIGN[level].enemies, () => 0, fus);
+export const newCampaignBattle = (team, level, fus = {}, powers = []) =>
+  ({ ...newBattle(team, CAMPAIGN[level].enemies, () => 0, fus), pw: [[...powers], campaignPowers(level)] });

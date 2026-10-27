@@ -171,9 +171,15 @@ check(done.unopened.length > 0, 'boss pack waits in your packs');
 for (const { type, n } of done.unopened) for (let i = 0; i < n; i++) {
   const before = Object.values((await call('/me', a.token)).collection).reduce((x, y) => x + y, 0);
   const o = await call('/packs/open', a.token, { type });
-  check(Object.values(o.profile.collection).reduce((x, y) => x + y, 0) === before + o.cards.length, 'opened pack adds its cards');
+  check(Object.values(o.profile.collection).reduce((x, y) => x + y, 0) === before + o.cards.filter(c => !c.startsWith('pw:')).length, 'opened pack adds its cards');
 }
 check((await call('/me', a.token)).unopened.length === 0, 'all packs opened');
+// power cards: you can only take ones you own into battle
+const pmeAll = await call('/me', a.token);
+check(typeof pmeAll.powers === 'object' && Array.isArray(pmeAll.powerTeam), 'profile lists power cards');
+const ownedPower = Object.keys(pmeAll.powers)[0];
+if (ownedPower) check((await call('/powers/team', a.token, { powers: [ownedPower] })).powerTeam[0] === ownedPower, 'power card equipped');
+await expectError(call('/powers/team', a.token, { powers: ['singularity', 'singularity', 'singularity'] }), 400);
 await expectError(call('/packs/open', a.token, { type: 'omni' }), 400);   // none left
 if (done.gold >= 5000) {
   const pack = await call('/packs', a.token, {});
