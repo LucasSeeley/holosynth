@@ -215,7 +215,7 @@ async function profile(db, user) {
     packs: prog.packs,
     unopened: JSON.parse(extra.unopened ?? '[]'),
     powers: await powerCounts(db, user.id),        // power cards you own: { id: count }
-    powerTeam: await powerTeam(db, user.id),       // the (up to) 2 you take into battle   // packs waiting to be opened, oldest first: [{ type, n }]
+    powerTeam: await loadout(db, user.id),       // the (up to) 2 you take into battle   // packs waiting to be opened, oldest first: [{ type, n }]
     campaign: {
       chapter: CHAPTERS[chapter].title,
       chapterNum: chapter + 1,
@@ -272,7 +272,10 @@ async function setPowerTeam(req, db, user) {
 // shortcut: spent before the battle is saved, so a rare double-submit can cost a card; move into the save batch if it matters.
 async function spendPowers(db, userId, before, after = []) {
   const left = [...after];
-  for (const id of before) { const i = left.indexOf(id); if (i >= 0) left.splice(i, 1); else await db.prepare('UPDATE powers SET count = count - 1 WHERE user_id = ? AND power = ? AND count > 0').bind(userId, id).run(); }
+  let spent = false;
+  for (const id of before) { const i = left.indexOf(id); if (i >= 0) left.splice(i, 1); else { spent = true; await db.prepare('UPDATE powers SET count = count - 1 WHERE user_id = ? AND power = ? AND count > 0').bind(userId, id).run(); } }
+  // a used-up card also comes off the equipped slots (unless another copy still covers it)
+  if (spent) await db.prepare('UPDATE power_team SET team = ? WHERE user_id = ?').bind(JSON.stringify(await loadout(db, userId)), userId).run();
 }
 const addCard = (db, userId, id) => db.prepare(
   'INSERT INTO collection (user_id, card_id, count) VALUES (?, ?, 1) ON CONFLICT (user_id, card_id) DO UPDATE SET count = count + 1',
