@@ -41,6 +41,7 @@ struct CollectionTab: View {
             }
         }
         .background(ScreenBackground())
+        .onDisappear { store.clearNew() }
         .sheet(item: $zoomed) { e in FuseSheet(card: e.card, holo: e.holo) { zoomed = nil } }
     }
 
@@ -166,6 +167,15 @@ struct CollectionTab: View {
                             .background(Theme.brass, in: Capsule()).foregroundColor(Color(hex: 0x1A0D05))
                             .offset(x: 3, y: -3)
                             .accessibilityLabel("\(count) copies")
+                    }
+                }
+                .overlay(alignment: .top) {
+                    if store.newCards.contains(card.id) {
+                        Text("New").font(.chakra(8)).tracking(1.3).textCase(.uppercase).foregroundColor(.white)
+                            .padding(.horizontal, 6).padding(.vertical, 1)
+                            .background(Theme.pink, in: RoundedRectangle(cornerRadius: 6))
+                            .shadow(color: Theme.pink.opacity(0.7), radius: 5)
+                            .offset(y: -6)
                     }
                 }
                 .overlay(alignment: .topLeading) {

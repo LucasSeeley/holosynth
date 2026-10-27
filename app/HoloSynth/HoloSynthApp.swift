@@ -140,6 +140,7 @@ struct HomeView: View {
                 .badge(store.profile?.quests?.claimable ?? 0)   // quest rewards waiting
             PackTab().tabItem { Label("Shop", systemImage: "bag.fill") }.tag(1)
             CollectionTab().tabItem { Label("Cards", systemImage: "square.grid.3x3.fill") }.tag(2)
+                .badge(store.newCards.count)   // new cards to look at
             SocialTab().tabItem { Label("Social", systemImage: "person.2.fill") }.tag(3)
                 .badge(socialBadge)
             ProfileTab().tabItem { Label("Profile", systemImage: "person.crop.circle.fill") }.tag(4)

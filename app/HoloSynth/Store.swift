@@ -41,7 +41,26 @@ final class GameStore: ObservableObject {
     @Published var token: String? = UserDefaults.standard.string(forKey: "token") {
         didSet { UserDefaults.standard.set(token, forKey: "token") }
     }
-    @Published var profile: Profile?
+    @Published var profile: Profile? { didSet { trackNew() } }
+    @Published var newCards: Set<String> = []   // cards you got since you last looked at the Cards tab ("NEW" tag)
+
+    // Any card id that shows up in the collection for the first time gets a NEW tag. Kept per account across launches.
+    private func trackNew() {
+        guard let p = profile, !p.needsStarter else { return }
+        let d = UserDefaults.standard, seenKey = "seen.\(p.username)", newKey = "new.\(p.username)"
+        let owned = Set(p.collection.keys)
+        var fresh = Set(d.stringArray(forKey: newKey) ?? [])
+        if let seen = d.stringArray(forKey: seenKey) { fresh.formUnion(owned.subtracting(seen)) }   // first launch: nothing is new
+        d.set(Array(owned), forKey: seenKey)
+        d.set(Array(fresh), forKey: newKey)
+        if fresh != newCards { newCards = fresh }
+    }
+
+    func clearNew() {
+        guard let p = profile, !newCards.isEmpty else { return }
+        newCards = []
+        UserDefaults.standard.removeObject(forKey: "new.\(p.username)")
+    }
     @Published var error: String?
     @Published var social: Social?
 
