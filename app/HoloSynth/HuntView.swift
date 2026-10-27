@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-// Legend Hunt, full screen: lobby → fight → won / got away. One try per 8-hour hunt against a fully fused Legendary and its support.
+// Legend Hunt, full screen: lobby → fight → won / got away. One try per 8-hour hunt against a fully fused Legendary and its two supports.
 // Winning gives an Overload pack (opened from the Play tab): 1 in 5 hold the Legendary, the rest a guaranteed Epic.
 struct HuntView: View {
     @EnvironmentObject var store: GameStore
@@ -55,23 +55,16 @@ struct HuntView: View {
                         Spacer()
                         countdown
                     }
-                    HStack(alignment: .bottom, spacing: 12) {
+                    HStack(alignment: .bottom, spacing: 8) {
                         VStack(spacing: 6) {
-                            CardView(card: legend, fusion: Self.full).frame(width: 180)
+                            CardView(card: legend, fusion: Self.full).frame(width: 144)
                                 .shadow(color: Self.gold.opacity(0.55), radius: 18)
-                            HStack(spacing: 6) { Pips(level: 3, size: 6); Text("Fully fused") }
+                            HStack(spacing: 6) { Pips(level: 3, size: 5); Text("Fully fused") }
                         }
-                        if let id = home?.support, let support = CardBook.card(id) {
-                            let f = home?.supportFusion
-                            VStack(spacing: 6) {
-                                Text("Support").font(.chakra(10, semibold: true)).tracking(2).textCase(.uppercase)
-                                    .foregroundColor(Theme.rarityColor(support.rarity))
-                                CardView(card: support, fusion: (f?.total ?? 0) > 0 ? f : nil).frame(width: 112)
-                                Text("\(support.rarity) · \((f?.total ?? 0) > 0 ? "lightly fused" : "not fused")")
-                            }
-                        }
+                        supportCard(home?.support, home?.supportFusion)
+                        supportCard(home?.support2, home?.support2Fusion)
                     }
-                    .font(.barlow(12)).foregroundColor(Color(hex: 0xA9A5C2))
+                    .font(.barlow(11)).foregroundColor(Color(hex: 0xA9A5C2))
                 }
                 .padding(14)
                 .background(RadialGradient(colors: [Self.gold.opacity(0.22), .clear], center: UnitPoint(x: 0.5, y: 0.35),
@@ -85,7 +78,7 @@ struct HuntView: View {
                         Image(uiImage: img).resizable().scaledToFit().frame(height: 78).shadow(color: Self.gold.opacity(0.45), radius: 8)
                     }
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Beat it to win").font(.chakra(11, semibold: true)).tracking(2).textCase(.uppercase).foregroundColor(Self.gold)
+                        Text("Beat all three to win").font(.chakra(11, semibold: true)).tracking(2).textCase(.uppercase).foregroundColor(Self.gold)
                         (Text("Overload Pack").font(.chakra(17)).foregroundColor(Theme.fg) + Text(" · 8 cards").font(.barlow(13)))
                         (Text("20%").font(.chakra(13)).foregroundColor(Self.gold) + Text(" chance of \(legend.name), else an Epic"))
                             .font(.barlow(13))
@@ -106,6 +99,17 @@ struct HuntView: View {
             Button(ready ? "Hunt" : "Back soon") { start() }.buttonStyle(GoldButton()).disabled(!ready)
         }
         .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 12)
+    }
+
+    @ViewBuilder private func supportCard(_ id: String?, _ f: Fusion?) -> some View {
+        if let id, let support = CardBook.card(id) {
+            VStack(spacing: 5) {
+                Text("Support").font(.chakra(9, semibold: true)).tracking(1.5).textCase(.uppercase)
+                    .foregroundColor(Theme.rarityColor(support.rarity))
+                CardView(card: support, fusion: (f?.total ?? 0) > 0 ? f : nil).frame(width: 84)
+                Text("\(support.rarity) · \((f?.total ?? 0) > 0 ? "fused" : "not fused")").font(.barlow(10)).lineLimit(1).minimumScaleFactor(0.7)
+            }
+        }
     }
 
     private var countdown: some View {

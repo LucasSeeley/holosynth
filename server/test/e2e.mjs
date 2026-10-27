@@ -199,7 +199,7 @@ if (qs.list.every(q => q.n >= q.goal)) {
 // legend hunt: one try a day against a fully fused Legendary
 check(done.hunt.status === 'ready' && done.hunt.legend, 'hunt ready');
 let hunt = await call('/hunt/start', a.token, {});
-check(hunt.status === 'playing' && hunt.state.teams[1][0].f.x && hunt.state.teams[1].length === 2, 'hunt started vs a fully fused legend and its support');
+check(hunt.status === 'playing' && hunt.state.teams[1][0].f.x && hunt.state.teams[1].length === 3, 'hunt started vs a fully fused legend and its two supports');
 check((await call('/hunt/start', a.token, {})).status === 'playing', 'starting again picks the fight back up');
 let hres = null;
 for (let i = 0; i < 100 && !hres; i++) {

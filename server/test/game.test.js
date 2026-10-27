@@ -237,7 +237,7 @@ test('daily shop: one Rare then three different Commons, the same all day, new t
   assert.ok(new Set(week).size > 1);
 });
 
-test('legend hunt: every 8 hours a fully fused Legendary and a lightly fused support; the pack holds the Legendary 1 in 5, else an Epic', () => {
+test('legend hunt: every 8 hours a fully fused Legendary and two medium fused supports; the pack holds the Legendary 1 in 5, else an Epic', () => {
   const t = 20000 * 86400000, f = huntFoes(t);
   assert.equal(BY_ID[f.legend].rarity, 'Legendary');
   assert.deepEqual(huntFoes(t + HUNT_MS - 1), f);
@@ -246,12 +246,13 @@ test('legend hunt: every 8 hours a fully fused Legendary and a lightly fused sup
     const g = huntFoes(t + i * HUNT_MS), c = BY_ID[g.support], lv = [g.supportFusion.h, g.supportFusion.b, g.supportFusion.s];
     assert.ok(['Rare', 'Epic'].includes(c.rarity));
     if (BY_ID[g.legend].cls !== 'Mystic') assert.equal(c.cls, 'Mystic');
-    assert.ok(lv.every(n => (c.rarity === 'Rare' ? n >= 1 && n <= 2 : n <= 1)) && !g.supportFusion.x);
+    assert.ok(lv.every(n => (c.rarity === 'Rare' ? n >= 2 && n <= 3 : n >= 1 && n <= 2)) && !g.supportFusion.x);
+    assert.ok(g.support2 && g.support2 !== g.support && g.support2 !== g.legend && ['Rare', 'Epic'].includes(BY_ID[g.support2].rarity));
   }
   assert.ok(new Set(Array.from({ length: 60 }, (_, i) => huntFoes(t + i * HUNT_MS).legend)).size > 3);
   const s = huntBattle(['volt', 'fang', 'goliath'], f);
   assert.equal(s.turn, 0);
-  assert.equal(s.teams[1].length, 2);
+  assert.equal(s.teams[1].length, 3);
   assert.deepEqual(s.teams[1][0].f, HUNT_FUSION);
   assert.equal(s.teams[1][0].max, Math.round(BY_ID[f.legend].hp * 1.3));
   let hits = 0;

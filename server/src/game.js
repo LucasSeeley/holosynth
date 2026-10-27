@@ -166,8 +166,9 @@ export function pickQuests(userId, t, can, rand = seeded((userId * 2654435761) ^
 }
 
 // ---- legend hunt ----
-// Every 8 hours (00:00, 08:00, 16:00 UTC) one Legendary, fully fused, the same for everyone, with a support card:
-// a Rare (lightly fused) or an Epic (maybe a little fused), a healer unless the Legendary heals itself. One try per hunt.
+// Every 8 hours (00:00, 08:00, 16:00 UTC) one Legendary, fully fused, the same for everyone, with two support cards,
+// each a Rare or an Epic, medium fused (Rare 2-3 per stat, Epic 1-2). The first is a healer unless the Legendary heals itself;
+// the second can be any class. One try per hunt.
 // Beat them for an Overload pack: 1 in 5 hold that Legendary (the plain card, no fusion), the rest a guaranteed Epic.
 export const HUNT_MS = 8 * 60 * 60 * 1000;
 export const huntStart = t => Math.floor(t / HUNT_MS) * HUNT_MS;
@@ -177,16 +178,20 @@ const LEGENDS = CARDS.filter(c => c.rarity === 'Legendary').map(c => c.id);
 export function huntFoes(t) {
   const rand = seeded(Math.floor(t / HUNT_MS) * 2654435761 + 97);
   const legend = LEGENDS[Math.floor(rand() * LEGENDS.length)];
-  const rarity = rand() < 0.5 ? 'Rare' : 'Epic';
-  const healer = BY_ID[legend].cls !== 'Mystic';
-  const pool = CARDS.filter(c => c.rarity === rarity && (!healer || c.cls === 'Mystic') && c.id !== legend);
-  const support = pool[Math.floor(rand() * pool.length)].id;
-  const lvl = rarity === 'Rare' ? () => 1 + Math.floor(rand() * 2) : () => Math.floor(rand() * 2);   // Rare 1-2, Epic 0-1 per stat
-  return { legend, support, supportFusion: { h: lvl(), b: lvl(), s: lvl(), x: false } };
+  const pick = (healer, not) => {
+    const rarity = rand() < 0.5 ? 'Rare' : 'Epic';
+    const pool = CARDS.filter(c => c.rarity === rarity && (!healer || c.cls === 'Mystic') && !not.includes(c.id));
+    const id = pool[Math.floor(rand() * pool.length)].id;
+    const lvl = () => (rarity === 'Rare' ? 2 : 1) + Math.floor(rand() * 2);   // Rare 2-3, Epic 1-2 per stat
+    return [id, { h: lvl(), b: lvl(), s: lvl(), x: false }];
+  };
+  const [support, supportFusion] = pick(BY_ID[legend].cls !== 'Mystic', [legend]);
+  const [support2, support2Fusion] = pick(false, [legend, support]);
+  return { legend, support, supportFusion, support2, support2Fusion };
 }
 // You move first. Tuned with the computer playing both sides (see scratch sim): hard on purpose.
-export const huntBattle = (team, foes, fus = {}) => newBattle(team, [foes.legend, foes.support], () => 0, fus,
-  { [foes.legend]: HUNT_FUSION, [foes.support]: foes.supportFusion });
+export const huntBattle = (team, foes, fus = {}) => newBattle(team, [foes.legend, foes.support, foes.support2], () => 0, fus,
+  { [foes.legend]: HUNT_FUSION, [foes.support]: foes.supportFusion, [foes.support2]: foes.support2Fusion });
 export const HUNT_LEGEND_CHANCE = 0.2;
 const EPICS = CARDS.filter(c => c.rarity === 'Epic').map(c => c.id);
 // The win's Overload pack: 1 in 5 has the Legendary in it; otherwise it always holds at least one Epic.
