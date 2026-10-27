@@ -87,7 +87,7 @@ struct GauntletView: View {
                         } else {
                             RoundedRectangle(cornerRadius: 8).fill(n == 1 ? Theme.brass.opacity(0.14) : Color.white.opacity(0.04))
                                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.brass.opacity(n == 1 ? 1 : 0.18), lineWidth: 1))
-                            Text("\(5 + 5 * n)").font(.chakra(13)).foregroundColor(n == 1 ? Theme.fg : Theme.muted)
+                            Text("\(50 + 25 * n)").font(.chakra(12)).foregroundColor(n == 1 ? Theme.fg : Theme.muted)
                         }
                     }
                     .frame(width: 30, height: 38)
@@ -97,7 +97,7 @@ struct GauntletView: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Fight 1 pays 10 gold, each win 5 more; a free pack every 10 wins")
+        .accessibilityLabel("Fight 1 pays 75 gold, each win 25 more; a free pack every 10 wins")
     }
 
     // MARK: fight

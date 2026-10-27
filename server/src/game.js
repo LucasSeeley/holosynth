@@ -112,7 +112,7 @@ export function spinWheel(rand = Math.random) {
 // Endless run: fight after fight with the same team, damage carries over, each win heals 20%. One loss ends it.
 export const GAUNTLET_HEAL = 0.2;
 export const GAUNTLET_PACK_EVERY = 10;
-export const gauntletGold = fight => 5 + 5 * fight;   // fight 1 pays 10, fight 2 pays 15…
+export const gauntletGold = fight => 50 + 25 * fight;   // fight 1 pays 75, fight 2 pays 100…
 const TIERS = ['Common', 'Rare', 'Epic', 'Legendary'];
 const POOLS = TIERS.map(r => CARDS.filter(c => c.rarity === r).map(c => c.id));
 // One enemy for fights 1–10, two for 11–20, then three; rarer cards creep in as the streak grows.
