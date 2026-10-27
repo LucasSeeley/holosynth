@@ -21,6 +21,7 @@ struct PackTab: View {
     @State private var sparkOut = false
     @State private var shakes: CGFloat = 0
     @State private var burst: Color?
+    @State private var pulledHolo: Set<Int> = []   // which of the pulled cards came out holo
     @State private var zoomed: Card?              // shop card tapped for a closer look
     @State private var openType = "cyber"         // wrapper of the pack being opened
 
@@ -63,11 +64,13 @@ struct PackTab: View {
     private func openPending() {
         guard let cards = store.pendingPack else { return }
         store.pendingPack = nil
-        start(cards, type: store.pendingPackType)
+        start(cards, type: store.pendingPackType, holo: store.pendingHolo)
+        store.pendingHolo = []
     }
 
-    private func start(_ cards: [String], type: String) {
+    private func start(_ cards: [String], type: String, holo: [Int] = []) {
         openType = type
+        pulledHolo = Set(holo)
         tearProgress = 0; lastTick = 0
         torn = false; rising = false; dealt = false
         flipped = []; sparking = false; sparkOut = false
@@ -190,7 +193,7 @@ struct PackTab: View {
             Button {
                 buying = true
                 Task {
-                    if let cards = await store.buyPack(pack.type) { start(cards, type: pack.type) }
+                    if let r = await store.buyPack(pack.type) { start(r.cards, type: pack.type, holo: r.holo ?? []) }
                     buying = false
                 }
             } label: {
@@ -242,7 +245,7 @@ struct PackTab: View {
                 // cards: hidden in the pack, rise out of the opening, then stack up big to reveal one by one
                 ForEach(Array(pulled.enumerated()), id: \.offset) { i, id in
                     let slot = cardSlot(i, finished: finished, width: geo.size.width, tearY: tearY, smallW: smallW)
-                    FlipCard(card: CardBook.card(id), flipped: flipped.contains(i))
+                    FlipCard(card: CardBook.card(id), flipped: flipped.contains(i), holo: pulledHolo.contains(i))
                         .frame(width: bigW, height: bigW * 7 / 5)
                         .scaleEffect(slot.small ? smallW / bigW : 1 - CGFloat(max(0, i - current)) * 0.05)
                         .rotationEffect(.degrees(slot.angle))
@@ -293,6 +296,16 @@ struct PackTab: View {
                 if sparking { sparks(at: tearY) }
 
                 hint.offset(y: hintY(finished: finished, smallW: smallW, bigW: bigW, packH: packH))
+
+                // HOLO! over the card while a holo one is showing
+                if dealt, current < pulled.count, flipped.contains(current), pulledHolo.contains(current) {
+                    Text("HOLO!").font(.chakra(40)).tracking(4)
+                        .foregroundStyle(LinearGradient(colors: HoloFoil.rainbow, startPoint: .leading, endPoint: .trailing))
+                        .shadow(color: .white.opacity(0.5), radius: 10)
+                        .offset(y: -(bigW * 0.7) - 48)
+                        .transition(.scale.combined(with: .opacity))
+                        .allowsHitTesting(false)
+                }
             }
             .frame(width: geo.size.width, height: geo.size.height)
             .contentShape(Rectangle())
@@ -423,6 +436,15 @@ struct PackTab: View {
         withAnimation(.easeInOut(duration: 0.45)) { _ = flipped.insert(i) }
         Sound.flip.play()
         let rarity = CardBook.card(id)?.rarity ?? "Common"
+        if pulledHolo.contains(i) {   // holo beats any rarity: rainbow flash, the big sound
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            DispatchQueue.main.asyncAfter(deadline: .now() + Sound.flip.duration) {
+                Sound.legendary.play()
+                withAnimation(.easeOut(duration: 0.15)) { burst = Color(hex: 0x8CC8FF) }
+                withAnimation(.easeIn(duration: 1.2).delay(0.15)) { burst = nil }
+            }
+            return
+        }
         guard rarity != "Common" else {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             return
@@ -441,13 +463,14 @@ struct PackTab: View {
 struct FlipCard: View {
     let card: Card?
     let flipped: Bool
+    var holo = false
     @State private var shake: CGFloat = 0
 
     var body: some View {
         ZStack {
             CardBack().opacity(flipped ? 0 : 1)
             Group {
-                if let card { CardView(card: card) } else { CardBack() }
+                if let card { CardView(card: card, fusion: holo ? .holoCopy : nil) } else { CardBack() }
             }
             .rotation3DEffect(.degrees(180), axis: (x: 0, y: 1, z: 0))
             .opacity(flipped ? 1 : 0)

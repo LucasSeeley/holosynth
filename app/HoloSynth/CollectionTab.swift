@@ -5,7 +5,7 @@ import SwiftUI
 // Team slots can be dragged onto each other to reorder. Every change saves straight away.
 struct CollectionTab: View {
     @EnvironmentObject var store: GameStore
-    @State private var zoomed: Card?
+    @State private var zoomed: Entry?
     @State private var pending: String?          // tapped "+ Team"; waiting for a slot
     @AppStorage("collectionSort") private var sort = 0   // 0 Synth #, 1 HP, 2 Rarity; the button steps through them
 
@@ -32,8 +32,8 @@ struct CollectionTab: View {
                     }
                     LazyVGrid(columns: columns, spacing: 14) {
                         // owned cards first in the chosen order, then locked cards in number order
-                        ForEach(CardSort.apply(CardBook.all.filter { owned[$0.id] != nil }, sort, counts: owned) + CardBook.all.filter { owned[$0.id] == nil }) { card in
-                            cell(card, count: owned[card.id] ?? 0)
+                        ForEach(entries(owned)) { e in
+                            cell(e.card, count: copies(e, owned), holo: e.holo)
                         }
                     }
                 }
@@ -41,7 +41,7 @@ struct CollectionTab: View {
             }
         }
         .background(ScreenBackground())
-        .sheet(item: $zoomed) { card in FuseSheet(card: card) { zoomed = nil } }
+        .sheet(item: $zoomed) { e in FuseSheet(card: e.card, holo: e.holo) { zoomed = nil } }
     }
 
     // MARK: team bar (pinned)
@@ -123,11 +123,42 @@ struct CollectionTab: View {
 
     // MARK: collection
 
+    // One cell per card you own (holo copies get a cell of their own next to the normal one), then locked cards.
+    struct Entry: Identifiable { let card: Card; let holo: Bool; var id: String { card.id + (holo ? "#holo" : "") } }
+
+    private func entries(_ owned: [String: Int]) -> [Entry] {
+        let holoCount = { (id: String) in store.profile?.holoCount(id) ?? 0 }
+        let mine = CardSort.apply(CardBook.all.filter { owned[$0.id] != nil }, sort, counts: owned,
+                                  holos: Set(owned.keys.filter { holoCount($0) > 0 }))
+        let holoFirst = CardSort.names[sort % CardSort.names.count] == "Holo"
+        var out: [Entry] = []
+        for c in mine {
+            let normal = (owned[c.id] ?? 0) > holoCount(c.id), holo = holoCount(c.id) > 0
+            if holo && holoFirst { out.append(Entry(card: c, holo: true)) }
+            if normal { out.append(Entry(card: c, holo: false)) }
+            if holo && !holoFirst { out.append(Entry(card: c, holo: true)) }
+        }
+        return out + CardBook.all.filter { owned[$0.id] == nil }.map { Entry(card: $0, holo: false) }
+    }
+
+    // Copies a cell stands for: holo copies on the holo cell, the rest on the normal one.
+    private func copies(_ e: Entry, _ owned: [String: Int]) -> Int {
+        let holo = store.profile?.holoCount(e.card.id) ?? 0
+        return e.holo ? holo : (owned[e.card.id] ?? 0) - holo
+    }
+
+    // Battles use your strongest copy (same rule as the server): a holo copy unless a normal one is fused well past it.
+    private func battleUsesHolo(_ id: String) -> Bool {
+        let score = { (f: Fusion?) -> Int in f.map { $0.h + $0.b + $0.s + ($0.x ? 3 : 0) + ($0.holo ? 4 : 0) } ?? -1 }
+        guard let h = store.profile?.holo(id) else { return false }
+        return score(h) >= score(store.profile?.fusion(id))
+    }
+
     @ViewBuilder
-    private func cell(_ card: Card, count: Int) -> some View {
+    private func cell(_ card: Card, count: Int, holo: Bool) -> some View {
         if count > 0 {
-            let onTeam = team.contains(card.id)
-            CardView(card: card, fusion: store.profile?.fusion(card.id))
+            let onTeam = team.contains(card.id) && holo == battleUsesHolo(card.id)
+            CardView(card: card, fusion: holo ? store.profile?.holo(card.id) : store.profile?.fusion(card.id))
                 .overlay(alignment: .topTrailing) {
                     if count > 1 {
                         Text("×\(count)").font(.chakra(9)).monospacedDigit()
@@ -163,7 +194,7 @@ struct CollectionTab: View {
                         RoundedRectangle(cornerRadius: 10).stroke(Color(hex: 0xFFD77A), lineWidth: 3).shadow(color: Theme.brass, radius: 8)
                     }
                 }
-                .onTapGesture { if pending != nil { pending = nil } else { zoomed = card } }
+                .onTapGesture { if pending != nil { pending = nil } else { zoomed = Entry(card: card, holo: holo) } }
                 .draggable(card.id) { CardView(card: card).frame(width: 110) }
         } else {
             CardBack().opacity(0.35)

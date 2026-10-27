@@ -47,16 +47,21 @@ const pickOf = (rarity, type, rand) => {
   return pool[Math.floor(rand() * pool.length)].id;
 };
 
-// Returns { cards: [ids], packsSinceLegend } for one pack of `type`.
+// Returns { cards: [ids], holo: [indexes of holo cards], packsSinceLegend } for one pack of `type`.
 export function openPack(packsSinceLegend, type = 'cyber', rand = Math.random) {
   const size = PACK_SIZES[type] ?? PACK_SIZE;
   // the Legends Pack's guaranteed Legendary is the last card, so it's the last one revealed
   const rarities = Array.from({ length: size }, (_, i) => (type === 'legends' && i === size - 1 ? 'Legendary' : rollRarity(rand)));
+  const cards = rarities.map(r => pickOf(r, type, rand));
   return {
-    cards: rarities.map(r => pickOf(r, type, rand)),
+    cards,
+    holo: cards.map((_, i) => i).filter(() => rand() < HOLO_CHANCE),   // which of them came out holo
     packsSinceLegend: rarities.includes('Legendary') ? 0 : packsSinceLegend + 1,
   };
 }
+
+// Any card from a pack can come out holo: rainbow foil, +20% to every stat, its own copy (like a fused one).
+export const HOLO_CHANCE = 1 / 250, HOLO_BOOST = 1.2;
 
 // ---- daily spin ----
 // The wheel's 9 slots clockwise from the top, as drawn in the app, with their chance out of 100.
@@ -202,13 +207,15 @@ export function huntPack(packsSinceLegend, legend, rand = Math.random) {
 export const FUSE_COST = 5, FUSE_MAX = 3, SECOND_COST = { copies: 10, gold: 10000 };
 export const FUSE_GOLD = [1000, 2500, 5000];   // gold for a stat's 1st, 2nd and 3rd fusion
 export const SECOND = Object.fromEntries(CARDS.filter(c => c.special2).map(c => [c.id, c.special2]));   // Epic & Legendary only
-// f = { h, b, s, x }: fusion levels for HP, basic, special, and whether the second special is unlocked.
-export const fusedHp = (id, f) => Math.round(BY_ID[id].hp * (1 + 0.1 * (f?.h || 0)));
+// f = { h, b, s, x, o }: fusion levels for HP, basic, special, whether the second special is unlocked, and holo.
+// f.o = holo: +20% on top.
+const holoX = f => (f?.o ? HOLO_BOOST : 1);
+export const fusedHp = (id, f) => Math.round(BY_ID[id].hp * (1 + 0.1 * (f?.h || 0)) * holoX(f));
 export const fusedDmg = (id, f, move) => {
   const c = BY_ID[id];
-  if (move === 'basic') return Math.round(c.basic.dmg * (1 + 0.2 * (f?.b || 0)));
+  if (move === 'basic') return Math.round(c.basic.dmg * (1 + 0.2 * (f?.b || 0)) * holoX(f));
   const base = move === 'special2' ? SECOND[id].dmg : c.special.dmg;
-  return Math.round(base * (1 + 0.1 * (f?.s || 0)));
+  return Math.round(base * (1 + 0.1 * (f?.s || 0)) * holoX(f));
 };
 const unitMax = u => u.max ?? BY_ID[u.id].hp;
 

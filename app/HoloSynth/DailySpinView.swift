@@ -166,7 +166,7 @@ struct DailySpinView: View {
     }
 
     private func close() {
-        if let r = reply { store.profile = r.profile; store.pendingPackType = r.packType ?? "cyber" }
+        if let r = reply { store.profile = r.profile; store.pendingPackType = r.packType ?? "cyber"; store.pendingHolo = r.holo ?? [] }
         onClose(reply?.kind == "pack" ? reply?.cards : nil)
     }
 

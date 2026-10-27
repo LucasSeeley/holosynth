@@ -183,7 +183,7 @@ struct HuntView: View {
             Text("Your Overload Pack has 8 cards.\nIs \(legend?.name ?? "the legend") one of them?")
                 .font(.barlow(15)).foregroundColor(Color(hex: 0xA9A5C2)).multilineTextAlignment(.center)
             Spacer()
-            Button("Open it") { onClose(r.pack ?? []) }.buttonStyle(GoldButton())
+            Button("Open it") { store.pendingHolo = r.holo ?? []; onClose(r.pack ?? []) }.buttonStyle(GoldButton())
         }
         .padding(.horizontal, 16).padding(.bottom, 12)
         .background(RadialGradient(colors: [Self.gold.opacity(0.25), .clear], center: UnitPoint(x: 0.5, y: 0.45), startRadius: 0, endRadius: 260))

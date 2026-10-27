@@ -6,6 +6,7 @@ import SwiftUI
 struct FuseSheet: View {
     @EnvironmentObject var store: GameStore
     let card: Card
+    var holo = false            // fusing your holo copy instead of your normal one
     let onClose: () -> Void
 
     @State private var fusing = false
@@ -17,8 +18,9 @@ struct FuseSheet: View {
     private let cost = 5, maxLevel = 3, secondCopies = 10, secondGold = 10_000
     private let fuseGold = [1000, 2500, 5000]   // a stat's 1st, 2nd and 3rd fusion (same as the server)
 
-    private var fusion: Fusion? { store.profile?.fusion(card.id) }
+    private var fusion: Fusion? { holo ? store.profile?.holo(card.id) : store.profile?.fusion(card.id) }
     private var copies: Int { store.profile?.collection[card.id] ?? 0 }
+    private var holoCopies: Int { store.profile?.holoCount(card.id) ?? 0 }
     // Copies you can spend: plain copies, keeping one back if none is fused yet (it becomes the fused one).
     private var spare: Int {
         let fusedCount = store.profile?.fused?.filter { $0.card == card.id }.count ?? 0
@@ -39,7 +41,7 @@ struct FuseSheet: View {
             Spacer(minLength: 0)
             CardView(card: card, fusion: fusion).padding(.horizontal, 40)
             HStack(spacing: 14) {
-                (Text("×\(copies)").font(.chakra(14)).foregroundColor(Theme.fg) + Text(" copies"))
+                (Text("×\(holo ? holoCopies : copies - holoCopies)").font(.chakra(14)).foregroundColor(Theme.fg) + Text(holo ? " holo" : " copies"))
                 pipLabel("HP", fusion?.h ?? 0); pipLabel("Basic", fusion?.b ?? 0); pipLabel("Special", fusion?.s ?? 0)
             }
             .font(.barlow(14)).foregroundColor(Theme.muted)
@@ -56,7 +58,7 @@ struct FuseSheet: View {
     private var fuseScreen: some View {
         VStack(spacing: 12) {
             HStack {
-                Text("Fuse \(card.name)").font(.chakra(24)).foregroundColor(Theme.fg)
+                Text("Fuse \(card.name)\(holo ? " (Holo)" : "")").font(.chakra(24)).foregroundColor(Theme.fg)
                 Spacer()
                 closeButton { fusing = false }
             }
@@ -203,7 +205,7 @@ struct FuseSheet: View {
         busy = true; error = nil
         Task {
             do {
-                let p: Profile = try await API.call("fuse", token: store.token, body: ["card": card.id, "stat": stat])
+                let p: Profile = try await API.call("fuse", token: store.token, body: ["card": card.id, "stat": stat, "holo": holo])
                 store.profile = p
                 result = (title, before, after, stat)
             } catch { self.error = error.localizedDescription }

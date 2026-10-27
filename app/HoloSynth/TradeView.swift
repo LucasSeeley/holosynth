@@ -148,7 +148,9 @@ struct TradePicker: View {
         let ids = Set(spare.keys).union(owned.keys.filter { team.contains($0) })
         let cards = CardSort.apply(CardBook.all.filter { ids.contains($0.id) }, sort, counts: spare)
         let order = Dictionary(uniqueKeysWithValues: CardSort.apply(CardBook.all, sort).enumerated().map { ($1.id, $0) })
-        let fusedSorted = fused.sorted { (order[$0.card] ?? 0, $1.fusion.total) < (order[$1.card] ?? 0, $0.fusion.total) }
+        let holoFirst = CardSort.names[sort % CardSort.names.count] == "Holo"
+        let rank = { (f: FusedCopy) in holoFirst && f.o == true ? 0 : 1 }
+        let fusedSorted = fused.sorted { (rank($0), order[$0.card] ?? 0, $1.fusion.total) < (rank($1), order[$1.card] ?? 0, $0.fusion.total) }
         ZStack {
             ScreenBackground()
             VStack(spacing: 12) {

@@ -39,7 +39,13 @@ enum CardBook {
 
 extension Profile {
     // The copy your battles use: your most-fused copy of that card.
-    func fusion(_ id: String) -> Fusion? { fused?.filter { $0.card == id }.max { $0.fusion.total < $1.fusion.total }?.fusion }
+    // Your best normal (non-holo) fused copy of a card, and your best holo copy.
+    func fusion(_ id: String) -> Fusion? { best(id, holo: false) }
+    func holo(_ id: String) -> Fusion? { best(id, holo: true) }
+    func holoCount(_ id: String) -> Int { fused?.filter { $0.card == id && $0.o == true }.count ?? 0 }
+    private func best(_ id: String, holo: Bool) -> Fusion? {
+        fused?.filter { $0.card == id && ($0.o == true) == holo }.max { $0.fusion.total < $1.fusion.total }?.fusion
+    }
     var xpInto: Int { levelXp ?? xp % 100 }
     var xpNeed: Int { max(levelNeed ?? 100, 1) }
 }
@@ -90,6 +96,7 @@ struct CampaignRun: Decodable, Equatable {
         let chooseCard: Bool?
         let newCard: String?
         let pack: [String]?
+        let holo: [Int]?            // which of the pack's cards came out holo
         let packType: String?
     }
     let level: Int
@@ -152,11 +159,13 @@ struct TradeDone: Decodable { let received: [String]; let gold: Int; let from: S
 
 // Collection order, shared by the Cards tab and the trade picker: 0 Synth #, 1 HP (highest first), 2 Rarity (best first).
 enum CardSort {
-    static let names = ["Synth #", "HP", "Rarity", "Dups"]
+    static let names = ["Synth #", "HP", "Rarity", "Dups", "Holo"]
     private static let rank = ["Legendary": 0, "Epic": 1, "Rare": 2, "Common": 3]
-    // `cards` must already be in number order so ties keep it. `counts` (copies per card) is only used by Dups.
-    static func apply(_ cards: [Card], _ mode: Int, counts: [String: Int] = [:]) -> [Card] {
+    // `cards` must already be in number order so ties keep it. `counts` (copies per card) is only used by Dups,
+    // `holos` (cards you have a holo copy of) by Holo.
+    static func apply(_ cards: [Card], _ mode: Int, counts: [String: Int] = [:], holos: Set<String> = []) -> [Card] {
         switch mode % names.count {
+        case 4: return cards.enumerated().sorted { (holos.contains($0.element.id) ? 0 : 1, $0.offset) < (holos.contains($1.element.id) ? 0 : 1, $1.offset) }.map(\.element)
         case 3: return cards.enumerated().sorted { (counts[$1.element.id] ?? 0, $0.offset) < (counts[$0.element.id] ?? 0, $1.offset) }.map(\.element)
         case 1: return cards.enumerated().sorted { ($1.element.hp, $0.offset) < ($0.element.hp, $1.offset) }.map(\.element)
         case 2: return cards.enumerated().sorted { (rank[$0.element.rarity] ?? 9, $0.offset) < (rank[$1.element.rarity] ?? 9, $1.offset) }.map(\.element)
@@ -180,7 +189,7 @@ struct Quests: Decodable, Equatable {
     var finished: Int { list.filter(\.done).count }
     var claimable: Int { list.filter { $0.done && !$0.claimed }.count + (bonus == "ready" ? 1 : 0) }
 }
-struct QuestReply: Decodable { let cards: [String]?; let type: String?; let profile: Profile }
+struct QuestReply: Decodable { let cards: [String]?; let holo: [Int]?; let type: String?; let profile: Profile }
 
 // MARK: Legend Hunt
 
@@ -188,7 +197,7 @@ struct QuestReply: Decodable { let cards: [String]?; let type: String?; let prof
 // A new hunt every 8 hours: the fully fused legend plus a lightly fused Rare or Epic support card.
 struct HuntInfo: Decodable, Equatable { let legend: String; let support: String?; let status: String; let next: Double }
 struct HuntHome: Decodable { let legend: String; let support: String?; let supportFusion: Fusion?; let status: String; let state: BattleState?; let next: Double }
-struct HuntResult: Decodable, Equatable { let won: Bool; let pack: [String]?; let packType: String?; let gold: Int?; let xp: Int? }
+struct HuntResult: Decodable, Equatable { let won: Bool; let pack: [String]?; let holo: [Int]?; let packType: String?; let gold: Int?; let xp: Int? }
 struct HuntReply: Decodable { let legend: String; let state: BattleState; let result: HuntResult?; let profile: Profile? }
 struct ProfileReply: Decodable { let profile: Profile }
 
@@ -213,6 +222,7 @@ struct GauntletResult: Decodable, Equatable {
     let won: Bool
     let gold: Int?              // won a fight: gold for it
     let pack: [String]?         // …and a pack every 10th win
+    let holo: [Int]?            // which of its cards came out holo
     let packType: String?
     let streak: Int?            // run over: final streak and totals
     let newBest: Bool?
@@ -235,11 +245,12 @@ struct SpinReply: Decodable {
     let kind: String            // gold | xp | pack
     let amount: Int
     let cards: [String]?        // the pack, when it's a pack
+    let holo: [Int]?            // which of its cards came out holo
     let packType: String?
     let profile: Profile
 }
 struct SocialReply: Decodable { let message: String?; let social: Social }
-struct PackReply: Decodable { let cards: [String]; let profile: Profile }
+struct PackReply: Decodable { let cards: [String]; let holo: [Int]?; let profile: Profile }
 struct ShopReply: Decodable { let card: String; let profile: Profile }
 
 // The daily shop: one Rare (first) and three Commons, the same for everyone, new at `next` (ms since 1970).
@@ -263,7 +274,10 @@ struct Unit: Decodable, Equatable {
 struct Fusion: Decodable, Equatable, Hashable {
     var h = 0, b = 0, s = 0
     var x = false
+    var o: Bool? = nil          // holo copy: rainbow foil, +20% to every stat
     var total: Int { h + b + s + (x ? 1 : 0) }
+    var holo: Bool { o == true }
+    static let holoCopy = Fusion(o: true)
 }
 // One fused copy a player owns (each counts as one of their copies of that card).
 struct FusedCopy: Decodable, Equatable, Identifiable, Hashable {
@@ -271,19 +285,23 @@ struct FusedCopy: Decodable, Equatable, Identifiable, Hashable {
     let card: String
     let h: Int, b: Int, s: Int
     let x: Bool
-    var fusion: Fusion { Fusion(h: h, b: b, s: s, x: x) }
+    let o: Bool?
+    var fusion: Fusion { Fusion(h: h, b: b, s: s, x: x, o: o) }
 }
 
 // Same sums as the server: HP +10%, basic +20%, special (and second special) +10% per level.
 extension Card {
-    func maxHP(_ f: Fusion?) -> Int { Int((Double(hp) * (1 + 0.1 * Double(f?.h ?? 0))).rounded()) }
+    // Same maths as the server: fusion levels, then +20% for a holo copy.
+    func maxHP(_ f: Fusion?) -> Int { Int((Double(hp) * (1 + 0.1 * Double(f?.h ?? 0)) * Self.holoX(f)).rounded()) }
     func dmg(_ move: String, _ f: Fusion?) -> Int {
+        let x = Self.holoX(f)
         switch move {
-        case "basic": return Int((Double(basic.dmg) * (1 + 0.2 * Double(f?.b ?? 0))).rounded())
-        case "special2": return Int((Double(special2?.dmg ?? 0) * (1 + 0.1 * Double(f?.s ?? 0))).rounded())
-        default: return Int((Double(special.dmg) * (1 + 0.1 * Double(f?.s ?? 0))).rounded())
+        case "basic": return Int((Double(basic.dmg) * (1 + 0.2 * Double(f?.b ?? 0)) * x).rounded())
+        case "special2": return Int((Double(special2?.dmg ?? 0) * (1 + 0.1 * Double(f?.s ?? 0)) * x).rounded())
+        default: return Int((Double(special.dmg) * (1 + 0.1 * Double(f?.s ?? 0)) * x).rounded())
         }
     }
+    private static func holoX(_ f: Fusion?) -> Double { f?.holo == true ? 1.2 : 1 }
 }
 
 struct LogEntry: Decodable, Equatable {

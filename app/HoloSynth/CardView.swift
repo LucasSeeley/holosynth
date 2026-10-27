@@ -6,7 +6,7 @@ struct CardView: View {
     let card: Card
     var hpNow: Int? = nil        // in battle: current HP
     var cooldown: Int = 0        // in battle: turns left before the special is ready
-    var fusion: Fusion? = nil    // fused copy: boosted stats in gold, ✦ crest, maybe a second special
+    var fusion: Fusion? = nil    // fused copy: boosted stats in gold, ✦ crest, maybe a second special; holo copy: rainbow foil
     private static let goldText = Color(hex: 0xFFD77A)
 
     var body: some View {
@@ -70,6 +70,7 @@ struct CardView: View {
             .overlay(RoundedRectangle(cornerRadius: w * 0.06, style: .continuous)
                 .stroke((fusion?.total ?? 0) > 0 ? Self.goldText : Theme.rarityColor(card.rarity), lineWidth: max(1, w * ((fusion?.total ?? 0) > 0 ? 0.012 : 0.008))))
             .shadow(color: (fusion?.total ?? 0) > 0 ? Self.goldText.opacity(0.45) : .clear, radius: w * 0.06)
+            .modifier(HoloFoil(on: fusion?.holo == true, width: w))
         }
         .aspectRatio(5.0 / 7.0, contentMode: .fit)
     }

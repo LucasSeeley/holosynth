@@ -127,7 +127,7 @@ struct QuestsView: View {
                 error = nil
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
                 Sound.rare.play()
-                if let cards = r.cards { onClose(cards, r.type ?? "omni") }
+                if let cards = r.cards { store.pendingHolo = r.holo ?? []; onClose(cards, r.type ?? "omni") }
             } catch {
                 self.error = error.localizedDescription
                 await store.refresh()

@@ -57,21 +57,23 @@ const pendingChoice = (prog, owned) => {
 const fusedRows = async (db, userId, cardId) => (await (cardId
   ? db.prepare('SELECT * FROM fused WHERE user_id = ? AND card_id = ?').bind(userId, cardId)
   : db.prepare('SELECT * FROM fused WHERE user_id = ?').bind(userId)).all()).results;
-const fusionScore = r => r.h + r.b + r.s + r.x * 3;
-const fusedView = r => ({ id: r.id, card: r.card_id, h: r.h, b: r.b, s: r.s, x: !!r.x });
+const fusionScore = r => r.h + r.b + r.s + r.x * 3 + (r.o ? 4 : 0);   // a holo copy beats a lightly fused one
+const fusedView = r => ({ id: r.id, card: r.card_id, h: r.h, b: r.b, s: r.s, x: !!r.x, o: !!r.o });
 // The best fused copy of each card a player owns: what their battles use.
 async function fusionsFor(db, userId) {
   const best = {};
   for (const r of await fusedRows(db, userId)) if (!best[r.card_id] || fusionScore(r) > fusionScore(best[r.card_id])) best[r.card_id] = r;
-  return Object.fromEntries(Object.entries(best).map(([id, r]) => [id, { h: r.h, b: r.b, s: r.s, x: !!r.x }]));
+  return Object.fromEntries(Object.entries(best).map(([id, r]) => [id, { h: r.h, b: r.b, s: r.s, x: !!r.x, o: !!r.o }]));
 }
-// Fuse spare copies into your best copy of a card (making it a fused copy the first time).
+// Fuse spare (plain) copies into your best normal copy of a card, or your best holo copy when `holo` is set
+// (a normal copy becomes a fused copy the first time).
 async function fuseCard(req, db, user) {
-  const { card = '', stat = '' } = await body(req);
+  const { card = '', stat = '', holo = false } = await body(req);
   if (!BY_ID[card] || !['h', 'b', 's', 'x'].includes(stat)) throw new HttpError(400, 'Pick a card and a stat to fuse.');
   const count = (await db.prepare('SELECT count FROM collection WHERE user_id = ? AND card_id = ?').bind(user.id, card).first())?.count ?? 0;
   const rows = await fusedRows(db, user.id, card);
-  const target = rows.sort((a, b) => fusionScore(b) - fusionScore(a))[0];
+  const target = rows.filter(r => !!r.o === !!holo).sort((a, b) => fusionScore(b) - fusionScore(a))[0];
+  if (holo && !target) throw new HttpError(400, "You don't have a holo copy of that card.");
   const need = stat === 'x' ? SECOND_COST.copies : FUSE_COST;
   const plain = count - rows.length;                  // copies not already fused
   if (plain < need + (target ? 0 : 1)) throw new HttpError(400, `You need ${need} spare copies to fuse.`);
@@ -147,10 +149,10 @@ async function claimQuest(req, db, user) {
     const res = await db.prepare('UPDATE daily_quests SET bonus = 1 WHERE user_id = ? AND day = ? AND bonus = 0').bind(user.id, day).run();
     if (!res.meta.changes) throw new HttpError(400, "You already got today's pack.");
     const pack = openPack(user.packs_since_legend, QUEST_BONUS);
-    await db.batch([...pack.cards.map(id => addCard(db, user.id, id)),
+    await db.batch([...packWrites(db, user.id, pack),
       db.prepare('UPDATE users SET packs_since_legend = ? WHERE id = ?').bind(pack.packsSinceLegend, user.id),
       bumpProgress(db, user.id, 'packs')]);
-    return json({ cards: pack.cards, type: QUEST_BONUS, profile: await profile(db, await freshUser(db, user.id)) });
+    return json({ cards: pack.cards, holo: pack.holo, type: QUEST_BONUS, profile: await profile(db, await freshUser(db, user.id)) });
   }
   const q = Number.isInteger(quest) ? quests.list[quest] : null;
   if (!q) throw new HttpError(400, 'Unknown quest.');
@@ -220,6 +222,9 @@ async function profile(db, user) {
 }
 
 const freshUser = (db, id) => db.prepare('SELECT * FROM users WHERE id = ?').bind(id).first();
+// A pack's cards go into the collection; each holo one also gets its own copy row (a fused row with o = 1).
+const packWrites = (db, userId, pack) => [...pack.cards.map(id => addCard(db, userId, id)),
+  ...pack.holo.map(i => db.prepare('INSERT INTO fused (user_id, card_id, o) VALUES (?, ?, 1)').bind(userId, pack.cards[i]))];
 const addCard = (db, userId, id) => db.prepare(
   'INSERT INTO collection (user_id, card_id, count) VALUES (?, ?, 1) ON CONFLICT (user_id, card_id) DO UPDATE SET count = count + 1',
 ).bind(userId, id);
@@ -272,8 +277,8 @@ async function buyPack(db, user, type = 'cyber') {
     'UPDATE users SET gold = gold - ?, packs_since_legend = ? WHERE id = ? AND gold >= ?',
   ).bind(cost, pack.packsSinceLegend, user.id, cost).run();
   if (!res.meta.changes) throw new HttpError(400, `You need ${cost} gold.`);
-  await db.batch([...pack.cards.map(id => addCard(db, user.id, id)), bumpProgress(db, user.id, 'packs')]);
-  return json({ cards: pack.cards, type, profile: await profile(db, await freshUser(db, user.id)) });
+  await db.batch([...packWrites(db, user.id, pack), bumpProgress(db, user.id, 'packs')]);
+  return json({ cards: pack.cards, holo: pack.holo, type, profile: await profile(db, await freshUser(db, user.id)) });
 }
 
 // Buys one of today's shop cards. The app sends the card too, so a tap just after midnight can't buy a different one.
@@ -384,10 +389,11 @@ async function campaignWin(db, user, level) {
     const fresh = await freshUser(db, user.id);
     const packType = CAMPAIGN[level].pack ?? freePack();
     const pack = openPack(fresh.packs_since_legend, packType);
-    await db.batch([...pack.cards.map(id => addCard(db, user.id, id)),
+    await db.batch([...packWrites(db, user.id, pack),
       db.prepare('UPDATE users SET packs_since_legend = ? WHERE id = ?').bind(pack.packsSinceLegend, user.id),
       bumpProgress(db, user.id, 'packs')]);
     result.pack = pack.cards;
+    result.holo = pack.holo;
     result.packType = packType;
   }
   return result;
@@ -745,16 +751,16 @@ async function spin(db, user) {
   let cards = null;
   if (prize.kind === 'gold') await db.prepare('UPDATE users SET gold = gold + ? WHERE id = ?').bind(prize.amount, user.id).run();
   if (prize.kind === 'xp') await db.prepare('UPDATE users SET xp = xp + ? WHERE id = ?').bind(prize.amount, user.id).run();
-  let packType = null;
+  let packType = null, holo = null;
   if (prize.kind === 'pack') {
     packType = dailyPack(t);
     const pack = openPack(user.packs_since_legend, packType);
-    await db.batch([...pack.cards.map(id => addCard(db, user.id, id)),
+    await db.batch([...packWrites(db, user.id, pack),
       db.prepare('UPDATE users SET packs_since_legend = ? WHERE id = ?').bind(pack.packsSinceLegend, user.id),
       bumpProgress(db, user.id, 'packs')]);
-    cards = pack.cards;
+    cards = pack.cards; holo = pack.holo;
   }
-  return json({ slot, kind: prize.kind, amount: prize.amount, cards, packType, profile: await profile(db, await freshUser(db, user.id)) });
+  return json({ slot, kind: prize.kind, amount: prize.amount, cards, holo, packType, profile: await profile(db, await freshUser(db, user.id)) });
 }
 
 // Someone's public card, shown when you tap a friend request. Only between people linked by a request or friendship.
@@ -842,11 +848,11 @@ async function huntMove(req, db, user) {
   }
   await saveHunt(db, user.id, h, null, 'won');   // claim the win first
   const pack = huntPack(user.packs_since_legend, h.legend);
-  await db.batch([...pack.cards.map(id => addCard(db, user.id, id)),
+  await db.batch([...packWrites(db, user.id, pack),
     db.prepare('UPDATE users SET packs_since_legend = ?, gold = gold + ?, xp = xp + ? WHERE id = ?')
       .bind(pack.packsSinceLegend, HUNT_GOLD, HUNT_XP, user.id),
     bumpProgress(db, user.id, 'wins'), bumpProgress(db, user.id, 'packs'), questEvent(db, user.id, 'hunt')]);
-  return json({ legend: h.legend, state, result: { won: true, pack: pack.cards, packType: 'overload', gold: HUNT_GOLD, xp: HUNT_XP },
+  return json({ legend: h.legend, state, result: { won: true, pack: pack.cards, holo: pack.holo, packType: 'overload', gold: HUNT_GOLD, xp: HUNT_XP },
     profile: await profile(db, await freshUser(db, user.id)) });
 }
 
@@ -932,21 +938,21 @@ async function gauntletMove(req, db, user) {
   const gold = gauntletGold(run.fight);
   const next = { ...run, wins: run.wins + 1, gold: run.gold + gold, fight: run.fight + 1,
     hp: gauntletHeal(run.state.teams[0]), enemies: gauntletEnemies(run.fight + 1), state: null };
-  let pack = null, packType = null;
+  let pack = null, packType = null, holo = null;
   const writes = [db.prepare('UPDATE users SET gold = gold + ? WHERE id = ?').bind(gold, user.id), bumpProgress(db, user.id, 'wins'),
     questEvent(db, user.id, 'streak', next.wins, true)];
   if (next.wins % GAUNTLET_PACK_EVERY === 0) {
     packType = freePack();
     const opened = openPack(user.packs_since_legend, packType);
-    pack = opened.cards;
+    pack = opened.cards; holo = opened.holo;
     next.packs++;
-    writes.push(...pack.map(id => addCard(db, user.id, id)),
+    writes.push(...packWrites(db, user.id, opened),
       db.prepare('UPDATE users SET packs_since_legend = ? WHERE id = ?').bind(opened.packsSinceLegend, user.id),
       bumpProgress(db, user.id, 'packs'));
   }
   await saveGauntlet(db, user.id, g.run, next, next.wins);   // claim the win first so a double-submit can't pay twice
   await db.batch(writes);
-  return json({ run: { ...view, ...gauntletView(next), state: run.state }, result: { won: true, gold, pack, packType },
+  return json({ run: { ...view, ...gauntletView(next), state: run.state }, result: { won: true, gold, pack, packType, holo },
     profile: await profile(db, await freshUser(db, user.id)) });
 }
 
