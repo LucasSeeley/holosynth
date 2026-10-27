@@ -359,7 +359,7 @@ const bumpProgress = (db, userId, field) => db.prepare(
 // ---- starter card & campaign ----
 async function pickStarter(req, db, user) {
   const { card } = await body(req);
-  if (!STARTER_TEAM.includes(card)) throw new HttpError(400, 'Pick Volt, Fang or Goliath.');
+  if (!STARTER_TEAM.includes(card)) throw new HttpError(400, 'Pick Sparkplug, Mutt or Stubby.');
   // Only works while the collection is empty, so it can't be used to grab extra cards.
   const res = await db.prepare(
     'UPDATE users SET team = ? WHERE id = ? AND NOT EXISTS (SELECT 1 FROM collection WHERE user_id = ?)',

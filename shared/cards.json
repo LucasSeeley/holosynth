@@ -2,763 +2,763 @@
  {
   "id": "volt",
   "num": 1,
-  "name": "Volt",
+  "name": "Sparkplug",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 60,
   "basic": {
-   "name": "Shock Punch",
+   "name": "Dead Battery Hook",
    "dmg": 10
   },
   "special": {
-   "name": "Overcharge",
+   "name": "Jumper Cable Combo",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Brawler android with neon-blue electric gauntlets and a cracked chrome faceplate.",
+  "look": "A short scrappy boxer robot with mismatched battery-pack gloves and a cracked face screen, bouncing on its toes.",
   "color": "#3ff0ff",
-  "quip": "Cracked his faceplate punching a vending machine. It still owes him a soda.",
+  "quip": "Cracked face, mismatched gloves, and still bouncing like he's winning.",
   "passive": "momentum"
  },
  {
   "id": "fang",
   "num": 2,
-  "name": "Fang",
+  "name": "Mutt",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 55,
   "basic": {
-   "name": "Neon Bite",
+   "name": "Slobber Snap",
    "dmg": 15
   },
   "special": {
-   "name": "Pounce",
+   "name": "Fetch Slam",
    "dmg": 20,
    "cd": 2
   },
-  "look": "Chrome cyber-wolf with glowing pink fangs.",
+  "look": "A scruffy stray robo-dog standing on its hind legs, big goofy face, bent ear antenna, chewed rubber collar, one pink LED tooth, tongue out.",
   "color": "#ff3fa4",
-  "quip": "Good boy. Bites anyway.",
+  "quip": "Chewed his own collar. Has opinions about yours.",
   "passive": "lifesteal"
  },
  {
   "id": "goliath",
   "num": 3,
-  "name": "Goliath",
+  "name": "Stubby",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 70,
   "basic": {
-   "name": "Scatter Shot",
+   "name": "Tiptoe Shot",
    "dmg": 10
   },
   "special": {
-   "name": "Cannon Blast",
+   "name": "Overhead Boom",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Squat walker mech with orange vents and a heavy arm cannon.",
+  "look": "A tiny squat robot with a big determined face and two stumpy legs, straining to hold an oversized orange cannon over its head.",
   "color": "#ff8a3d",
-  "quip": "Short, loud, and absolutely not compensating for anything.",
+  "quip": "Can barely hold the cannon. Has never once missed the point.",
   "passive": "armor"
  },
  {
   "id": "razor",
   "num": 4,
-  "name": "Razor",
+  "name": "Rookie",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 50,
   "basic": {
-   "name": "Hardlight Slash",
+   "name": "Ruler Whack",
    "dmg": 15
   },
   "special": {
-   "name": "Thousand Cuts",
+   "name": "Wobbly Flurry",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Samurai android with a violet hardlight katana and a split visor.",
+  "look": "A gangly nervous rookie swordsman robot with a face screen showing wide anxious eyes, a dented practice helmet too big for it, gripping a bent metal-ruler sword with both shaky hands, knees knocking.",
   "color": "#8f7bff",
-  "quip": "Split his own visor showing off. Calls it a style choice.",
+  "quip": "Sword is a ruler. Helmet is a bucket. Confidence is on backorder.",
   "passive": "firststrike"
  },
  {
   "id": "stinger",
   "num": 5,
-  "name": "Stinger",
+  "name": "Pinch",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 65,
   "basic": {
-   "name": "Tail Jab",
+   "name": "Key Twist",
    "dmg": 10
   },
   "special": {
-   "name": "Venom Spike",
+   "name": "Green Gloop Flick",
    "dmg": 20,
    "cd": 1
   },
-  "look": "Chrome cyber-scorpion with a dripping green neon tail.",
+  "look": "A small wind-up toy scorpion robot with a cheeky grinning face, wind-up key in its back, green bulb on its tail.",
   "color": "#3dff8a",
-  "quip": "The green drip is venom. Probably. Don't lick it.",
+  "quip": "Wound up every morning. Cannot stop grinning about it.",
   "passive": "executioner"
  },
  {
   "id": "sentry",
   "num": 6,
-  "name": "Sentry",
+  "name": "Peeper",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 80,
   "basic": {
-   "name": "Pulse Fire",
+   "name": "Flashlight Poke",
    "dmg": 5
   },
   "special": {
-   "name": "Lockdown Barrage",
+   "name": "Hall Pass Check",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Tripod turret drone with a red scanning eye and twin barrels.",
+  "look": "A small nervous hall-monitor security-guard robot on two short legs, round body, one oversized red camera-lens eye, a guard cap too big for it, clutching a tiny flashlight, worried face.",
   "color": "#ff4d5e",
-  "quip": "Three legs, two barrels, zero chill.",
+  "quip": "Saw something. Said something. Now regrets everything.",
   "passive": "thorns"
  },
  {
   "id": "hex",
   "num": 7,
-  "name": "Hex",
+  "name": "Typo",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 55,
   "basic": {
-   "name": "Code Spike",
+   "name": "Pop-Up Flood",
    "dmg": 10
   },
   "special": {
-   "name": "System Crash",
+   "name": "Reboot Loop",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Slim hacker android surrounded by floating holo keyboards.",
+  "look": "A thin nerdy hacker bot hunched over a cracked old laptop strapped to its chest, pink glasses.",
   "color": "#ff3fa4",
-  "quip": "Types 400 words a minute. All of them are insults.",
+  "quip": "Hacks like he types: fast, loud, and full of mistakes.",
   "passive": "momentum"
  },
  {
   "id": "mantis",
   "num": 8,
-  "name": "Mantis",
+  "name": "Twig",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 60,
   "basic": {
-   "name": "Scythe Swipe",
+   "name": "Hanger Snip",
    "dmg": 15
   },
   "special": {
-   "name": "Twin Reap",
+   "name": "Double Pinch",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Chrome praying mantis with teal blade arms.",
+  "look": "A spindly stick-insect robot made of coat hangers with a nervous little face and big eyes, tiny teal claws raised, wobbling on a branch.",
   "color": "#2fe3c4",
-  "quip": "Prays before every fight. Mostly that you hold still.",
+  "quip": "Made of coat hangers and nerves. Hard to hang up on.",
   "passive": "lifesteal"
  },
  {
   "id": "rook",
   "num": 9,
-  "name": "Rook",
+  "name": "Boxy",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 75,
   "basic": {
-   "name": "Rivet Gun",
+   "name": "Tape Gun",
    "dmg": 10
   },
   "special": {
-   "name": "Siege Shot",
+   "name": "Tube Cannon Pop",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Boxy walker tank with a hazard-striped cannon.",
+  "look": "A little cardboard-box robot CHARACTER with a face (two bottle-cap eyes, a determined frown), stubby arms balancing a toilet-roll tube cannon on its shoulder, tank-tread feet, yellow hazard tape.",
   "color": "#ffd23d",
-  "quip": "Moves in straight lines only. Refuses to explain why.",
+  "quip": "Arrived in a box. Fights from inside one. No returns.",
   "passive": "armor"
  },
  {
   "id": "wirelash",
   "num": 10,
-  "name": "Wirelash",
+  "name": "Tangle",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 60,
   "basic": {
-   "name": "Live Wire",
+   "name": "Spark Whip",
    "dmg": 10
   },
   "special": {
-   "name": "Short Circuit",
+   "name": "Knot Zap",
    "dmg": 20,
    "cd": 1
   },
-  "look": "Scrapyard android whose arm unspools into a sparking cable whip.",
+  "look": "A scrapyard robot hopelessly wrapped in its own cables, one spark at the end of a loose wire.",
   "color": "#3ff0ff",
-  "quip": "Made entirely of extension cords and bad decisions.",
+  "quip": "Tripped over himself twice just introducing himself.",
   "passive": "firststrike"
  },
  {
   "id": "raptor",
   "num": 11,
-  "name": "Raptor",
+  "name": "Crumbs",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 50,
   "basic": {
-   "name": "Talon Rake",
+   "name": "Envelope Smack",
    "dmg": 15
   },
   "special": {
-   "name": "Dive Strike",
+   "name": "Airmail Dive",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Cyber-hawk with glowing amber wings.",
+  "look": "A scrappy pigeon courier robot standing upright like a person, little mail satchel, cracked goggles pushed up, holding a crumpled envelope, cocky grin, one bent amber wing.",
   "color": "#ffb03d",
-  "quip": "Screams like an eagle. Is legally a hawk.",
+  "quip": "Special delivery. Return to sender is not an option.",
   "passive": "executioner"
  },
  {
   "id": "crusher",
   "num": 12,
-  "name": "Crusher",
+  "name": "Lugnut",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 70,
   "basic": {
-   "name": "Hydraulic Slam",
+   "name": "Fork Shove",
    "dmg": 10
   },
   "special": {
-   "name": "Crush Grip",
+   "name": "Pallet Squeeze",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Heavy cargo-loader mech with giant hydraulic fists and blue warning lights.",
+  "look": "A stocky worn-out dock-worker robot in a dented hard hat with a blue warning light, big flat fork-shaped hands, hugging a small crate, mid-yawn.",
   "color": "#4a7dff",
-  "quip": "Was hired to lift crates. Now lifts people. Same pay.",
+  "quip": "Clocked in tired. Will clock you out.",
   "passive": "thorns"
  },
  {
   "id": "nyx",
   "num": 13,
-  "name": "Nyx",
+  "name": "Peekaboo",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 55,
   "basic": {
-   "name": "Shadow Jab",
+   "name": "Tarp Surprise",
    "dmg": 10
   },
   "special": {
-   "name": "Blackout Strike",
+   "name": "Lights Out Boop",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Stealth android whose plating bends light.",
+  "look": "A shy little robot half-hiding under a ragged violet tarp, only its eyes glowing.",
   "color": "#8f7bff",
-  "quip": "You won't see him coming. He won't see you leaving either.",
+  "quip": "Hides under a tarp. You can still see the eyes. He thinks he's winning.",
   "passive": "momentum"
  },
  {
   "id": "mongoose",
   "num": 14,
-  "name": "Mongoose",
+  "name": "Zippy",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 55,
   "basic": {
-   "name": "Dart Bite",
+   "name": "Scarf Zip",
    "dmg": 15
   },
   "special": {
-   "name": "Cobra Breaker",
+   "name": "Spring Tail Whip",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Lightning-fast cyber-mongoose with amber reflex sensors.",
+  "look": "A tiny jittery ferret robot in a racing scarf, amber eye lights, a spring for a tail, mid-twitch.",
   "color": "#ffb03d",
-  "quip": "Has never lost a staring contest. Or blinked.",
+  "quip": "Three espressos deep and the spring tail knows it.",
   "passive": "lifesteal"
  },
  {
   "id": "harvester",
   "num": 15,
-  "name": "Harvester",
+  "name": "Grumbles",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 75,
   "basic": {
-   "name": "Thresher",
+   "name": "Rake Swipe",
    "dmg": 10
   },
   "special": {
-   "name": "Reap Field",
+   "name": "Mow Down",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Farm combine mech with glowing lime thresher blades.",
+  "look": "A grumpy old groundskeeper robot with a lawnmower for a lower body, a bushy grass-clipping moustache, lime grass stains, leaning on a rake.",
   "color": "#b6ff3d",
-  "quip": "Retired from farming. The crops know why.",
+  "quip": "Get off his lawn. And his arena. And his planet.",
   "passive": "armor"
  },
  {
   "id": "blaze",
   "num": 16,
-  "name": "Blaze",
+  "name": "Crispin",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 60,
   "basic": {
-   "name": "Flame Knuckle",
+   "name": "Mitt Smack",
    "dmg": 10
   },
   "special": {
-   "name": "Inferno Rush",
+   "name": "Extra Crispy",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Brawler android with plasma-flame fists and vented shoulders.",
+  "look": "A stocky robot whose head is an old toaster with a grumpy face on the front, orange glow inside the slots, oven-mitt fists raised.",
   "color": "#ff8a3d",
-  "quip": "Has never once held a cold drink.",
+  "quip": "Always angry, always warm, always slightly burnt.",
   "passive": "firststrike"
  },
  {
   "id": "narwhal",
   "num": 17,
-  "name": "Narwhal",
+  "name": "Brrbert",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 75,
   "basic": {
-   "name": "Tusk Poke",
+   "name": "Popsicle Poke",
    "dmg": 10
   },
   "special": {
-   "name": "Ice Lance",
+   "name": "Fishbowl Bonk",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Hovering cyber-narwhal with a frosted crystal tusk.",
+  "look": "A chubby little fish robot waddling on two stubby legs in a fishbowl helmet, ice-pop stick horn, frosty pale blue, curious face.",
   "color": "#9fe8ff",
-  "quip": "The unicorn of the sea, now with a frost setting.",
+  "quip": "Fish in a bowl, horn from a popsicle. Cool under pressure.",
   "passive": "executioner"
  },
  {
   "id": "siphon",
   "num": 18,
-  "name": "Siphon",
+  "name": "Slurp",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 60,
   "basic": {
-   "name": "Drain Tap",
+   "name": "Straw Sip",
    "dmg": 10
   },
   "special": {
-   "name": "Power Leech",
+   "name": "Juice Heist",
    "dmg": 20,
    "cd": 1
   },
-  "look": "Spindly mech that plugs cables into its targets.",
+  "look": "A sneaky little rubbery robot with suction-cup hands, slurping juice from a battery through a magenta straw, guilty grin.",
   "color": "#ff3df0",
-  "quip": "Your battery's on 1%? That was him.",
+  "quip": "Caught red-handed, magenta-strawed, and completely unrepentant.",
   "passive": "thorns"
  },
  {
   "id": "ronin",
   "num": 19,
-  "name": "Ronin",
+  "name": "Drifter Joe",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 65,
   "basic": {
-   "name": "Edge Cut",
+   "name": "Pocketknife Flick",
    "dmg": 10
   },
   "special": {
-   "name": "Iaido Flash",
+   "name": "Straw Hat Slash",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Battered swordsman android with a red neon tanto.",
+  "look": "An old weathered wandering robot in a torn straw hat, one red neon pocketknife.",
   "color": "#ff4d5e",
-  "quip": "No master, no shop, no warranty.",
+  "quip": "Old hat, older knife. Mostly just wants a nap.",
   "passive": "momentum"
  },
  {
   "id": "viper",
   "num": 20,
-  "name": "Viper",
+  "name": "Noodle",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 50,
   "basic": {
-   "name": "Fang Strike",
+   "name": "Hose Whip",
    "dmg": 15
   },
   "special": {
-   "name": "Neurotoxin",
+   "name": "Sprinkler Spray",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Cyber-cobra with a hood made of light panels.",
+  "look": "A lazy garden-hose snake robot with a sleepy face on its green nozzle head, wearing a tiny sunhat, coiled up.",
   "color": "#3dff8a",
-  "quip": "Hood lights up like a billboard. Subtle, it is not.",
+  "quip": "Coils up for a nap mid-fight. Sunhat stays on.",
   "passive": "lifesteal"
  },
  {
   "id": "juggernaut",
   "num": 21,
-  "name": "Juggernaut",
+  "name": "Plodder",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 85,
   "basic": {
-   "name": "Stomp",
+   "name": "Cane Thump",
    "dmg": 5
   },
   "special": {
-   "name": "Steamroll",
+   "name": "Slow Roll",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Hulking siege mech that never stops walking.",
+  "look": "A huge lumbering but sleepy robot that walks with a cane, red standby light, rust patches.",
   "color": "#ff4d5e",
-  "quip": "Doesn't know how to stop. Literally. The brakes are missing.",
+  "quip": "Takes forever to arrive. Takes longer to leave.",
   "passive": "armor"
  },
  {
   "id": "glitch",
   "num": 22,
-  "name": "Glitch",
+  "name": "Lag",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 50,
   "basic": {
-   "name": "Packet Loss",
+   "name": "Pixel Poke",
    "dmg": 10
   },
   "special": {
-   "name": "Desync",
+   "name": "Frame Skip",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Flickering android that skips frames when it moves.",
+  "look": "A small pixelated robot that looks half-rendered, one pink block flickering out of place.",
   "color": "#ff3fa4",
-  "quip": "Lags in real life. Somehow still wins.",
+  "quip": "Hit him. Wait three seconds. Now he's hit you.",
   "passive": "firststrike"
  },
  {
   "id": "rhino",
   "num": 23,
-  "name": "Rhino",
+  "name": "Bumper",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 85,
   "basic": {
-   "name": "Horn Jab",
+   "name": "Cone Bonk",
    "dmg": 5
   },
   "special": {
-   "name": "Stampede",
+   "name": "Bumper Rush",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Armored cyber-rhino with a chrome drill horn.",
+  "look": "A chunky little rhino robot standing upright in bumper-car padding, rubber traffic-cone horn, yellow paint, eager grin.",
   "color": "#ffd23d",
-  "quip": "Horn upgraded to a drill. Doorbells are a thing of the past.",
+  "quip": "Built for bumper cars. Drives everything else the same way.",
   "passive": "executioner"
  },
  {
   "id": "scout",
   "num": 24,
-  "name": "Scout",
+  "name": "Buzzby",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 50,
   "basic": {
-   "name": "Laser Ping",
+   "name": "Prop Buzz",
    "dmg": 10
   },
   "special": {
-   "name": "Target Lock",
+   "name": "Dizzy Dive",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Recon drone with a sweeping blue laser.",
+  "look": "A tiny round drone robot with a big curious face on its body, four little propeller arms, a duct-tape bandage, waving.",
   "color": "#3ff0ff",
-  "quip": "Points a laser at you. Then his friends show up.",
+  "quip": "Held together by duct tape and sheer enthusiasm.",
   "passive": "thorns"
  },
  {
   "id": "cipher",
   "num": 25,
-  "name": "Cipher",
+  "name": "Clicks",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 60,
   "basic": {
-   "name": "Data Jab",
+   "name": "Dial Spin",
    "dmg": 5
   },
   "special": {
-   "name": "Decrypt",
+   "name": "Safe Crack",
    "dmg": 35,
    "cd": 3
   },
-  "look": "Codebreaker android with a spinning cipher-wheel face.",
+  "look": "A small safe-cracker robot with a dial-lock for a face and a stethoscope, cyan readout.",
   "color": "#3ff0ff",
-  "quip": "Spins its own face to think. It's a lot.",
+  "quip": "Listens to your secrets through a stethoscope. Reports nothing.",
   "passive": "momentum"
  },
  {
   "id": "arachne",
   "num": 26,
-  "name": "Arachne",
+  "name": "Skitter",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 55,
   "basic": {
-   "name": "Bite",
+   "name": "Lens Stare",
    "dmg": 10
   },
   "special": {
-   "name": "Web Snare",
+   "name": "Cable Tangle",
    "dmg": 20,
    "cd": 1
   },
-  "look": "Mechanical spider spinning glowing violet webs.",
+  "look": "A shy spider robot whose head is an old webcam (the lens is its one big eye), eight wire legs, violet recording light, waving one leg.",
   "color": "#8f7bff",
-  "quip": "Eight legs, glowing webs, ruins every dinner party.",
+  "quip": "Always recording, never talking. Waves awkwardly.",
   "passive": "lifesteal"
  },
  {
   "id": "gyro",
   "num": 27,
-  "name": "Gyro",
+  "name": "Wobbles",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 55,
   "basic": {
-   "name": "Rotor Slice",
+   "name": "Pinwheel Flap",
    "dmg": 10
   },
   "special": {
-   "name": "Blade Spin",
+   "name": "Spin Cycle",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Gyrocopter mech with spinning saw rotors.",
+  "look": "A wobbly little robot kid wearing a teal paper-pinwheel propeller beanie, arms out trying to fly, determined face.",
   "color": "#2fe3c4",
-  "quip": "Flies with saws. The neighbors have filed complaints.",
+  "quip": "Believes he can fly. Gravity has notes.",
   "passive": "armor"
  },
  {
   "id": "bounty",
   "num": 28,
-  "name": "Bounty",
+  "name": "Tumbleweed",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 65,
   "basic": {
-   "name": "Pistol Shot",
+   "name": "Cap Gun",
    "dmg": 10
   },
   "special": {
-   "name": "Dead or Alive",
+   "name": "Showdown Squint",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Hunter android in a long coat with a neon revolver arm.",
+  "look": "A dusty cowboy robot with a too-big hat and a bottle-cap sheriff badge, amber eyes.",
   "color": "#ffb03d",
-  "quip": "Wanted: Dead or Alive. Accepts both, prefers whichever's quicker.",
+  "quip": "Hat's too big, badge is a bottle cap, aim is surprisingly fine.",
   "passive": "firststrike"
  },
  {
   "id": "shark",
   "num": 29,
-  "name": "Shark",
+  "name": "Chomps",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 70,
   "basic": {
-   "name": "Chomp",
+   "name": "Rubber Chomp",
    "dmg": 15
   },
   "special": {
-   "name": "Feeding Frenzy",
+   "name": "Splash Frenzy",
    "dmg": 25,
    "cd": 3
   },
-  "look": "Cyber-shark that swims through the air on hover fins.",
+  "look": "An inflatable pool-toy shark robot standing upright on little flippers, blue fin, leak patch, goofy toothy grin, holding a swim ring.",
   "color": "#4a7dff",
-  "quip": "Hates water. Loves you.",
+  "quip": "Slow leak, big smile. Please do not pop.",
   "passive": "executioner"
  },
  {
   "id": "forge",
   "num": 30,
-  "name": "Forge",
+  "name": "Steamy",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 75,
   "basic": {
-   "name": "Hot Rivet",
+   "name": "Whistle Blast",
    "dmg": 10
   },
   "special": {
-   "name": "Molten Pour",
+   "name": "Scald Splash",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Foundry mech with a glowing molten core.",
+  "look": "A stout grumpy teakettle robot with a face, stubby arms on its hips, orange glowing belly, steam puffing from its whistle head like it is annoyed.",
   "color": "#ff8a3d",
-  "quip": "Runs hot. Bring oven mitts to the handshake.",
+  "quip": "Whistles when annoyed, which is always.",
   "passive": "thorns"
  },
  {
   "id": "spike",
   "num": 31,
-  "name": "Spike",
+  "name": "Prickles",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 55,
   "basic": {
-   "name": "Knee Strike",
+   "name": "Cactus Bump",
    "dmg": 15
   },
   "special": {
-   "name": "Spiked Rush",
+   "name": "Prickly Hug",
    "dmg": 20,
    "cd": 1
   },
-  "look": "Brawler android covered in chrome spikes.",
+  "look": "A short grumpy cactus-shaped robot covered in blunt rubber spikes, lime green.",
   "color": "#b6ff3d",
-  "quip": "Cannot be hugged. Has tried.",
+  "quip": "Rubber spikes. Zero danger. Maximum attitude.",
   "passive": "momentum"
  },
  {
   "id": "silverback",
   "num": 32,
-  "name": "Silverback",
+  "name": "Chunk",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 80,
   "basic": {
-   "name": "Knuckle Pound",
+   "name": "Knuckle Plop",
    "dmg": 10
   },
   "special": {
-   "name": "Chest Beat",
+   "name": "Snack Smash",
    "dmg": 25,
    "cd": 3
   },
-  "look": "Chrome gorilla with glowing blue knuckles.",
+  "look": "A big lazy gorilla bot sitting down, eating a battery like a banana, pale blue knuckle lights.",
   "color": "#9fe8ff",
-  "quip": "Chest beat registers on seismographs.",
+  "quip": "Mid-snack. Do not interrupt.",
   "passive": "lifesteal"
  },
  {
   "id": "burrower",
   "num": 33,
-  "name": "Burrower",
+  "name": "Digger",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 70,
   "basic": {
-   "name": "Drill Jab",
+   "name": "Crank Poke",
    "dmg": 10
   },
   "special": {
-   "name": "Tunnel Strike",
+   "name": "Dirt Surprise",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Mining mech with a massive spiral drill.",
+  "look": "A small mole bot with a hand-crank drill nose and a miner lamp, dirt on its face.",
   "color": "#ffd23d",
-  "quip": "Arrives from below. Leaves a sinkhole and a bad review.",
+  "quip": "Pops up in the wrong place every time. Still blames the map.",
   "passive": "armor"
  },
  {
   "id": "echo",
   "num": 34,
-  "name": "Echo",
+  "name": "Thump",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 60,
   "basic": {
-   "name": "Sonic Pulse",
+   "name": "Bass Bump",
    "dmg": 10
   },
   "special": {
-   "name": "Feedback Loop",
+   "name": "Mixtape Mayhem",
    "dmg": 20,
    "cd": 1
   },
-  "look": "Android with speaker cones built into its shoulders.",
+  "look": "A robot whose torso is a beat-up boombox, teal speaker cones, headphones round its neck.",
   "color": "#2fe3c4",
-  "quip": "Echo. Echo. Echo. She won't stop.",
+  "quip": "Bass up, volume up, patience out.",
   "passive": "firststrike"
  },
  {
   "id": "panther",
   "num": 35,
-  "name": "Panther",
+  "name": "Scraps",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 55,
   "basic": {
-   "name": "Swipe",
+   "name": "Claw Flick",
    "dmg": 15
   },
   "special": {
-   "name": "Shadow Pounce",
+   "name": "Bin Ambush",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Sleek black cyber-panther with violet eyes.",
+  "look": "A scruffy black stray cat robot in a torn bandana, one violet eye, notched ear, smug grin, sitting on a trash bin with its arms crossed.",
   "color": "#8f7bff",
-  "quip": "A cat in every way. Knocks your stuff off tables at 90 mph.",
+  "quip": "Lives on a bin. Rules the alley. Disrespects your furniture.",
   "passive": "executioner"
  },
  {
   "id": "mortar",
   "num": 36,
-  "name": "Mortar",
+  "name": "Pops",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 65,
   "basic": {
-   "name": "Shell Toss",
+   "name": "Cork Pop",
    "dmg": 10
   },
   "special": {
-   "name": "Barrage",
+   "name": "Cork Storm",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Artillery walker with stubby launch tubes.",
+  "look": "A tiny trigger-happy robot with a cork-gun barrel strapped to its back, an oversized army helmet, amber bulb, excited face.",
   "color": "#ffb03d",
-  "quip": "Can't aim. Doesn't need to.",
+  "quip": "Cork gun, big helmet, bigger ego.",
   "passive": "thorns"
  },
  {
   "id": "rivet",
   "num": 37,
-  "name": "Rivet",
+  "name": "Overtime",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 70,
@@ -767,276 +767,276 @@
    "dmg": 10
   },
   "special": {
-   "name": "Overtime",
+   "name": "Caffeine Rush",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Dockworker android with a hydraulic wrench arm.",
+  "look": "A tired office-worker robot in a loose tie, bags under its eyes, clutching a huge coffee mug in one hand and a clunky wrench in the other.",
   "color": "#ffd23d",
-  "quip": "Clocked in for overtime. Never clocked out.",
+  "quip": "Running on caffeine and spite. Mostly spite.",
   "passive": "momentum"
  },
  {
   "id": "croc",
   "num": 38,
-  "name": "Croc",
+  "name": "Soggy",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 75,
   "basic": {
-   "name": "Snap",
+   "name": "Boot Snap",
    "dmg": 10
   },
   "special": {
-   "name": "Death Roll",
+   "name": "Soggy Roll",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Swamp cyber-croc with a lime neon jaw.",
+  "look": "A small swamp gator robot whose body is an old rubber boot, the stitched lime teeth on the toe form its grin, little legs, mischievous eyes.",
   "color": "#b6ff3d",
-  "quip": "Smiles a lot. That's the problem.",
+  "quip": "A boot with a smile and a bad attitude. Smells like swamp.",
   "passive": "lifesteal"
  },
  {
   "id": "bastion",
   "num": 39,
-  "name": "Bastion",
+  "name": "Huddle",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 85,
   "basic": {
-   "name": "Plate Slam",
+   "name": "Umbrella Poke",
    "dmg": 5
   },
   "special": {
-   "name": "Fortify Blast",
+   "name": "Brolly Bash",
    "dmg": 25,
    "cd": 3
   },
-  "look": "Fortress mech with fold-out armor walls.",
+  "look": "A small timid robot peeking out from behind a big blue umbrella it holds as a shield, nervous eyes.",
   "color": "#4a7dff",
-  "quip": "A building with legs and anger issues.",
+  "quip": "Behind the umbrella, nobody can see him. He thinks.",
   "passive": "armor"
  },
  {
   "id": "vandal",
   "num": 40,
-  "name": "Vandal",
+  "name": "Doodle",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 55,
   "basic": {
-   "name": "Spray Burst",
+   "name": "Spray Squirt",
    "dmg": 10
   },
   "special": {
-   "name": "Tag Out",
+   "name": "Tag Frenzy",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Android with spray-nozzle hands that shoot blinding neon paint.",
+  "look": "A cheeky little graffiti robot with spray-can hands and a magenta paint smear on its face.",
   "color": "#ff3df0",
-  "quip": "Every wall is a canvas. Every face too.",
+  "quip": "Tagged your shoes, your car, and your dignity.",
   "passive": "firststrike"
  },
  {
   "id": "hornet",
   "num": 41,
-  "name": "Hornet",
+  "name": "Bumbles",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 45,
   "basic": {
-   "name": "Sting",
+   "name": "Fuzzy Jab",
    "dmg": 15
   },
   "special": {
-   "name": "Swarm Dive",
+   "name": "Goggle Dive",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Fist-sized robo-hornet with a plasma stinger.",
+  "look": "A fat fuzzy bumblebee robot in tiny aviator goggles, tiny wings, a dim yellow bulb stinger, proud face.",
   "color": "#ffd23d",
-  "quip": "Fist-sized. Somehow that's worse.",
+  "quip": "Tiny wings, big ego, dim stinger. Flies anyway.",
   "passive": "executioner"
  },
  {
   "id": "magnus",
   "num": 42,
-  "name": "Magnus",
+  "name": "Clingy",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 65,
   "basic": {
-   "name": "Pull",
+   "name": "Magnet Tug",
    "dmg": 10
   },
   "special": {
-   "name": "Polarity Crush",
+   "name": "Paperclip Pile",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Junkyard crane mech with a giant magnet.",
+  "look": "A small horseshoe-magnet robot with a face, little arms and legs, red belly, paperclips and bottle caps stuck all over it, embarrassed.",
   "color": "#ff4d5e",
-  "quip": "Your belt buckle is now his belt buckle.",
+  "quip": "Attracts paperclips, bottle caps, and awkward moments.",
   "passive": "thorns"
  },
  {
   "id": "phantom",
   "num": 43,
-  "name": "Phantom",
+  "name": "Fritz",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 45,
   "basic": {
-   "name": "Fade Hit",
+   "name": "Static Boo",
    "dmg": 15
   },
   "special": {
-   "name": "Haunt",
+   "name": "Spooky Fuzz",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Hologram android that is barely there.",
+  "look": "A sheet-over-the-head ghost robot made of a pale blue bedsheet with a TV-static face.",
   "color": "#9fe8ff",
-  "quip": "Barely there. Still shows up to fights, technically.",
+  "quip": "Not a ghost. Just a sheet. With a lot of static.",
   "passive": "momentum"
  },
  {
   "id": "vesper",
   "num": 44,
-  "name": "Vesper",
+  "name": "Squeak",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 50,
   "basic": {
-   "name": "Screech",
+   "name": "Dish Squeal",
    "dmg": 10
   },
   "special": {
-   "name": "Sonar Blast",
+   "name": "Echo Ping",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Cyber-bat that maps the arena with pink sonar.",
+  "look": "A small round bat robot with big ears made from satellite dishes, tiny headphones, pink sonar dot, curious face.",
   "color": "#ff3df0",
-  "quip": "Sees with sound. Screams with purpose.",
+  "quip": "Hears everything, including your embarrassing mumble.",
   "passive": "lifesteal"
  },
  {
   "id": "buzzsaw",
   "num": 45,
-  "name": "Buzzsaw",
+  "name": "Slice",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 60,
   "basic": {
-   "name": "Grind",
+   "name": "Wheel Slice",
    "dmg": 15
   },
   "special": {
-   "name": "Rip Cut",
+   "name": "Extra Cheese Cut",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Scrap mech with a spinning buzzsaw arm.",
+  "look": "A cocky pizza-delivery robot with a pizza-cutter wheel for one hand, lime cap, tomato stain, holding a pizza box.",
   "color": "#b6ff3d",
-  "quip": "Built from scrap. Turns things back into scrap.",
+  "quip": "Delivers hot pizza and cold stares. Tip him.",
   "passive": "armor"
  },
  {
   "id": "brick",
   "num": 46,
-  "name": "Brick",
+  "name": "Bouncer",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 80,
   "basic": {
-   "name": "Haymaker",
+   "name": "Velvet Rope Whip",
    "dmg": 5
   },
   "special": {
-   "name": "Body Slam",
+   "name": "Door Duty Slam",
    "dmg": 25,
    "cd": 3
   },
-  "look": "Huge bouncer android with slab-like chrome forearms.",
+  "look": "A big blocky doorman robot with a velvet rope and arms crossed, orange name tag.",
   "color": "#ff8a3d",
-  "quip": "Bouncer. Your name is not on the list.",
+  "quip": "Your name's not on the list. Neither is your lunch.",
   "passive": "firststrike"
  },
  {
   "id": "boar",
   "num": 47,
-  "name": "Boar",
+  "name": "Truffle",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 70,
   "basic": {
-   "name": "Tusk Gore",
+   "name": "Snout Bump",
    "dmg": 10
   },
   "special": {
-   "name": "Charge",
+   "name": "Magnifier Dash",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Chrome boar with glowing red tusks.",
+  "look": "A round piglet robot with tiny red tusks and a detective magnifier on a string, sniffing the ground.",
   "color": "#ff4d5e",
-  "quip": "Doesn't do turns. Only forward.",
+  "quip": "Sniffs out clues. Mostly finds snacks.",
   "passive": "executioner"
  },
  {
   "id": "skyburst",
   "num": 48,
-  "name": "Skyburst",
+  "name": "Fizzbang",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 55,
   "basic": {
-   "name": "Missile Ping",
+   "name": "Fizz Pop",
    "dmg": 10
   },
   "special": {
-   "name": "Payload",
+   "name": "Double Launch",
    "dmg": 35,
    "cd": 3
   },
-  "look": "Jetpack mech that rains micro-missiles.",
+  "look": "A little robot strapped to two soda-bottle rockets, pink fuse sparkling.",
   "color": "#ff3fa4",
-  "quip": "Flies on a jetpack held together with tape and hope.",
+  "quip": "Powered by soda. Landing plan pending.",
   "passive": "thorns"
  },
  {
   "id": "shiv",
   "num": 49,
-  "name": "Shiv",
+  "name": "Scrounge",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 50,
   "basic": {
-   "name": "Quick Stab",
+   "name": "Butter Jab",
    "dmg": 15
   },
   "special": {
-   "name": "Backstab",
+   "name": "Spread Thin",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Small scavenger android with twin hardlight knives.",
+  "look": "A tiny scavenger robot with two butter knives, wearing a bottle cap as a helmet.",
   "color": "#3dff8a",
-  "quip": "Small. Stabby. Sincerely sorry.",
+  "quip": "Two butter knives, zero table manners.",
   "passive": "momentum"
  },
  {
   "id": "kraken",
   "num": 50,
-  "name": "Kraken",
+  "name": "Squishy",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 65,
   "basic": {
-   "name": "Tentacle Lash",
+   "name": "Squish Slap",
    "dmg": 10
   },
   "special": {
@@ -1044,246 +1044,246 @@
    "dmg": 20,
    "cd": 1
   },
-  "look": "Neon octopus that sprays glowing ink.",
+  "look": "A small rubber octopus robot in a tiny sailor hat, teal suckers, wobbly happy face.",
   "color": "#2fe3c4",
-  "quip": "Eight arms, all of them slapping.",
+  "quip": "Wears the sailor hat to look tough. Fails adorably.",
   "passive": "lifesteal"
  },
  {
   "id": "welder",
   "num": 51,
-  "name": "Welder",
+  "name": "Patch",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 65,
   "basic": {
-   "name": "Torch Burn",
+   "name": "Torch Tickle",
    "dmg": 10
   },
   "special": {
-   "name": "Arc Weld",
+   "name": "Patch Job",
    "dmg": 20,
    "cd": 1
   },
-  "look": "Repair bot with a white-hot welding arm.",
+  "look": "A small repair robot with welding goggles pushed up, cyan torch tip, covered in sticky bandages.",
   "color": "#3ff0ff",
-  "quip": "Fixes friends. Melts enemies. Same tool.",
+  "quip": "More bandages than robot. Does not slow down.",
   "passive": "armor"
  },
  {
   "id": "neon",
   "num": 52,
-  "name": "Neon",
+  "name": "Raver",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 60,
   "basic": {
-   "name": "Light Jab",
+   "name": "Glowstick Jab",
    "dmg": 10
   },
   "special": {
-   "name": "Flashbang",
+   "name": "Strobe Dance",
    "dmg": 20,
    "cd": 1
   },
-  "look": "Android whose glowing circuit lines pulse when it fights.",
+  "look": "A skinny robot made of bent pink glowsticks with a goofy face, slightly flickering, striking a dance pose.",
   "color": "#ff3fa4",
-  "quip": "Lights up when angry. Visible from orbit most days.",
+  "quip": "Flickers on the beat and sometimes off it.",
   "passive": "firststrike"
  },
  {
   "id": "hyena",
   "num": 53,
-  "name": "Hyena",
+  "name": "Giggles",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 55,
   "basic": {
-   "name": "Cackle Bite",
+   "name": "Squeak Chomp",
    "dmg": 10
   },
   "special": {
-   "name": "Pack Hunt",
+   "name": "Laugh Track",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Laughing cyber-hyena with a cracked amber visor.",
+  "look": "A scruffy laughing hyena bot with a cracked amber visor and a cheap squeaky voice box.",
   "color": "#ffb03d",
-  "quip": "Laughs at every joke. Especially the ones you didn't make.",
+  "quip": "Laughs through a squeaky box. Still somehow intimidating.",
   "passive": "executioner"
  },
  {
   "id": "hive",
   "num": 54,
-  "name": "Hive",
+  "name": "Honeypot",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 50,
   "basic": {
-   "name": "Swarm Sting",
+   "name": "Jar Shake",
    "dmg": 10
   },
   "special": {
-   "name": "Swarm Cloud",
+   "name": "Escaped Bees",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Cloud of tiny worker drones moving as one.",
+  "look": "A little beekeeper robot in a veil hat holding a taped-up jar of tiny yellow drone bees, a few escaping, worried face.",
   "color": "#ffd23d",
-  "quip": "A thousand drones and one shared opinion.",
+  "quip": "The tape on the jar is holding. Mostly.",
   "passive": "thorns"
  },
  {
   "id": "static",
   "num": 55,
-  "name": "Static",
+  "name": "Fuzz",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 55,
   "basic": {
-   "name": "Zap",
+   "name": "Balloon Rub",
    "dmg": 10
   },
   "special": {
-   "name": "Overload",
+   "name": "Hair Raiser",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Android that stores lightning in coils down its back.",
+  "look": "A puffball robot with hair standing up from static, cyan sparks crackling off one tip.",
   "color": "#3ff0ff",
-  "quip": "Pet him once and your hair stands up for a week.",
+  "quip": "Wears a perm powered by rubbing socks.",
   "passive": "momentum"
  },
  {
   "id": "grizzly",
   "num": 56,
-  "name": "Grizzly",
+  "name": "Stitches",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 85,
   "basic": {
-   "name": "Maul",
+   "name": "Plush Swat",
    "dmg": 10
   },
   "special": {
-   "name": "Bear Hug",
+   "name": "Squeezy Hug",
    "dmg": 25,
    "cd": 3
   },
-  "look": "Massive cyber-bear with exhaust pipes on its back.",
+  "look": "A big soft plush teddy-bear robot with an orange exhaust pipe on its back, a stitched smile.",
   "color": "#ff8a3d",
-  "quip": "Bear hugs are not a gesture. They're a move.",
+  "quip": "Soft, huggable, and leaking exhaust. Don't ask.",
   "passive": "lifesteal"
  },
  {
   "id": "hoist",
   "num": 57,
-  "name": "Hoist",
+  "name": "Grabby",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 75,
   "basic": {
-   "name": "Hook Swing",
+   "name": "Claw Grab",
    "dmg": 10
   },
   "special": {
-   "name": "Drop Load",
+   "name": "Prize Drop",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Construction crane mech with a swinging hook.",
+  "look": "An arcade claw-machine robot with a happy face on its glass front, a long amber claw arm proudly holding up a prize, little wheels.",
   "color": "#ffb03d",
-  "quip": "Picks you up. Drops you off. Not at your stop.",
+  "quip": "Always wins prizes. Never gives them back.",
   "passive": "armor"
  },
  {
   "id": "ember",
   "num": 58,
-  "name": "Ember",
+  "name": "Twitchy",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 50,
   "basic": {
-   "name": "Cinder Kick",
+   "name": "Match Kick",
    "dmg": 15
   },
   "special": {
-   "name": "Firewalk",
+   "name": "Hot Foot",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Dancer android with molten-glow legs.",
+  "look": "A tall thin robot with a red match head, a tiny flame on top, nervous expression.",
   "color": "#ff4d5e",
-  "quip": "Dances like the floor is lava, because it is now.",
+  "quip": "Strikes first because he's scared of everything else.",
   "passive": "firststrike"
  },
  {
   "id": "komodo",
   "num": 59,
-  "name": "Komodo",
+  "name": "Sticky",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 70,
   "basic": {
-   "name": "Lick Bite",
+   "name": "Sticky Lick",
    "dmg": 10
   },
   "special": {
-   "name": "Infection",
+   "name": "Wall Crawl Slap",
    "dmg": 20,
    "cd": 1
   },
-  "look": "Cyber-lizard dripping green static.",
+  "look": "A small sticky-footed gecko robot in tiny climbing goggles, grinning, climbing a wall, lime green, one static spark.",
   "color": "#b6ff3d",
-  "quip": "One lick and your firmware is never the same.",
+  "quip": "Climbs walls, sticks to everything, regrets nothing.",
   "passive": "executioner"
  },
  {
   "id": "watchtower",
   "num": 60,
-  "name": "Watchtower",
+  "name": "Lanky",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 80,
   "basic": {
-   "name": "Spotlight",
+   "name": "Bulb Flash",
    "dmg": 5
   },
   "special": {
-   "name": "Searchlight Burn",
+   "name": "Late Shift Glare",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Tall tower mech with a blinding spotlight head.",
+  "look": "A tall skinny sleepy night-watchman robot with a buzzing pale blue streetlight bulb for a head, dented pole body, little cap, leaning on a stick.",
   "color": "#9fe8ff",
-  "quip": "Shines a light in your face and asks where you were Tuesday.",
+  "quip": "Falls asleep on shift. The light stays on.",
   "passive": "thorns"
  },
  {
   "id": "jackal",
   "num": 61,
-  "name": "Jackal",
+  "name": "Mangy",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 60,
   "basic": {
-   "name": "Pipe Swing",
+   "name": "Cheap Shot",
    "dmg": 10
   },
   "special": {
-   "name": "Ambush",
+   "name": "Dodgy Deal",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Gang-leader android with a jackal-shaped chrome head.",
+  "look": "A thin scheming street-dog robot standing upright in a torn leather vest, sly grin, amber collar light, rubbing its hands together.",
   "color": "#ffb03d",
-  "quip": "Runs a gang of three. Two are pipes.",
+  "quip": "Runs a gang of one and calls it a syndicate.",
   "passive": "momentum"
  },
  {
   "id": "moth",
   "num": 62,
-  "name": "Moth",
+  "name": "Dusty",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 45,
@@ -1296,246 +1296,246 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Giant cyber-moth drawn to neon signs.",
+  "look": "A fluffy little moth robot standing upright hugging a bare light bulb like a teddy, pale blue wings, dusty, dreamy face.",
   "color": "#9fe8ff",
-  "quip": "Will abandon any fight for a nice neon sign.",
+  "quip": "Won't let go of the bulb. Or grudges.",
   "passive": "lifesteal"
  },
  {
   "id": "dozer",
   "num": 63,
-  "name": "Dozer",
+  "name": "Scoops",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 85,
   "basic": {
-   "name": "Shove",
+   "name": "Sandbox Shove",
    "dmg": 5
   },
   "special": {
-   "name": "Plow Through",
+   "name": "Dirt Dump",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Bulldozer mech with a scarred chrome blade.",
+  "look": "A toddler-sized bulldozer robot with a face, pushing an orange plastic blade of sand like a kid playing, proud grin.",
   "color": "#ff8a3d",
-  "quip": "Ask him to move. He'll move you.",
+  "quip": "Moves mountains. Well, sandcastles.",
   "passive": "armor"
  },
  {
   "id": "monk",
   "num": 64,
-  "name": "Monk",
+  "name": "Tally",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 70,
   "basic": {
-   "name": "Palm Strike",
+   "name": "Bead Flick",
    "dmg": 10
   },
   "special": {
-   "name": "Inner Charge",
+   "name": "Sum Total",
    "dmg": 20,
    "cd": 1
   },
-  "look": "Monk android wrapped in a glowing data-bead necklace.",
+  "look": "A calm little robot sitting cross-legged, counting on teal abacus beads around its neck.",
   "color": "#2fe3c4",
-  "quip": "Achieved inner peace. Uses it to punch harder.",
+  "quip": "Counts to ten before hitting. Then counts your mistakes.",
   "passive": "firststrike"
  },
  {
   "id": "vixen",
   "num": 65,
-  "name": "Vixen",
+  "name": "Socks",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 50,
   "basic": {
-   "name": "Quick Bite",
+   "name": "Sock Slap",
    "dmg": 15
   },
   "special": {
-   "name": "Fox Fire",
+   "name": "Tail Flurry",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Two-tailed cyber-fox with pink fire tips.",
+  "look": "A small fox bot with two pink-tipped tails and odd socks on its feet.",
   "color": "#ff3fa4",
-  "quip": "Two tails, both on fire, zero regrets.",
+  "quip": "Two tails, four feet, zero matching socks.",
   "passive": "executioner"
  },
  {
   "id": "overclock",
   "num": 66,
-  "name": "Overclock",
+  "name": "Sweaty",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 55,
   "basic": {
-   "name": "Spin Up",
+   "name": "Sweat Flick",
    "dmg": 10
   },
   "special": {
-   "name": "Overheat",
+   "name": "Hot Air Blast",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Overclocked mech venting red steam.",
+  "look": "A frantic box-fan robot with a face, arms and legs, its blades spinning too fast, red-hot grille, sweat drops flying.",
   "color": "#ff4d5e",
-  "quip": "Runs at 300%. Warranty voided on day one.",
+  "quip": "Runs hot, runs fast, runs out of excuses.",
   "passive": "thorns"
  },
  {
   "id": "riot",
   "num": 67,
-  "name": "Riot",
+  "name": "Clatter",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 75,
   "basic": {
-   "name": "Baton Hit",
+   "name": "Lid Whack",
    "dmg": 5
   },
   "special": {
-   "name": "Shield Bash",
+   "name": "Gong Show",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Riot-control android with a hardlight shield.",
+  "look": "A scrappy little street-kid robot banging a blue trash-can lid like a gong with a stick, defiant grin.",
   "color": "#4a7dff",
-  "quip": "Brought a shield to a party. Wasn't invited back.",
+  "quip": "Makes noise first, plans second.",
   "passive": "momentum"
  },
  {
   "id": "scarab",
   "num": 68,
-  "name": "Scarab",
+  "name": "Scuttle",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 75,
   "basic": {
-   "name": "Pincer",
+   "name": "Pincer Pinch",
    "dmg": 10
   },
   "special": {
-   "name": "Burrow Strike",
+   "name": "Cap Charge",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Armored beetle with an oil-slick teal shell.",
+  "look": "A round beetle robot standing upright on little legs, teal oil-slick shell, wobbly antennae, a brave face, holding a bottle-cap shield.",
   "color": "#2fe3c4",
-  "quip": "Shell looks like an oil spill. Personality too.",
+  "quip": "Brave face, wobbly antennae, bottle-cap shield. Please be gentle.",
   "passive": "lifesteal"
  },
  {
   "id": "lancer",
   "num": 69,
-  "name": "Lancer",
+  "name": "Boing",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 60,
   "basic": {
-   "name": "Lance Poke",
+   "name": "Pogo Poke",
    "dmg": 15
   },
   "special": {
-   "name": "Plasma Lance",
+   "name": "Big Bounce",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Jousting mech with a violet plasma lance.",
+  "look": "A robot bouncing on a violet pogo stick it uses as a lance.",
   "color": "#8f7bff",
-  "quip": "Jousting is dead. Nobody told him.",
+  "quip": "Jousts on a pogo stick. Has never once stuck the landing.",
   "passive": "armor"
  },
  {
   "id": "lotus",
   "num": 70,
-  "name": "Lotus",
+  "name": "Twirl",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 55,
   "basic": {
-   "name": "Petal Kick",
+   "name": "Toe Tap",
    "dmg": 10
   },
   "special": {
-   "name": "Bloom Burst",
+   "name": "Tutu Twirl",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Martial-arts android whose kicks leave pink light petals.",
+  "look": "A small dancer robot in a tutu made of pink pipe cleaners, on one toe.",
   "color": "#ff3df0",
-  "quip": "Kicks so pretty you'll forget it hurt. It still hurt.",
+  "quip": "Pirouettes into your shin, then curtsies.",
   "passive": "firststrike"
  },
  {
   "id": "crow",
   "num": 71,
-  "name": "Crow",
+  "name": "Tapeye",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 45,
   "basic": {
-   "name": "Peck",
+   "name": "Beak Jab",
    "dmg": 10
   },
   "special": {
-   "name": "Murder Dive",
+   "name": "Stakeout Swoop",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Cyber-crow with a cracked camera eye.",
+  "look": "A scruffy little crow detective in a tiny trench coat, one cheap camera lens taped over an eye, tilting its head.",
   "color": "#8f7bff",
-  "quip": "Steals shiny things. You are slightly shiny.",
+  "quip": "Case closed. The case was a shiny button.",
   "passive": "executioner"
  },
  {
   "id": "railer",
   "num": 72,
-  "name": "Railer",
+  "name": "Strawshot",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 50,
   "basic": {
-   "name": "Charge Shot",
+   "name": "Pellet Spit",
    "dmg": 10
   },
   "special": {
-   "name": "Rail Blast",
+   "name": "Long Sip",
    "dmg": 35,
    "cd": 3
   },
-  "look": "Sniper mech with a long rail cannon.",
+  "look": "A small robot with a long drinking-straw sniper barrel, pale blue scope.",
   "color": "#9fe8ff",
-  "quip": "Shoots you from three districts away, then texts \"gg\".",
+  "quip": "Aims through a straw. Hits through a straw.",
   "passive": "thorns"
  },
  {
   "id": "gunner",
   "num": 73,
-  "name": "Gunner",
+  "name": "Squirt",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 60,
   "basic": {
-   "name": "Burst Fire",
+   "name": "Soaker Burst",
    "dmg": 10
   },
   "special": {
-   "name": "Full Auto",
+   "name": "Drench Spree",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Mercenary android with a smoking neon rifle arm.",
+  "look": "A cocky little robot holding a big red water pistol, dripping.",
   "color": "#ff4d5e",
-  "quip": "Hasn't cooled his rifle since the last update.",
+  "quip": "Brought a water pistol to a gunfight. Is winning anyway.",
   "passive": "momentum"
  },
  {
   "id": "hare",
   "num": 74,
-  "name": "Hare",
+  "name": "Springy",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 50,
@@ -1544,187 +1544,187 @@
    "dmg": 15
   },
   "special": {
-   "name": "Burrow Ambush",
+   "name": "Mad Bounce",
    "dmg": 20,
    "cd": 1
   },
-  "look": "Speedy cyber-hare with spring-loaded legs.",
+  "look": "A tiny bunny robot with spring legs and a sweatband, mid-bounce, cyan ear lights, determined face.",
   "color": "#3ff0ff",
-  "quip": "Hops into combat. Burrows out of responsibility.",
+  "quip": "Bounces back from everything, mostly off walls.",
   "passive": "lifesteal"
  },
  {
   "id": "shredder",
   "num": 75,
-  "name": "Shredder",
+  "name": "Munch",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 65,
   "basic": {
-   "name": "Claw Grab",
+   "name": "Staple Shot",
    "dmg": 10
   },
   "special": {
-   "name": "Shred",
+   "name": "Confetti Shred",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Recycling mech with shredder jaws.",
+  "look": "A grumpy office paper-shredder robot with a face, little arms and legs, green teeth, paper stuck in its mouth, holding a stapler.",
   "color": "#3dff8a",
-  "quip": "Reduce. Reuse. Ruin.",
+  "quip": "Eats paperwork, spits confetti, staples the rest.",
   "passive": "armor"
  },
  {
   "id": "drifter",
   "num": 76,
-  "name": "Drifter",
+  "name": "Rollo",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 65,
   "basic": {
-   "name": "Tire Iron",
+   "name": "Chain Whip",
    "dmg": 10
   },
   "special": {
-   "name": "Hit and Run",
+   "name": "Wheelie Rush",
    "dmg": 20,
    "cd": 1
   },
-  "look": "Racer android with wheel hubs in its legs and a chain fist.",
+  "look": "A robot on old roller skates with a bike-chain belt, orange knee pads.",
   "color": "#ff8a3d",
-  "quip": "Never turns. Just slides sideways and hopes.",
+  "quip": "Brakes are a suggestion. Knee pads are a lifestyle.",
   "passive": "firststrike"
  },
  {
   "id": "eel",
   "num": 77,
-  "name": "Eel",
+  "name": "Zappy",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 55,
   "basic": {
-   "name": "Shock Bite",
+   "name": "Clamp Nip",
    "dmg": 10
   },
   "special": {
-   "name": "Voltage Coil",
+   "name": "Jump Start",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Electric eel crackling with cyan current.",
+  "look": "A wiggly eel robot made of jumper cables with a goofy face on its cyan clamp head, sparking a little.",
   "color": "#3ff0ff",
-  "quip": "Swims through power lines for fun.",
+  "quip": "Half jumper cable, half bad idea, fully shocking.",
   "passive": "executioner"
  },
  {
   "id": "pylon",
   "num": 78,
-  "name": "Pylon",
+  "name": "Plugsy",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 70,
   "basic": {
-   "name": "Arc Zap",
+   "name": "Socket Zap",
    "dmg": 10
   },
   "special": {
-   "name": "Tesla Field",
+   "name": "Short Circuit",
    "dmg": 20,
    "cd": 1
   },
-  "look": "Walking power pylon crackling with arcs.",
+  "look": "A walking power-strip robot with a face, socket-hole eyes, little legs, cables trailing like a tail, cyan lights.",
   "color": "#3ff0ff",
-  "quip": "Do not touch. Seriously. Read the sign.",
+  "quip": "Overloaded socket, overloaded personality.",
   "passive": "thorns"
  },
  {
   "id": "siren",
   "num": 79,
-  "name": "Siren",
+  "name": "Toots",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 55,
   "basic": {
-   "name": "Scream",
+   "name": "Kazoo Blast",
    "dmg": 10
   },
   "special": {
-   "name": "Shatter Note",
+   "name": "Off-Key Wail",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Android with a resonator throat that cracks glass.",
+  "look": "A small robot with a kazoo for a mouth and pale blue sound rings.",
   "color": "#9fe8ff",
-  "quip": "Hit one high note. Lost three windows and a friend.",
+  "quip": "Kazoo for a mouth. Zero talent, maximum volume.",
   "passive": "momentum"
  },
  {
   "id": "ram",
   "num": 80,
-  "name": "Ram",
+  "name": "Fuzzball",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 70,
   "basic": {
-   "name": "Headbutt",
+   "name": "Woolly Bonk",
    "dmg": 10
   },
   "special": {
-   "name": "Battering Charge",
+   "name": "Spring Ram",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Chrome ram with spiraling neon horns.",
+  "look": "A round woolly sheep robot in a knitted scarf, curly orange horns made of springs, stubborn face.",
   "color": "#ff8a3d",
-  "quip": "Solves every problem with his forehead.",
+  "quip": "Wool sweater, spring horns, one idea: forward.",
   "passive": "lifesteal"
  },
  {
   "id": "quake",
   "num": 81,
-  "name": "Quake",
+  "name": "Rattles",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 80,
   "basic": {
-   "name": "Ground Pound",
+   "name": "Jackhammer Jab",
    "dmg": 10
   },
   "special": {
-   "name": "Seismic Slam",
+   "name": "Dust Quake",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Squat mech with piston-driven fists.",
+  "look": "A small shaky robot riding a jackhammer, amber dust cloud.",
   "color": "#ffb03d",
-  "quip": "Every step is a 4.2 on the Richter scale.",
+  "quip": "Teeth rattle, knees rattle, jackhammer rattles. All of him rattles.",
   "passive": "armor"
  },
  {
   "id": "warden",
   "num": 82,
-  "name": "Warden",
+  "name": "Whistles",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 70,
   "basic": {
-   "name": "Cuff Strike",
+   "name": "Clipboard Clobber",
    "dmg": 10
   },
   "special": {
-   "name": "Lockup",
+   "name": "Lap Penalty",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Guard android with magnetic shackle hands.",
+  "look": "A strict little gym-coach robot with a whistle in its mouth, a blue sweatband and a clipboard, pointing sternly.",
   "color": "#4a7dff",
-  "quip": "You have the right to remain shocked.",
+  "quip": "Fifty laps. Nobody asked. Nobody argued.",
   "passive": "firststrike"
  },
  {
   "id": "piranha",
   "num": 83,
-  "name": "Piranha",
+  "name": "Nibbles",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 45,
@@ -1733,103 +1733,103 @@
    "dmg": 15
   },
   "special": {
-   "name": "Frenzy",
+   "name": "Feeding Frenzy",
    "dmg": 20,
    "cd": 1
   },
-  "look": "Swarm of flying robo-piranhas.",
+  "look": "A tiny robot wearing a goldfish bowl as a helmet with three red robo-piranhas nibbling inside, panicked face.",
   "color": "#ff4d5e",
-  "quip": "Individually adorable. Collectively a blender.",
+  "quip": "Wears the bowl so the fish can't get out. The fish disagree.",
   "passive": "executioner"
  },
  {
   "id": "cyclone",
   "num": 84,
-  "name": "Cyclone",
+  "name": "Breezy",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 60,
   "basic": {
-   "name": "Fan Blade",
+   "name": "Blade Whirl",
    "dmg": 10
   },
   "special": {
-   "name": "Tornado Spin",
+   "name": "Mini Twister",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Turbine mech that whips up neon wind.",
+  "look": "A cute little desk-fan robot with a happy face in the middle of its teal blades, little arms and feet, a wind swirl.",
   "color": "#2fe3c4",
-  "quip": "Bad hair day guaranteed.",
+  "quip": "Oscillates between cheerful and slightly more cheerful.",
   "passive": "thorns"
  },
  {
   "id": "dynamo",
   "num": 85,
-  "name": "Dynamo",
+  "name": "Hustle",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 65,
   "basic": {
-   "name": "Turbine Punch",
+   "name": "Treadmill Punch",
    "dmg": 10
   },
   "special": {
-   "name": "Power Surge",
+   "name": "Wheel Rush",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Power-plant android with spinning turbine gauntlets.",
+  "look": "A small robot running in a yellow hamster wheel that powers its lights.",
   "color": "#ffd23d",
-  "quip": "Powers a whole block. Charges you rent.",
+  "quip": "Runs all day, goes nowhere, lights up the room.",
   "passive": "momentum"
  },
  {
   "id": "mammoth",
   "num": 86,
-  "name": "Mammoth",
+  "name": "Snowball",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 85,
   "basic": {
-   "name": "Trunk Slap",
+   "name": "Tusk Jab",
    "dmg": 5
   },
   "special": {
-   "name": "Tusk Quake",
+   "name": "Pop Tusk Poke",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Frozen cyber-mammoth with glowing ice tusks.",
+  "look": "A round fluffy baby mammoth bot with short pale blue ice-pop tusks.",
   "color": "#9fe8ff",
-  "quip": "Thawed out last Tuesday. Still grumpy about it.",
+  "quip": "Tusks are ice pops. Do not lick. Do not provoke.",
   "passive": "lifesteal"
  },
  {
   "id": "chopper",
   "num": 87,
-  "name": "Chopper",
+  "name": "Whirr",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 55,
   "basic": {
-   "name": "Rotor Strike",
+   "name": "Pulse Blend",
    "dmg": 15
   },
   "special": {
-   "name": "Strafing Run",
+   "name": "Puree Storm",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Attack-helicopter mech with twin rotors.",
+  "look": "A hyper kitchen-blender robot with a face on its jar, little arms, red blades whirring inside its head.",
   "color": "#ff4d5e",
-  "quip": "Two rotors means twice the loud.",
+  "quip": "Blends fruit, ice and enemies. Smoothie of regret.",
   "passive": "armor"
  },
  {
   "id": "rogue",
   "num": 88,
-  "name": "Rogue",
+  "name": "Sly",
   "rarity": "Common",
   "cls": "Fighter",
   "hp": 50,
@@ -1838,292 +1838,292 @@
    "dmg": 15
   },
   "special": {
-   "name": "Vanish Strike",
+   "name": "Pickpocket Dash",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Thief android that fights from inside a cloud of neon smoke.",
+  "look": "A small sneaky robot in a hoodie, violet smoke puff behind it, holding a stolen bolt.",
   "color": "#8f7bff",
-  "quip": "Fights inside a smoke cloud. Nobody's sure he's actually there.",
+  "quip": "Stole one bolt. Plans to steal the rest.",
   "passive": "firststrike"
  },
  {
   "id": "sabre",
   "num": 89,
-  "name": "Sabre",
+  "name": "Tuffy",
   "rarity": "Common",
   "cls": "Beast",
   "hp": 60,
   "basic": {
-   "name": "Claw Rake",
+   "name": "Claw Swat",
    "dmg": 15
   },
   "special": {
-   "name": "Sabre Bite",
+   "name": "Big Fang Bite",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Sabertooth cyber-cat with amber plasma fangs.",
+  "look": "A tiny kitten robot in a too-big spiked collar, comically oversized amber fangs, trying to look tough.",
   "color": "#ffb03d",
-  "quip": "Teeth sized for a bigger cat. Doesn't care.",
+  "quip": "Teeth too big, collar too big, courage just right.",
   "passive": "executioner"
  },
  {
   "id": "crawler",
   "num": 90,
-  "name": "Crawler",
+  "name": "Scrubs",
   "rarity": "Common",
   "cls": "Mech",
   "hp": 70,
   "basic": {
-   "name": "Leg Stab",
+   "name": "Leg Scrub",
    "dmg": 10
   },
   "special": {
-   "name": "Pin Down",
+   "name": "Mop Up",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Six-legged crawler mech built for climbing walls.",
+  "look": "A round floor-cleaning robot with a busy little face, six little legs, climbing a wall, violet light.",
   "color": "#8f7bff",
-  "quip": "Climbs walls, ceilings and your nerves.",
+  "quip": "Cleans floors, climbs walls, judges your shoes.",
   "passive": "thorns"
  },
  {
   "id": "vanta",
   "num": 91,
-  "name": "Vanta",
+  "name": "Kuro",
   "rarity": "Rare",
   "cls": "Fighter",
   "hp": 75,
   "basic": {
-   "name": "Void Palm",
+   "name": "Steady Palm",
    "dmg": 15
   },
   "special": {
-   "name": "Event Horizon",
+   "name": "Black Belt Combo",
    "dmg": 35,
    "cd": 3
   },
-  "look": "Martial-arts android in light-eating black plating with a blue edge.",
+  "look": "A young martial-artist robot in a clean black gi with blue trim, steady stance.",
   "color": "#8f7bff",
-  "quip": "Absorbs light, sound and criticism.",
+  "quip": "Black belt, blue trim, zero drama. Bows before and after.",
   "passive": "momentum"
  },
  {
   "id": "basilisk",
   "num": 92,
-  "name": "Basilisk",
+  "name": "Glint",
   "rarity": "Rare",
   "cls": "Beast",
   "hp": 70,
   "basic": {
-   "name": "Petrify Gaze",
+   "name": "Cyan Stare",
    "dmg": 15
   },
   "special": {
-   "name": "Stone Coil",
+   "name": "Chrome Constrict",
    "dmg": 30,
    "cd": 2
   },
-  "look": "Chrome serpent whose stare freezes circuits solid.",
+  "look": "A shiny chrome snake robot with cyan eyes, calmly coiled, a little smug.",
   "color": "#3ff0ff",
-  "quip": "Don't make eye contact. Seriously, look away.",
+  "quip": "Polishes himself daily. Reflects badly on everyone else.",
   "passive": "lifesteal"
  },
  {
   "id": "warlord",
   "num": 93,
-  "name": "Warlord",
+  "name": "Brask",
   "rarity": "Rare",
   "cls": "Mech",
   "hp": 90,
   "basic": {
-   "name": "Gatling Sweep",
+   "name": "Suppressing Fire",
    "dmg": 15
   },
   "special": {
-   "name": "Orbital Strike",
+   "name": "Call In Strike",
    "dmg": 35,
    "cd": 3
   },
-  "look": "Command mech that calls down satellite strikes.",
+  "look": "A squad-leader robot with a radio headset and a glowing tablet, pointing.",
   "color": "#ff4d5e",
-  "quip": "Doesn't fight. Calls in a favor from space.",
+  "quip": "Leads from the back. The back has excellent Wi-Fi.",
   "passive": "armor"
  },
  {
   "id": "shogun",
   "num": 94,
-  "name": "Shogun",
+  "name": "Akane",
   "rarity": "Rare",
   "cls": "Fighter",
   "hp": 80,
   "basic": {
-   "name": "Command Slash",
+   "name": "Crimson Sweep",
    "dmg": 15
   },
   "special": {
-   "name": "Dragon Cut",
+   "name": "Hardlight Arc",
    "dmg": 30,
    "cd": 2
   },
-  "look": "Warlord android with a twin-bladed hardlight naginata.",
+  "look": "A samurai-trainee android in simple red armour, hardlight naginata held at rest.",
   "color": "#ff4d5e",
-  "quip": "Two blades on one stick, because one blade is for amateurs.",
+  "quip": "Still in training. The naginata has not been told.",
   "passive": "firststrike"
  },
  {
   "id": "chimera",
   "num": 95,
-  "name": "Chimera",
+  "name": "Trio",
   "rarity": "Rare",
   "cls": "Beast",
   "hp": 75,
   "basic": {
-   "name": "Triple Bite",
+   "name": "Triple Snap",
    "dmg": 15
   },
   "special": {
-   "name": "Hydra Breath",
+   "name": "Neon Chorus",
    "dmg": 30,
    "cd": 2
   },
-  "look": "Three-headed cyber-beast, each head a different neon color.",
+  "look": "A dog-sized three-headed robo-hound, each head a different neon colour and mood.",
   "color": "#ff3df0",
-  "quip": "Three heads, one stomach, constant arguments.",
+  "quip": "Three heads, three moods, one leash nobody can hold.",
   "passive": "executioner"
  },
  {
   "id": "colossus",
   "num": 96,
-  "name": "Colossus",
+  "name": "Bastian",
   "rarity": "Rare",
   "cls": "Mech",
   "hp": 95,
   "basic": {
-   "name": "Arm Sweep",
+   "name": "Shield Shove",
    "dmg": 10
   },
   "special": {
-   "name": "Titan Fall",
+   "name": "Lockdown Slam",
    "dmg": 35,
    "cd": 3
   },
-  "look": "Towering mech that blocks out the city lights.",
+  "look": "A sturdy security robot with a solid blue shield, calm and dependable.",
   "color": "#4a7dff",
-  "quip": "Blocks out the sun. Doesn't apologize.",
+  "quip": "Shift ends when you leave. Politely, but it ends.",
   "passive": "thorns"
  },
  {
   "id": "specter",
   "num": 97,
-  "name": "Specter",
+  "name": "Phase",
   "rarity": "Rare",
   "cls": "Fighter",
   "hp": 65,
   "basic": {
-   "name": "Phase Strike",
+   "name": "Static Jab",
    "dmg": 20
   },
   "special": {
-   "name": "Ghost Protocol",
+   "name": "Flicker Ambush",
    "dmg": 30,
    "cd": 2
   },
-  "look": "Spy android that phases through walls in a shimmer of static.",
+  "look": "A spy robot in a neat grey suit with a slight static flicker on one side, sly look.",
   "color": "#9fe8ff",
-  "quip": "Phases through walls. Still uses doors to be polite.",
+  "quip": "Flickers when lying. Hasn't stopped flickering.",
   "passive": "momentum"
  },
  {
   "id": "wyvern",
   "num": 98,
-  "name": "Wyvern",
+  "name": "Jade",
   "rarity": "Rare",
   "cls": "Beast",
   "hp": 70,
   "basic": {
-   "name": "Wing Slash",
+   "name": "Wingtip Slash",
    "dmg": 15
   },
   "special": {
-   "name": "Plasma Breath",
+   "name": "Jade Flare",
    "dmg": 35,
    "cd": 3
   },
-  "look": "Small cyber-dragon with green plasma in its throat.",
+  "look": "A dog-sized young cyber-dragon with small wings and a faint green glow in its throat.",
   "color": "#3dff8a",
-  "quip": "Small dragon, huge attitude, terrible breath.",
+  "quip": "Tiny wings, huge ego. The breath is mostly a rumour.",
   "passive": "lifesteal"
  },
  {
   "id": "valkyrie",
   "num": 99,
-  "name": "Valkyrie",
+  "name": "Aria",
   "rarity": "Rare",
   "cls": "Mech",
   "hp": 70,
   "basic": {
-   "name": "Wing Blades",
+   "name": "Winglet Cut",
    "dmg": 15
   },
   "special": {
-   "name": "Sky Lance",
+   "name": "Strafing Run",
    "dmg": 30,
    "cd": 2
   },
-  "look": "Winged combat mech that dives from the sky.",
+  "look": "A pink scout drone robot with small swept wings, hovering, alert.",
   "color": "#ff3fa4",
-  "quip": "Dives from the clouds. Lands on you specifically.",
+  "quip": "Scouts ahead, reports back, judges your footwork.",
   "passive": "armor"
  },
  {
   "id": "overdrive",
   "num": 100,
-  "name": "Overdrive",
+  "name": "Revv",
   "rarity": "Rare",
   "cls": "Fighter",
   "hp": 70,
   "basic": {
-   "name": "Nitro Kick",
+   "name": "Burnout Kick",
    "dmg": 15
   },
   "special": {
-   "name": "Redline",
+   "name": "Final Lap",
    "dmg": 35,
    "cd": 3
   },
-  "look": "Racer android with turbo-boosted legs.",
+  "look": "A racer robot in a clean orange suit and helmet, leaning forward, eager.",
   "color": "#ff8a3d",
-  "quip": "Zero to sixty before you finish blinking.",
+  "quip": "Always leaning forward. Even at funerals.",
   "passive": "firststrike"
  },
  {
   "id": "manticore",
   "num": 101,
-  "name": "Manticore",
+  "name": "Rasha",
   "rarity": "Rare",
   "cls": "Beast",
   "hp": 80,
   "basic": {
-   "name": "Spiked Tail",
+   "name": "Cub Swipe",
    "dmg": 15
   },
   "special": {
-   "name": "Venom Volley",
+   "name": "Amber Sting",
    "dmg": 30,
    "cd": 2
   },
-  "look": "Lion-bodied cyber-beast with a scorpion tail.",
+  "look": "A lean robo-lion cub with a curled amber scorpion tail, confident.",
   "color": "#ffb03d",
-  "quip": "A lion that said yes to every upgrade.",
+  "quip": "A cub with a stinger and plenty of confidence. Mostly aimed.",
   "passive": "executioner"
  },
  {
   "id": "reactor",
   "num": 102,
-  "name": "Reactor",
+  "name": "Gamma",
   "rarity": "Rare",
   "cls": "Mech",
   "hp": 75,
@@ -2132,19 +2132,19 @@
    "dmg": 15
   },
   "special": {
-   "name": "Meltdown",
+   "name": "Containment Breach",
    "dmg": 35,
    "cd": 3
   },
-  "look": "Walking power core leaking lime radiation.",
+  "look": "A robot in a clean hazard suit with a glowing lime power-core chest.",
   "color": "#b6ff3d",
-  "quip": "Glows lime. Should not be hugged.",
+  "quip": "Lime glow means fine. Probably. Stand back anyway.",
   "passive": "thorns"
  },
  {
   "id": "prism",
   "num": 103,
-  "name": "Prism",
+  "name": "Spectra",
   "rarity": "Rare",
   "cls": "Fighter",
   "hp": 70,
@@ -2153,66 +2153,66 @@
    "dmg": 15
   },
   "special": {
-   "name": "Spectrum Burst",
+   "name": "Rainbow Slice",
    "dmg": 35,
    "cd": 3
   },
-  "look": "Crystal-bodied android that splits light into rainbow blades.",
+  "look": "A crystal-faced android holding a small rainbow light blade.",
   "color": "#3ff0ff",
-  "quip": "Turns a flashlight into a rainbow of pain.",
+  "quip": "Cuts in seven colours. Bleeds in one.",
   "passive": "momentum"
  },
  {
   "id": "thunderhide",
   "num": 104,
-  "name": "Thunderhide",
+  "name": "Brontes",
   "rarity": "Rare",
   "cls": "Beast",
   "hp": 85,
   "basic": {
-   "name": "Storm Charge",
+   "name": "Calf Charge",
    "dmg": 15
   },
   "special": {
-   "name": "Thunder Stampede",
+   "name": "Blue Stampede",
    "dmg": 30,
    "cd": 2
   },
-  "look": "Armored cyber-bison with lightning arcing between its horns.",
+  "look": "A sturdy armoured robo-bison calf with a small blue spark between its horns.",
   "color": "#4a7dff",
-  "quip": "Charges on his own lightning. Never pays the bill.",
+  "quip": "Small spark, big plans. Mostly just charges in.",
   "passive": "lifesteal"
  },
  {
   "id": "hellfire",
   "num": 105,
-  "name": "Hellfire",
+  "name": "Cinder",
   "rarity": "Rare",
   "cls": "Mech",
   "hp": 80,
   "basic": {
-   "name": "Napalm Spit",
+   "name": "Torch Jet",
    "dmg": 15
   },
   "special": {
-   "name": "Firestorm",
+   "name": "Backburner Blast",
    "dmg": 35,
    "cd": 3
   },
-  "look": "Flamethrower tank mech with glowing fuel tanks.",
+  "look": "A compact flamethrower robot with a small orange fuel tank on its back, pilot-light flame.",
   "color": "#ff8a3d",
-  "quip": "Sees a problem, sets it on fire.",
+  "quip": "Pilot light's always on. So is his questionable judgment.",
   "passive": "armor"
  },
  {
   "id": "paragon",
   "num": 106,
-  "name": "Paragon",
+  "name": "Auric",
   "rarity": "Epic",
   "cls": "Fighter",
   "hp": 95,
   "basic": {
-   "name": "Radiant Fist",
+   "name": "Gilded Fist",
    "dmg": 20
   },
   "special": {
@@ -2220,9 +2220,9 @@
    "dmg": 40,
    "cd": 3
   },
-  "look": "Golden android with a sun reactor in its chest.",
+  "look": "A golden android with a glowing sun-core in its chest, fists raised.",
   "color": "#ffd23d",
-  "quip": "Has a sun in his chest. Never needs a nightlight.",
+  "quip": "Sun in his chest, ego to match. Sunscreen sold separately.",
   "special2": {
    "name": "Supernova",
    "dmg": 55,
@@ -2233,22 +2233,22 @@
  {
   "id": "leviathan",
   "num": 107,
-  "name": "Leviathan",
+  "name": "Tidebreaker",
   "rarity": "Epic",
   "cls": "Beast",
   "hp": 100,
   "basic": {
-   "name": "Tidal Crush",
+   "name": "Fin Blade Lash",
    "dmg": 15
   },
   "special": {
-   "name": "Abyss Roar",
+   "name": "Undertow Crush",
    "dmg": 40,
    "cd": 3
   },
-  "look": "Colossal cyber-sea-serpent from the flooded districts.",
+  "look": "A person-sized armoured cyber eel, coiled, its fin blades glowing aqua.",
   "color": "#2fe3c4",
-  "quip": "Floods your district. Asks why you're wet.",
+  "quip": "Slippery, armoured, and unbothered by your harbour rules.",
   "special2": {
    "name": "Maelstrom",
    "dmg": 55,
@@ -2259,7 +2259,7 @@
  {
   "id": "dreadnought",
   "num": 108,
-  "name": "Dreadnought",
+  "name": "Ironhull",
   "rarity": "Epic",
   "cls": "Mech",
   "hp": 105,
@@ -2268,15 +2268,15 @@
    "dmg": 15
   },
   "special": {
-   "name": "Armageddon Salvo",
+   "name": "Gunnery Run",
    "dmg": 40,
    "cd": 3
   },
-  "look": "Flying battleship mech bristling with cannons.",
+  "look": "A heavy flying gunboat mech the size of a person, hovering, twin cannons glowing.",
   "color": "#ff4d5e",
-  "quip": "A battleship that learned to fly. Nobody stopped it.",
+  "quip": "A navy of one, airborne. Port and starboard both armed.",
   "special2": {
-   "name": "Orbital Strike",
+   "name": "Armageddon Salvo",
    "dmg": 55,
    "cd": 4
   },
@@ -2285,7 +2285,7 @@
  {
   "id": "nightblade",
   "num": 109,
-  "name": "Nightblade",
+  "name": "Hush",
   "rarity": "Epic",
   "cls": "Fighter",
   "hp": 80,
@@ -2294,15 +2294,15 @@
    "dmg": 20
   },
   "special": {
-   "name": "Eclipse",
+   "name": "Dusk Draw",
    "dmg": 40,
    "cd": 3
   },
-  "look": "Assassin android whose blade swallows light.",
+  "look": "An assassin android crouched low, its blade glowing with light-eating darkness.",
   "color": "#8f7bff",
-  "quip": "His sword eats light. Hates birthday candles.",
+  "quip": "Swings quietly. Light stops being a thing near him.",
   "special2": {
-   "name": "New Moon",
+   "name": "Total Eclipse",
    "dmg": 55,
    "cd": 4
   },
@@ -2311,12 +2311,12 @@
  {
   "id": "phoenix",
   "num": 110,
-  "name": "Phoenix",
+  "name": "Pyrelle",
   "rarity": "Epic",
   "cls": "Beast",
   "hp": 85,
   "basic": {
-   "name": "Ember Talon",
+   "name": "Flame Talon",
    "dmg": 20
   },
   "special": {
@@ -2324,11 +2324,11 @@
    "dmg": 35,
    "cd": 2
   },
-  "look": "Firebird made of burning neon.",
+  "look": "A neon firebird with wings spread, flames running along its feathers.",
   "color": "#ff8a3d",
-  "quip": "Dies, comes back, does it again. Show-off.",
+  "quip": "Dies dramatically. Returns for the applause.",
   "special2": {
-   "name": "Inferno Dive",
+   "name": "Falling Pyre",
    "dmg": 50,
    "cd": 3
   },
@@ -2337,7 +2337,7 @@
  {
   "id": "omega",
   "num": 111,
-  "name": "Omega",
+  "name": "Overseer",
   "rarity": "Epic",
   "cls": "Mech",
   "hp": 90,
@@ -2350,11 +2350,11 @@
    "dmg": 40,
    "cd": 3
   },
-  "look": "AI war machine with one all-seeing lens.",
+  "look": "A sleek AI war android with one large all-seeing red lens, arms spread commandingly.",
   "color": "#3ff0ff",
-  "quip": "One eye, all-seeing. Saw what you did.",
+  "quip": "One lens, no blind spots, and your search history on file.",
   "special2": {
-   "name": "Deletion",
+   "name": "Total Deletion",
    "dmg": 55,
    "cd": 4
   },
@@ -2363,7 +2363,7 @@
  {
   "id": "sovereign",
   "num": 112,
-  "name": "Sovereign",
+  "name": "Regalis",
   "rarity": "Legendary",
   "cls": "Fighter",
   "hp": 120,
@@ -2376,9 +2376,9 @@
    "dmg": 50,
    "cd": 3
   },
-  "look": "Ruler android of the neon city, crowned in hardlight.",
+  "look": "The ruler android of the neon city on a throne above the skyline, hardlight crown, cape flowing.",
   "color": "#ffd23d",
-  "quip": "Rules the neon city. The crown is mostly for show.",
+  "quip": "The crown is hardlight. The ego is solid.",
   "special2": {
    "name": "Royal Decree",
    "dmg": 70,
@@ -2389,7 +2389,7 @@
  {
   "id": "apex",
   "num": 113,
-  "name": "Apex",
+  "name": "Vorgath",
   "rarity": "Legendary",
   "cls": "Beast",
   "hp": 115,
@@ -2398,15 +2398,15 @@
    "dmg": 25
   },
   "special": {
-   "name": "Extinction",
+   "name": "Extinction Event",
    "dmg": 50,
    "cd": 3
   },
-  "look": "Ancient alpha predator rebuilt in chrome.",
+  "look": "An ancient chrome alpha predator on a cliff in a lightning storm, eyes burning.",
   "color": "#ff4d5e",
-  "quip": "At the top of the food chain. Ate the rest of the chain.",
+  "quip": "Stands on the cliff, lightning behind him. Staged it, obviously.",
   "special2": {
-   "name": "Alpha Howl",
+   "name": "Predator Dominion",
    "dmg": 70,
    "cd": 4
   },
@@ -2415,7 +2415,7 @@
  {
   "id": "genesis",
   "num": 114,
-  "name": "Genesis",
+  "name": "Prime Forge",
   "rarity": "Legendary",
   "cls": "Mech",
   "hp": 125,
@@ -2424,15 +2424,15 @@
    "dmg": 20
   },
   "special": {
-   "name": "Singularity",
+   "name": "Mass Assembly",
    "dmg": 55,
    "cd": 3
   },
-  "look": "Self-building mech that grows new parts mid-fight.",
+  "look": "A colossal self-building mech assembling new armour mid-air from swirling parts in a factory of light.",
   "color": "#ff3df0",
-  "quip": "Builds itself mid-fight. Never finishes. Always upgrading.",
+  "quip": "Builds itself mid-fight. The warranty keeps getting longer.",
   "special2": {
-   "name": "Big Bang",
+   "name": "Final Assembly",
    "dmg": 75,
    "cd": 4
   },
@@ -2441,7 +2441,7 @@
  {
   "id": "rune",
   "num": 115,
-  "name": "Rune",
+  "name": "Glyphling",
   "rarity": "Common",
   "cls": "Arcanist",
   "hp": 55,
@@ -2450,126 +2450,126 @@
    "dmg": 15
   },
   "special": {
-   "name": "Arcane Burst",
+   "name": "Panic Glyph",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Chrome android sorcerer in an armoured coat, violet rune circles spinning around both hands.",
+  "look": "A young apprentice robot with a clearly visible nervous face under an oversized patched hooded coat, holding a small glowing rune card, one tiny violet glyph floating above it.",
   "color": "#9b6bff",
-  "quip": "Read the manual. Then rewrote it in ancient runes.",
+  "quip": "Nervous apprentice. The spell works; the hands shake.",
   "passive": "quickcharge"
  },
  {
   "id": "wisp",
   "num": 116,
-  "name": "Wisp",
+  "name": "Flicker",
   "rarity": "Common",
   "cls": "Spirit",
   "hp": 60,
   "basic": {
-   "name": "Spirit Bite",
+   "name": "Warm Nip",
    "dmg": 10
   },
   "special": {
-   "name": "Will-o'-Wisp",
+   "name": "Lazy Flare",
    "dmg": 25,
    "cd": 2
   },
-  "look": "A three-tailed fox made of living teal spirit-flame.",
+  "look": "A small fluffy fox kit made of soft teal flame, three short tails, sitting and yawning. Gentle glow only.",
   "color": "#2fe3c4",
-  "quip": "Follow the light. It's probably fine.",
+  "quip": "Yawns flames. Dangerously cozy.",
   "passive": "phaseshift"
  },
  {
   "id": "halo",
   "num": 117,
-  "name": "Halo",
+  "name": "Dozy",
   "rarity": "Common",
   "cls": "Mystic",
   "hp": 70,
   "basic": {
-   "name": "Light Ray",
+   "name": "Glow Nudge",
    "dmg": 10
   },
   "special": {
-   "name": "Mend",
+   "name": "Lullaby Glow",
    "dmg": 25,
    "cd": 2,
    "heal": true
   },
-  "look": "Floating crystal construct with a golden halo and healing light in its hands.",
+  "look": "A small plug-in nightlight robot with a soft gold halo ring, sleepy face.",
   "color": "#ffc53d",
-  "quip": "Turns you off and on again. Works every time.",
+  "quip": "A night light with a nap problem.",
   "passive": "regen"
  },
  {
   "id": "glyph",
   "num": 118,
-  "name": "Glyph",
+  "name": "Scribble",
   "rarity": "Common",
   "cls": "Arcanist",
   "hp": 50,
   "basic": {
-   "name": "Ink Strike",
+   "name": "Marker Streak",
    "dmg": 15
   },
   "special": {
-   "name": "Living Script",
+   "name": "Scrawl Spell",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Matte-black android scribe covered in glowing scarlet glyph tattoos, writing spells in the air with a stylus finger.",
+  "look": "A small black robot doodling scarlet symbols on itself with a marker, tongue out.",
   "color": "#ff5a2e",
-  "quip": "Has terrible handwriting. The spells work anyway.",
+  "quip": "Draws spells on himself and calls it a tattoo.",
   "passive": "laststand"
  },
  {
   "id": "moonhare",
   "num": 119,
-  "name": "Moonhare",
+  "name": "Dustbunny",
   "rarity": "Common",
   "cls": "Spirit",
   "hp": 50,
   "basic": {
-   "name": "Moon Kick",
+   "name": "Fluff Kick",
    "dmg": 15
   },
   "special": {
-   "name": "Crescent Leap",
+   "name": "Moonlit Pounce",
    "dmg": 25,
    "cd": 2
   },
-  "look": "A hare made of silver moonlight with crescent-moon ears and drifting lilac motes.",
+  "look": "A tiny grey dust-bunny with a sleepy face, lilac moonlight glow, big floppy ears.",
   "color": "#c9b8ff",
-  "quip": "Only comes out at night. Mostly to steal your carrots.",
+  "quip": "Lives under the couch. Rises at dusk. Judges your cleaning.",
   "passive": "rebirth"
  },
  {
   "id": "lantern",
   "num": 120,
-  "name": "Lantern",
+  "name": "Crinkle",
   "rarity": "Common",
   "cls": "Mystic",
   "hp": 65,
   "basic": {
-   "name": "Spark Flick",
+   "name": "Wick Flick",
    "dmg": 10
   },
   "special": {
-   "name": "Warm Glow",
+   "name": "Cozy Glow",
    "dmg": 20,
    "cd": 1,
    "heal": true
   },
-  "look": "Small floating paper-lantern bot with a crimson shell, gold tassels and a soft glowing heart.",
+  "look": "A small crumpled paper-lantern robot with a timid face, little legs, crimson shell, weak candle glow inside.",
   "color": "#e0283c",
-  "quip": "Lights the way home. Will not stop talking about it.",
+  "quip": "Afraid of wind, rain and being folded. Glows anyway.",
   "passive": "blessing"
  },
  {
   "id": "hexcoil",
   "num": 121,
-  "name": "Hexcoil",
+  "name": "Coils",
   "rarity": "Common",
   "cls": "Arcanist",
   "hp": 60,
@@ -2578,19 +2578,19 @@
    "dmg": 10
   },
   "special": {
-   "name": "Hexfire",
+   "name": "Sproing Hex",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Warlock android wound in serpentine copper coils that spit acid-green hexfire.",
+  "look": "A copper slinky-spring robot with a face and little arms, mid-bounce, acid-green spark at one end.",
   "color": "#b8ff2e",
-  "quip": "Curses you, then apologises. Then curses you again.",
+  "quip": "Springs back after every curse. Sproing.",
   "passive": "quickcharge"
  },
  {
   "id": "emberkoi",
   "num": 122,
-  "name": "Emberkoi",
+  "name": "Goldie",
   "rarity": "Common",
   "cls": "Spirit",
   "hp": 55,
@@ -2599,19 +2599,19 @@
    "dmg": 10
   },
   "special": {
-   "name": "Koi Current",
+   "name": "Bubble Blaze",
    "dmg": 30,
    "cd": 3
   },
-  "look": "A pair of koi fish made of tangerine-gold flame, swimming through the air in a loop.",
+  "look": "A small goldfish of tangerine flame with big expressive eyes and a proud little grin, swimming in a bubble of air.",
   "color": "#ff9a1f",
-  "quip": "Two fish, one brain cell, infinite swagger.",
+  "quip": "One fish, one bubble, infinite swagger.",
   "passive": "phaseshift"
  },
  {
   "id": "bloom",
   "num": 123,
-  "name": "Bloom",
+  "name": "Sprout",
   "rarity": "Common",
   "cls": "Mystic",
   "hp": 70,
@@ -2620,67 +2620,67 @@
    "dmg": 10
   },
   "special": {
-   "name": "Blossom",
+   "name": "Petal Pick-Me-Up",
    "dmg": 25,
    "cd": 2,
    "heal": true
   },
-  "look": "Flower construct of glowing spring-green leaves with pink blossoms opening across its body.",
+  "look": "A tiny seedling robot with a face in a cracked flowerpot, little arms, one pink bud on its head.",
   "color": "#5cff7a",
-  "quip": "Heals you with petals. Mildly allergic to itself.",
+  "quip": "Cracked pot, big dreams, one pink bud.",
   "passive": "regen"
  },
  {
   "id": "rime",
   "num": 124,
-  "name": "Rime",
+  "name": "Shiver",
   "rarity": "Common",
   "cls": "Arcanist",
   "hp": 55,
   "basic": {
-   "name": "Frost Needle",
+   "name": "Shiver Slap",
    "dmg": 15
   },
   "special": {
-   "name": "Glacier Spike",
+   "name": "Brain Freeze",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Frost-mage android with crystalline ice-blue armour and snowflake sigils orbiting its head.",
+  "look": "A small robot shaped like an ice lolly with a face and little arms, pale blue, a snowflake sticker on its head, shivering.",
   "color": "#9fe8ff",
-  "quip": "Cool under pressure. And everywhere else.",
+  "quip": "Melts if you look at him. Shivers if you don't.",
   "passive": "laststand"
  },
  {
   "id": "wraithhound",
   "num": 125,
-  "name": "Wraithhound",
+  "name": "Smokey",
   "rarity": "Common",
   "cls": "Spirit",
   "hp": 65,
   "basic": {
-   "name": "Ghost Fang",
+   "name": "Ghost Nip",
    "dmg": 10
   },
   "special": {
-   "name": "Haunting Howl",
+   "name": "Ghostly Yap",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Lean hound of ghost-green fire with a black smoke body and hollow glowing eyes.",
+  "look": "A small scruffy puppy made of grey smoke with ghost-green eyes, a little collar tag, wagging.",
   "color": "#6bff9e",
-  "quip": "Fetches souls. Will not fetch sticks.",
+  "quip": "Good boy. Slightly see-through.",
   "passive": "rebirth"
  },
  {
   "id": "chime",
   "num": 126,
-  "name": "Chime",
+  "name": "Ding",
   "rarity": "Common",
   "cls": "Mystic",
   "hp": 65,
   "basic": {
-   "name": "Ring Out",
+   "name": "Bell Bonk",
    "dmg": 10
   },
   "special": {
@@ -2689,36 +2689,36 @@
    "cd": 1,
    "heal": true
   },
-  "look": "Floating wind-chime construct of hanging silver bells that ripple sky-blue sound waves.",
+  "look": "A small doorbell robot with a face, little arms and legs, a silver bell hat, sky-blue ding ring, pressing its own button.",
   "color": "#7cc8ff",
-  "quip": "Heals with music. Only knows one song.",
+  "quip": "Presses his own button. Nobody's home.",
   "passive": "blessing"
  },
  {
   "id": "tome",
   "num": 127,
-  "name": "Tome",
+  "name": "Dewey",
   "rarity": "Common",
   "cls": "Arcanist",
   "hp": 60,
   "basic": {
-   "name": "Page Cut",
+   "name": "Page Nip",
    "dmg": 10
   },
   "special": {
-   "name": "Chapter Close",
+   "name": "Overdue Fine",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Librarian android with emerald plating, reading from a floating cream-paged spellbook that glows.",
+  "look": "A worm robot poking out of a green paperback book, wearing reading glasses.",
   "color": "#1fd17a",
-  "quip": "Spoilers are a spell. A very evil one.",
+  "quip": "Bookworm in the literal sense. Overdue.",
   "passive": "quickcharge"
  },
  {
   "id": "nocturne",
   "num": 128,
-  "name": "Nocturne",
+  "name": "Hoot",
   "rarity": "Common",
   "cls": "Spirit",
   "hp": 50,
@@ -2727,147 +2727,147 @@
    "dmg": 15
   },
   "special": {
-   "name": "Starfall",
+   "name": "Starry Yawn",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Great owl made of midnight-blue night sky, its feathers dotted with constellations.",
+  "look": "A small round owl chick robot in a little sleeping cap, midnight-blue fluff, two big star-dot eyes, yawning.",
   "color": "#3b5bff",
-  "quip": "Asks 'who' a lot. Already knows the answer.",
+  "quip": "Up past bedtime. Still won't tell you who.",
   "passive": "phaseshift"
  },
  {
   "id": "tide",
   "num": 129,
-  "name": "Tide",
+  "name": "Puddle",
   "rarity": "Common",
   "cls": "Mystic",
   "hp": 75,
   "basic": {
-   "name": "Splash",
+   "name": "Droplet Plop",
    "dmg": 5
   },
   "special": {
-   "name": "Healing Wave",
+   "name": "Fountain Refill",
    "dmg": 30,
    "cd": 3,
    "heal": true
   },
-  "look": "Flowing water construct shaped like a fountain, deep ocean blue with seafoam crests.",
+  "look": "A small cute water blob spirit sitting in a cracked plastic fountain bowl, calm, one little droplet hovering above its head.",
   "color": "#1f7aff",
-  "quip": "Go with the flow. Or get washed away. Your call.",
+  "quip": "Calm, damp and slightly cracked.",
   "passive": "regen"
  },
  {
   "id": "tempest",
   "num": 130,
-  "name": "Tempest",
+  "name": "Drizzle",
   "rarity": "Common",
   "cls": "Arcanist",
   "hp": 55,
   "basic": {
-   "name": "Gust",
+   "name": "Soggy Sprinkle",
    "dmg": 10
   },
   "special": {
-   "name": "Thunderhead",
+   "name": "Downpour Tantrum",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Storm-caller android in a navy cloak, holding a floating orb of electric-yellow lightning.",
+  "look": "A small robot under a tiny yellow storm cloud raining on it, grumpy.",
   "color": "#ffe62e",
-  "quip": "Brings an umbrella to every fight. For you.",
+  "quip": "Personal rain cloud. Personally offended.",
   "passive": "laststand"
  },
  {
   "id": "glimmerstag",
   "num": 131,
-  "name": "Glimmerstag",
+  "name": "Twinkle",
   "rarity": "Common",
   "cls": "Spirit",
   "hp": 70,
   "basic": {
-   "name": "Antler Jab",
+   "name": "Nub Jab",
    "dmg": 10
   },
   "special": {
-   "name": "Crystal Charge",
+   "name": "Crystal Stumble",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Stag spirit with a pearl-white glowing body and branching antlers of peach-coral crystal.",
+  "look": "A wobbly baby deer robot in a little leaf scarf, peach-coral crystal nubs for antlers, shy face.",
   "color": "#ff9a7a",
-  "quip": "Majestic until it gets its antlers stuck in a doorway.",
+  "quip": "Wobbly legs, crystal nubs, zero confidence.",
   "passive": "rebirth"
  },
  {
   "id": "vital",
   "num": 132,
-  "name": "Vital",
+  "name": "Owie",
   "rarity": "Common",
   "cls": "Mystic",
   "hp": 60,
   "basic": {
-   "name": "Defib Zap",
+   "name": "Plaster Slap",
    "dmg": 15
   },
   "special": {
-   "name": "Triage",
+   "name": "Boo-Boo Fix",
    "dmg": 20,
    "cd": 1,
    "heal": true
   },
-  "look": "Rounded white medical drone with a neon-red cross visor and heartbeat lights pulsing down its arms.",
+  "look": "A small round first-aid box robot with a red cross and plasters stuck all over.",
   "color": "#ff2e4d",
-  "quip": "Your vitals are fine. Your choices are not.",
+  "quip": "Plasters on everything. Mostly on himself.",
   "passive": "blessing"
  },
  {
   "id": "mirage",
   "num": 133,
-  "name": "Mirage",
+  "name": "Dizzy",
   "rarity": "Common",
   "cls": "Arcanist",
   "hp": 50,
   "basic": {
-   "name": "Heat Shimmer",
+   "name": "Wobble Swing",
    "dmg": 15
   },
   "special": {
-   "name": "Phantom Copy",
+   "name": "Seeing Double",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Desert illusionist android with sand-gold plates, flickering turquoise mirror-copies of itself around it.",
+  "look": "A small robot seeing double, two faint turquoise copies beside it, swirly eyes.",
   "color": "#2ee6d6",
-  "quip": "Which one is the real one? Not that one.",
+  "quip": "Sees two of you. Hits neither.",
   "passive": "quickcharge"
  },
  {
   "id": "mistwyrm",
   "num": 134,
-  "name": "Mistwyrm",
+  "name": "Puffwyrm",
   "rarity": "Common",
   "cls": "Spirit",
   "hp": 55,
   "basic": {
-   "name": "Mist Bite",
+   "name": "Puff Bite",
    "dmg": 10
   },
   "special": {
-   "name": "Fog Coil",
+   "name": "Steam Ring",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Small eel-like dragon made of swirling lavender mist with mint-green glowing whiskers.",
+  "look": "A tiny lavender cloud dragon puffing a little mint-green steam ring.",
   "color": "#c39bff",
-  "quip": "Mostly fog. Partly attitude.",
+  "quip": "Dragon-shaped cloud. Breathes steam rings, nothing scary.",
   "passive": "phaseshift"
  },
  {
   "id": "geode",
   "num": 135,
-  "name": "Geode",
+  "name": "Pebble",
   "rarity": "Common",
   "cls": "Mystic",
   "hp": 80,
@@ -2881,79 +2881,79 @@
    "cd": 3,
    "heal": true
   },
-  "look": "Stocky slate-grey rock golem split open to show glowing citrine crystals inside.",
+  "look": "A small rock robot with a face and stubby arms, one yellow crystal poking out of its head.",
   "color": "#ffd21f",
-  "quip": "Hard on the outside. Also hard on the inside.",
+  "quip": "Small rock, one shiny secret.",
   "passive": "regen"
  },
  {
   "id": "sigil",
   "num": 136,
-  "name": "Sigil",
+  "name": "Snips",
   "rarity": "Common",
   "cls": "Arcanist",
   "hp": 55,
   "basic": {
-   "name": "Mark",
+   "name": "Stencil Stamp",
    "dmg": 10
   },
   "special": {
-   "name": "Seal Break",
+   "name": "Cutout Break",
    "dmg": 30,
    "cd": 3
   },
-  "look": "Android with a hexagonal lens in its chest projecting spinning magenta sigils with teal edges.",
+  "look": "A flat robot made of cut-out magenta stencils with a face, one sigil shining through its chest.",
   "color": "#ff2ec4",
-  "quip": "Signs everything with a magic circle. Including takeout orders.",
+  "quip": "Cut out of paper, stenciled to the soul.",
   "passive": "laststand"
  },
  {
   "id": "flutter",
   "num": 137,
-  "name": "Flutter",
+  "name": "Shimmy",
   "rarity": "Common",
   "cls": "Spirit",
   "hp": 45,
   "basic": {
-   "name": "Wing Dust",
+   "name": "Confetti Flap",
    "dmg": 15
   },
   "special": {
-   "name": "Glass Swarm",
+   "name": "Glitter Swarm",
    "dmg": 25,
    "cd": 2
   },
-  "look": "A swirling swarm of iridescent glass butterflies that catch and split the light.",
+  "look": "A little butterfly character made of confetti scraps with a happy face, iridescent paper wings.",
   "color": "#ff7ae0",
-  "quip": "Beautiful, fragile and absolutely furious.",
+  "quip": "Confetti wings, party energy, fragile pride.",
   "passive": "rebirth"
  },
  {
   "id": "plume",
   "num": 138,
-  "name": "Plume",
+  "name": "Fluff",
   "rarity": "Common",
   "cls": "Mystic",
   "hp": 65,
   "basic": {
-   "name": "Feather Dart",
+   "name": "Duster Flick",
    "dmg": 10
   },
   "special": {
-   "name": "Downy Shield",
+   "name": "Tidy Up",
    "dmg": 20,
    "cd": 1,
    "heal": true
   },
-  "look": "Floating construct of layered white feathers around a cobalt-blue light ring.",
+  "look": "A fussy butler robot whose head is a feather duster, cobalt body, little bow tie, dusting with a tiny rag.",
   "color": "#2e6bff",
-  "quip": "Softest healer in the game. Sheds everywhere.",
+  "quip": "Dusts you off, then judges the dust.",
   "passive": "blessing"
  },
  {
   "id": "origami",
   "num": 139,
-  "name": "Origami",
+  "name": "Folds",
   "rarity": "Common",
   "cls": "Arcanist",
   "hp": 50,
@@ -2966,36 +2966,36 @@
    "dmg": 25,
    "cd": 2
   },
-  "look": "Slim android whose body folds like paper, conjuring a flock of rose-pink paper cranes.",
+  "look": "A folded rose-pink paper crane robot standing on thin legs with a little crease face, bowing politely.",
   "color": "#ff8ab8",
-  "quip": "Paper cuts, but make it magic.",
+  "quip": "Bows politely. Never wrinkles under pressure.",
   "passive": "quickcharge"
  },
  {
   "id": "drift",
   "num": 140,
-  "name": "Drift",
+  "name": "Bloop",
   "rarity": "Common",
   "cls": "Spirit",
   "hp": 60,
   "basic": {
-   "name": "Sting Tendril",
+   "name": "Tendril Flop",
    "dmg": 10
   },
   "special": {
-   "name": "Bioglow",
+   "name": "Bubble Glow",
    "dmg": 25,
    "cd": 2
   },
-  "look": "Floating jellyfish spirit with an aqua bell and long hot-pink bioluminescent tendrils.",
+  "look": "A tiny jellyfish robot with a sleepy face inside a soap bubble, aqua bell, short pink tendrils.",
   "color": "#ff3da8",
-  "quip": "No brain, no heart, no problem.",
+  "quip": "Bubble, jelly, nap. Repeat.",
   "passive": "phaseshift"
  },
  {
   "id": "wick",
   "num": 141,
-  "name": "Wick",
+  "name": "Wishes",
   "rarity": "Common",
   "cls": "Mystic",
   "hp": 60,
@@ -3009,15 +3009,15 @@
    "cd": 2,
    "heal": true
   },
-  "look": "Small ivory candle golem with a calm cyan flame for a head and melted-wax drips.",
+  "look": "A small striped birthday-candle robot with a face and little arms, calm cyan flame on top, wax drips.",
   "color": "#3df2ff",
-  "quip": "Burns the midnight oil. Also itself.",
+  "quip": "A birthday candle with a head start on regret.",
   "passive": "regen"
  },
  {
   "id": "flask",
   "num": 142,
-  "name": "Flask",
+  "name": "Fizz",
   "rarity": "Common",
   "cls": "Arcanist",
   "hp": 60,
@@ -3030,15 +3030,15 @@
    "dmg": 30,
    "cd": 3
   },
-  "look": "Alchemist android with a bandolier of bubbling lime and purple potion vials.",
+  "look": "A small potion-bottle robot with a face and little arms, fizzing lime bubbles out of its cork top, giggling.",
   "color": "#a8ff3d",
-  "quip": "Labels are for people who want to live.",
+  "quip": "Bubbling with confidence. Also with something else.",
   "passive": "laststand"
  },
  {
   "id": "totem",
   "num": 143,
-  "name": "Totem",
+  "name": "Cubby",
   "rarity": "Common",
   "cls": "Spirit",
   "hp": 75,
@@ -3047,19 +3047,19 @@
    "dmg": 10
   },
   "special": {
-   "name": "Ancestor Roar",
+   "name": "Drum Roll Roar",
    "dmg": 25,
    "cd": 3
   },
-  "look": "Big bear spirit of amber light, carved with glowing patterns like a living totem pole.",
+  "look": "A small bear cub carved from wood with amber painted patterns, a cheerful face, sitting and beating a tiny wooden drum.",
   "color": "#ffae3d",
-  "quip": "Hugs are free. Escaping costs extra.",
+  "quip": "Wooden hugs, constant drumming, no exits.",
   "passive": "rebirth"
  },
  {
   "id": "mender",
   "num": 144,
-  "name": "Mender",
+  "name": "Thimble",
   "rarity": "Common",
   "cls": "Mystic",
   "hp": 65,
@@ -3073,41 +3073,41 @@
    "cd": 2,
    "heal": true
   },
-  "look": "Spider-like bronze repair drone whose eight arms stitch wounds closed with glowing teal thread.",
+  "look": "A pin-cushion robot with a kind face, eight needle legs, teal thread trailing, holding a button.",
   "color": "#2ec7b4",
-  "quip": "Fixes anything. Bills you in compliments.",
+  "quip": "Pinned, stitched and unreasonably nice.",
   "passive": "blessing"
  },
  {
   "id": "archon",
   "num": 145,
-  "name": "Archon",
+  "name": "Vael",
   "rarity": "Rare",
   "cls": "Arcanist",
   "hp": 75,
   "basic": {
-   "name": "Decree",
+   "name": "Quoted Verse",
    "dmg": 15
   },
   "special": {
-   "name": "Six Tomes",
+   "name": "Chapter Burst",
    "dmg": 35,
    "cd": 3
   },
-  "look": "Tall high-mage android with a crown of six spellbooks orbiting its head.",
+  "look": "A scholarly mage robot in tidy blue robes holding one glowing spellbook.",
   "color": "#3d6bff",
-  "quip": "Has read every book. Has opinions about all of them.",
+  "quip": "Has read every spell twice. Highlights nothing, judges everything.",
   "passive": "quickcharge"
  },
  {
   "id": "thunderbird",
   "num": 146,
-  "name": "Thunderbird",
+  "name": "Stormwing",
   "rarity": "Rare",
   "cls": "Spirit",
   "hp": 70,
   "basic": {
-   "name": "Storm Wing",
+   "name": "Static Wingbeat",
    "dmg": 15
   },
   "special": {
@@ -3115,37 +3115,37 @@
    "dmg": 35,
    "cd": 3
   },
-  "look": "Huge bird of storm light with lightning crackling along violet-white wings.",
+  "look": "A hawk-sized storm bird with violet-white feathers and a small lightning crest.",
   "color": "#d9b8ff",
-  "quip": "Every flap is a weather warning.",
+  "quip": "Every flap files a weather report. Nobody asked for it.",
   "passive": "phaseshift"
  },
  {
   "id": "sanctum",
   "num": 147,
-  "name": "Sanctum",
+  "name": "Seren",
   "rarity": "Rare",
   "cls": "Mystic",
   "hp": 90,
   "basic": {
-   "name": "Bell Strike",
+   "name": "Stone Chime",
    "dmg": 10
   },
   "special": {
-   "name": "Holy Spring",
+   "name": "Jade Spring",
    "dmg": 35,
    "cd": 3,
    "heal": true
   },
-  "look": "Walking shrine construct of white marble with a glowing jade healing pool on its back.",
+  "look": "A gentle white stone guardian robot carrying a small glowing jade basin.",
   "color": "#3dd9a0",
-  "quip": "Open 24/7. No appointment needed.",
+  "quip": "Calm as stone. The basin is always full, the patience less so.",
   "passive": "regen"
  },
  {
   "id": "hexblade",
   "num": 148,
-  "name": "Hexblade",
+  "name": "Morrow",
   "rarity": "Rare",
   "cls": "Arcanist",
   "hp": 80,
@@ -3154,19 +3154,19 @@
    "dmg": 15
   },
   "special": {
-   "name": "Void Rend",
+   "name": "Rune Rend",
    "dmg": 30,
    "cd": 2
   },
-  "look": "Spellsword android in black plate with a rune-etched blade dripping blood-red void magic.",
+  "look": "A spellsword robot in black armour with a rune dagger glowing faint red.",
   "color": "#ff1f3d",
-  "quip": "The sword talks. Mostly trash.",
+  "quip": "The dagger glows red. Not a mood ring, a warning.",
   "passive": "laststand"
  },
  {
   "id": "aurora",
   "num": 149,
-  "name": "Aurora",
+  "name": "Lumi",
   "rarity": "Rare",
   "cls": "Spirit",
   "hp": 85,
@@ -3175,19 +3175,19 @@
    "dmg": 15
   },
   "special": {
-   "name": "Northern Lights",
+   "name": "Aurora Ribbon",
    "dmg": 30,
    "cd": 2
   },
-  "look": "A sky whale made of aurora borealis, its body rippling green, pink and purple light.",
+  "look": "A small aurora-light whale calf drifting playfully, green and pink.",
   "color": "#7affc0",
-  "quip": "Hums in frequencies only dogs and wizards hear.",
+  "quip": "Plays in the sky. Leaves colour wherever it giggles.",
   "passive": "rebirth"
  },
  {
   "id": "choir",
   "num": 150,
-  "name": "Choir",
+  "name": "Cantor",
   "rarity": "Rare",
   "cls": "Mystic",
   "hp": 75,
@@ -3196,41 +3196,41 @@
    "dmg": 15
   },
   "special": {
-   "name": "Harmony",
+   "name": "Healing Harmony",
    "dmg": 30,
    "cd": 2,
    "heal": true
   },
-  "look": "Ring of floating pearl crystal tuning forks that hum healing harmonies in prismatic light.",
+  "look": "A pearl-white singer robot with a small ring of tuning forks, mid-note.",
   "color": "#f0e6ff",
-  "quip": "Practises 24 hours a day. Neighbours hate it.",
+  "quip": "Hit the high note. The windows have not forgiven him.",
   "passive": "blessing"
  },
  {
   "id": "chronos",
   "num": 151,
-  "name": "Chronos",
+  "name": "Tempo",
   "rarity": "Rare",
   "cls": "Arcanist",
   "hp": 70,
   "basic": {
-   "name": "Tick",
+   "name": "Minute Hand Jab",
    "dmg": 15
   },
   "special": {
-   "name": "Rewind",
+   "name": "Hourglass Flip",
    "dmg": 35,
    "cd": 3
   },
-  "look": "Time-mage android with a clockwork halo and glowing aquamarine sand falling through an hourglass chest.",
+  "look": "A watchmaker mage robot with a clockwork monocle and a small glowing hourglass.",
   "color": "#4dffd2",
-  "quip": "Always on time. Usually yesterday's.",
+  "quip": "Punctual to the second. Sometimes the second before.",
   "passive": "quickcharge"
  },
  {
   "id": "solmane",
   "num": 152,
-  "name": "Solmane",
+  "name": "Helion",
   "rarity": "Rare",
   "cls": "Spirit",
   "hp": 80,
@@ -3239,41 +3239,41 @@
    "dmg": 15
   },
   "special": {
-   "name": "Solar Roar",
+   "name": "Golden Roar",
    "dmg": 35,
    "cd": 3
   },
-  "look": "Lion spirit with a mane of erupting solar flares and white-hot eyes.",
+  "look": "A young lion spirit with a short mane of warm sunlight.",
   "color": "#ff6a1f",
-  "quip": "King of the jungle. And the sun. Ask him.",
+  "quip": "Mane of sunlight, ego of the same. Roars at sunrise on principle.",
   "passive": "phaseshift"
  },
  {
   "id": "lifeline",
   "num": 153,
-  "name": "Lifeline",
+  "name": "Marisol",
   "rarity": "Rare",
   "cls": "Mystic",
   "hp": 80,
   "basic": {
-   "name": "Scalpel",
+   "name": "Med Drone Zap",
    "dmg": 15
   },
   "special": {
-   "name": "Surgery",
+   "name": "Field Mend",
    "dmg": 35,
    "cd": 3,
    "heal": true
   },
-  "look": "Slim charcoal android surgeon with six coral-light arms and a halo of tiny med-drones.",
+  "look": "A field-medic robot in a coral uniform with a med-kit and one tiny med-drone.",
   "color": "#ff6f61",
-  "quip": "Steady hands. All six of them.",
+  "quip": "Calm hands, tiny drone, zero patience for 'I'm fine'.",
   "passive": "regen"
  },
  {
   "id": "voidweaver",
   "num": 154,
-  "name": "Voidweaver",
+  "name": "Vesnara",
   "rarity": "Epic",
   "cls": "Arcanist",
   "hp": 90,
@@ -3286,9 +3286,9 @@
    "dmg": 40,
    "cd": 3
   },
-  "look": "Obsidian android sorceress weaving a tiny ultraviolet black hole between her hands.",
+  "look": "An obsidian sorceress android holding a small swirling ultraviolet void orb.",
   "color": "#8a2eff",
-  "quip": "Knits with gravity. Your scarf is now a star.",
+  "quip": "Holds a tiny black hole. Keeps it on a very short leash.",
   "special2": {
    "name": "Event Horizon",
    "dmg": 55,
@@ -3299,7 +3299,7 @@
  {
   "id": "starwyrm",
   "num": 155,
-  "name": "Starwyrm",
+  "name": "Cosmo",
   "rarity": "Epic",
   "cls": "Spirit",
   "hp": 95,
@@ -3308,13 +3308,13 @@
    "dmg": 20
   },
   "special": {
-   "name": "Constellation",
+   "name": "Constellation Coil",
    "dmg": 40,
    "cd": 3
   },
-  "look": "Serpent dragon made of a living galaxy, gold constellations tracing its cosmic-teal body.",
+  "look": "A slender serpent dragon of teal starfield, gold constellation lines along its body, coiled in the air.",
   "color": "#ffd36b",
-  "quip": "Was a zodiac sign once. Got bored.",
+  "quip": "Gold lines connect the stars. He still can't connect the dots.",
   "special2": {
    "name": "Meteor Shower",
    "dmg": 55,
@@ -3325,7 +3325,7 @@
  {
   "id": "petalcore",
   "num": 156,
-  "name": "Petalcore",
+  "name": "Rosalind",
   "rarity": "Epic",
   "cls": "Mystic",
   "hp": 100,
@@ -3339,9 +3339,9 @@
    "cd": 3,
    "heal": true
   },
-  "look": "Giant mechanical lotus of rose-gold petals that unfold to pour out jade healing light.",
+  "look": "A rose-gold lotus-armoured healer android opening its petal shoulders to release jade light.",
   "color": "#ff9fb0",
-  "quip": "Opens up slowly. Like your friend who does therapy.",
+  "quip": "Opens up slowly, heals quickly, never mentions the thorns.",
   "special2": {
    "name": "Thorn Storm",
    "dmg": 55,
@@ -3352,7 +3352,7 @@
  {
   "id": "omnis",
   "num": 157,
-  "name": "Omnis",
+  "name": "Omniarch",
   "rarity": "Legendary",
   "cls": "Arcanist",
   "hp": 115,
@@ -3361,13 +3361,13 @@
    "dmg": 25
   },
   "special": {
-   "name": "All Runes",
+   "name": "Rune Cataclysm",
    "dmg": 50,
    "cd": 3
   },
-  "look": "The first android to learn magic: a towering platinum sorcerer crowned by orbiting rune planets of every colour.",
+  "look": "A towering platinum sorcerer android crowned by orbiting rune planets, magic storm around it.",
   "color": "#e8e8ff",
-  "quip": "Invented magic. Wants royalties.",
+  "quip": "Orbiting rune planets. They are not allowed to orbit anyone else.",
   "special2": {
    "name": "Final Word",
    "dmg": 70,
@@ -3378,7 +3378,7 @@
  {
   "id": "dawnbringer",
   "num": 158,
-  "name": "Dawnbringer",
+  "name": "Solenne",
   "rarity": "Legendary",
   "cls": "Spirit",
   "hp": 120,
@@ -3387,13 +3387,13 @@
    "dmg": 20
   },
   "special": {
-   "name": "Sunrise",
+   "name": "Dawn Charge",
    "dmg": 50,
    "cd": 3
   },
-  "look": "Colossal stag-dragon made of sunrise light, sky-orange to pink, trailing a dawn sky behind it.",
+  "look": "A colossal stag-dragon made of sunrise light striding over mountains, dawn sky trailing behind it.",
   "color": "#ff8a5c",
-  "quip": "Hits snooze for no one.",
+  "quip": "Brings the dawn personally. Zero sympathy for night owls.",
   "special2": {
    "name": "Solar Crown",
    "dmg": 70,
@@ -3404,23 +3404,23 @@
  {
   "id": "eternity",
   "num": 159,
-  "name": "Eternity",
+  "name": "Everheart",
   "rarity": "Legendary",
   "cls": "Mystic",
   "hp": 125,
   "basic": {
-   "name": "Pure Beam",
+   "name": "Prism Pulse",
    "dmg": 20
   },
   "special": {
-   "name": "Rebirth",
+   "name": "Eternal Renewal",
    "dmg": 50,
    "cd": 3,
    "heal": true
   },
-  "look": "Vast floating crystal heart ringed by spinning halos that throw full-spectrum healing light.",
+  "look": "A vast floating crystal heart ringed by spinning halos, throwing full-spectrum light across a temple.",
   "color": "#ffffff",
-  "quip": "Has been around forever. Still has not seen it all.",
+  "quip": "A heart that big has to float. Gravity gave up.",
   "special2": {
    "name": "Endless Light",
    "dmg": 70,
@@ -3431,12 +3431,12 @@
  {
   "id": "valor",
   "num": 160,
-  "name": "Valor",
+  "name": "Kensho",
   "rarity": "Legendary",
   "cls": "Fighter",
   "hp": 115,
   "basic": {
-   "name": "Starlance",
+   "name": "Twin Crescent",
    "dmg": 25
   },
   "special": {
@@ -3444,9 +3444,9 @@
    "dmg": 50,
    "cd": 3
   },
-  "look": "Android samurai general in midnight-navy armour, twin hardlight katanas, a cape trailing falling stars.",
+  "look": "A samurai general android with twin hardlight katanas, cape whipping, a burning city behind him.",
   "color": "#2ee6d6",
-  "quip": "Undefeated in duels. Several losses to stairs.",
+  "quip": "Walked out of a burning city. Didn't look back or hurry.",
   "special2": {
    "name": "Last Stand",
    "dmg": 70,
@@ -3457,7 +3457,7 @@
  {
   "id": "overlord",
   "num": 161,
-  "name": "Overlord",
+  "name": "Gorrath",
   "rarity": "Legendary",
   "cls": "Fighter",
   "hp": 145,
@@ -3466,13 +3466,13 @@
    "dmg": 30
   },
   "special": {
-   "name": "Meteor Drop",
+   "name": "Arena Breaker",
    "dmg": 65,
    "cd": 3
   },
-  "look": "Towering gladiator champion android in gunmetal armour with molten bronze-gold seams and wrecking-ball fists.",
+  "look": "A towering gladiator champion android in gunmetal and molten gold, roaring in a packed neon arena.",
   "color": "#d4a72c",
-  "quip": "Retired from the arena. The arena did not retire from him.",
+  "quip": "The crowd chants his name. He has given them no choice.",
   "special2": {
    "name": "Worldbreaker",
    "dmg": 90,
@@ -3483,22 +3483,22 @@
  {
   "id": "fenrir",
   "num": 162,
-  "name": "Fenrir",
+  "name": "Rimefang",
   "rarity": "Legendary",
   "cls": "Beast",
   "hp": 120,
   "basic": {
-   "name": "Frostbite",
+   "name": "Rime Rend",
    "dmg": 20
   },
   "special": {
-   "name": "Ragnarok",
+   "name": "Glacier Fang",
    "dmg": 50,
    "cd": 3
   },
-  "look": "Giant mechanical wolf of frosted chrome, ice crystals growing from its back, breathing blue frost.",
+  "look": "A giant frosted-chrome wolf howling on a frozen peak, ice crystals on its back, breath of blue frost.",
   "color": "#9cc8ff",
-  "quip": "Was told to sit. Ate the instructions.",
+  "quip": "Howls at the peak. The avalanche is just the echo.",
   "special2": {
    "name": "Endless Winter",
    "dmg": 70,
@@ -3509,7 +3509,7 @@
  {
   "id": "tyrannos",
   "num": 163,
-  "name": "Tyrannos",
+  "name": "Rexmortis",
   "rarity": "Legendary",
   "cls": "Beast",
   "hp": 145,
@@ -3518,13 +3518,13 @@
    "dmg": 30
   },
   "special": {
-   "name": "Meteor Roar",
+   "name": "Toxic Roar",
    "dmg": 65,
    "cd": 3
   },
-  "look": "Mechanical tyrannosaurus king in black chrome with a crown of toxic-lime neon spikes.",
+  "look": "A black-chrome tyrannosaurus king with a crown of toxic-lime neon spikes, roaring over ruins.",
   "color": "#8dff3d",
-  "quip": "Short arms. Long reach.",
+  "quip": "Short arms, long crown, and nobody dares mention either.",
   "special2": {
    "name": "Tyrant Reign",
    "dmg": 90,
@@ -3535,7 +3535,7 @@
  {
   "id": "atlas",
   "num": 164,
-  "name": "Atlas",
+  "name": "Terrakor",
   "rarity": "Legendary",
   "cls": "Mech",
   "hp": 145,
@@ -3548,9 +3548,9 @@
    "dmg": 65,
    "cd": 3
   },
-  "look": "Mountain-sized titan mech carrying a glowing ringed planet on its shoulders.",
+  "look": "A mountain-sized titan mech carrying a glowing ringed planet on its shoulders, clouds at its knees.",
   "color": "#3d6bff",
-  "quip": "Carries the world. Still asks for help with groceries.",
+  "quip": "Carries a planet on his shoulders. Ask nicely before he moves.",
   "special2": {
    "name": "World Engine",
    "dmg": 90,
@@ -3561,7 +3561,7 @@
  {
   "id": "zenith",
   "num": 165,
-  "name": "Zenith",
+  "name": "Skyreign",
   "rarity": "Legendary",
   "cls": "Mech",
   "hp": 115,
@@ -3574,9 +3574,9 @@
    "dmg": 50,
    "cd": 3
   },
-  "look": "Sleek silver-white sky-fortress mech, half jet fighter, half walking fortress, red running lights.",
+  "look": "A silver-white sky-fortress mech, half jet and half walking fortress, breaking through the clouds.",
   "color": "#d6dcec",
-  "quip": "Peaked early. Stayed there.",
+  "quip": "Half jet, half fortress, entirely above your concerns.",
   "special2": {
    "name": "Zero Hour",
    "dmg": 70,
@@ -3587,7 +3587,7 @@
  {
   "id": "grimoire",
   "num": 166,
-  "name": "Grimoire",
+  "name": "Codexa",
   "rarity": "Legendary",
   "cls": "Arcanist",
   "hp": 120,
@@ -3600,9 +3600,9 @@
    "dmg": 50,
    "cd": 3
   },
-  "look": "Android golem whose body is a giant open spellbook, pages fanned into armour, violet runes flying off.",
+  "look": "A giant spellbook golem, pages fanned into armour, violet runes storming around it in a vast library.",
   "color": "#a35cff",
-  "quip": "Spoiler: everyone loses.",
+  "quip": "Pages as armour, footnotes as weapons. Spoilers are free.",
   "special2": {
    "name": "Final Page",
    "dmg": 70,
@@ -3613,12 +3613,12 @@
  {
   "id": "paradox",
   "num": 167,
-  "name": "Paradox",
+  "name": "Chronelle",
   "rarity": "Legendary",
   "cls": "Arcanist",
   "hp": 135,
   "basic": {
-   "name": "Backstep",
+   "name": "Echo Step",
    "dmg": 35
   },
   "special": {
@@ -3626,11 +3626,11 @@
    "dmg": 60,
    "cd": 3
   },
-  "look": "Slender android time-sorceress with floating clock-rune rings and a cracked hourglass heart.",
+  "look": "A time-sorceress android with floating clock-rune rings and a cracked hourglass heart, time shattering around her.",
   "color": "#3dffc4",
-  "quip": "Already won this fight. Doing it again for fun.",
+  "quip": "Already knows how this ends. The cracked hourglass says hurry.",
   "special2": {
-   "name": "Undo",
+   "name": "Hourglass Shatter",
    "dmg": 85,
    "cd": 4
   },
@@ -3639,7 +3639,7 @@
  {
   "id": "celestia",
   "num": 168,
-  "name": "Celestia",
+  "name": "Starmother",
   "rarity": "Legendary",
   "cls": "Spirit",
   "hp": 145,
@@ -3652,9 +3652,9 @@
    "dmg": 65,
    "cd": 3
   },
-  "look": "Huge celestial whale of living starlight and nebula, constellations across its body.",
+  "look": "A huge whale of living starlight swimming through a nebula, constellations across its body.",
   "color": "#7a6bff",
-  "quip": "Sings to the stars. The stars sing back, badly.",
+  "quip": "Hums lullabies to galaxies. They go to bed on time.",
   "special2": {
    "name": "Galaxy Wave",
    "dmg": 90,
@@ -3665,24 +3665,24 @@
  {
   "id": "ifrit",
   "num": 169,
-  "name": "Ifrit",
+  "name": "Pyrazhar",
   "rarity": "Legendary",
   "cls": "Spirit",
   "hp": 115,
   "basic": {
-   "name": "Ember Lash",
+   "name": "Smoke Lash",
    "dmg": 25
   },
   "special": {
-   "name": "Inferno Gale",
+   "name": "Desert Inferno",
    "dmg": 50,
    "cd": 3
   },
-  "look": "Fire djinn of living flame and black smoke with a molten-gold mask for a face.",
+  "look": "A fire djinn of living flame and black smoke with a molten-gold mask, towering over a burning desert.",
   "color": "#ff5a1f",
-  "quip": "Grants wishes. Mostly for more fire.",
+  "quip": "Grants three wishes. All of them involve more smoke.",
   "special2": {
-   "name": "Wish of Ash",
+   "name": "Wish Of Ash",
    "dmg": 70,
    "cd": 4
   },
@@ -3691,25 +3691,25 @@
  {
   "id": "seraph",
   "num": 170,
-  "name": "Seraph",
+  "name": "Halcyon",
   "rarity": "Legendary",
   "cls": "Mystic",
   "hp": 120,
   "basic": {
-   "name": "Halo Ray",
+   "name": "Halo Lance",
    "dmg": 20
   },
   "special": {
-   "name": "Grace",
+   "name": "Healing Grace",
    "dmg": 50,
    "cd": 3,
    "heal": true
   },
-  "look": "Six-winged angelic healer construct of white porcelain and pale-gold light, faceless halo visor.",
+  "look": "A six-winged porcelain angel healer descending in a beam of gold light through storm clouds.",
   "color": "#fff0a0",
-  "quip": "Watches over everyone. Judges a little.",
+  "quip": "Six wings, one gentle sigh, a polite look of disappointment.",
   "special2": {
-   "name": "Judgment Light",
+   "name": "Radiant Verdict",
    "dmg": 70,
    "cd": 4
   },
@@ -3718,7 +3718,7 @@
  {
   "id": "gaia",
   "num": 171,
-  "name": "Gaia",
+  "name": "Sylvara",
   "rarity": "Legendary",
   "cls": "Mystic",
   "hp": 145,
@@ -3732,9 +3732,9 @@
    "cd": 3,
    "heal": true
   },
-  "look": "World-tree healer construct of crystal and glowing vines, a leaf-canopy crown and a faceless crystal mask.",
+  "look": "A world-tree healer construct of crystal and glowing vines with a leaf-canopy crown, a forest blooming around it.",
   "color": "#4dff88",
-  "quip": "Plants one seed. Grows a forest. Nobody asked.",
+  "quip": "Planted one vine. The forest took it as an invitation.",
   "special2": {
    "name": "Overgrowth",
    "dmg": 90,
@@ -3745,12 +3745,12 @@
  {
   "id": "bladestorm",
   "num": 172,
-  "name": "Bladestorm",
+  "name": "Kaelis",
   "rarity": "Epic",
   "cls": "Fighter",
   "hp": 110,
   "basic": {
-   "name": "Blade Dance",
+   "name": "Orbit Slash",
    "dmg": 25
   },
   "special": {
@@ -3758,11 +3758,11 @@
    "dmg": 50,
    "cd": 3
   },
-  "look": "Duelist android with six hardlight blades orbiting it.",
+  "look": "A duelist android with three hardlight blades circling it, mid-spin.",
   "color": "#ff3d6e",
-  "quip": "Brought six swords to a knife fight.",
+  "quip": "Three blades, no hands needed. The hands are for pointing.",
   "special2": {
-   "name": "Hurricane Cut",
+   "name": "Tempest Cut",
    "dmg": 65,
    "cd": 4
   },
@@ -3771,7 +3771,7 @@
  {
   "id": "ironclad",
   "num": 173,
-  "name": "Ironclad",
+  "name": "Garrick",
   "rarity": "Epic",
   "cls": "Fighter",
   "hp": 125,
@@ -3784,9 +3784,9 @@
    "dmg": 50,
    "cd": 3
   },
-  "look": "Armoured knight android behind a tower shield of neon glass.",
+  "look": "An armoured knight android braced behind a tall neon-glass tower shield.",
   "color": "#9aa4b5",
-  "quip": "Hasn't taken a hit in years. Dodges conversations too.",
+  "quip": "Hides behind a glass wall and still manages to look smug.",
   "special2": {
    "name": "Fortress Charge",
    "dmg": 65,
@@ -3797,7 +3797,7 @@
  {
   "id": "ghostwire",
   "num": 174,
-  "name": "Ghostwire",
+  "name": "Glitchkin",
   "rarity": "Epic",
   "cls": "Fighter",
   "hp": 95,
@@ -3810,11 +3810,11 @@
    "dmg": 50,
    "cd": 3
   },
-  "look": "Assassin android dissolving into streams of green code.",
+  "look": "An assassin android whose arm is dissolving into green code streams, ready to strike.",
   "color": "#00ffb3",
-  "quip": "You won't see him coming. Or leaving.",
+  "quip": "Arm's in beta. Fists still ship on time.",
   "special2": {
-   "name": "Blackout",
+   "name": "Kernel Panic",
    "dmg": 65,
    "cd": 4
   },
@@ -3823,12 +3823,12 @@
  {
   "id": "hydra",
   "num": 175,
-  "name": "Hydra",
+  "name": "Tressa",
   "rarity": "Epic",
   "cls": "Beast",
   "hp": 120,
   "basic": {
-   "name": "Hydra Bite",
+   "name": "Hissing Lunge",
    "dmg": 20
   },
   "special": {
@@ -3836,11 +3836,11 @@
    "dmg": 50,
    "cd": 3
   },
-  "look": "Three-headed mechanical serpent in violet chrome.",
+  "look": "A violet-chrome three-headed serpent, each head hissing, faint glow in the jaws.",
   "color": "#b84dff",
-  "quip": "Three heads, zero agreement.",
+  "quip": "Three heads, three opinions, one very unified bite.",
   "special2": {
-   "name": "Many Heads",
+   "name": "Heads Will Roll",
    "dmg": 65,
    "cd": 4
   },
@@ -3849,7 +3849,7 @@
  {
   "id": "stormclaw",
   "num": 176,
-  "name": "Stormclaw",
+  "name": "Voltigre",
   "rarity": "Epic",
   "cls": "Beast",
   "hp": 110,
@@ -3862,11 +3862,11 @@
    "dmg": 50,
    "cd": 3
   },
-  "look": "Electric chrome tiger crackling with yellow lightning.",
+  "look": "A chrome tiger prowling, yellow lightning sparking along its claws.",
   "color": "#ffe03d",
-  "quip": "Purrs at 10,000 volts.",
+  "quip": "Purrs at ten thousand volts. Petting is at your own risk.",
   "special2": {
-   "name": "Thunder Maul",
+   "name": "Voltage Maul",
    "dmg": 65,
    "cd": 4
   },
@@ -3875,7 +3875,7 @@
  {
   "id": "sandscorch",
   "num": 177,
-  "name": "Sandscorch",
+  "name": "Dunestrike",
   "rarity": "Epic",
   "cls": "Beast",
   "hp": 115,
@@ -3884,13 +3884,13 @@
    "dmg": 25
   },
   "special": {
-   "name": "Venom Lance",
+   "name": "Plasma Stinger",
    "dmg": 50,
    "cd": 3
   },
-  "look": "Giant mechanical desert scorpion with an amber plasma stinger.",
+  "look": "A person-sized mechanical desert scorpion with an amber plasma stinger raised.",
   "color": "#ffb347",
-  "quip": "Has a tail for every occasion.",
+  "quip": "Desert-built, sun-tested, unreasonably proud of the tail.",
   "special2": {
    "name": "Sandstorm Sting",
    "dmg": 65,
@@ -3901,7 +3901,7 @@
  {
   "id": "ravager",
   "num": 178,
-  "name": "Ravager",
+  "name": "Arachnyx",
   "rarity": "Epic",
   "cls": "Mech",
   "hp": 120,
@@ -3914,9 +3914,9 @@
    "dmg": 50,
    "cd": 3
   },
-  "look": "Eight-legged spider-tank mech with red sensor eyes.",
+  "look": "An eight-legged spider-tank mech with red sensor eyes, legs braced.",
   "color": "#ff3d3d",
-  "quip": "Eight legs, zero chill.",
+  "quip": "Eight legs, red eyes, and absolutely no personal space.",
   "special2": {
    "name": "Siege Barrage",
    "dmg": 65,
@@ -3927,12 +3927,12 @@
  {
   "id": "aegis",
   "num": 179,
-  "name": "Aegis",
+  "name": "Haven",
   "rarity": "Epic",
   "cls": "Mech",
   "hp": 125,
   "basic": {
-   "name": "Pulse Wall",
+   "name": "Hex Pulse",
    "dmg": 20
   },
   "special": {
@@ -3940,11 +3940,11 @@
    "dmg": 50,
    "cd": 3
   },
-  "look": "Floating fortress drone ringed with hex-light shields.",
+  "look": "A floating fortress drone with a ring of glowing hex shields around it.",
   "color": "#3dd6ff",
-  "quip": "Blocks everything. Including your calls.",
+  "quip": "Hex shields up. Opinions, however, remain fully exposed.",
   "special2": {
-   "name": "Barrier Break",
+   "name": "Hex Overload",
    "dmg": 65,
    "cd": 4
   },
@@ -3953,7 +3953,7 @@
  {
   "id": "havoc",
   "num": 180,
-  "name": "Havoc",
+  "name": "Ruckus",
   "rarity": "Epic",
   "cls": "Mech",
   "hp": 110,
@@ -3966,9 +3966,9 @@
    "dmg": 50,
    "cd": 3
   },
-  "look": "Heavy artillery walker with twin yellow-hot cannons.",
+  "look": "A heavy artillery walker with twin yellow-hot cannons, braced to fire.",
   "color": "#ffef3d",
-  "quip": "Aims for subtle. Hits the whole block.",
+  "quip": "Subtlety was never in the manual. Neither was quiet.",
   "special2": {
    "name": "Carpet Bomb",
    "dmg": 65,
@@ -3979,7 +3979,7 @@
  {
   "id": "spellforge",
   "num": 181,
-  "name": "Spellforge",
+  "name": "Anvara",
   "rarity": "Epic",
   "cls": "Arcanist",
   "hp": 115,
@@ -3988,13 +3988,13 @@
    "dmg": 25
   },
   "special": {
-   "name": "Anvil Spell",
+   "name": "Anvil Strike",
    "dmg": 50,
    "cd": 3
   },
-  "look": "Blacksmith android hammering molten orange runes into shape.",
+  "look": "A blacksmith android hammering a molten orange rune on an anvil, sparks flying.",
   "color": "#ff8a1f",
-  "quip": "Forges spells. Also toasts sandwiches.",
+  "quip": "Hammers spells into shape. Customer service is mostly dents.",
   "special2": {
    "name": "Molten Sigil",
    "dmg": 65,
@@ -4005,7 +4005,7 @@
  {
   "id": "nebulon",
   "num": 182,
-  "name": "Nebulon",
+  "name": "Orion",
   "rarity": "Epic",
   "cls": "Arcanist",
   "hp": 110,
@@ -4018,9 +4018,9 @@
    "dmg": 50,
    "cd": 3
   },
-  "look": "Star-mage android wrapped in a cloak full of galaxies.",
+  "look": "A star-mage android wrapped in a cloak full of galaxies, one hand glowing.",
   "color": "#5c7cff",
-  "quip": "Has a cloak full of stars. Still loses keys.",
+  "quip": "Cloak holds a galaxy. Pockets still hold nothing.",
   "special2": {
    "name": "Star Collapse",
    "dmg": 65,
@@ -4031,7 +4031,7 @@
  {
   "id": "hexqueen",
   "num": 183,
-  "name": "Hexqueen",
+  "name": "Malvina",
   "rarity": "Epic",
   "cls": "Arcanist",
   "hp": 100,
@@ -4044,9 +4044,9 @@
    "dmg": 50,
    "cd": 3
   },
-  "look": "Witch-queen android with a crown of floating magenta hexes.",
+  "look": "A witch android in a dark gown with three magenta hexes floating around one raised hand.",
   "color": "#ff3db8",
-  "quip": "Rules by curse. Mostly paperwork.",
+  "quip": "Three hexes, one hand, zero patience for your excuses.",
   "special2": {
    "name": "Hex Storm",
    "dmg": 65,
@@ -4057,7 +4057,7 @@
  {
   "id": "kitsune",
   "num": 184,
-  "name": "Kitsune",
+  "name": "Kiyo",
   "rarity": "Epic",
   "cls": "Spirit",
   "hp": 110,
@@ -4066,15 +4066,15 @@
    "dmg": 25
   },
   "special": {
-   "name": "Spirit Flame",
+   "name": "Amber Dance",
    "dmg": 50,
    "cd": 3
   },
-  "look": "Nine-tailed fox made of amber spirit light.",
+  "look": "A nine-tailed fox of amber spirit light, tails fanned out.",
   "color": "#ff9a3d",
-  "quip": "Nine tails. Nine excuses.",
+  "quip": "Nine tails, nine alibis, and one suspiciously clean paw.",
   "special2": {
-   "name": "Nine Tails",
+   "name": "Nine Tail Blaze",
    "dmg": 65,
    "cd": 4
   },
@@ -4083,7 +4083,7 @@
  {
   "id": "glacia",
   "num": 185,
-  "name": "Glacia",
+  "name": "Frostine",
   "rarity": "Epic",
   "cls": "Spirit",
   "hp": 115,
@@ -4096,11 +4096,11 @@
    "dmg": 50,
    "cd": 3
   },
-  "look": "Phoenix made of living ice crystals and pale blue light.",
+  "look": "A bird of living ice crystals and pale blue light, wings raised.",
   "color": "#bff4ff",
-  "quip": "Cool under pressure. Freezing, actually.",
+  "quip": "Cool under pressure. Crystalline, actually. Don't touch.",
   "special2": {
-   "name": "Blizzard Wing",
+   "name": "Whiteout Wing",
    "dmg": 65,
    "cd": 4
   },
@@ -4109,12 +4109,12 @@
  {
   "id": "raiju",
   "num": 186,
-  "name": "Raiju",
+  "name": "Thundercub",
   "rarity": "Epic",
   "cls": "Spirit",
   "hp": 100,
   "basic": {
-   "name": "Spark Dash",
+   "name": "Static Dash",
    "dmg": 25
   },
   "special": {
@@ -4122,9 +4122,9 @@
    "dmg": 50,
    "cd": 3
   },
-  "look": "Lightning beast of pure yellow electricity with a thundercloud mane.",
+  "look": "A lightning beast of yellow electricity with a small thundercloud mane, crackling.",
   "color": "#ffe84d",
-  "quip": "Naps in thunderclouds. Doesn't share.",
+  "quip": "Tiny thundercloud, big voltage, nap schedule non-negotiable.",
   "special2": {
    "name": "Storm Call",
    "dmg": 65,
@@ -4135,7 +4135,7 @@
  {
   "id": "lumina",
   "num": 187,
-  "name": "Lumina",
+  "name": "Lustre",
   "rarity": "Epic",
   "cls": "Mystic",
   "hp": 120,
@@ -4144,14 +4144,14 @@
    "dmg": 20
   },
   "special": {
-   "name": "Radiance",
+   "name": "Warm Radiance",
    "dmg": 50,
    "cd": 3,
    "heal": true
   },
-  "look": "Floating crystal chandelier construct pouring warm healing light.",
+  "look": "A crystal-chandelier healer android pouring warm golden light from its hands.",
   "color": "#fff3d6",
-  "quip": "Lights up every room. And the bill.",
+  "quip": "Chandelier by day, emergency lighting by night. Tips welcome.",
   "special2": {
    "name": "Prism Flare",
    "dmg": 65,
@@ -4162,7 +4162,7 @@
  {
   "id": "mendforge",
   "num": 188,
-  "name": "Mendforge",
+  "name": "Gearwing",
   "rarity": "Epic",
   "cls": "Mystic",
   "hp": 115,
@@ -4176,11 +4176,11 @@
    "cd": 3,
    "heal": true
   },
-  "look": "Clockwork medic beetle construct with glowing green repair arms.",
+  "look": "A clockwork medic beetle construct with glowing green repair arms working.",
   "color": "#7dff9a",
-  "quip": "Fixes anything. Except your attitude.",
+  "quip": "Mends, tightens, oils. Won't stop until you shine.",
   "special2": {
-   "name": "Overhaul",
+   "name": "Full Overhaul",
    "dmg": 65,
    "cd": 4
   },
@@ -4189,7 +4189,7 @@
  {
   "id": "coralheart",
   "num": 189,
-  "name": "Coralheart",
+  "name": "Corallia",
   "rarity": "Epic",
   "cls": "Mystic",
   "hp": 125,
@@ -4203,11 +4203,11 @@
    "cd": 3,
    "heal": true
   },
-  "look": "Reef construct of pink coral and glowing sea light.",
+  "look": "A reef healer android of pink coral with glowing sea-light in its chest.",
   "color": "#ff7f9a",
-  "quip": "Sensitive to temperature. And criticism.",
+  "quip": "Grows slowly, glows warmly, bleaches when ignored.",
   "special2": {
-   "name": "Coral Crush",
+   "name": "Reef Collapse",
    "dmg": 65,
    "cd": 4
   },
@@ -4216,7 +4216,7 @@
  {
   "id": "deadeye",
   "num": 190,
-  "name": "Deadeye",
+  "name": "Sable",
   "rarity": "Rare",
   "cls": "Fighter",
   "hp": 80,
@@ -4225,40 +4225,40 @@
    "dmg": 25
   },
   "special": {
-   "name": "Headshot",
+   "name": "Rail Snipe",
    "dmg": 35,
    "cd": 2
   },
-  "look": "Sniper android with a long red rail rifle and a single scope eye.",
+  "look": "A marksman robot with a red rail rifle slung over its shoulder and a scope eye.",
   "color": "#ff5a5a",
-  "quip": "Never misses. Sometimes forgets to shoot.",
+  "quip": "Never wastes a shot. Sometimes waits all day to prove it.",
   "passive": "firststrike"
  },
  {
   "id": "bruiser",
   "num": 191,
-  "name": "Bruiser",
+  "name": "Knox",
   "rarity": "Rare",
   "cls": "Fighter",
   "hp": 100,
   "basic": {
-   "name": "Jab",
+   "name": "Piston Jab",
    "dmg": 20
   },
   "special": {
-   "name": "Uppercut",
+   "name": "Hydraulic Uppercut",
    "dmg": 35,
    "cd": 2
   },
-  "look": "Boxer android with huge orange piston gloves.",
+  "look": "A boxer robot with orange piston gloves, guard up.",
   "color": "#ffa53d",
-  "quip": "Floats like a brick.",
+  "quip": "Gloves run on hydraulics. Feelings do not.",
   "passive": "momentum"
  },
  {
   "id": "kunai",
   "num": 192,
-  "name": "Kunai",
+  "name": "Yume",
   "rarity": "Rare",
   "cls": "Fighter",
   "hp": 85,
@@ -4267,40 +4267,40 @@
    "dmg": 20
   },
   "special": {
-   "name": "Shadow Star",
+   "name": "Kunai Flurry",
    "dmg": 40,
    "cd": 3
   },
-  "look": "Ninja android throwing glowing violet kunai.",
+  "look": "A ninja robot in a violet scarf holding two glowing kunai.",
   "color": "#c43dff",
-  "quip": "Silent. Except the kunai.",
+  "quip": "Silent as a whisper. The scarf, however, flaps loudly.",
   "passive": "firststrike"
  },
  {
   "id": "paladin",
   "num": 193,
-  "name": "Paladin",
+  "name": "Aldric",
   "rarity": "Rare",
   "cls": "Fighter",
   "hp": 100,
   "basic": {
-   "name": "Shield Strike",
+   "name": "Halberd Thrust",
    "dmg": 20
   },
   "special": {
-   "name": "Holy Halberd",
+   "name": "Gilded Sweep",
    "dmg": 40,
    "cd": 3
   },
-  "look": "Knight android with a glowing pale-gold halberd.",
+  "look": "A knight robot in clean pale-gold armour holding a halberd.",
   "color": "#ffe9a3",
-  "quip": "Polishes the armour between turns.",
+  "quip": "Pale-gold armour, spotless halberd, zero tolerance for scuffs.",
   "passive": "momentum"
  },
  {
   "id": "falcon",
   "num": 194,
-  "name": "Falcon",
+  "name": "Zephyr",
   "rarity": "Rare",
   "cls": "Beast",
   "hp": 80,
@@ -4309,45 +4309,45 @@
    "dmg": 25
   },
   "special": {
-   "name": "Dive Bomb",
+   "name": "Vent Dive",
    "dmg": 35,
    "cd": 2
   },
-  "look": "Sleek mechanical falcon with sky-blue jet wings.",
+  "look": "A sleek robo-falcon with small sky-blue jet vents, perched.",
   "color": "#3dc4ff",
-  "quip": "Fast. Smug about it.",
+  "quip": "Perched, polished, and just barely not gloating.",
   "passive": "executioner"
  },
  {
   "id": "smilodon",
   "num": 195,
-  "name": "Smilodon",
+  "name": "Goldtooth",
   "rarity": "Rare",
   "cls": "Beast",
   "hp": 95,
   "basic": {
-   "name": "Saber Leap",
+   "name": "Fang Leap",
    "dmg": 20
   },
   "special": {
-   "name": "Sabre Fang",
+   "name": "Golden Fang",
    "dmg": 40,
    "cd": 3
   },
-  "look": "Mechanical sabre-tooth cat with long golden fangs.",
+  "look": "A lean robo sabre-tooth cat with golden fangs, sitting proudly.",
   "color": "#ffc43d",
-  "quip": "Built for the ice age. Wrong era.",
+  "quip": "Golden fangs, sitting pretty. The dental plan is excellent.",
   "passive": "lifesteal"
  },
  {
   "id": "octopod",
   "num": 196,
-  "name": "Octopod",
+  "name": "Octavia",
   "rarity": "Rare",
   "cls": "Beast",
   "hp": 90,
   "basic": {
-   "name": "Tentacle Slap",
+   "name": "Wrench Slap",
    "dmg": 20
   },
   "special": {
@@ -4355,36 +4355,36 @@
    "dmg": 35,
    "cd": 2
   },
-  "look": "Mechanical octopus with eight hot-pink neon arms.",
+  "look": "A clever robo-octopus with hot-pink arms holding small tools.",
   "color": "#ff3da8",
-  "quip": "Eight arms, all busy.",
+  "quip": "Eight arms, eight tools, zero sympathy for flat-pack furniture.",
   "passive": "executioner"
  },
  {
   "id": "bison",
   "num": 197,
-  "name": "Bison",
+  "name": "Brutus",
   "rarity": "Rare",
   "cls": "Beast",
   "hp": 110,
   "basic": {
-   "name": "Horn Butt",
+   "name": "Bronze Bash",
    "dmg": 15
   },
   "special": {
-   "name": "Thunder Herd",
+   "name": "Loyal Charge",
    "dmg": 40,
    "cd": 3
   },
-  "look": "Armoured mechanical bison with bronze plating.",
+  "look": "A stocky bronze-plated robo-bulldog with a studded collar, loyal.",
   "color": "#b07a45",
-  "quip": "Takes the scenic route. Through walls.",
+  "quip": "Studded collar, bronze plating, unshakeable belief in fetch.",
   "passive": "lifesteal"
  },
  {
   "id": "drillbot",
   "num": 198,
-  "name": "Drillbot",
+  "name": "Digby",
   "rarity": "Rare",
   "cls": "Mech",
   "hp": 100,
@@ -4397,15 +4397,15 @@
    "dmg": 40,
    "cd": 3
   },
-  "look": "Stocky mining mech with a giant yellow drill arm.",
+  "look": "A mining robot with a yellow drill arm and a headlamp, ready to work.",
   "color": "#ffd23d",
-  "quip": "Loves boring work.",
+  "quip": "Headlamp on, drill ready, happily digs the whole shift.",
   "passive": "thorns"
  },
  {
   "id": "gunship",
   "num": 199,
-  "name": "Gunship",
+  "name": "Gale",
   "rarity": "Rare",
   "cls": "Mech",
   "hp": 85,
@@ -4418,15 +4418,15 @@
    "dmg": 35,
    "cd": 2
   },
-  "look": "Small attack-copter mech with green rotor lights.",
+  "look": "A small copter robot with a pilot-face cockpit and green rotor lights.",
   "color": "#3dff8a",
-  "quip": "Hovers. Judges. Shoots.",
+  "quip": "Hovers, judges, shoots. Rotor lights go green when smug.",
   "passive": "armor"
  },
  {
   "id": "tankette",
   "num": 200,
-  "name": "Tankette",
+  "name": "Sarge",
   "rarity": "Rare",
   "cls": "Mech",
   "hp": 110,
@@ -4439,15 +4439,15 @@
    "dmg": 40,
    "cd": 3
   },
-  "look": "Tiny olive-green tank mech with an oversized cannon.",
+  "look": "A little olive tank robot with a cannon and a sergeant cap, serious.",
   "color": "#9bb36b",
-  "quip": "Small. Loud. Proud.",
+  "quip": "Small tank, big cap, endless sermons about discipline.",
   "passive": "thorns"
  },
  {
   "id": "pulsar",
   "num": 201,
-  "name": "Pulsar",
+  "name": "Lazlo",
   "rarity": "Rare",
   "cls": "Mech",
   "hp": 85,
@@ -4460,20 +4460,20 @@
    "dmg": 35,
    "cd": 2
   },
-  "look": "Laser turret mech on walking legs, violet beam core.",
+  "look": "A walking laser-turret robot with a violet lens eye, scanning.",
   "color": "#a33dff",
-  "quip": "Has one move. It's a good one.",
+  "quip": "One lens, one idea, perfect aim. Scans before saying hello.",
   "passive": "armor"
  },
  {
   "id": "runesmith",
   "num": 202,
-  "name": "Runesmith",
+  "name": "Brann",
   "rarity": "Rare",
   "cls": "Arcanist",
   "hp": 95,
   "basic": {
-   "name": "Rune Strike",
+   "name": "Chisel Strike",
    "dmg": 20
   },
   "special": {
@@ -4481,20 +4481,20 @@
    "dmg": 35,
    "cd": 2
   },
-  "look": "Android carving glowing orange runes into the air with a chisel.",
+  "look": "A craftsman robot in a leather apron carving a glowing orange rune with a chisel.",
   "color": "#ff7a3d",
-  "quip": "Writes in a font only he can read.",
+  "quip": "Carves runes by hand. Spell-check not included.",
   "passive": "quickcharge"
  },
  {
   "id": "stormcaller",
   "num": 203,
-  "name": "Stormcaller",
+  "name": "Volta",
   "rarity": "Rare",
   "cls": "Arcanist",
   "hp": 90,
   "basic": {
-   "name": "Spark",
+   "name": "Staff Zap",
    "dmg": 20
   },
   "special": {
@@ -4502,20 +4502,20 @@
    "dmg": 40,
    "cd": 3
   },
-  "look": "Android mage holding a staff that crackles with blue lightning.",
+  "look": "A mage robot holding a short staff with a blue spark at the tip.",
   "color": "#3d9bff",
-  "quip": "Forecast: you, getting hit.",
+  "quip": "Short staff, short fuse, forecast of static.",
   "passive": "laststand"
  },
  {
   "id": "shade",
   "num": 204,
-  "name": "Shade",
+  "name": "Nyra",
   "rarity": "Rare",
   "cls": "Arcanist",
   "hp": 85,
   "basic": {
-   "name": "Dark Touch",
+   "name": "Smoke Touch",
    "dmg": 20
   },
   "special": {
@@ -4523,83 +4523,83 @@
    "dmg": 40,
    "cd": 3
   },
-  "look": "Shadow-mage android in robes of drifting purple smoke.",
+  "look": "A hooded shadow-mage robot with soft purple smoke at its feet.",
   "color": "#7a3dff",
-  "quip": "Prefers the dark. Bad with stairs.",
+  "quip": "Hooded, hushed, and a little too fond of corners.",
   "passive": "quickcharge"
  },
  {
   "id": "alchemist",
   "num": 205,
-  "name": "Alchemist",
+  "name": "Fennick",
   "rarity": "Rare",
   "cls": "Arcanist",
   "hp": 90,
   "basic": {
-   "name": "Toss",
+   "name": "Lime Flask Lob",
    "dmg": 20
   },
   "special": {
-   "name": "Acid Flask",
+   "name": "Corrosive Flask",
    "dmg": 35,
    "cd": 2
   },
-  "look": "Android chemist with a bandolier of glowing lime potions.",
+  "look": "An alchemist robot with goggles and a belt of glowing lime vials.",
   "color": "#d4ff3d",
-  "quip": "Ninety percent sure that one is safe.",
+  "quip": "Ninety percent sure that vial is safe. Stand back anyway.",
   "passive": "laststand"
  },
  {
   "id": "nightowl",
   "num": 206,
-  "name": "Nightowl",
+  "name": "Selene",
   "rarity": "Rare",
   "cls": "Spirit",
   "hp": 85,
   "basic": {
-   "name": "Wing Gust",
+   "name": "Starlit Wing",
    "dmg": 20
   },
   "special": {
-   "name": "Talon Glow",
+   "name": "Amber Talon",
    "dmg": 35,
    "cd": 2
   },
-  "look": "Owl made of amber starlight with glowing moon eyes.",
+  "look": "An owl spirit of amber starlight with round moon eyes, perched.",
   "color": "#ffb03d",
-  "quip": "Stays up late. Every night.",
+  "quip": "Stays up all night, judging your sleep schedule.",
   "passive": "phaseshift"
  },
  {
   "id": "dreamjelly",
   "num": 207,
-  "name": "Dreamjelly",
+  "name": "Mirra",
   "rarity": "Rare",
   "cls": "Spirit",
   "hp": 90,
   "basic": {
-   "name": "Drift",
+   "name": "Gentle Drift",
    "dmg": 20
   },
   "special": {
-   "name": "Sting Glow",
+   "name": "Lull Sting",
    "dmg": 40,
    "cd": 3
   },
-  "look": "Floating jellyfish of soft pink light trailing glowing tendrils.",
+  "look": "A small glowing pink jellyfish spirit with a calm, dreamy face.",
   "color": "#ff9fe0",
-  "quip": "Floats through life. Literally.",
+  "quip": "Floats through life, wakes up for no one.",
   "passive": "rebirth"
  },
  {
   "id": "wavesprite",
   "num": 208,
-  "name": "Wavesprite",
+  "name": "Nerin",
   "rarity": "Rare",
   "cls": "Spirit",
   "hp": 85,
   "basic": {
-   "name": "Splash Kick",
+   "name": "Wave Kick",
    "dmg": 20
   },
   "special": {
@@ -4607,36 +4607,36 @@
    "dmg": 40,
    "cd": 3
   },
-  "look": "Little water spirit riding a curling wave of cyan light.",
+  "look": "A little water spirit riding a small curl of cyan wave.",
   "color": "#3dd9ff",
-  "quip": "Always making waves.",
+  "quip": "Rides a wave, makes more of them, apologises to none.",
   "passive": "phaseshift"
  },
  {
   "id": "ashwolf",
   "num": 209,
-  "name": "Ashwolf",
+  "name": "Ashka",
   "rarity": "Rare",
   "cls": "Spirit",
   "hp": 95,
   "basic": {
-   "name": "Ember Bite",
+   "name": "Ash Bite",
    "dmg": 20
   },
   "special": {
-   "name": "Ember Fang",
+   "name": "Smoulder Fang",
    "dmg": 35,
    "cd": 2
   },
-  "look": "Wolf made of glowing embers and drifting ash.",
+  "look": "A young wolf of glowing embers, a little ash drifting off it.",
   "color": "#ff4d3d",
-  "quip": "All bark. Also a lot of bite.",
+  "quip": "Leaves a trail of ash and mild regret.",
   "passive": "rebirth"
  },
  {
   "id": "cauldron",
   "num": 210,
-  "name": "Cauldron",
+  "name": "Hazel",
   "rarity": "Rare",
   "cls": "Mystic",
   "hp": 100,
@@ -4650,7 +4650,7 @@
    "cd": 3,
    "heal": true
   },
-  "look": "Bubbling cauldron construct on iron legs, glowing green brew.",
+  "look": "A potion-brewer robot carrying a small bubbling green cauldron, stirring.",
   "color": "#3dff9b",
   "quip": "Soup of the day: you, but better.",
   "passive": "regen"
@@ -4658,12 +4658,12 @@
  {
   "id": "prismheart",
   "num": 211,
-  "name": "Prismheart",
+  "name": "Gemma",
   "rarity": "Rare",
   "cls": "Mystic",
   "hp": 95,
   "basic": {
-   "name": "Refract",
+   "name": "Prism Tap",
    "dmg": 20
   },
   "special": {
@@ -4672,20 +4672,20 @@
    "cd": 2,
    "heal": true
   },
-  "look": "Floating prism-crystal construct splitting light into rainbows.",
+  "look": "A small crystal sprite with a glowing prism heart, kind smile.",
   "color": "#ff3df0",
-  "quip": "Sees every side of you.",
+  "quip": "Sees every side of you and likes all of them.",
   "passive": "blessing"
  },
  {
   "id": "orrery",
   "num": 212,
-  "name": "Orrery",
+  "name": "Astra",
   "rarity": "Rare",
   "cls": "Mystic",
   "hp": 90,
   "basic": {
-   "name": "Orbit Hit",
+   "name": "Planet Bump",
    "dmg": 20
   },
   "special": {
@@ -4694,15 +4694,15 @@
    "cd": 3,
    "heal": true
   },
-  "look": "Brass orrery construct with glowing planets circling it.",
+  "look": "A brass stargazer robot with a few small planets orbiting its head.",
   "color": "#ffd36b",
-  "quip": "Knows where every planet is. Not the remote.",
+  "quip": "Tracks every planet. Cannot track her keys.",
   "passive": "regen"
  },
  {
   "id": "moss",
   "num": 213,
-  "name": "Moss",
+  "name": "Bramble",
   "rarity": "Rare",
   "cls": "Mystic",
   "hp": 110,
@@ -4711,14 +4711,14 @@
    "dmg": 15
   },
   "special": {
-   "name": "Regrowth",
+   "name": "Gentle Regrowth",
    "dmg": 35,
    "cd": 2,
    "heal": true
   },
-  "look": "Mossy stone golem construct sprouting glowing green ferns.",
+  "look": "A small mossy stone golem with a few glowing ferns on its shoulders.",
   "color": "#7dff3d",
-  "quip": "Slow to anger. Slow to everything.",
+  "quip": "Slow to anger, slower to move, fern collection thriving.",
   "passive": "blessing"
  }
 ]
