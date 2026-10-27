@@ -86,6 +86,7 @@ struct PackTab: View {
             if list.isEmpty {
                 Spacer()
             } else {
+                Spacer(minLength: 0)
                 TabView(selection: $page) {
                     ForEach(list.indices, id: \.self) { j in
                         let info = Self.info(list[j].type)
@@ -114,9 +115,8 @@ struct PackTab: View {
                 let info = Self.info(list[i].type)
                 VStack(spacing: 4) {
                     Text(info.name).font(.chakra(22)).tracking(1.5).textCase(.uppercase).foregroundColor(Color(hex: info.glow))
-                    Text("\(info.cards) cards · \(info.contents)").font(.barlow(14)).foregroundColor(Theme.muted)
+                    Text(list[i].type == "power" ? info.contents : "\(info.cards) cards · \(info.contents)").font(.barlow(14)).foregroundColor(Theme.muted)
                 }
-                Spacer(minLength: 0)
                 if let error = store.error { Text(error).font(.barlow(14, semibold: true)).foregroundColor(Theme.pink) }
                 Button("Open") {
                     let type = list[i].type
@@ -128,6 +128,8 @@ struct PackTab: View {
                 }
                 .buttonStyle(GoldButton(height: 52)).frame(width: 240)
                 .disabled(buying)
+                .padding(.top, 6)
+                Spacer(minLength: 0).frame(maxHeight: 40)   // the pack, its name and Open sit together, low on the screen
             }
         }
         .padding(.top, 8).padding(.bottom, 24)
