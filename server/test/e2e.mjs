@@ -135,7 +135,7 @@ check(unf.social.friends.length === 0, 'unfriended');
 console.log('social OK');
 check((await call('/me', a.token)).nextSpin === 0, 'spin ready');
 const sp = await call('/spin', a.token, {});
-check(sp.slot >= 0 && sp.slot < 8 && sp.profile.nextSpin > Date.now(), 'spun');
+check(sp.slot >= 0 && sp.slot < 9 && sp.profile.nextSpin > Date.now(), 'spun');
 await expectError(call('/spin', a.token, {}), 400);
 console.log('spin', sp.kind, sp.amount, sp.cards || '');
 
