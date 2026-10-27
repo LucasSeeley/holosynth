@@ -9,6 +9,7 @@ struct PackTab: View {
     @EnvironmentObject var store: GameStore
     var onClose: (() -> Void)? = nil
     @State private var page = 0                   // which of your packs the carousel shows
+    @State private var drag: CGFloat = 0          // finger offset while swiping the carousel
     @State private var added: String?             // pack type just bought, for the "added" toast
     @State private var pulled: [String] = []     // cards in the pack being opened
     @State private var buying = false
@@ -87,26 +88,42 @@ struct PackTab: View {
                 Spacer()
             } else {
                 Spacer(minLength: 0)
-                TabView(selection: $page) {
-                    ForEach(list.indices, id: \.self) { j in
-                        let info = Self.info(list[j].type)
-                        packImage(list[j].type).frame(maxWidth: 240)
-                            .shadow(color: Color(hex: info.glow).opacity(0.55), radius: 26)
-                            .overlay(alignment: .topTrailing) {
-                                if list[j].n > 1 {
-                                    Text("×\(list[j].n)").font(.chakra(16)).foregroundColor(Color(hex: info.glow))
-                                        .padding(.horizontal, 10).frame(minWidth: 44, minHeight: 32)
-                                        .background(Theme.ink, in: Capsule())
-                                        .overlay(Capsule().stroke(Color(hex: info.glow), lineWidth: 1))
-                                        .offset(x: 8, y: 6)
+                // Swipe between your packs; the ones either side peek in, dimmed (like the old Packs tab).
+                GeometryReader { g in
+                    let slot: CGFloat = 270, w: CGFloat = 240
+                    HStack(spacing: slot - w) {
+                        ForEach(list.indices, id: \.self) { j in
+                            let info = Self.info(list[j].type), on = j == i
+                            packImage(list[j].type).frame(width: w)
+                                .shadow(color: Color(hex: info.glow).opacity(on ? 0.55 : 0), radius: 26)
+                                .overlay(alignment: .topTrailing) {
+                                    if list[j].n > 1 && on {
+                                        Text("×\(list[j].n)").font(.chakra(16)).foregroundColor(Color(hex: info.glow))
+                                            .padding(.horizontal, 10).frame(minWidth: 44, minHeight: 32)
+                                            .background(Theme.ink, in: Capsule())
+                                            .overlay(Capsule().stroke(Color(hex: info.glow), lineWidth: 1))
+                                            .offset(x: 8, y: 6)
+                                    }
                                 }
-                            }
-                            .padding(.vertical, 20)
-                            .tag(j)
+                                .scaleEffect(on ? 1 : 0.62)
+                                .opacity(on ? 1 : 0.45).saturation(on ? 1 : 0.7)
+                                .onTapGesture { withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) { page = j } }
+                        }
                     }
+                    .offset(x: (g.size.width - w) / 2 - CGFloat(i) * slot + drag)
+                    .frame(height: g.size.height)
+                    .contentShape(Rectangle())
+                    .gesture(DragGesture()
+                        .onChanged { drag = $0.translation.width }
+                        .onEnded { v in
+                            let t = v.predictedEndTranslation.width
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                                if t < -slot / 3 { page = min(i + 1, list.count - 1) } else if t > slot / 3 { page = max(i - 1, 0) }
+                                drag = 0
+                            }
+                        })
                 }
-                .tabViewStyle(.page(indexDisplayMode: .never))
-                .frame(maxHeight: 440)
+                .frame(maxHeight: 420)
                 HStack(spacing: 6) {
                     ForEach(list.indices, id: \.self) { j in
                         Capsule().fill(j == i ? Theme.brass : Theme.fg.opacity(0.3)).frame(width: j == i ? 22 : 7, height: 7)
