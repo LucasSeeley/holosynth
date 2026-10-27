@@ -77,15 +77,15 @@ struct ProfileTab: View {
                 Spacer()
                 Text("\(p.collection.count)/\(CardBook.all.count)").font(.chakra(13)).foregroundColor(Theme.fg)
             }
-            ForEach(["Common", "Rare", "Epic", "Legendary"], id: \.self) { r in
-                let all = CardBook.all.filter { $0.rarity == r }
-                let have = all.filter { p.collection[$0.id] != nil }.count
+            ForEach(["Common", "Rare", "Epic", "Legendary", "Holo"], id: \.self) { r in
+                let all = r == "Holo" ? CardBook.all : CardBook.all.filter { $0.rarity == r }
+                let have = r == "Holo" ? all.filter { p.holoCount($0.id) > 0 }.count : all.filter { p.collection[$0.id] != nil }.count
                 HStack(spacing: 10) {
                     Text(r).font(.barlow(14)).foregroundColor(Theme.fg).frame(width: 84, alignment: .leading)
                     GeometryReader { g in
                         ZStack(alignment: .leading) {
                             Capsule().fill(Theme.fg.opacity(0.08))
-                            Capsule().fill(Theme.rarityColor(r))
+                            Capsule().fill(barFill(r))
                                 .frame(width: max(4, g.size.width * CGFloat(have) / CGFloat(max(all.count, 1))))
                         }
                     }
@@ -99,6 +99,12 @@ struct ProfileTab: View {
         .padding(14)
         .background(Theme.field, in: RoundedRectangle(cornerRadius: 18))
         .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.brass.opacity(0.2), lineWidth: 1))
+    }
+
+    // Holo cards (any card you have a holo copy of) get the rainbow foil colours.
+    private func barFill(_ r: String) -> AnyShapeStyle {
+        r == "Holo" ? AnyShapeStyle(LinearGradient(colors: HoloFoil.rainbow, startPoint: .leading, endPoint: .trailing))
+                    : AnyShapeStyle(Theme.rarityColor(r))
     }
 
     private var settings: some View {
