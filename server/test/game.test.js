@@ -48,12 +48,12 @@ test('no pity: a pack never forces a Legendary', () => {
   assert.ok(p.cards.every(id => rarityOf(id) === 'Common'));
 });
 
-test('drop rates: characters 30.5/10/4/1, Deflector+Ricochet+Restore 24%, other power cards 30.5%', () => {
+test('drop rates: characters ~29/12/6/1, Deflector+Ricochet+Restore ~23%, other power cards ~29%', () => {
   const n = { Common: 0, Rare: 0, Epic: 0, Legendary: 0, fav: 0, gear: 0 };
   const fav = ['pw:shield', 'pw:mirror', 'pw:restore'];
   for (let i = 0; i < 20000; i++) for (const id of openPack(0).cards) n[fav.includes(id) ? 'fav' : id.startsWith('pw:') ? 'gear' : rarityOf(id)]++;
   const pct = r => (100 * n[r]) / 60000;
-  assert.ok(Math.abs(pct('Common') - 30.5) < 1.5 && Math.abs(pct('fav') - 24) < 1.5 && Math.abs(pct('gear') - 30.5) < 1.5 && Math.abs(pct('Legendary') - 1) < 0.5, JSON.stringify(n));
+  assert.ok(Math.abs(pct('Common') - 29.06) < 1.5 && Math.abs(pct('fav') - 22.87) < 1.5 && Math.abs(pct('gear') - 29.06) < 1.5 && Math.abs(pct('Rare') - 12) < 1 && Math.abs(pct('Epic') - 6) < 0.8 && Math.abs(pct('Legendary') - 1) < 0.5, JSON.stringify(n));
 });
 
 test('teams smaller than 3 play out', () => {
@@ -402,7 +402,7 @@ test('power cards: each does its job, is used up, and counts as the card\'s move
   const m = aiMove(s, 1); assert.ok(m.move.startsWith('pw:'));
   // packs: power cards turn up in normal packs, Power Packs are all power cards; campaign chapter 1 enemies have none
   let found = 0; for (let i = 0; i < 2000; i++) found += op(0).cards.filter(c => c.startsWith('pw:')).length;
-  assert.ok(Math.abs(found / 6000 - 0.545) < 0.03, `${found} power cards in 6000 pack cards`);   // 24% + 30.5%
+  assert.ok(Math.abs(found / 6000 - 0.519) < 0.03, `${found} power cards in 6000 pack cards`);   // ~23% + ~29%
   assert.ok(op(0, 'power').cards.every(c => POWERS[c.slice(3)]));
   assert.deepEqual(campaignPowers(0), []);
   assert.ok(campaignPowers(31).length >= 1);

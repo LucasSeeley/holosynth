@@ -12,7 +12,7 @@ export const CAMPAIGN_XP = [50, 100, 150, 200, 250];
 export const CHAPTERS_OPEN = 5;   // chapters past this show "More chapters are on the way"
 export const WIN_XP = 25;
 export const XP_PER_LEVEL = 100;
-export const RATES = [['Common', 85], ['Rare', 10], ['Epic', 4], ['Legendary', 1]];
+export const RATES = [['Common', 81], ['Rare', 12], ['Epic', 6], ['Legendary', 1]];
 // +20% damage. Tech and magic each have a triangle, and every class also beats one class from the other side:
 // each class beats 2, is weak to 2 and is even with 1.
 export const BEATS = {
@@ -55,7 +55,7 @@ const powerOf = (rand, skip = []) => {
 };
 // What a pack card that rolled Common turns into (see COMMON_SPLIT).
 function commonSlot(type, rand) {
-  const u = rand() * 85;
+  const u = rand() * (COMMON_SPLIT.character + COMMON_SPLIT.favourites + COMMON_SPLIT.gear);
   if (u < COMMON_SPLIT.character) return pickOf('Common', type, rand);
   if (u < COMMON_SPLIT.character + COMMON_SPLIT.favourites) return 'pw:' + FAVOURITE_POWERS[Math.floor(rand() * FAVOURITE_POWERS.length)];
   return powerOf(rand, FAVOURITE_POWERS);
@@ -320,8 +320,9 @@ export const POWERS = {
 export const POWER_SLOTS = 2;
 export const rarityOf = id => (id.startsWith('pw:') ? POWERS[id.slice(3)].rarity : BY_ID[id].rarity);   // a pack card's rarity
 export const POWER_PACK = { cost: 3000, size: 3, rates: [['Common', 70], ['Rare', 22], ['Epic', 7], ['Legendary', 1]] };
-// Every pack card that rolls Common (85%) splits into: a Common character 30.5%, Deflector / Ricochet / Restore 24% (8% each),
-// any other power card 30.5% (rarer ones less often). The guaranteed card of a pack never changes.
+// Every pack card that rolls Common (81%) splits in these proportions: a Common character, Deflector / Ricochet / Restore
+// (even split), any other power card (rarer ones less often). Of all pack cards that's about 29% / 23% / 29%.
+// The guaranteed card of a pack never changes.
 export const COMMON_SPLIT = { character: 30.5, favourites: 24, gear: 30.5 };
 export const FAVOURITE_POWERS = ['shield', 'mirror', 'restore'];
 const POWER_POOLS = TIERS.map(r => Object.keys(POWERS).filter(k => POWERS[k].rarity === r));
