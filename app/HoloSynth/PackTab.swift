@@ -32,12 +32,12 @@ struct PackTab: View {
     private let tearLine: CGFloat = 0.05          // just under the crimped top of the pack art
     private typealias PackInfo = (type: String, name: String, contents: String, glow: UInt32, cards: Int, price: Int)
     private static let packs: [PackInfo] = [   // prices match the server
+        ("power", "Power Pack", "3 power cards", 0xB46BFF, 3, 3000),
         ("cyber", "Cyber Pack", "Fighter, Beast and Mech cards", 0x3FF0FF, 3, 5000),
         ("magic", "Magic Pack", "Arcanist, Spirit and Mystic cards", 0xB46BFF, 3, 5000),
         ("omni", "Omni Pack", "Any card from both sets", 0xE8B85A, 3, 5000),
         ("overload", "Overload Pack", "A guaranteed Rare or better + 7 more", 0xFFD77A, 8, 12000),
         ("legends", "Legends Pack", "A guaranteed Legendary + 4 more cards", 0xFFF3C4, 5, 25000),
-        ("power", "Power Pack", "3 power cards", 0xB46BFF, 3, 3000),
     ]
 
     var body: some View {
