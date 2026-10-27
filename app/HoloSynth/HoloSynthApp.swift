@@ -140,13 +140,25 @@ struct HomeView: View {
                 .badge(store.profile?.quests?.claimable ?? 0)   // quest rewards waiting
             PackTab().tabItem { Label("Shop", systemImage: "bag.fill") }.tag(1)
             CollectionTab().tabItem { Label("Cards", systemImage: "square.grid.3x3.fill") }.tag(2)
-                .badge(store.newCards.isEmpty ? nil : Text(store.newCards.count > 9 ? "9+" : "\(store.newCards.count)"))   // new cards to look at
             SocialTab().tabItem { Label("Social", systemImage: "person.2.fill") }.tag(3)
                 .badge(socialBadge)
             ProfileTab().tabItem { Label("Profile", systemImage: "person.crop.circle.fill") }.tag(4)
         }
         .toolbarBackground(Theme.ink, for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)
+        // New cards to look at: a pink dot on the Cards icon's top corner (the system badge can't be a dot or be moved).
+        // shortcut: assumes the standard 49pt iPhone tab bar with 5 tabs, Cards in the middle; recheck if tabs change.
+        .overlay(alignment: .bottom) {
+            if !store.newCards.isEmpty {
+                GeometryReader { g in
+                    Circle().fill(Theme.pink).frame(width: 9, height: 9)
+                        .shadow(color: Theme.pink.opacity(0.7), radius: 4)
+                        .position(x: g.size.width / 2 + 14, y: g.size.height - 49 + 7)
+                }
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+            }
+        }
         .task {
             await store.refresh()
             // keeps friend requests, challenges and who's online fresh (and marks you online to friends)
