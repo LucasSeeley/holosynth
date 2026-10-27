@@ -64,7 +64,7 @@ async function campaign(token, upTo) {
 }
 for (const t of [a.token, b.token]) {
   const prof = await campaign(t, 6);
-  check(prof.team.length === 3 && prof.campaign.friendsUnlocked && prof.gold === 150, 'level 6 gives a full team and 150 gold');
+  check(prof.team.length === 3 && prof.campaign.friendsUnlocked && prof.gold === 300, 'level 6 gives a full team and 300 gold');
 }
 
 const inv = await call('/matches', a.token, {});
