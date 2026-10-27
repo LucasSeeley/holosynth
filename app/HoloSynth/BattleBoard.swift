@@ -303,7 +303,7 @@ struct BattleBoard: View {
                 if !powers.isEmpty { powerHand(powers, enabled: card != nil && myTurn && !sending) }
             }
         }
-        .padding(.horizontal, 16).padding(.top, 14).padding(.bottom, 12)
+        .padding(.horizontal, 16).padding(.top, 14).padding(.bottom, 26)   // a little up from the bottom edge
         .frame(maxWidth: .infinity)
         .background(Theme.ink.opacity(0.92).ignoresSafeArea(edges: .bottom))
         .overlay(alignment: .top) { Rectangle().fill(Theme.brass.opacity(0.25)).frame(height: 1) }
