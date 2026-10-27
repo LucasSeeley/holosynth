@@ -5,7 +5,7 @@ struct PlayTab: View {
     @EnvironmentObject var store: GameStore
     @Binding var tab: Int
 
-    enum Screen: Identifiable { case campaign, friend, reward, spin, gauntlet, hunt, quests; var id: Self { self } }
+    enum Screen: Identifiable { case campaign, friend, reward, spin, gauntlet, hunt, quests, ranked; var id: Self { self } }
     @State var screen: Screen?
 
     var body: some View {
@@ -18,6 +18,7 @@ struct PlayTab: View {
                         campaignTile(p)
                         SpinTile(nextSpin: p.nextSpin) { screen = .spin }
                         if let q = p.quests { QuestTile(quests: q) { screen = .quests } }
+                        if let r = p.ranked { RankedTile(info: r, unlocked: p.team.count >= 3) { screen = .ranked } }
                         GauntletTile(stats: p.gauntlet, unlocked: p.campaign.friendsUnlocked) { screen = .gauntlet }
                         if let h = p.hunt { HuntTile(hunt: h, unlocked: p.team.count >= 3) { screen = .hunt } }
                         HStack(spacing: 12) { friendTile(p); packTile }
@@ -46,6 +47,12 @@ struct PlayTab: View {
                 GauntletView { packs in
                     screen = nil
                     if let packs { store.pendingPack = packs; tab = 1 }
+                }
+            case .ranked:
+                RankedView { pack in
+                    screen = nil
+                    Task { await store.refresh() }
+                    if let pack { store.pendingPack = pack; tab = 1 }
                 }
             case .quests:
                 QuestsView { pack, type in

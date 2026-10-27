@@ -71,6 +71,7 @@ struct Profile: Decodable, Equatable {
     let shop: Shop?             // today's shop cards
     let hunt: HuntInfo?         // today's Legend Hunt
     let quests: Quests?         // today's daily quests
+    let ranked: RankedTileInfo? // your ranked rank and place this week
     let fused: [FusedCopy]?     // fused copies you own
     let gauntlet: GauntletStats
     let campaign: Campaign
@@ -173,6 +174,37 @@ enum CardSort {
         }
     }
 }
+// MARK: Ranked
+
+// Eight ranks; each week you're in your rank's table of 30 (computer players fill it out), moved up or down by your place.
+struct Ranked: Decodable, Equatable {
+    struct Row: Decodable, Equatable { let place: Int; let name: String; let points: Int; let me: Bool; let bot: Bool }
+    struct Reward: Decodable, Equatable { let gold: Int; let pack: String? }
+    struct Opp: Decodable, Equatable { let name: String; let rank: Int; let team: [String]; let avatar: String? }
+    struct Run: Decodable, Equatable { let opp: Opp; let state: BattleState }
+    struct Moved: Decodable, Equatable { let place: Int; let from: Int; let to: Int; let points: Int }
+    struct SeasonReward: Decodable, Equatable { let season: Int; let rank: Int; let gold: Int; let pack: String? }
+    let rank: Int
+    let ranks: [String]
+    let rewards: [Reward]
+    let points: Int
+    let place: Int
+    let table: [Row]
+    let weekEnds: Double
+    let season: Int
+    let seasonEnds: Double
+    let best: Int
+    let run: Run?               // a fight against another player's team, played by the computer
+    let liveMatch: Int?         // a live match against another player searching at the same time
+    let moved: Moved?           // last week's result, shown once
+    let reward: SeasonReward?   // last season's reward, waiting to be claimed
+}
+struct RankedSearchReply: Decodable { let view: Ranked; let searching: Bool? }
+struct RankedResult: Decodable, Equatable { let won: Bool; let delta: Int; let points: Int; let from: Int; let place: Int; let gold: Int; let xp: Int }
+struct RankedMoveReply: Decodable { let state: BattleState?; let result: RankedResult?; let view: Ranked?; let profile: Profile? }
+struct RankedClaimReply: Decodable { let cards: [String]?; let holo: [Int]?; let type: String?; let gold: Int; let profile: Profile }
+struct RankedTileInfo: Decodable, Equatable { let rank: Int; let name: String; let place: Int; let points: Int; let weekEnds: Double; let alert: Bool }
+
 // MARK: Daily quests
 
 // Three a day (new at `next`, ms since 1970). bonus: locked | ready | claimed (the free pack for finishing all three).
