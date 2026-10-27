@@ -102,7 +102,7 @@ test('packs only hold cards of their type, and only open types are free', () => 
 });
 
 test('five chapters of 30 with a boss every 10th level, all real cards', () => {
-  assert.deepEqual([0, 30, 60, 90, 120].map(l => [CAMPAIGN_GOLD[CAMPAIGN[l].chapter], CAMPAIGN_XP[CAMPAIGN[l].chapter]]), [[25, 25], [50, 50], [100, 100], [150, 150], [200, 200]]);
+  assert.deepEqual([0, 30, 60, 90, 120].map(l => [CAMPAIGN_GOLD[CAMPAIGN[l].chapter], CAMPAIGN_XP[CAMPAIGN[l].chapter]]), [[50, 50], [100, 100], [150, 150], [200, 200], [250, 250]]);
   assert.deepEqual(CHAPTERS.map(c => c.levels.length), [30, 30, 30, 30, 30]);
   assert.equal(OPEN_LEVELS, CHAPTERS_OPEN * 30);
   assert.deepEqual(CAMPAIGN.filter(l => l.boss).map(l => l.pack), [...Array(9).fill('cyber'), 'magic', 'magic', 'magic', 'cyber', 'magic', 'omni']);
