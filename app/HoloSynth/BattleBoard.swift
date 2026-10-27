@@ -295,14 +295,15 @@ struct BattleBoard: View {
         let powers = s.pw?[you] ?? []
         return VStack(spacing: 10) {
             Text(error ?? prompt(card)).font(.barlow(15, semibold: true))
-                .padding(.bottom, (s.pw?[you] ?? []).isEmpty ? 0 : 6)   // room for a lifted power card
                 .foregroundColor(error != nil ? Theme.pink : (myTurn || playing ? Theme.fg : Color(hex: 0xFF7884)))
                 .multilineTextAlignment(.center).lineLimit(2).frame(minHeight: 20)
+            if !powers.isEmpty {   // your power hand, fanned in the bottom-right corner above the moves
+                HStack { Spacer(); powerHand(powers, enabled: card != nil && myTurn && !sending) }.frame(height: 104, alignment: .bottom)
+            }
             HStack(spacing: 10) {
                 moveButton("basic", card: card, unit: unit)
                 moveButton("special", card: card, unit: unit)
                 if unit?.cd2 != nil { moveButton("special2", card: card, unit: unit) }   // fused Epic/Legendary
-                if !powers.isEmpty { powerHand(powers, enabled: card != nil && myTurn && !sending) }
             }
         }
         .padding(.horizontal, 16).padding(.top, 14).padding(.bottom, 26)   // a little up from the bottom edge
@@ -311,7 +312,7 @@ struct BattleBoard: View {
         .overlay(alignment: .top) { Rectangle().fill(Theme.brass.opacity(0.25)).frame(height: 1) }
     }
 
-    // Your power cards as a little fanned hand at the end of the move buttons. Tap one to play it with the selected card.
+    // Your power cards as a little fanned hand above the move buttons, bottom right. Tap one to play it with the selected card.
     private func powerHand(_ powers: [String], enabled: Bool) -> some View {
         ZStack(alignment: .bottomTrailing) {
             ForEach(Array(powers.prefix(2).enumerated()), id: \.offset) { k, id in
@@ -320,30 +321,30 @@ struct BattleBoard: View {
                     Button { if enabled { choosePower(p) } else { error = myTurn ? "Pick one of your cards first" : nil } } label: { miniPower(p, glow: picked || enabled) }
                         .buttonStyle(.plain)
                         .rotationEffect(.degrees(powers.count > 1 ? (k == 0 ? -9 : 7) : 0), anchor: .bottom)
-                        .offset(x: powers.count > 1 && k == 0 ? -30 : 0, y: picked ? -10 : 0)
+                        .offset(x: powers.count > 1 && k == 0 ? -52 : 0, y: picked ? -16 : 0)
                         .zIndex(picked ? 2 : Double(k))
                         .accessibilityLabel("Power card: \(p.name). \(p.effect)")
                 }
             }
         }
-        .frame(width: powers.count > 1 ? 92 : 60, height: 66, alignment: .bottomTrailing)
+        .frame(width: powers.count > 1 ? 124 : 72, height: 100, alignment: .bottomTrailing)
         .opacity(enabled || powerMove != nil ? 1 : 0.55)
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: powerMove?.id)
     }
 
     private func miniPower(_ p: Power, glow: Bool) -> some View {
         VStack(spacing: 3) {
-            Text("Power").font(.chakra(6, semibold: true)).tracking(1).textCase(.uppercase).foregroundColor(Power.violet)
+            Text("Power").font(.chakra(7, semibold: true)).tracking(1).textCase(.uppercase).foregroundColor(Power.violet)
             ZStack {
                 RadialGradient(colors: [Theme.rarityColor(p.rarity).opacity(0.35), Color(hex: 0x120A24)], center: .center, startRadius: 0, endRadius: 30)
                 if let img = Art.image("power_" + p.id) { Image(uiImage: img).resizable().scaledToFill() }
                 else { Image(systemName: p.symbol).font(.system(size: 18)).foregroundColor(Theme.cyan) }
             }
-            .frame(width: 48, height: 40).clipShape(RoundedRectangle(cornerRadius: 5))
-            Text(p.name).font(.chakra(8)).foregroundColor(Theme.fg).lineLimit(1).minimumScaleFactor(0.6)
+            .frame(width: 60, height: 52).clipShape(RoundedRectangle(cornerRadius: 6))
+            Text(p.name).font(.chakra(10)).foregroundColor(Theme.fg).lineLimit(1).minimumScaleFactor(0.6)
         }
-        .padding(4)
-        .frame(width: 58, height: 82)
+        .padding(5)
+        .frame(width: 70, height: 98)
         .background(LinearGradient(colors: [Color(hex: 0x2A1450), Color(hex: 0x0B0918)], startPoint: .top, endPoint: .bottom), in: RoundedRectangle(cornerRadius: 8))
         .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.rarityColor(p.rarity), lineWidth: 1))
         .shadow(color: glow ? Power.violet.opacity(0.7) : .black.opacity(0.6), radius: glow ? 10 : 6, y: glow ? 0 : 4)
