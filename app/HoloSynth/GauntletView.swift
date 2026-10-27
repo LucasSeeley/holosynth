@@ -4,7 +4,7 @@ import UIKit
 // Gauntlet, full screen: lobby → fight → between fights → … → run over. Endless; one loss ends the run.
 struct GauntletView: View {
     @EnvironmentObject var store: GameStore
-    let onClose: (_ packs: [String]?) -> Void    // cards from packs won this visit, to open on the Packs tab
+    let onClose: (_ packs: [String]?) -> Void    // cards from packs won this visit (they wait in the Play tab's Packs row)
 
     enum Phase: Equatable { case loading, lobby, fight, between, over(GauntletResult) }
     @State private var phase = Phase.loading
@@ -172,9 +172,6 @@ struct GauntletView: View {
                             .background(Theme.brass.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
                             .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.brass.opacity(0.45), lineWidth: 1))
                             .padding(.top, 4)
-                    }
-                    if won?.pack != nil {
-                        Text("Free pack! It opens when you finish.").font(.barlow(14, semibold: true)).foregroundColor(Color(hex: 0xFF7884))
                     }
                     Text("This run: \(run.gold) gold").font(.barlow(13)).foregroundColor(Theme.muted)
                 }
