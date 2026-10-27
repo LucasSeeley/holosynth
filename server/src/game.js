@@ -49,7 +49,17 @@ const pickOf = (rarity, type, rand) => {
 };
 
 // A random power card for a pack, rarer ones less often.
-const powerOf = rand => { const r = RARITY_I[rollRarity(rand, POWER_PACK.rates)]; return 'pw:' + POWER_POOLS[r][Math.floor(rand() * POWER_POOLS[r].length)]; };
+const powerOf = (rand, skip = []) => {
+  const r = RARITY_I[rollRarity(rand, POWER_PACK.rates)], pool = POWER_POOLS[r].filter(id => !skip.includes(id));
+  return pool.length ? 'pw:' + pool[Math.floor(rand() * pool.length)] : powerOf(rand, skip);
+};
+// What a pack card that rolled Common turns into (see COMMON_SPLIT).
+function commonSlot(type, rand) {
+  const u = rand() * 85;
+  if (u < COMMON_SPLIT.character) return pickOf('Common', type, rand);
+  if (u < COMMON_SPLIT.character + COMMON_SPLIT.favourites) return 'pw:' + FAVOURITE_POWERS[Math.floor(rand() * FAVOURITE_POWERS.length)];
+  return powerOf(rand, FAVOURITE_POWERS);
+}
 // Returns { cards: [ids], holo: [indexes of holo cards], packsSinceLegend } for one pack of `type`.
 export function openPack(packsSinceLegend, type = 'cyber', rand = Math.random) {
   const size = PACK_SIZES[type] ?? PACK_SIZE;
@@ -57,7 +67,7 @@ export function openPack(packsSinceLegend, type = 'cyber', rand = Math.random) {
   const last = { legends: () => 'Legendary', overload: () => rollRarity(rand, OVERLOAD_BEST) }[type];
   if (type === 'power') return { cards: Array.from({ length: POWER_PACK.size }, () => powerOf(rand)), holo: [], packsSinceLegend };   // power cards only
   const rarities = Array.from({ length: size }, (_, i) => (last && i === size - 1 ? last() : rollRarity(rand)));
-  const cards = rarities.map((r, i) => (r === 'Common' && !(last && i === size - 1) && rand() < POWER_IN_PACK ? powerOf(rand) : pickOf(r, type, rand)));
+  const cards = rarities.map((r, i) => (r === 'Common' && !(last && i === size - 1) ? commonSlot(type, rand) : pickOf(r, type, rand)));
   return {
     cards,
     holo: cards.map((_, i) => i).filter(i => !cards[i].startsWith('pw:') && rand() < HOLO_CHANCE),   // which of them came out holo
@@ -310,7 +320,10 @@ export const POWERS = {
 export const POWER_SLOTS = 2;
 export const rarityOf = id => (id.startsWith('pw:') ? POWERS[id.slice(3)].rarity : BY_ID[id].rarity);   // a pack card's rarity
 export const POWER_PACK = { cost: 3000, size: 3, rates: [['Common', 70], ['Rare', 22], ['Epic', 7], ['Legendary', 1]] };
-export const POWER_IN_PACK = 0.5;   // share of the Common drops in every pack that are power cards instead (not the guaranteed card)
+// Every pack card that rolls Common (85%) splits into: a Common character 30.5%, Deflector / Ricochet / Restore 24% (8% each),
+// any other power card 30.5% (rarer ones less often). The guaranteed card of a pack never changes.
+export const COMMON_SPLIT = { character: 30.5, favourites: 24, gear: 30.5 };
+export const FAVOURITE_POWERS = ['shield', 'mirror', 'restore'];
 const POWER_POOLS = TIERS.map(r => Object.keys(POWERS).filter(k => POWERS[k].rarity === r));
 // Two power cards for a computer opponent, from rarity tiers a and b (0 = Common ... 3 = Legendary).
 export const botPowers = (a, b, rand = Math.random) => [a, b].map(t => POWER_POOLS[t][Math.floor(rand() * POWER_POOLS[t].length)]);
