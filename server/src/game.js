@@ -296,16 +296,16 @@ export const POWERS = {
   // kept weak on purpose: a nudge, not a win button
   repair: { name: 'Repair Kit', rarity: 'Common', target: 'ally' },        // heal 15 HP
   overclock: { name: 'Overclock', rarity: 'Common', target: 'ally' },      // its next attack +25%
-  shield: { name: 'Shield', rarity: 'Common', target: 'ally' },            // the next hit on it does half damage
+  shield: { name: 'Deflector', rarity: 'Common', target: 'ally' },            // the next hit on it does half damage
   recharge: { name: 'Recharge', rarity: 'Rare', target: 'ally' },          // its specials are ready now
   emp: { name: 'EMP', rarity: 'Rare', target: 'none' },                    // every enemy special +1 cooldown
   nanoswarm: { name: 'Nanoswarm', rarity: 'Rare', target: 'none' },        // 10 damage to every enemy
   revive: { name: 'Revive Chip', rarity: 'Epic', target: 'ko' },           // back at 15% HP
   timeskip: { name: 'Time Skip', rarity: 'Epic', target: 'acted' },        // it can act again this round
-  mirror: { name: 'Mirror', rarity: 'Epic', target: 'ally' },              // half of the next hit on it bounces back at the attacker
-  overdrive: { name: 'Overdrive', rarity: 'Legendary', target: 'none' },   // every card's next attack +15%
+  mirror: { name: 'Ricochet', rarity: 'Epic', target: 'ally' },              // half of the next hit on it bounces back at the attacker
+  overdrive: { name: 'Rally', rarity: 'Legendary', target: 'none' },   // every card's next attack +15%
   restore: { name: 'Restore', rarity: 'Legendary', target: 'ally' },       // heal half its max HP
-  singularity: { name: 'Singularity', rarity: 'Legendary', target: 'none' }, // every enemy loses 10% of its max HP
+  singularity: { name: 'Static Field', rarity: 'Legendary', target: 'none' }, // every enemy loses 10% of its max HP
 };
 export const POWER_SLOTS = 2;
 export const rarityOf = id => (id.startsWith('pw:') ? POWERS[id.slice(3)].rarity : BY_ID[id].rarity);   // a pack card's rarity
@@ -417,12 +417,12 @@ export function applyMove(state, p, from, move, to) {
     dmg = hitFor(attacker, target, move);
     if (boosted) mine(attacker, p, from, 0);
     if (guarded && !target.sh && !target.mi) mine(target, 1 - p, to, 0);
-    if (target.sh) { target.sh = false; pas.push({ p: 1 - p, i: to, n: 'Shield', v: 0 }); }
+    if (target.sh) { target.sh = false; pas.push({ p: 1 - p, i: to, n: 'Deflector', v: 0 }); }
     else if (target.mi) {   // Mirror: the other half of the hit goes back at the attacker
       target.mi = false;
       const back = Math.min(hitFor(attacker, target, move, true) - dmg, attacker.hp);
       attacker.hp -= back;
-      pas.push({ p, i: from, n: 'Mirror', v: -back });
+      pas.push({ p, i: from, n: 'Ricochet', v: -back });
     }
     attacker.oc = false; attacker.od = false;
     if (target.ps === 'phaseshift') target.ph = true;
