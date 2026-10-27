@@ -415,3 +415,20 @@ test('power cards: each does its job, is used up, and counts as the card\'s move
   assert.deepEqual(campaignPowers(0), []);
   assert.ok(campaignPowers(31).length >= 1);
 });
+
+test('gauntlet: special cooldowns carry into the next fight, EMP\'s extra wears off', async () => {
+  const { gauntletCooldowns } = await import('../src/game.js');
+  const team = ['volt', 'fang', 'goliath'];
+  const s = gauntletBattle(team, team.map(id => BY_ID[id].hp), ['crow'], {}, [], 1);
+  s.turn = 0; applyMove(s, 0, 0, 'special', 0);           // volt's special: cooldown starts
+  const cd = s.teams[0][0].cd;
+  s.pw[1] = ['emp']; s.turn = 1; s.acted = [[true, false, false], [false]];
+  applyMove(s, 1, 0, 'pw:emp', 0);                        // the enemy EMPs our team: +1 each
+  assert.equal(s.teams[0][0].cd, cd + 1);
+  assert.equal(s.teams[0][1].cd, 1);
+  const carried = gauntletCooldowns(s.teams[0]);
+  assert.deepEqual(carried.map(c => c.cd), [cd, 0, 0], 'EMP part dropped, real cooldown kept');
+  const next = gauntletBattle(team, team.map(id => BY_ID[id].hp), ['moth'], {}, [], 2, carried);
+  assert.deepEqual(next.teams[0].map(u => u.cd), [cd, 0, 0]);
+  assert.ok(next.teams[0].every(u => !u.sh && !u.mi && !u.oc), 'other effects start fresh');
+});

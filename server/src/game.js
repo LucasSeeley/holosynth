@@ -166,12 +166,15 @@ export function gauntletEnemies(fight, rand = Math.random) {
   });
 }
 // Fight `fight` against `enemies`, your cards starting at `hp` (knocked-out cards stay at 0). You move first.
-export function gauntletBattle(team, hp, enemies, fus = {}, powers = [], fight = 1) {
+// cds: cooldowns carried from the last fight (see gauntletCooldowns); every other effect starts fresh each fight.
+export function gauntletBattle(team, hp, enemies, fus = {}, powers = [], fight = 1, cds = []) {
   const s = newBattle(team, enemies, () => 0, fus);
   s.pw = [[...powers], gauntletPowers(fight)];
-  s.teams[0].forEach((u, i) => { u.hp = hp[i]; });
+  s.teams[0].forEach((u, i) => { u.hp = hp[i]; u.cd = cds[i]?.cd ?? 0; if (u.cd2 !== undefined) u.cd2 = cds[i]?.cd2 ?? 0; });
   return s;
 }
+// Special cooldowns carry into the next Gauntlet fight, minus whatever an EMP added (that wears off with the fight).
+export const gauntletCooldowns = team => team.map(u => ({ cd: Math.max(0, u.cd - (u.emp || 0)), cd2: u.cd2 === undefined ? undefined : Math.max(0, u.cd2 - (u.emp2 || 0)) }));
 export const gauntletHeal = team => team.map(u => (u.hp === 0 ? 0 : Math.min(unitMax(u), u.hp + Math.round(unitMax(u) * GAUNTLET_HEAL))));
 
 // ---- daily quests ----
@@ -478,6 +481,8 @@ export function applyMove(state, p, from, move, to) {
   const qc = attacker.ps === 'quickcharge' ? 1 : 0;
   attacker.cd = move === 'special' ? Math.max(1, card.special.cd - qc) : Math.max(0, attacker.cd - 1);
   if (attacker.cd2 !== undefined) attacker.cd2 = move === 'special2' ? Math.max(1, SECOND[attacker.id].cd - qc) : Math.max(0, attacker.cd2 - 1);
+  if (move === 'special') attacker.emp = 0;      // a fresh cooldown: no EMP left in it
+  if (move === 'special2') attacker.emp2 = 0;
 
   state.acted[p][from] = true;
   refreshActed(state, p);
@@ -508,12 +513,12 @@ function playPower(state, p, from, id, to) {
     case 'repair': t.hp = Math.min(unitMax(t), t.hp + 15); break;
     case 'overclock': t.oc = true; break;
     case 'shield': t.sh = true; break;
-    case 'recharge': t.cd = 0; if (t.cd2 !== undefined) t.cd2 = 0; break;
+    case 'recharge': t.cd = 0; t.emp = 0; if (t.cd2 !== undefined) { t.cd2 = 0; t.emp2 = 0; } break;
     case 'revive': t.hp = Math.max(1, Math.round(unitMax(t) * 0.15)); state.acted[p][to] = true; break;
     case 'timeskip': state.acted[p][to] = false; break;
     case 'mirror': t.mi = true; break;
     case 'restore': t.hp = Math.min(unitMax(t), t.hp + Math.round(unitMax(t) / 2)); break;
-    case 'emp': each(foe, 1 - p, u => { u.cd += 1; if (u.cd2 !== undefined) u.cd2 += 1; }); break;
+    case 'emp': each(foe, 1 - p, u => { u.cd += 1; u.emp = (u.emp || 0) + 1; if (u.cd2 !== undefined) { u.cd2 += 1; u.emp2 = (u.emp2 || 0) + 1; } }); break;   // emp/emp2: how much of the cooldown is EMP's
     case 'nanoswarm': each(foe, 1 - p, u => { u.hp = Math.max(0, u.hp - 10); }); break;
     case 'singularity': each(foe, 1 - p, u => { u.hp = Math.max(0, u.hp - Math.round(unitMax(u) * 0.1)); }); break;
     case 'overdrive': each(me, p, u => { u.od = true; }); break;

@@ -3,7 +3,7 @@
 import {
   BY_ID, STARTER_TEAM, START_GOLD, PACK_COST, PACK_COSTS, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN_XP, CAMPAIGN, CHAPTERS, NEW_CARD_AFTER, OPEN_LEVELS,
   levelFor, levelStart, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, dailyShop, SHOP_PRICES, huntFoes, huntStart, HUNT_MS, huntBattle, huntPack, HUNT_GOLD, HUNT_XP, QUESTS, QUEST_PAY, QUEST_BONUS, pickQuests, RANKS, RANK_REWARDS, RANKED_WIN, RANKED_LOSS, RANKED_GOLD, RANKED_XP, WEEK_MS, weekStart, seasonOf, seasonEnd, rankMove, rankTable, rankedTeam, botName, rankedFusions,
-  gauntletEnemies, gauntletBattle, gauntletHeal, fusedHp, FUSE_COPIES, FUSE_GOLD, FUSE_MAX, SECOND, SECOND_COST, PASSIVE_COST, POWERS, POWER_SLOTS, rankedPowers, gauntletGold, GAUNTLET_PACK_EVERY, newCampaignBattle, applyMove, aiMove,
+  gauntletEnemies, gauntletBattle, gauntletHeal, gauntletCooldowns, fusedHp, FUSE_COPIES, FUSE_GOLD, FUSE_MAX, SECOND, SECOND_COST, PASSIVE_COST, POWERS, POWER_SLOTS, rankedPowers, gauntletGold, GAUNTLET_PACK_EVERY, newCampaignBattle, applyMove, aiMove,
 } from './game.js';
 
 class HttpError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
@@ -1161,7 +1161,7 @@ async function nextGauntletFight(db, user) {
   const run = JSON.parse(g.run);
   if (!run) throw new HttpError(400, 'No Gauntlet run in progress.');
   if (!run.state) {
-    run.state = gauntletBattle(run.team, run.hp, run.enemies, run.fus || {}, await loadout(db, user.id), run.fight);
+    run.state = gauntletBattle(run.team, run.hp, run.enemies, run.fus || {}, await loadout(db, user.id), run.fight, run.cds);
     await saveGauntlet(db, user.id, g.run, run, g.best);
   }
   return json(gauntletView(run));
@@ -1201,7 +1201,7 @@ async function gauntletMove(req, db, user) {
   // won: pay out, heal, line up the next fight
   const gold = gauntletGold(run.fight);
   const next = { ...run, wins: run.wins + 1, gold: run.gold + gold, fight: run.fight + 1,
-    hp: gauntletHeal(run.state.teams[0]), enemies: gauntletEnemies(run.fight + 1), state: null };
+    hp: gauntletHeal(run.state.teams[0]), cds: gauntletCooldowns(run.state.teams[0]), enemies: gauntletEnemies(run.fight + 1), state: null };
   let pack = null, packType = null, holo = null;
   const writes = [db.prepare('UPDATE users SET gold = gold + ? WHERE id = ?').bind(gold, user.id), bumpProgress(db, user.id, 'wins'),
     questEvent(db, user.id, 'streak', next.wins, true)];
