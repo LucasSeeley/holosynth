@@ -129,6 +129,7 @@ export const gauntletHeal = team => team.map(u => (u.hp === 0 ? 0 : Math.min(uni
 // Once a day (midnight UTC) one Legendary, fully fused, the same for everyone. You get one try with your team.
 // Beat it for an Overload pack; half the time one of its 8 cards is that Legendary (the plain card, no fusion).
 export const HUNT_FUSION = { h: 3, b: 3, s: 3, x: true };
+export const HUNT_GOLD = 5000, HUNT_XP = 1000;   // also paid for a win, on top of the pack
 const LEGENDS = CARDS.filter(c => c.rarity === 'Legendary').map(c => c.id);
 export const dailyLegend = t => {
   let h = (Math.floor(t / DAY_MS) + 7) * 2654435761 >>> 0;

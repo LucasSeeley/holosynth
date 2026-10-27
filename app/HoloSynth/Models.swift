@@ -168,7 +168,7 @@ enum CardSort {
 // status: ready | playing | won | lost. next = when a new legend appears (ms since 1970).
 struct HuntInfo: Decodable, Equatable { let legend: String; let status: String; let next: Double }
 struct HuntHome: Decodable { let legend: String; let status: String; let state: BattleState?; let next: Double }
-struct HuntResult: Decodable, Equatable { let won: Bool; let pack: [String]?; let packType: String? }
+struct HuntResult: Decodable, Equatable { let won: Bool; let pack: [String]?; let packType: String?; let gold: Int?; let xp: Int? }
 struct HuntReply: Decodable { let legend: String; let state: BattleState; let result: HuntResult?; let profile: Profile? }
 struct ProfileReply: Decodable { let profile: Profile }
 

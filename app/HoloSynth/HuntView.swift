@@ -7,7 +7,7 @@ struct HuntView: View {
     @EnvironmentObject var store: GameStore
     let onClose: (_ pack: [String]?) -> Void
 
-    enum Phase: Equatable { case loading, lobby, fight, won([String]), lost }
+    enum Phase: Equatable { case loading, lobby, fight, won(HuntResult), lost }
     @State private var phase = Phase.loading
     @State private var home: HuntHome?
     @State private var state: BattleState?
@@ -26,7 +26,7 @@ struct HuntView: View {
             case .loading: ProgressView().tint(Theme.brass)
             case .lobby: lobby
             case .fight: fight
-            case .won(let pack): won(pack)
+            case .won(let r): won(r)
             case .lost: lost
             }
         }
@@ -79,6 +79,7 @@ struct HuntView: View {
                         (Text("Overload Pack").font(.chakra(17)).foregroundColor(Theme.fg) + Text(" · 8 cards").font(.barlow(13)))
                         (Text("50%").font(.chakra(13)).foregroundColor(Self.gold) + Text(" chance one of them is \(legend.name)"))
                             .font(.barlow(13))
+                        (Text("+ 5,000 gold · 1,000 XP").font(.chakra(13)).foregroundColor(Self.gold))
                     }
                     .foregroundColor(Color(hex: 0xA9A5C2))
                     Spacer(minLength: 0)
@@ -141,7 +142,7 @@ struct HuntView: View {
         if r.won {
             UINotificationFeedbackGenerator().notificationOccurred(.success)
             Sound.victory.play()
-            withAnimation { phase = .won(r.pack ?? []) }
+            withAnimation { phase = .won(r) }
         } else {
             UINotificationFeedbackGenerator().notificationOccurred(.error)
             Sound.defeat.play()
@@ -151,7 +152,7 @@ struct HuntView: View {
 
     // MARK: results
 
-    private func won(_ pack: [String]) -> some View {
+    private func won(_ r: HuntResult) -> some View {
         VStack(spacing: 12) {
             Spacer()
             Label("Legend Hunt", systemImage: "crown.fill").font(.chakra(12, semibold: true)).tracking(3).textCase(.uppercase)
@@ -162,10 +163,17 @@ struct HuntView: View {
                 Image(uiImage: img).resizable().scaledToFit().frame(height: 300).rotationEffect(.degrees(-3))
                     .shadow(color: Self.gold.opacity(0.6), radius: 26).padding(.top, 10)
             }
+            if let g = r.gold, let x = r.xp {
+                Label("+\(g.formatted()) gold  ·  +\(x.formatted()) XP", systemImage: "circle.hexagongrid.fill")
+                    .font(.chakra(18)).foregroundColor(Self.gold)
+                    .padding(.horizontal, 14).frame(height: 38)
+                    .background(Theme.brass.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.brass.opacity(0.45), lineWidth: 1))
+            }
             Text("Your Overload Pack has 8 cards.\nIs \(legend?.name ?? "the legend") one of them?")
                 .font(.barlow(15)).foregroundColor(Color(hex: 0xA9A5C2)).multilineTextAlignment(.center)
             Spacer()
-            Button("Open it") { onClose(pack) }.buttonStyle(GoldButton())
+            Button("Open it") { onClose(r.pack ?? []) }.buttonStyle(GoldButton())
         }
         .padding(.horizontal, 16).padding(.bottom, 12)
         .background(RadialGradient(colors: [Self.gold.opacity(0.25), .clear], center: UnitPoint(x: 0.5, y: 0.45), startRadius: 0, endRadius: 260))

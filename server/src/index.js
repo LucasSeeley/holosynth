@@ -2,7 +2,7 @@
 // It also serves the iPhone app download (IPA + SideStore source) from the KV namespace bound as FILES.
 import {
   BY_ID, STARTER_TEAM, START_GOLD, PACK_COST, PACK_COSTS, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN_XP, CAMPAIGN, CHAPTERS, NEW_CARD_AFTER, OPEN_LEVELS,
-  levelFor, levelStart, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, dailyShop, SHOP_PRICES, dailyLegend, huntBattle, huntPack,
+  levelFor, levelStart, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, dailyShop, SHOP_PRICES, dailyLegend, huntBattle, huntPack, HUNT_GOLD, HUNT_XP,
   gauntletEnemies, gauntletBattle, gauntletHeal, fusedHp, FUSE_COST, FUSE_GOLD, FUSE_MAX, SECOND, SECOND_COST, gauntletGold, GAUNTLET_PACK_EVERY, newCampaignBattle, applyMove, aiMove,
 } from './game.js';
 
@@ -773,9 +773,10 @@ async function huntMove(req, db, user) {
   await saveHunt(db, user.id, h, null, 'won');   // claim the win first
   const pack = huntPack(user.packs_since_legend, h.legend);
   await db.batch([...pack.cards.map(id => addCard(db, user.id, id)),
-    db.prepare('UPDATE users SET packs_since_legend = ? WHERE id = ?').bind(pack.packsSinceLegend, user.id),
+    db.prepare('UPDATE users SET packs_since_legend = ?, gold = gold + ?, xp = xp + ? WHERE id = ?')
+      .bind(pack.packsSinceLegend, HUNT_GOLD, HUNT_XP, user.id),
     bumpProgress(db, user.id, 'wins'), bumpProgress(db, user.id, 'packs')]);
-  return json({ legend: h.legend, state, result: { won: true, pack: pack.cards, packType: 'overload' },
+  return json({ legend: h.legend, state, result: { won: true, pack: pack.cards, packType: 'overload', gold: HUNT_GOLD, xp: HUNT_XP },
     profile: await profile(db, await freshUser(db, user.id)) });
 }
 
