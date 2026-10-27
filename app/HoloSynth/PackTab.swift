@@ -1,11 +1,15 @@
 import SwiftUI
 import UIKit
 
-// The Shop tab: daily cards and packs. Buy a pack, drag a finger across the top to tear it open, watch the cards rise out, then reveal them
+// The Shop tab: daily cards and packs. Bought and won packs wait unopened; `onClose` set = "Your packs" (opened from the Play tab):
+// swipe between them, Open one, drag a finger across the top to tear it, watch the cards rise out, then reveal them
 // one at a time: swipe the top card of the stack to turn it over, swipe again (or wait) for the next.
 // Rarity tells early: light leaking from the tear takes the colour of the best card inside.
 struct PackTab: View {
     @EnvironmentObject var store: GameStore
+    var onClose: (() -> Void)? = nil
+    @State private var page = 0                   // which of your packs the carousel shows
+    @State private var added: String?             // pack type just bought, for the "added" toast
     @State private var pulled: [String] = []     // cards in the pack being opened
     @State private var buying = false
     @State private var tearProgress: CGFloat = 0
@@ -37,10 +41,11 @@ struct PackTab: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PlayerBar()
-            ZStack {
+            if onClose == nil { PlayerBar() }
+            ZStack(alignment: .bottom) {
                 ScreenBackground()
-                shop
+                if onClose != nil { yourPacks } else { shop }
+                if let added { toast(added) }
             }
         }
         // Opening takes over the whole screen so the tabs can't be seen or tapped mid-rip.
@@ -54,18 +59,99 @@ struct PackTab: View {
             }
         }
         .onAppear {
-            openPending()
             if let next = store.profile?.shop?.next, SpinClock.ready(next) { Task { await store.refresh() } }   // a new day's shop
         }
-        .onChange(of: store.pendingPack) { _ in openPending() }
     }
 
-    // A pack won in the campaign opens here the same way as a bought one.
-    private func openPending() {
-        guard let cards = store.pendingPack else { return }
-        store.pendingPack = nil
-        start(cards, type: store.pendingPackType, holo: store.pendingHolo)
-        store.pendingHolo = []
+    // MARK: your packs
+
+    private var owned: [UnopenedPack] { store.profile?.unopened ?? [] }
+
+    private var yourPacks: some View {
+        let list = owned
+        let i = min(page, max(list.count - 1, 0))
+        return VStack(spacing: 14) {
+            HStack(spacing: 12) {
+                Button { onClose?() } label: {
+                    Image(systemName: "chevron.left").font(.system(size: 17, weight: .semibold)).foregroundColor(Theme.brass)
+                        .frame(width: 44, height: 44).goldPanel(12)
+                }
+                .accessibilityLabel("Back")
+                Text("Your packs").font(.chakra(24)).foregroundColor(Theme.fg)
+                Spacer()
+                Text("\(list.reduce(0) { $0 + $1.n }) to open").font(.barlow(13)).foregroundColor(Theme.muted)
+            }
+            .padding(.horizontal, 16)
+            if list.isEmpty {
+                Spacer()
+            } else {
+                TabView(selection: $page) {
+                    ForEach(list.indices, id: \.self) { j in
+                        let info = Self.info(list[j].type)
+                        packImage(list[j].type).frame(maxWidth: 240)
+                            .shadow(color: Color(hex: info.glow).opacity(0.55), radius: 26)
+                            .overlay(alignment: .topTrailing) {
+                                if list[j].n > 1 {
+                                    Text("×\(list[j].n)").font(.chakra(16)).foregroundColor(Color(hex: info.glow))
+                                        .padding(.horizontal, 10).frame(minWidth: 44, minHeight: 32)
+                                        .background(Theme.ink, in: Capsule())
+                                        .overlay(Capsule().stroke(Color(hex: info.glow), lineWidth: 1))
+                                        .offset(x: 8, y: 6)
+                                }
+                            }
+                            .padding(.vertical, 20)
+                            .tag(j)
+                    }
+                }
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                .frame(maxHeight: 440)
+                HStack(spacing: 6) {
+                    ForEach(list.indices, id: \.self) { j in
+                        Capsule().fill(j == i ? Theme.brass : Theme.fg.opacity(0.3)).frame(width: j == i ? 22 : 7, height: 7)
+                    }
+                }
+                let info = Self.info(list[i].type)
+                VStack(spacing: 4) {
+                    Text(info.name).font(.chakra(22)).tracking(1.5).textCase(.uppercase).foregroundColor(Color(hex: info.glow))
+                    Text("\(info.cards) cards · \(info.contents)").font(.barlow(14)).foregroundColor(Theme.muted)
+                }
+                Spacer(minLength: 0)
+                if let error = store.error { Text(error).font(.barlow(14, semibold: true)).foregroundColor(Theme.pink) }
+                Button("Open") {
+                    let type = list[i].type
+                    buying = true
+                    Task {
+                        if let r = await store.openPack(type) { start(r.cards, type: type, holo: r.holo ?? []) }
+                        buying = false
+                    }
+                }
+                .buttonStyle(GoldButton(height: 52)).frame(width: 240)
+                .disabled(buying)
+            }
+        }
+        .padding(.top, 8).padding(.bottom, 24)
+        .onChange(of: owned.count) { c in if page >= c { page = max(c - 1, 0) } }
+    }
+
+    private static func info(_ type: String) -> PackInfo { packs.first { $0.type == type } ?? packs[0] }
+
+    // "Overload Pack added": a bought pack goes to your packs on the Play tab.
+    private func toast(_ type: String) -> some View {
+        HStack(spacing: 12) {
+            packImage(type).frame(height: 46)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(Self.info(type).name) added").font(.chakra(15)).foregroundColor(Theme.fg)
+                Text("Open it from the Play tab").font(.barlow(12)).foregroundColor(Theme.muted)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 14).padding(.vertical, 10)
+        .background(Theme.ink.opacity(0.96), in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.brass.opacity(0.7), lineWidth: 1))
+        .shadow(color: .black.opacity(0.6), radius: 15, y: 8)
+        .padding(.horizontal, 16).padding(.bottom, 12)
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+        .accessibilityElement(children: .combine)
     }
 
     private func start(_ cards: [String], type: String, holo: [Int] = []) {
@@ -193,7 +279,12 @@ struct PackTab: View {
             Button {
                 buying = true
                 Task {
-                    if let r = await store.buyPack(pack.type) { start(r.cards, type: pack.type, holo: r.holo ?? []) }
+                    if await store.buyPack(pack.type) != nil {
+                        UINotificationFeedbackGenerator().notificationOccurred(.success)
+                        withAnimation { added = pack.type }
+                        try? await Task.sleep(nanoseconds: 2_500_000_000)
+                        withAnimation { if added == pack.type { added = nil } }
+                    }
                     buying = false
                 }
             } label: {
@@ -407,7 +498,11 @@ struct PackTab: View {
         } else if dealt {
             VStack(spacing: 14) {
                 Text("Added to your collection").font(.barlow(15)).foregroundColor(Theme.muted)
-                Button("Done") { pulled = [] }.buttonStyle(GoldButton(height: 50)).frame(width: 200)
+                Button("Done") {
+                    pulled = []
+                    if let onClose, owned.isEmpty { DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { onClose() } }   // after the cover slides away
+                }
+                .buttonStyle(GoldButton(height: 50)).frame(width: 200)
             }
         }
     }

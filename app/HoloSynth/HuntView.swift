@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 
 // Legend Hunt, full screen: lobby → fight → won / got away. One try per 8-hour hunt against a fully fused Legendary and its support.
-// Winning gives an Overload pack (opened on the Shop tab): 1 in 5 hold the Legendary, the rest a guaranteed Epic.
+// Winning gives an Overload pack (opened from the Play tab): 1 in 5 hold the Legendary, the rest a guaranteed Epic.
 struct HuntView: View {
     @EnvironmentObject var store: GameStore
     let onClose: (_ pack: [String]?) -> Void
@@ -180,10 +180,10 @@ struct HuntView: View {
                     .background(Theme.brass.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
                     .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.brass.opacity(0.45), lineWidth: 1))
             }
-            Text("Your Overload Pack has 8 cards.\nIs \(legend?.name ?? "the legend") one of them?")
+            Text("Your Overload Pack is waiting on the Play tab.\nIs \(legend?.name ?? "the legend") in it?")
                 .font(.barlow(15)).foregroundColor(Color(hex: 0xA9A5C2)).multilineTextAlignment(.center)
             Spacer()
-            Button("Open it") { store.pendingHolo = r.holo ?? []; onClose(r.pack ?? []) }.buttonStyle(GoldButton())
+            Button("Collect") { onClose(r.pack ?? []) }.buttonStyle(GoldButton())
         }
         .padding(.horizontal, 16).padding(.bottom, 12)
         .background(RadialGradient(colors: [Self.gold.opacity(0.25), .clear], center: UnitPoint(x: 0.5, y: 0.45), startRadius: 0, endRadius: 260))

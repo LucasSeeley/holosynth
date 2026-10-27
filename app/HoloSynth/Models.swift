@@ -62,6 +62,7 @@ struct Profile: Decodable, Equatable {
     let needsStarter: Bool
     let wins: Int
     let packs: Int
+    let unopened: [UnopenedPack]?   // packs waiting to be opened, oldest first
     let avatar: String          // card shown as your picture
     let since: Double           // account created, ms since 1970
     let friends: Int
@@ -282,6 +283,7 @@ struct SpinReply: Decodable {
     let profile: Profile
 }
 struct SocialReply: Decodable { let message: String?; let social: Social }
+struct UnopenedPack: Decodable, Equatable { let type: String; let n: Int }
 struct PackReply: Decodable { let cards: [String]; let holo: [Int]?; let profile: Profile }
 struct ShopReply: Decodable { let card: String; let profile: Profile }
 

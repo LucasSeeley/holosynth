@@ -358,7 +358,7 @@ struct GauntletView: View {
         close()
     }
 
-    private func close() { store.pendingPackType = packType; store.pendingHolo = packHolo; onClose(packCards.isEmpty ? nil : packCards) }
+    private func close() { onClose(packCards.isEmpty ? nil : packCards) }
 }
 
 // Best Gauntlet streaks, friends or everyone.

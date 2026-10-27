@@ -471,11 +471,7 @@ struct RankedView: View {
             do {
                 let r: RankedClaimReply = try await API.call("ranked/claim", token: store.token, body: [:])
                 store.profile = r.profile
-                if let cards = r.cards {
-                    store.pendingPackType = r.type ?? "omni"
-                    store.pendingHolo = r.holo ?? []
-                    onClose(cards)
-                } else { await load() }
+                if let cards = r.cards { onClose(cards) } else { await load() }   // a pack goes to your packs on the Play tab
             } catch { self.error = error.localizedDescription; await load() }
             busy = false
         }

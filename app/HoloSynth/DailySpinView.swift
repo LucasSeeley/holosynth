@@ -81,9 +81,9 @@ struct DailySpinView: View {
         }
         .frame(height: 270)
         .accessibilityHidden(true)
-        Text(pack ? "The wheel landed on the jackpot." : gold ? "Added to your gold." : "Added to your level.")
+        Text(pack ? "Jackpot! Open it from the Play tab." : gold ? "Added to your gold." : "Added to your level.")
             .font(.barlow(14)).foregroundColor(Color(hex: 0xA9A5C2))
-        Button(pack ? "Open it now" : "Collect") { close() }.buttonStyle(GoldButton())
+        Button("Collect") { close() }.buttonStyle(GoldButton())
         TimelineView(.periodic(from: .now, by: 1)) { _ in
             Text("Next spin in \(SpinClock.left(until: r.profile.nextSpin))").font(.barlow(13)).foregroundColor(Theme.muted).monospacedDigit()
         }
@@ -166,7 +166,7 @@ struct DailySpinView: View {
     }
 
     private func close() {
-        if let r = reply { store.profile = r.profile; store.pendingPackType = r.packType ?? "cyber"; store.pendingHolo = r.holo ?? [] }
+        if let r = reply { store.profile = r.profile }
         onClose(reply?.kind == "pack" ? reply?.cards : nil)
     }
 

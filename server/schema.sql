@@ -155,3 +155,13 @@ CREATE TABLE IF NOT EXISTS ranked_meta (
   k TEXT PRIMARY KEY,
   v INTEGER NOT NULL
 );
+
+-- Packs won or bought but not opened yet. Contents are rolled when you get the pack (cards and holo as JSON lists).
+CREATE TABLE IF NOT EXISTS pack_inv (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  type TEXT NOT NULL,
+  cards TEXT NOT NULL,
+  holo TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS pack_inv_user ON pack_inv (user_id);

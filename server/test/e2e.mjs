@@ -162,6 +162,15 @@ console.log('gauntlet streak', fights);
 
 const done = await campaign(a.token, 10);
 check(done.campaign.next?.num === 11 && done.campaign.chapterNum === 1, 'boss beaten, on to level 11');
+// won packs wait unopened until you open them
+check(done.unopened.length > 0, 'boss pack waits in your packs');
+for (const { type, n } of done.unopened) for (let i = 0; i < n; i++) {
+  const before = Object.values((await call('/me', a.token)).collection).reduce((x, y) => x + y, 0);
+  const o = await call('/packs/open', a.token, { type });
+  check(Object.values(o.profile.collection).reduce((x, y) => x + y, 0) === before + o.cards.length, 'opened pack adds its cards');
+}
+check((await call('/me', a.token)).unopened.length === 0, 'all packs opened');
+await expectError(call('/packs/open', a.token, { type: 'omni' }), 400);   // none left
 if (done.gold >= 5000) {
   const pack = await call('/packs', a.token, {});
   console.log('bought pack:', pack.cards, 'gold left', pack.profile.gold, 'packs opened', pack.profile.packs);

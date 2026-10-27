@@ -159,8 +159,7 @@ struct HomeView: View {
             !spinClosed && store.profile.map { !$0.needsStarter && $0.nextSpin == 0 } == true
         }, set: { if !$0 { spinClosed = true } })) {
             DailySpinView { pack in
-                spinClosed = true
-                if let pack { store.pendingPack = pack; tab = 1 }
+                spinClosed = true   // a won pack waits on the Play tab
             }
         }
         // New accounts pick their first card before anything else.

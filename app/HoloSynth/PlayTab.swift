@@ -5,7 +5,7 @@ struct PlayTab: View {
     @EnvironmentObject var store: GameStore
     @Binding var tab: Int
 
-    enum Screen: Identifiable { case campaign, friend, reward, spin, gauntlet, hunt, quests, ranked; var id: Self { self } }
+    enum Screen: Identifiable { case campaign, friend, reward, spin, gauntlet, hunt, quests, ranked, packs; var id: Self { self } }
     @State var screen: Screen?
 
     var body: some View {
@@ -16,6 +16,7 @@ struct PlayTab: View {
                     VStack(spacing: 12) {
                         header(p)
                         campaignTile(p)
+                        if let u = p.unopened, !u.isEmpty { packsRow(u) }
                         daily(p)
                         modes(p)
                         teamPanel(p)
@@ -34,37 +35,23 @@ struct PlayTab: View {
                     switch next {
                     case .none: screen = nil
                     case .chooseCard: screen = .reward
-                    case .pack(let cards): screen = nil; store.pendingPack = cards; tab = 1
+                    case .pack: screen = nil   // the pack waits in the Packs row
                     }
                 }
             case .friend:
                 FriendBattleView { screen = nil }
             case .gauntlet:
-                GauntletView { packs in
-                    screen = nil
-                    if let packs { store.pendingPack = packs; tab = 1 }
-                }
+                GauntletView { _ in screen = nil; Task { await store.refresh() } }
             case .ranked:
-                RankedView { pack in
-                    screen = nil
-                    Task { await store.refresh() }
-                    if let pack { store.pendingPack = pack; tab = 1 }
-                }
+                RankedView { _ in screen = nil; Task { await store.refresh() } }
             case .quests:
-                QuestsView { pack, type in
-                    screen = nil
-                    if let pack { store.pendingPackType = type; store.pendingPack = pack; tab = 1 }
-                }
+                QuestsView { _, _ in screen = nil }
             case .hunt:
-                HuntView { pack in
-                    screen = nil
-                    if let pack { store.pendingPackType = "overload"; store.pendingPack = pack; tab = 1 }
-                }
+                HuntView { _ in screen = nil; Task { await store.refresh() } }
             case .spin:
-                DailySpinView { pack in
-                    screen = nil
-                    if let pack { store.pendingPack = pack; tab = 1 }
-                }
+                DailySpinView { _ in screen = nil }
+            case .packs:
+                PackTab { screen = nil }
             case .reward:
                 CardPicker(eyebrow: "Level 3 cleared", title: "A new card joins you",
                            subtitle: "The other one joins after level 6.",
@@ -161,7 +148,39 @@ struct PlayTab: View {
         .shadow(color: Theme.brass.opacity(0.15), radius: 12)
     }
 
-    // MARK: daily + modes
+    // MARK: packs, daily + modes
+
+    // Packs you've won or bought, waiting to be opened. Only shown when there are some.
+    private func packsRow(_ u: [UnopenedPack]) -> some View {
+        let total = u.reduce(0) { $0 + $1.n }
+        return Button { screen = .packs } label: {
+            HStack(spacing: 12) {
+                HStack(spacing: -16) {
+                    ForEach(Array(u.prefix(3).enumerated()), id: \.offset) { i, pack in
+                        if let img = Art.pack(pack.type) {
+                            Image(uiImage: img).resizable().scaledToFit().frame(height: 40)
+                                .rotationEffect(.degrees(Double(i - 1) * 8)).shadow(color: .black.opacity(0.6), radius: 4, y: 2)
+                        }
+                    }
+                }
+                Text(total == 1 ? "1 pack to open" : "\(total) packs to open").font(.chakra(16)).foregroundColor(Theme.fg)
+                Spacer(minLength: 0)
+                HStack(spacing: 6) {
+                    Text("Open").font(.chakra(14))
+                    Image(systemName: "chevron.right").font(.system(size: 14, weight: .bold))
+                }
+                .foregroundColor(Theme.brass)
+            }
+            .padding(.leading, 12).padding(.trailing, 14).frame(height: 56)
+            .contentShape(Rectangle())
+            .background(RadialGradient(colors: [Theme.brass.opacity(0.28), Theme.field], center: UnitPoint(x: 0.15, y: 0.5), startRadius: 0, endRadius: 220),
+                        in: RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.brass.opacity(0.7), lineWidth: 1))
+            .shadow(color: Theme.brass.opacity(0.25), radius: 9)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(total == 1 ? "1 pack to open" : "\(total) packs to open")
+    }
 
     private func daily(_ p: Profile) -> some View {
         VStack(alignment: .leading, spacing: 8) {

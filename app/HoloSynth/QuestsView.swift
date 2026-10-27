@@ -100,7 +100,7 @@ struct QuestsView: View {
                 Text(taken ? "Claimed today" : "Finish all 3").font(.chakra(11, semibold: true)).tracking(2).textCase(.uppercase).foregroundColor(Theme.brass)
                 Text("Free Omni Pack").font(.chakra(17)).foregroundColor(Theme.fg)
                 if ready {
-                    Button("Open it") { claim(nil) }.buttonStyle(GoldButton(height: 38))
+                    Button("Claim") { claim(nil) }.buttonStyle(GoldButton(height: 38))
                 } else {
                     HStack(spacing: 5) {
                         ForEach(0..<3, id: \.self) { i in Capsule().fill(i < claimed ? Self.green : Color.white.opacity(0.1)).frame(height: 6) }
@@ -127,7 +127,7 @@ struct QuestsView: View {
                 error = nil
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
                 Sound.rare.play()
-                if let cards = r.cards { store.pendingHolo = r.holo ?? []; onClose(cards, r.type ?? "omni") }
+                if let cards = r.cards { onClose(cards, r.type ?? "omni") }
             } catch {
                 self.error = error.localizedDescription
                 await store.refresh()
