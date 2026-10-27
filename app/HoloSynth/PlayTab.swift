@@ -178,6 +178,10 @@ struct PlayTab: View {
                 }
                 .frame(width: 120, height: 120)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
+                // dark fade so the text reads over the packs
+                LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: Theme.ink.opacity(0.95), location: 0.6)],
+                               startPoint: .top, endPoint: .bottom)
+                    .frame(height: 72)
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Open a pack").font(.chakra(16)).foregroundColor(Theme.fg)
                     Text("From 5,000 gold").font(.barlow(13)).foregroundColor(Theme.brass)
