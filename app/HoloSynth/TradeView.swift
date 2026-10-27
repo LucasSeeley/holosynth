@@ -146,7 +146,7 @@ struct TradePicker: View {
     var body: some View {
         // plain copies you have (or team cards, shown locked); cards whose every copy is fused only appear as fused copies
         let ids = Set(spare.keys).union(owned.keys.filter { team.contains($0) })
-        let cards = CardSort.apply(CardBook.all.filter { ids.contains($0.id) }, sort)
+        let cards = CardSort.apply(CardBook.all.filter { ids.contains($0.id) }, sort, counts: spare)
         let order = Dictionary(uniqueKeysWithValues: CardSort.apply(CardBook.all, sort).enumerated().map { ($1.id, $0) })
         let fusedSorted = fused.sorted { (order[$0.card] ?? 0, $1.fusion.total) < (order[$1.card] ?? 0, $0.fusion.total) }
         ZStack {
@@ -156,9 +156,9 @@ struct TradePicker: View {
                 HStack {
                     Text("\(picked.count) of 3 picked").sectionTitle()
                     Spacer()
-                    Button { sort = (sort + 1) % 3 } label: { Label(CardSort.names[sort % 3], systemImage: "arrow.up.arrow.down") }
+                    Button { sort = (sort + 1) % CardSort.names.count } label: { Label(CardSort.names[sort % CardSort.names.count], systemImage: "arrow.up.arrow.down") }
                         .buttonStyle(OutlineButton())
-                        .accessibilityLabel("Sort by \(CardSort.names[sort % 3]), tap to change")
+                        .accessibilityLabel("Sort by \(CardSort.names[sort % CardSort.names.count]), tap to change")
                 }
                 .padding(.horizontal, 16)
                 if !owned.isEmpty {

@@ -24,15 +24,15 @@ struct CollectionTab: View {
                     HStack {
                         Text("Collection · \(owned.count) of \(CardBook.all.count)").sectionTitle()
                         Spacer()
-                        Button { sort = (sort + 1) % 3 } label: {
-                            Label(CardSort.names[sort % 3], systemImage: "arrow.up.arrow.down")
+                        Button { sort = (sort + 1) % CardSort.names.count } label: {
+                            Label(CardSort.names[sort % CardSort.names.count], systemImage: "arrow.up.arrow.down")
                         }
                         .buttonStyle(OutlineButton())
-                        .accessibilityLabel("Sort by \(CardSort.names[sort % 3]), tap to change")
+                        .accessibilityLabel("Sort by \(CardSort.names[sort % CardSort.names.count]), tap to change")
                     }
                     LazyVGrid(columns: columns, spacing: 14) {
                         // owned cards first in the chosen order, then locked cards in number order
-                        ForEach(CardSort.apply(CardBook.all.filter { owned[$0.id] != nil }, sort) + CardBook.all.filter { owned[$0.id] == nil }) { card in
+                        ForEach(CardSort.apply(CardBook.all.filter { owned[$0.id] != nil }, sort, counts: owned) + CardBook.all.filter { owned[$0.id] == nil }) { card in
                             cell(card, count: owned[card.id] ?? 0)
                         }
                     }
