@@ -134,7 +134,7 @@ struct DailySpinView: View {
                 }
             }
             .foregroundColor(ink)
-            .padding(.top, size * 0.1)
+            .padding(.top, size * (kind == "pack" ? 0.05 : 0.1))   // the pack sits in the middle of its slice
         }
         .frame(width: size * 0.91, height: size * 0.91)
         .rotationEffect(.degrees(Double(i) * Self.step))
