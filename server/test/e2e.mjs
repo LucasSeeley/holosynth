@@ -206,6 +206,31 @@ if (done.gold >= 500) {
   check(got.card === shop[1].id && got.profile.shop.cards[1].sold && got.profile.collection[shop[1].id] >= 1, 'bought a shop card');
   await expectError(call('/shop', a.token, { slot: 1, card: shop[1].id }), 400);   // once a day
 } else await expectError(call('/shop', a.token, { slot: 1, card: shop[1].id }), 400);   // not enough gold
+// ranked: weekly table of 30, a live match when both search, otherwise another player's team played by the computer
+let rk = await call('/ranked', a.token);
+check(rk.table.length === 30 && rk.table.some(r => r.me) && rk.rank === 0, 'ranked table');
+const s1 = await call('/ranked/search', a.token, {});
+check(s1.searching === true, 'a is searching');
+const s2 = await call('/ranked/search', b.token, {});
+check(s2.view.liveMatch, 'b found a live ranked match with a');
+check((await call('/ranked/search', a.token, {})).view.liveMatch === s2.view.liveMatch, 'a sees the same match');
+check((await call('/matches/current', a.token)) === null, 'ranked matches stay out of friend battles');
+let lm = await call(`/matches/${s2.view.liveMatch}`, a.token);
+const lt = { [lm.you]: a.token, [1 - lm.you]: b.token };
+while (lm.status === 'active') lm = await call(`/matches/${lm.id}/move`, lt[lm.state.turn], aiMove(lm.state, lm.state.turn));
+const wa = (await call('/ranked', a.token)).points, wb = (await call('/ranked', b.token)).points;
+check(wa + wb === 25, `live ranked scored (${wa} + ${wb})`);
+rk = (await call('/ranked/ghost', a.token, {})).view;
+check(rk.run && rk.run.opp.team.length === 3, 'ghost fight vs ' + rk.run?.opp.name);
+let gs = rk.run.state, gres = null;
+for (let i = 0; i < 200 && !gres; i++) {
+  const m = aiMove(gs, 0);
+  const r = await call('/ranked/move', a.token, m);
+  gs = r.state; gres = r.result;
+}
+check(gres && typeof gres.place === 'number', `ranked fight over: ${gres.won ? 'won' : 'lost'} ${gres.delta}, now #${gres.place}`);
+await expectError(call('/ranked/move', a.token, { from: 0, move: 'basic', to: 0 }), 400);
+await expectError(call('/ranked/claim', a.token, {}), 400);   // no season reward yet
 // leave no test players behind (they'd show up on the live leaderboard)
 for (const t of [a.token, b.token]) await call('/me/delete', t, {});
 await expectError(call('/me', a.token), 401);

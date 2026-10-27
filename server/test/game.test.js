@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS, levelFor, levelStart, fusedHp, fusedDmg, SECOND, FUSE_GOLD, dailyShop, huntFoes, HUNT_MS, huntBattle, huntPack, HUNT_FUSION, pickQuests, QUESTS, QUEST_PAY } from '../src/game.js';
+import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS, levelFor, levelStart, fusedHp, fusedDmg, SECOND, FUSE_GOLD, dailyShop, huntFoes, HUNT_MS, huntBattle, huntPack, HUNT_FUSION, pickQuests, QUESTS, QUEST_PAY, weekStart, seasonOf, seasonEnd, rankMove, rankTable, rankBots, rankedTeam, RANKS, RANK_REWARDS, WEEK_MS } from '../src/game.js';
 
 const fixed = v => () => v;
 
@@ -293,4 +293,25 @@ test('holo: about 1 in 250 pack cards, +20% to every stat, stacking with fusion'
   assert.equal(fusedDmg('apex', { s: 3, x: true, o: true }, 'special2'), Math.round(SECOND.apex.dmg * 1.3 * 1.2));
   const s = newBattle(['apex'], ['volt'], () => 0, { apex: { h: 0, b: 0, s: 0, x: false, o: true } });
   assert.equal(s.teams[0][0].max, Math.round(BY_ID.apex.hp * 1.2));
+});
+
+test('ranked: Monday weeks, monthly seasons, 30-player tables, moves by place', () => {
+  const mon = Date.UTC(2026, 9, 26), wed = Date.UTC(2026, 9, 28, 15);
+  assert.equal(weekStart(wed), mon);
+  assert.equal(new Date(weekStart(wed)).getUTCDay(), 1);
+  assert.equal(seasonOf(Date.UTC(2026, 9, 27)), 0);
+  assert.equal(seasonOf(Date.UTC(2026, 10, 30)), 0);
+  assert.equal(seasonOf(Date.UTC(2026, 11, 2)), 1);
+  assert.equal(seasonEnd(0), Date.UTC(2026, 11, 1));
+  assert.deepEqual([1, 2, 3, 4, 10, 11, 20, 21, 30].map(rankMove), [3, 2, 2, 1, 1, 0, 0, -1, -1]);
+  const table = rankTable([{ id: 1, name: 'a', points: 50 }, { id: 2, name: 'b', points: 0 }], mon, 2, wed);
+  assert.equal(table.length, 30);
+  assert.deepEqual(table.map(r => r.place), Array.from({ length: 30 }, (_, i) => i + 1));
+  assert.ok(table.every((r, i) => i === 0 || table[i - 1].points >= r.points));
+  assert.deepEqual(rankTable([], mon, 2, wed), rankTable([], mon, 2, wed));   // same computer players for everyone
+  const end = rankBots(mon, 7, 28, mon + WEEK_MS), start = rankBots(mon, 7, 28, mon);
+  assert.ok(start.every(b => b.points === 0) && end.some(b => b.points > 0));
+  assert.ok(Math.max(...rankBots(mon, 7, 28, mon + WEEK_MS).map(b => b.points)) > Math.max(...rankBots(mon, 0, 28, mon + WEEK_MS).map(b => b.points)));
+  assert.equal(rankedTeam(0, () => 0).every(id => BY_ID[id].rarity === 'Common'), true);
+  assert.equal(RANKS.length, RANK_REWARDS.length);
 });

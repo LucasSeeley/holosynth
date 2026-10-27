@@ -201,6 +201,51 @@ export function huntPack(packsSinceLegend, legend, rand = Math.random) {
   return pack;
 }
 
+// ---- ranked ----
+// Eight ranks. Each week everyone is in their rank's standings of 30 (real players, topped up with computer players);
+// week points: win +25, lose -20 (never below 0). At the week's end #1 ranks up 3, #2-3 up 2, #4-10 up 1, #11-20 stay,
+// #21-30 drop 1. Monthly seasons: the reward is for the highest rank reached; a new season drops everyone 2 ranks.
+export const RANKS = ['Rookie', 'Contender', 'Elite', 'Veteran', 'Champion', 'Conqueror', 'Holo', 'Legend'];
+export const RANK_REWARDS = [[1000, null], [2500, null], [5000, 'omni'], [7500, 'omni'], [10000, 'overload'], [15000, 'overload'],
+  [20000, 'overload'], [25000, 'legends']];
+export const RANKED_WIN = 25, RANKED_LOSS = 20, RANKED_GOLD = 150, RANKED_XP = 100, GROUP = 30;
+export const WEEK_MS = 7 * DAY_MS;
+export const weekStart = t => Math.floor((t - 4 * DAY_MS) / WEEK_MS) * WEEK_MS + 4 * DAY_MS;   // Mondays 00:00 UTC
+const SEASON_EPOCH = Date.UTC(2026, 10, 1);   // season 1 runs to the end of November 2026
+export const seasonOf = t => {
+  const d = new Date(t), months = (d.getUTCFullYear() - 2026) * 12 + d.getUTCMonth() - 10;
+  return Math.max(0, months);   // 0 = season 1
+};
+export const seasonEnd = s => Date.UTC(2026, 11 + s, 1);
+export const rankMove = place => (place === 1 ? 3 : place <= 3 ? 2 : place <= 10 ? 1 : place <= 20 ? 0 : -1);
+const BOT_NAMES = ['NeonVex', 'Kiro', 'ByteWolf', 'Sable', 'ZeroDay', 'Halcyon', 'Rook', 'Mira', 'Pyx', 'Glitchjaw', 'Talon', 'Orbit',
+  'Juno', 'Quill', 'Static', 'Vanta', 'Ember', 'Nyx', 'Cobalt', 'Wren', 'Drift', 'Fable', 'Onyx', 'Kestrel', 'Lumen', 'Rift', 'Sol',
+  'Ash', 'Vire', 'Hexa', 'Moth', 'Pulse', 'Zinc', 'Lyra', 'Echo', 'Flux'];
+// Computer players filling a rank's standings: each has a week-end score (higher ranks score more) and gets there
+// steadily through the week, so the table moves while you play.
+export function rankBots(week, rank, n, t) {
+  const rand = seeded((week / DAY_MS) * 7919 + rank * 104729 + 13);
+  const top = 180 + 60 * rank;   // roughly what the best computer player ends a week on
+  const f = Math.max(0, Math.min(1, (t - week) / WEEK_MS));
+  return Array.from({ length: n }, (_, i) => {
+    const final = Math.round(top * rand() ** 1.6 / 5) * 5;
+    const name = BOT_NAMES[Math.floor(rand() * BOT_NAMES.length)] + (rand() < 0.5 ? '' : '_' + Math.floor(rand() * 99));
+    return { id: -1 - i, name, bot: true, points: Math.round(final * Math.min(1, f * (0.8 + rand() * 0.4)) / 5) * 5 };
+  });
+}
+// The 30-player table for a rank: real players' week points plus computer players. Ties go to the real player.
+// shortcut: more than 30 real players in one rank all go in one table, ranked by the same rule; split into groups past that.
+export function rankTable(real, week, rank, t) {
+  const rows = [...real.map(r => ({ ...r, bot: false })), ...rankBots(week, rank, Math.max(0, GROUP - real.length), t)];
+  rows.sort((a, b) => b.points - a.points || (a.bot - b.bot) || a.id - b.id);
+  return rows.map((r, i) => ({ ...r, place: i + 1 }));
+}
+// A computer team for a rank, when there's no real player to face: tougher cards as you climb.
+export function rankedTeam(rank, rand = Math.random) {
+  const tiers = [[0, 0, 0], [0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 1, 2], [1, 2, 2], [2, 2, 3], [2, 3, 3]][rank];
+  return tiers.map(t => POOLS[t][Math.floor(rand() * POOLS[t].length)]);
+}
+
 // ---- fusion ----
 // Fuse 5 spare copies into one copy for +10% HP, +20% basic or +10% special (max 3 each).
 // Epic and Legendary cards can also unlock a second, stronger special (10 copies + 10,000 gold); the special bonus applies to it too.

@@ -2,7 +2,7 @@
 // It also serves the iPhone app download (IPA + SideStore source) from the KV namespace bound as FILES.
 import {
   BY_ID, STARTER_TEAM, START_GOLD, PACK_COST, PACK_COSTS, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN_XP, CAMPAIGN, CHAPTERS, NEW_CARD_AFTER, OPEN_LEVELS,
-  levelFor, levelStart, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, dailyShop, SHOP_PRICES, huntFoes, huntStart, HUNT_MS, huntBattle, huntPack, HUNT_GOLD, HUNT_XP, QUESTS, QUEST_PAY, QUEST_BONUS, pickQuests,
+  levelFor, levelStart, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, dailyShop, SHOP_PRICES, huntFoes, huntStart, HUNT_MS, huntBattle, huntPack, HUNT_GOLD, HUNT_XP, QUESTS, QUEST_PAY, QUEST_BONUS, pickQuests, RANKS, RANK_REWARDS, RANKED_WIN, RANKED_LOSS, RANKED_GOLD, RANKED_XP, WEEK_MS, weekStart, seasonOf, seasonEnd, rankMove, rankTable, rankedTeam,
   gauntletEnemies, gauntletBattle, gauntletHeal, fusedHp, FUSE_COST, FUSE_GOLD, FUSE_MAX, SECOND, SECOND_COST, gauntletGold, GAUNTLET_PACK_EVERY, newCampaignBattle, applyMove, aiMove,
 } from './game.js';
 
@@ -205,6 +205,7 @@ async function profile(db, user) {
     },
     fused: (await fusedRows(db, user.id)).map(fusedView),
     quests,
+    ranked: await rankedTile(db, user),
     hunt: { ...huntFoes(now()), status: extra.hunted ?? 'ready', next: huntStart(now()) + HUNT_MS },   // ready | playing | won | lost
     gauntlet: { best: extra.gbest || 0, rank: extra.gahead + 1 },   // rank among you and your friends
     wins: prog.wins,
@@ -467,7 +468,7 @@ async function getMatch(db, user, id) {
 
 async function currentMatch(db, user) {
   const m = await db.prepare(
-    "SELECT * FROM matches WHERE (p0 = ? OR p1 = ?) AND status IN ('waiting', 'active') ORDER BY updated DESC LIMIT 1",
+    "SELECT * FROM matches WHERE (p0 = ? OR p1 = ?) AND status IN ('waiting', 'active') AND code NOT LIKE '#%' ORDER BY updated DESC LIMIT 1",
   ).bind(user.id, user.id).first();
   return json(m ? await matchView(db, m, user) : null);
 }
@@ -487,7 +488,8 @@ async function move(req, db, user, id) {
   if (!res.meta.changes) throw new HttpError(409, 'The match changed. Refreshing.');
   if (done) {
     const winnerId = state.winner === 0 ? m.p0 : m.p1;
-    await db.batch([db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(WIN_GOLD, WIN_XP, winnerId),
+    if (m.code.startsWith('#')) await finishRankedMatch(db, m, winnerId);
+    else await db.batch([db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(WIN_GOLD, WIN_XP, winnerId),
       bumpProgress(db, winnerId, 'wins'), questEvent(db, winnerId, 'friend')]);   // forfeits don't count for the quest
   }
   return json(await matchView(db, { ...m, state: JSON.stringify(state), status: done ? 'done' : 'active' }, user));
@@ -504,7 +506,8 @@ async function leaveMatch(db, user, id) {
     await db.prepare("UPDATE matches SET state = ?, status = 'done', updated = ? WHERE id = ?")
       .bind(JSON.stringify(state), now(), m.id).run();
     const winnerId = you === 0 ? m.p1 : m.p0;
-    await db.batch([db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(WIN_GOLD, WIN_XP, winnerId),
+    if (m.code.startsWith('#')) await finishRankedMatch(db, m, winnerId);
+    else await db.batch([db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(WIN_GOLD, WIN_XP, winnerId),
       bumpProgress(db, winnerId, 'wins')]);
   }
   return json({ ok: true });
@@ -787,6 +790,204 @@ async function setAvatar(req, db, user) {
   return json(await profile(db, user));
 }
 
+// ---- ranked ----
+// ranked row per player: rank (0-7), week (the Monday the points belong to), points, best (highest rank this season),
+// run (a fight against a real player's team played by the computer), moved (last week's result, shown once),
+// reward (last season's reward, waiting to be claimed). Players without a row are Rookies on 0.
+const rankedRow = async (db, userId) => await db.prepare('SELECT * FROM ranked WHERE user_id = ?').bind(userId).first()
+  ?? { user_id: userId, rank: 0, week: weekStart(now()), points: 0, best: 0, run: null, moved: null, reward: null };
+const weekPoints = (r, week) => (r.week === week ? r.points : 0);
+
+// Week and season changes, done once by whoever asks first. Everyone is in the standings, played or not.
+async function rankedRollover(db) {
+  const t = now(), week = weekStart(t), season = seasonOf(t);
+  const meta = await db.prepare("SELECT (SELECT v FROM ranked_meta WHERE k = 'week') AS week, (SELECT v FROM ranked_meta WHERE k = 'season') AS season").first();
+  if (meta.week === null) {   // first run: start counting from this week
+    await db.batch([db.prepare("INSERT OR IGNORE INTO ranked_meta (k, v) VALUES ('week', ?)").bind(week),
+      db.prepare("INSERT OR IGNORE INTO ranked_meta (k, v) VALUES ('season', ?)").bind(season)]);
+    return;
+  }
+  for (let w = meta.week; w < week; w += WEEK_MS) {
+    const claim = await db.prepare("UPDATE ranked_meta SET v = ? WHERE k = 'week' AND v = ?").bind(w + WEEK_MS, w).run();
+    if (!claim.meta.changes) return;   // someone else is doing it
+    const { results } = await db.prepare('SELECT u.id, u.username, r.rank, r.week, r.points, r.best FROM users u LEFT JOIN ranked r ON r.user_id = u.id').all();
+    const byRank = {};
+    for (const u of results) (byRank[u.rank ?? 0] ??= []).push({ id: u.id, name: u.username, points: u.week === w ? u.points : 0, best: u.best ?? 0 });
+    const writes = [];
+    for (const [rank, real] of Object.entries(byRank)) {
+      for (const r of rankTable(real, w, Number(rank), w + WEEK_MS).filter(x => !x.bot)) {
+        const to = Math.max(0, Math.min(RANKS.length - 1, Number(rank) + rankMove(r.place)));
+        writes.push(db.prepare(`INSERT INTO ranked (user_id, rank, week, points, best, moved) VALUES (?1, ?2, ?3, 0, ?4, ?5)
+          ON CONFLICT (user_id) DO UPDATE SET rank = ?2, week = ?3, points = 0, best = MAX(best, ?2), moved = ?5`)
+          .bind(r.id, to, w + WEEK_MS, Math.max(r.best, to), JSON.stringify({ place: r.place, from: Number(rank), to, points: r.points })));
+      }
+    }
+    for (let i = 0; i < writes.length; i += 50) await db.batch(writes.slice(i, i + 50));
+  }
+  if (meta.season < season) {
+    const claim = await db.prepare("UPDATE ranked_meta SET v = ? WHERE k = 'season' AND v = ?").bind(season, meta.season).run();
+    if (!claim.meta.changes) return;
+    // last season's reward for everyone, by the best rank they reached; then everyone drops 2 ranks
+    await db.batch([
+      db.prepare(`INSERT INTO ranked (user_id, rank, week, points, best, reward)
+        SELECT id, 0, ?1, 0, 0, json_object('season', ?2, 'rank', 0) FROM users WHERE id NOT IN (SELECT user_id FROM ranked)`).bind(week, meta.season),
+      db.prepare(`UPDATE ranked SET reward = json_object('season', ?1, 'rank', MAX(best, rank)), rank = MAX(0, rank - 2), best = MAX(0, rank - 2)`).bind(meta.season),
+    ]);
+  }
+}
+
+async function rankedView(db, user) {
+  await rankedRollover(db);
+  const t = now(), week = weekStart(t), me = await rankedRow(db, user.id);
+  const { results } = await db.prepare(`SELECT u.id, u.username AS name, COALESCE(r.rank, 0) AS rank, r.week, r.points
+    FROM users u LEFT JOIN ranked r ON r.user_id = u.id WHERE COALESCE(r.rank, 0) = ?`).bind(me.rank).all();
+  const table = rankTable(results.map(r => ({ id: r.id, name: r.name, points: r.week === week ? r.points : 0 })), week, me.rank, t)
+    .map(r => ({ place: r.place, name: r.name, points: r.points, me: r.id === user.id, bot: r.bot }));
+  const live = await db.prepare("SELECT id FROM matches WHERE (p0 = ?1 OR p1 = ?1) AND status = 'active' AND code LIKE '#%' LIMIT 1").bind(user.id).first();
+  const reward = me.reward && JSON.parse(me.reward);
+  return {
+    rank: me.rank, ranks: RANKS, rewards: RANK_REWARDS.map(([gold, pack]) => ({ gold, pack })),
+    points: weekPoints(me, week), place: table.find(r => r.me).place, table,
+    weekEnds: week + WEEK_MS, season: seasonOf(t) + 1, seasonEnds: seasonEnd(seasonOf(t)), best: me.best,
+    run: me.run ? JSON.parse(me.run) : null, liveMatch: live?.id ?? null,
+    moved: me.moved ? JSON.parse(me.moved) : null,
+    reward: reward ? { season: reward.season + 1, rank: reward.rank, gold: RANK_REWARDS[reward.rank][0], pack: RANK_REWARDS[reward.rank][1] } : null,
+  };
+}
+
+// What the Play tab's Ranked row shows.
+async function rankedTile(db, user) {
+  const v = await rankedView(db, user);
+  return { rank: v.rank, name: RANKS[v.rank], place: v.place, points: v.points, weekEnds: v.weekEnds, alert: !!(v.moved || v.reward) };
+}
+
+// A ranked win or loss: week points, and gold + XP for a win.
+function rankedResult(db, me, won, week) {
+  const points = Math.max(0, weekPoints(me, week) + (won ? RANKED_WIN : -RANKED_LOSS));
+  const writes = [db.prepare(`INSERT INTO ranked (user_id, rank, week, points, best) VALUES (?1, ?2, ?3, ?4, ?2)
+    ON CONFLICT (user_id) DO UPDATE SET week = ?3, points = ?4, run = NULL`).bind(me.user_id, me.rank, week, points)];
+  if (won) writes.push(db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(RANKED_GOLD, RANKED_XP, me.user_id),
+    bumpProgress(db, me.user_id, 'wins'));
+  return { writes, delta: won ? RANKED_WIN : -Math.min(RANKED_LOSS, weekPoints(me, week)), points };
+}
+
+// Live ranked matches are friend-battle matches whose code starts with '#'; they pay out here instead.
+async function finishRankedMatch(db, m, winnerId) {
+  await rankedRollover(db);
+  const week = weekStart(now()), writes = [];
+  for (const id of [m.p0, m.p1]) writes.push(...rankedResult(db, await rankedRow(db, id), id === winnerId, week).writes);
+  await db.batch(writes);
+}
+
+// Find a match: pair with someone else searching right now, otherwise keep waiting (the app asks again every few seconds).
+async function rankedSearch(db, user) {
+  needFullTeam(user);
+  await rankedRollover(db);
+  const view = await rankedView(db, user);
+  if (view.liveMatch || view.run) return json({ view });
+  await db.prepare('DELETE FROM ranked_queue WHERE since < ?').bind(now() - 20000).run();
+  const other = await db.prepare('SELECT q.user_id, u.team FROM ranked_queue q JOIN users u ON u.id = q.user_id WHERE q.user_id != ? ORDER BY q.since LIMIT 1').bind(user.id).first();
+  if (other) {
+    const claimed = await db.prepare('DELETE FROM ranked_queue WHERE user_id = ?').bind(other.user_id).run();
+    if (claimed.meta.changes) {
+      const state = newBattle(JSON.parse(other.team), JSON.parse(user.team), Math.random, await fusionsFor(db, other.user_id), await fusionsFor(db, user.id));
+      await db.batch([db.prepare('DELETE FROM ranked_queue WHERE user_id = ?').bind(user.id),
+        db.prepare("INSERT INTO matches (code, p0, p1, team0, state, status, updated) VALUES (?, ?, ?, ?, ?, 'active', ?)")
+          .bind('#' + makeCode() + makeCode(), other.user_id, user.id, other.team, JSON.stringify(state), now())]);
+      return json({ view: await rankedView(db, user) });
+    }
+  }
+  await db.prepare('INSERT INTO ranked_queue (user_id, since) VALUES (?1, ?2) ON CONFLICT (user_id) DO UPDATE SET since = ?2').bind(user.id, now()).run();
+  return json({ view, searching: true });
+}
+
+async function rankedCancel(db, user) {
+  await db.prepare('DELETE FROM ranked_queue WHERE user_id = ?').bind(user.id).run();
+  return json({ ok: true });
+}
+
+// Nobody to play live: face a real player's team (nearest rank first), played by the computer; a computer team if there's nobody.
+async function rankedGhost(db, user) {
+  needFullTeam(user);
+  await db.prepare('DELETE FROM ranked_queue WHERE user_id = ?').bind(user.id).run();
+  const view = await rankedView(db, user);
+  if (view.liveMatch || view.run) return json({ view });
+  const me = await rankedRow(db, user.id);
+  const { results } = await db.prepare(`SELECT u.id, u.username, u.team, COALESCE(r.rank, 0) AS rank, p.avatar FROM users u
+    LEFT JOIN ranked r ON r.user_id = u.id LEFT JOIN presence p ON p.user_id = u.id WHERE u.id != ?`).bind(user.id).all();
+  const pool = results.filter(u => JSON.parse(u.team).length >= 3).sort((a, b) => Math.abs(a.rank - me.rank) - Math.abs(b.rank - me.rank));
+  const near = pool.filter(u => Math.abs(u.rank - pool[0]?.rank) === 0);
+  const pick = near[Math.floor(Math.random() * near.length)];
+  const opp = pick
+    ? { name: pick.username, rank: pick.rank, team: JSON.parse(pick.team), avatar: avatarOf(pick.avatar, pick.team), fus: await fusionsFor(db, pick.id) }
+    : { name: 'HoloBot', rank: me.rank, team: rankedTeam(me.rank), avatar: null, fus: {} };
+  opp.avatar ??= opp.team[0];
+  const run = { opp, state: newBattle(JSON.parse(user.team), opp.team, Math.random, await fusionsFor(db, user.id), opp.fus) };
+  while (run.state.winner === null && run.state.turn === 1) { const m = aiMove(run.state, 1); applyMove(run.state, 1, m.from, m.move, m.to); }
+  await db.prepare(`INSERT INTO ranked (user_id, rank, week, points, best, run) VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+    ON CONFLICT (user_id) DO UPDATE SET run = ?6`).bind(user.id, me.rank, me.week, me.points, me.best, JSON.stringify(run)).run();
+  return json({ view: await rankedView(db, user) });
+}
+
+async function rankedMove(req, db, user) {
+  await rankedRollover(db);
+  const me = await rankedRow(db, user.id);
+  const run = me.run && JSON.parse(me.run);
+  if (!run) throw new HttpError(400, 'No ranked fight in progress.');
+  const { from, move: kind, to } = await body(req);
+  try {
+    applyMove(run.state, 0, from, kind, to);
+    while (run.state.winner === null && run.state.turn === 1) { const m = aiMove(run.state, 1); applyMove(run.state, 1, m.from, m.move, m.to); }
+  } catch (e) { throw new HttpError(400, e.message); }
+  if (run.state.winner === null) {
+    const res = await db.prepare('UPDATE ranked SET run = ? WHERE user_id = ? AND run = ?').bind(JSON.stringify(run), user.id, me.run).run();
+    if (!res.meta.changes) throw new HttpError(409, 'The fight changed. Refreshing.');
+    return json({ state: run.state, result: null, profile: null });
+  }
+  return json({ state: run.state, ...(await endRankedRun(db, user, me, run.state.winner === 0)) });
+}
+
+async function endRankedRun(db, user, me, won) {
+  const claim = await db.prepare('UPDATE ranked SET run = NULL WHERE user_id = ? AND run = ?').bind(user.id, me.run).run();   // claim first: no double pay
+  if (!claim.meta.changes) throw new HttpError(409, 'The fight changed. Refreshing.');
+  const before = (await rankedView(db, user)).place;
+  const r = rankedResult(db, me, won, weekStart(now()));
+  await db.batch(r.writes);
+  const view = await rankedView(db, user);
+  return { result: { won, delta: r.delta, points: r.points, from: before, place: view.place, gold: won ? RANKED_GOLD : 0, xp: won ? RANKED_XP : 0 },
+    view, profile: await profile(db, await freshUser(db, user.id)) };
+}
+
+// Giving up a ranked fight counts as a loss.
+async function rankedLeave(db, user) {
+  const me = await rankedRow(db, user.id);
+  if (!me.run) return json({ result: null });
+  return json(await endRankedRun(db, user, me, false));
+}
+
+async function rankedSeen(db, user) {
+  await db.prepare('UPDATE ranked SET moved = NULL WHERE user_id = ?').bind(user.id).run();
+  return json({ ok: true });
+}
+
+// Last season's reward: gold, and a pack for Elite and up.
+async function rankedClaim(db, user) {
+  const view = await rankedView(db, user);
+  if (!view.reward) throw new HttpError(400, 'No season reward to claim.');
+  const res = await db.prepare('UPDATE ranked SET reward = NULL WHERE user_id = ? AND reward IS NOT NULL').bind(user.id).run();
+  if (!res.meta.changes) throw new HttpError(400, 'Already claimed.');
+  const writes = [db.prepare('UPDATE users SET gold = gold + ? WHERE id = ?').bind(view.reward.gold, user.id)];
+  let pack = null;
+  if (view.reward.pack) {
+    pack = openPack(user.packs_since_legend, view.reward.pack);
+    writes.push(...packWrites(db, user.id, pack), db.prepare('UPDATE users SET packs_since_legend = ? WHERE id = ?').bind(pack.packsSinceLegend, user.id),
+      bumpProgress(db, user.id, 'packs'));
+  }
+  await db.batch(writes);
+  return json({ cards: pack?.cards ?? null, holo: pack?.holo ?? null, type: view.reward.pack, gold: view.reward.gold,
+    profile: await profile(db, await freshUser(db, user.id)) });
+}
+
 // ---- legend hunt ----
 // One try per 8-hour hunt. hunts.day = the start of the hunt (ms) the try belongs to.
 const getHunt = (db, userId) => db.prepare('SELECT * FROM hunts WHERE user_id = ?').bind(userId).first();
@@ -992,7 +1193,7 @@ async function deleteAccount(db, user) {
     db.prepare('DELETE FROM matches WHERE p0 = ?1 OR p1 = ?1').bind(id),
     db.prepare('DELETE FROM trades WHERE from_id = ?1 OR to_id = ?1').bind(id),
     db.prepare('DELETE FROM fused WHERE user_id = ?1').bind(id),
-    ...['collection', 'sessions', 'progress', 'presence', 'spins', 'gauntlet', 'shop_buys', 'hunts', 'daily_quests', 'quest_events'].map(t => db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(id)),
+    ...['collection', 'sessions', 'progress', 'presence', 'spins', 'gauntlet', 'shop_buys', 'hunts', 'daily_quests', 'quest_events', 'ranked', 'ranked_queue'].map(t => db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(id)),
     db.prepare('DELETE FROM users WHERE id = ?').bind(id),
   ]);
   return json({ ok: true });
@@ -1057,6 +1258,16 @@ async function route(req, env) {
     if (method === 'POST' && b === 'reward') return pickReward(req, db, user);
   }
   if (method === 'POST' && pathname === '/quests/claim') return claimQuest(req, db, user);
+  if (a === 'ranked') {
+    if (method === 'GET' && !b) return json(await rankedView(db, user));
+    if (method === 'POST' && b === 'search') return rankedSearch(db, user);
+    if (method === 'POST' && b === 'cancel') return rankedCancel(db, user);
+    if (method === 'POST' && b === 'ghost') return rankedGhost(db, user);
+    if (method === 'POST' && b === 'move') return rankedMove(req, db, user);
+    if (method === 'POST' && b === 'leave') return rankedLeave(db, user);
+    if (method === 'POST' && b === 'seen') return rankedSeen(db, user);
+    if (method === 'POST' && b === 'claim') return rankedClaim(db, user);
+  }
   if (a === 'hunt') {
     if (method === 'GET' && !b) return huntHome(db, user);
     if (method === 'POST' && b === 'start') return startHunt(db, user);

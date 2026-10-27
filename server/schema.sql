@@ -132,3 +132,26 @@ CREATE TABLE IF NOT EXISTS quest_events (
   n INTEGER NOT NULL,
   PRIMARY KEY (user_id, day, kind)
 );
+-- Ranked: one row per player (missing = Rookie on 0). week = the Monday (ms) the points belong to; best = highest rank this
+-- season; run = a fight against another player's team played by the computer; moved = last week's result (shown once);
+-- reward = last season's reward waiting to be claimed.
+CREATE TABLE IF NOT EXISTS ranked (
+  user_id INTEGER PRIMARY KEY,
+  rank INTEGER NOT NULL DEFAULT 0,
+  week INTEGER NOT NULL,
+  points INTEGER NOT NULL DEFAULT 0,
+  best INTEGER NOT NULL DEFAULT 0,
+  run TEXT,
+  moved TEXT,
+  reward TEXT
+);
+-- Players searching for a live ranked match right now.
+CREATE TABLE IF NOT EXISTS ranked_queue (
+  user_id INTEGER PRIMARY KEY,
+  since INTEGER NOT NULL
+);
+-- Ranked bookkeeping: the week and season the standings were last moved on.
+CREATE TABLE IF NOT EXISTS ranked_meta (
+  k TEXT PRIMARY KEY,
+  v INTEGER NOT NULL
+);

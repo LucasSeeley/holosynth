@@ -10,11 +10,13 @@ struct FriendBattleView: View {
     @State var busy = false
     @State var error: String?
     @State var settled = true      // false while a move is still playing out on the board
+    @State var loaded = false      // the open match (a challenge just sent or accepted) is looked up before anything shows
 
     var body: some View {
         ZStack {
             ScreenBackground()
-            if let match, match.status != "waiting", let state = match.state { board(match, state) }
+            if !loaded { ProgressView().tint(Theme.brass) }
+            else if let match, match.status != "waiting", let state = match.state { board(match, state) }
             else if let match { waiting(match) }
             else { lobby }
         }
@@ -166,6 +168,7 @@ struct FriendBattleView: View {
     }
 
     private func loadCurrent() async {
+        defer { loaded = true }
         guard match == nil else { return }
         await run {
             let current: MatchView? = try await API.call("matches/current", token: store.token)
