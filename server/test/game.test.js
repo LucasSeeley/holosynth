@@ -234,7 +234,7 @@ test('daily shop: one Rare then three different Commons, the same all day, new t
   assert.ok(new Set(week).size > 1);
 });
 
-test('legend hunt: every 8 hours a fully fused Legendary and a lightly fused support; the pack holds the Legendary half the time', () => {
+test('legend hunt: every 8 hours a fully fused Legendary and a lightly fused support; the pack holds the Legendary 1 in 5, else an Epic', () => {
   const t = 20000 * 86400000, f = huntFoes(t);
   assert.equal(BY_ID[f.legend].rarity, 'Legendary');
   assert.deepEqual(huntFoes(t + HUNT_MS - 1), f);
@@ -256,8 +256,9 @@ test('legend hunt: every 8 hours a fully fused Legendary and a lightly fused sup
     const p = huntPack(5, f.legend);
     assert.equal(p.cards.length, 8);
     if (p.cards.includes(f.legend)) hits++;
+    else assert.ok(p.cards.some(id => BY_ID[id].rarity === 'Epic'), 'no legend means a guaranteed Epic');
   }
-  assert.ok(hits / 4000 > 0.45 && hits / 4000 < 0.6, `legend in ${hits / 40}% of packs`);
+  assert.ok(hits / 4000 > 0.17 && hits / 4000 < 0.26, `legend in ${hits / 40}% of packs`);
 });
 
 test('daily quests: one per tier, the same all day, a missing hard one becomes another medium one', () => {

@@ -161,7 +161,7 @@ export function pickQuests(userId, t, can, rand = seeded((userId * 2654435761) ^
 // ---- legend hunt ----
 // Every 8 hours (00:00, 08:00, 16:00 UTC) one Legendary, fully fused, the same for everyone, with a support card:
 // a Rare (lightly fused) or an Epic (maybe a little fused), a healer unless the Legendary heals itself. One try per hunt.
-// Beat them for an Overload pack; half the time one of its 8 cards is that Legendary (the plain card, no fusion).
+// Beat them for an Overload pack: 1 in 5 hold that Legendary (the plain card, no fusion), the rest a guaranteed Epic.
 export const HUNT_MS = 8 * 60 * 60 * 1000;
 export const huntStart = t => Math.floor(t / HUNT_MS) * HUNT_MS;
 export const HUNT_FUSION = { h: 3, b: 3, s: 3, x: true };
@@ -180,11 +180,18 @@ export function huntFoes(t) {
 // You move first. Tuned with the computer playing both sides (see scratch sim): hard on purpose.
 export const huntBattle = (team, foes, fus = {}) => newBattle(team, [foes.legend, foes.support], () => 0, fus,
   { [foes.legend]: HUNT_FUSION, [foes.support]: foes.supportFusion });
+export const HUNT_LEGEND_CHANCE = 0.2;
+const EPICS = CARDS.filter(c => c.rarity === 'Epic').map(c => c.id);
+// The win's Overload pack: 1 in 5 has the Legendary in it; otherwise it always holds at least one Epic.
 export function huntPack(packsSinceLegend, legend, rand = Math.random) {
   const pack = openPack(packsSinceLegend, 'overload', rand);
-  if (rand() < 0.5) {
-    pack.cards[Math.floor(rand() * pack.cards.length)] = legend;
+  const slot = Math.floor(rand() * pack.cards.length);
+  if (rand() < HUNT_LEGEND_CHANCE) {
+    pack.cards[slot] = legend;
     pack.packsSinceLegend = 0;
+  } else if (!pack.cards.some(id => BY_ID[id].rarity === 'Epic')) {
+    const plain = pack.cards.map((id, i) => i).filter(i => BY_ID[pack.cards[i]].rarity !== 'Legendary');
+    pack.cards[plain[Math.floor(rand() * plain.length)]] = EPICS[Math.floor(rand() * EPICS.length)];
   }
   return pack;
 }

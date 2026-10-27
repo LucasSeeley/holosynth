@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 
 // Legend Hunt, full screen: lobby → fight → won / got away. One try per 8-hour hunt against a fully fused Legendary and its support.
-// Winning gives an Overload pack (opened on the Shop tab); half the time one of its cards is the Legendary.
+// Winning gives an Overload pack (opened on the Shop tab): 1 in 5 hold the Legendary, the rest a guaranteed Epic.
 struct HuntView: View {
     @EnvironmentObject var store: GameStore
     let onClose: (_ pack: [String]?) -> Void
@@ -87,7 +87,7 @@ struct HuntView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Beat it to win").font(.chakra(11, semibold: true)).tracking(2).textCase(.uppercase).foregroundColor(Self.gold)
                         (Text("Overload Pack").font(.chakra(17)).foregroundColor(Theme.fg) + Text(" · 8 cards").font(.barlow(13)))
-                        (Text("50%").font(.chakra(13)).foregroundColor(Self.gold) + Text(" chance one of them is \(legend.name)"))
+                        (Text("20%").font(.chakra(13)).foregroundColor(Self.gold) + Text(" chance of \(legend.name), else an Epic"))
                             .font(.barlow(13))
                         (Text("+ 5,000 gold · 1,000 XP").font(.chakra(13)).foregroundColor(Self.gold))
                     }
