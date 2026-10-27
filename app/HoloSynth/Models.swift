@@ -184,9 +184,10 @@ struct QuestReply: Decodable { let cards: [String]?; let type: String?; let prof
 
 // MARK: Legend Hunt
 
-// status: ready | playing | won | lost. next = when a new legend appears (ms since 1970).
-struct HuntInfo: Decodable, Equatable { let legend: String; let status: String; let next: Double }
-struct HuntHome: Decodable { let legend: String; let status: String; let state: BattleState?; let next: Double }
+// status: ready | playing | won | lost (this hunt). next = when a new legend appears (ms since 1970).
+// A new hunt every 8 hours: the fully fused legend plus a lightly fused Rare or Epic support card.
+struct HuntInfo: Decodable, Equatable { let legend: String; let support: String?; let status: String; let next: Double }
+struct HuntHome: Decodable { let legend: String; let support: String?; let supportFusion: Fusion?; let status: String; let state: BattleState?; let next: Double }
 struct HuntResult: Decodable, Equatable { let won: Bool; let pack: [String]?; let packType: String?; let gold: Int?; let xp: Int? }
 struct HuntReply: Decodable { let legend: String; let state: BattleState; let result: HuntResult?; let profile: Profile? }
 struct ProfileReply: Decodable { let profile: Profile }

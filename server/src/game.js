@@ -159,18 +159,27 @@ export function pickQuests(userId, t, can, rand = seeded((userId * 2654435761) ^
 }
 
 // ---- legend hunt ----
-// Once a day (midnight UTC) one Legendary, fully fused, the same for everyone. You get one try with your team.
-// Beat it for an Overload pack; half the time one of its 8 cards is that Legendary (the plain card, no fusion).
+// Every 8 hours (00:00, 08:00, 16:00 UTC) one Legendary, fully fused, the same for everyone, with a support card:
+// a Rare (lightly fused) or an Epic (maybe a little fused), a healer unless the Legendary heals itself. One try per hunt.
+// Beat them for an Overload pack; half the time one of its 8 cards is that Legendary (the plain card, no fusion).
+export const HUNT_MS = 8 * 60 * 60 * 1000;
+export const huntStart = t => Math.floor(t / HUNT_MS) * HUNT_MS;
 export const HUNT_FUSION = { h: 3, b: 3, s: 3, x: true };
 export const HUNT_GOLD = 5000, HUNT_XP = 1000;   // also paid for a win, on top of the pack
 const LEGENDS = CARDS.filter(c => c.rarity === 'Legendary').map(c => c.id);
-export const dailyLegend = t => {
-  let h = (Math.floor(t / DAY_MS) + 7) * 2654435761 >>> 0;
-  h = Math.imul(h ^ (h >>> 16), 2246822519) >>> 0;
-  return LEGENDS[((h ^ (h >>> 13)) >>> 0) % LEGENDS.length];
-};
-// You move first. Tuned with the computer playing both sides: all Rares win about 1 in 10, all Epics about half.
-export const huntBattle = (team, legend, fus = {}) => newBattle(team, [legend], () => 0, fus, { [legend]: HUNT_FUSION });
+export function huntFoes(t) {
+  const rand = seeded(Math.floor(t / HUNT_MS) * 2654435761 + 97);
+  const legend = LEGENDS[Math.floor(rand() * LEGENDS.length)];
+  const rarity = rand() < 0.5 ? 'Rare' : 'Epic';
+  const healer = BY_ID[legend].cls !== 'Mystic';
+  const pool = CARDS.filter(c => c.rarity === rarity && (!healer || c.cls === 'Mystic') && c.id !== legend);
+  const support = pool[Math.floor(rand() * pool.length)].id;
+  const lvl = rarity === 'Rare' ? () => 1 + Math.floor(rand() * 2) : () => Math.floor(rand() * 2);   // Rare 1-2, Epic 0-1 per stat
+  return { legend, support, supportFusion: { h: lvl(), b: lvl(), s: lvl(), x: false } };
+}
+// You move first. Tuned with the computer playing both sides (see scratch sim): hard on purpose.
+export const huntBattle = (team, foes, fus = {}) => newBattle(team, [foes.legend, foes.support], () => 0, fus,
+  { [foes.legend]: HUNT_FUSION, [foes.support]: foes.supportFusion });
 export function huntPack(packsSinceLegend, legend, rand = Math.random) {
   const pack = openPack(packsSinceLegend, 'overload', rand);
   if (rand() < 0.5) {

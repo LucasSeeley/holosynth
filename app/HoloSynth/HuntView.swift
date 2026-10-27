@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-// Legend Hunt, full screen: lobby → fight → won / got away. One try a day against a fully fused Legendary.
+// Legend Hunt, full screen: lobby → fight → won / got away. One try per 8-hour hunt against a fully fused Legendary and its support.
 // Winning gives an Overload pack (opened on the Shop tab); half the time one of its cards is the Legendary.
 struct HuntView: View {
     @EnvironmentObject var store: GameStore
@@ -50,18 +50,28 @@ struct HuntView: View {
             if let legend {
                 VStack(spacing: 10) {
                     HStack {
-                        Label("Today's legend", systemImage: "crown.fill").font(.chakra(12, semibold: true)).tracking(2.5)
+                        Label("Current legend", systemImage: "crown.fill").font(.chakra(12, semibold: true)).tracking(2.5)
                             .textCase(.uppercase).foregroundColor(Self.gold)
                         Spacer()
                         countdown
                     }
-                    CardView(card: legend, fusion: Self.full).frame(width: 200)
-                        .shadow(color: Self.gold.opacity(0.55), radius: 18)
-                    HStack(spacing: 8) {
-                        Pips(level: 3, size: 7)
-                        Text("Fully fused · second special unlocked")
+                    HStack(alignment: .bottom, spacing: 12) {
+                        VStack(spacing: 6) {
+                            CardView(card: legend, fusion: Self.full).frame(width: 180)
+                                .shadow(color: Self.gold.opacity(0.55), radius: 18)
+                            HStack(spacing: 6) { Pips(level: 3, size: 6); Text("Fully fused") }
+                        }
+                        if let id = home?.support, let support = CardBook.card(id) {
+                            let f = home?.supportFusion
+                            VStack(spacing: 6) {
+                                Text("Support").font(.chakra(10, semibold: true)).tracking(2).textCase(.uppercase)
+                                    .foregroundColor(Theme.rarityColor(support.rarity))
+                                CardView(card: support, fusion: (f?.total ?? 0) > 0 ? f : nil).frame(width: 112)
+                                Text("\(support.rarity) · \((f?.total ?? 0) > 0 ? "lightly fused" : "not fused")")
+                            }
+                        }
                     }
-                    .font(.barlow(13)).foregroundColor(Color(hex: 0xA9A5C2))
+                    .font(.barlow(12)).foregroundColor(Color(hex: 0xA9A5C2))
                 }
                 .padding(14)
                 .background(RadialGradient(colors: [Self.gold.opacity(0.22), .clear], center: UnitPoint(x: 0.5, y: 0.35),
@@ -88,12 +98,12 @@ struct HuntView: View {
                 .goldPanel(18)
                 .accessibilityElement(children: .combine)
 
-                Text(ready ? "One try a day. Lose and it's gone until tomorrow." : "You've hunted today. A new legend is on its way.")
+                Text(ready ? "One try per hunt. A new legend every 8 hours." : "You've hunted this one. A new legend is on its way.")
                     .font(.barlow(13)).foregroundColor(Theme.muted).frame(maxWidth: .infinity)
             }
             Spacer(minLength: 0)
             if let error { Text(error).font(.barlow(14, semibold: true)).foregroundColor(Theme.pink).frame(maxWidth: .infinity) }
-            Button(ready ? "Hunt" : "Back tomorrow") { start() }.buttonStyle(GoldButton()).disabled(!ready)
+            Button(ready ? "Hunt" : "Back soon") { start() }.buttonStyle(GoldButton()).disabled(!ready)
         }
         .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 12)
     }
@@ -264,12 +274,18 @@ struct HuntTile: View {
         .disabled(!unlocked)
     }
 
+    private var plusSupport: String {
+        guard let id = hunt.support, let c = CardBook.card(id) else { return "" }
+        return " + " + c.name
+    }
+
     @ViewBuilder private var subtitle: some View {
         let name = CardBook.card(hunt.legend)?.name ?? hunt.legend
         if !unlocked {
             Label("Unlocks at level 6", systemImage: "lock.fill").foregroundColor(Theme.muted)
         } else if hunt.status == "ready" || hunt.status == "playing" {
-            Text("Today: ") + Text(name).font(.chakra(13)).foregroundColor(Theme.fg) + Text(" · 1 try")
+            Text("Now: ") + Text(name).font(.chakra(13)).foregroundColor(Theme.fg)
+                + Text(plusSupport) + Text(" · 1 try")
         } else {
             TimelineView(.periodic(from: .now, by: 30)) { _ in
                 Text(hunt.status == "won" ? "Beaten! " : "Got away. ") + Text("New legend in \(HuntView.left(hunt.next))")

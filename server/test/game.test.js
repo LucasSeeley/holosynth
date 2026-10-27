@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS, levelFor, levelStart, fusedHp, fusedDmg, SECOND, FUSE_GOLD, dailyShop, dailyLegend, huntBattle, huntPack, HUNT_FUSION, pickQuests, QUESTS, QUEST_PAY } from '../src/game.js';
+import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS, levelFor, levelStart, fusedHp, fusedDmg, SECOND, FUSE_GOLD, dailyShop, huntFoes, HUNT_MS, huntBattle, huntPack, HUNT_FUSION, pickQuests, QUESTS, QUEST_PAY } from '../src/game.js';
 
 const fixed = v => () => v;
 
@@ -234,21 +234,28 @@ test('daily shop: one Rare then three different Commons, the same all day, new t
   assert.ok(new Set(week).size > 1);
 });
 
-test('legend hunt: a fully fused Legendary a day, you move first, the pack holds it half the time', () => {
-  const day = 20000 * 86400000, legend = dailyLegend(day);
-  assert.equal(BY_ID[legend].rarity, 'Legendary');
-  assert.equal(dailyLegend(day + 86399999), legend);
-  assert.ok(new Set(Array.from({ length: 30 }, (_, d) => dailyLegend(day + d * 86400000))).size > 3);
-  const s = huntBattle(['volt', 'fang', 'goliath'], legend);
+test('legend hunt: every 8 hours a fully fused Legendary and a lightly fused support; the pack holds the Legendary half the time', () => {
+  const t = 20000 * 86400000, f = huntFoes(t);
+  assert.equal(BY_ID[f.legend].rarity, 'Legendary');
+  assert.deepEqual(huntFoes(t + HUNT_MS - 1), f);
+  assert.notDeepEqual(Array.from({ length: 6 }, (_, i) => huntFoes(t + i * HUNT_MS).legend + huntFoes(t + i * HUNT_MS).support).length, 1);
+  for (let i = 0; i < 300; i++) {
+    const g = huntFoes(t + i * HUNT_MS), c = BY_ID[g.support], lv = [g.supportFusion.h, g.supportFusion.b, g.supportFusion.s];
+    assert.ok(['Rare', 'Epic'].includes(c.rarity));
+    if (BY_ID[g.legend].cls !== 'Mystic') assert.equal(c.cls, 'Mystic');
+    assert.ok(lv.every(n => (c.rarity === 'Rare' ? n >= 1 && n <= 2 : n <= 1)) && !g.supportFusion.x);
+  }
+  assert.ok(new Set(Array.from({ length: 60 }, (_, i) => huntFoes(t + i * HUNT_MS).legend)).size > 3);
+  const s = huntBattle(['volt', 'fang', 'goliath'], f);
   assert.equal(s.turn, 0);
+  assert.equal(s.teams[1].length, 2);
   assert.deepEqual(s.teams[1][0].f, HUNT_FUSION);
-  assert.equal(s.teams[1][0].max, Math.round(BY_ID[legend].hp * 1.3));
-  assert.equal(s.teams[1][0].cd2, 0);
+  assert.equal(s.teams[1][0].max, Math.round(BY_ID[f.legend].hp * 1.3));
   let hits = 0;
   for (let i = 0; i < 4000; i++) {
-    const p = huntPack(5, legend);
+    const p = huntPack(5, f.legend);
     assert.equal(p.cards.length, 8);
-    if (p.cards.includes(legend)) hits++;
+    if (p.cards.includes(f.legend)) hits++;
   }
   assert.ok(hits / 4000 > 0.45 && hits / 4000 < 0.6, `legend in ${hits / 40}% of packs`);
 });

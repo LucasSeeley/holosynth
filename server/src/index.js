@@ -2,7 +2,7 @@
 // It also serves the iPhone app download (IPA + SideStore source) from the KV namespace bound as FILES.
 import {
   BY_ID, STARTER_TEAM, START_GOLD, PACK_COST, PACK_COSTS, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN_XP, CAMPAIGN, CHAPTERS, NEW_CARD_AFTER, OPEN_LEVELS,
-  levelFor, levelStart, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, dailyShop, SHOP_PRICES, dailyLegend, huntBattle, huntPack, HUNT_GOLD, HUNT_XP, QUESTS, QUEST_PAY, QUEST_BONUS, pickQuests,
+  levelFor, levelStart, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, dailyShop, SHOP_PRICES, huntFoes, huntStart, HUNT_MS, huntBattle, huntPack, HUNT_GOLD, HUNT_XP, QUESTS, QUEST_PAY, QUEST_BONUS, pickQuests,
   gauntletEnemies, gauntletBattle, gauntletHeal, fusedHp, FUSE_COST, FUSE_GOLD, FUSE_MAX, SECOND, SECOND_COST, gauntletGold, GAUNTLET_PACK_EVERY, newCampaignBattle, applyMove, aiMove,
 } from './game.js';
 
@@ -125,7 +125,7 @@ async function questsFor(db, user, prog, collection, extra, shopped) {
   const have = {
     spin: extra.spun >= day ? 1 : 0, pack: prog.packs - base.packs, shop: shopped,
     wins: prog.wins - base.wins, levels: prog.cleared - base.cleared,
-    fuse: ev.fuse || 0, friend: ev.friend || 0, streak: ev.streak || 0, hunt: extra.hunted === 'won' ? 1 : 0,
+    fuse: ev.fuse || 0, friend: ev.friend || 0, streak: ev.streak || 0, hunt: ev.hunt || 0,
   };
   const list = JSON.parse(row.quests).map((id, i) => {
     const q = QUESTS[id], pay = QUEST_PAY[q.tier];
@@ -170,13 +170,13 @@ async function profile(db, user) {
   const extra = await db.prepare(`SELECT (SELECT avatar FROM presence WHERE user_id = ?1) AS avatar,
     (SELECT last FROM spins WHERE user_id = ?1) AS spun,
     (SELECT GROUP_CONCAT(slot) FROM shop_buys WHERE user_id = ?1 AND day = ?2) AS shopped,
-    (SELECT CASE WHEN state IS NOT NULL THEN 'playing' ELSE result END FROM hunts WHERE user_id = ?1 AND day = ?2) AS hunted,
+    (SELECT CASE WHEN state IS NOT NULL THEN 'playing' ELSE result END FROM hunts WHERE user_id = ?1 AND day = ?3) AS hunted,
     (SELECT best FROM gauntlet WHERE user_id = ?1) AS gbest,
     (SELECT COUNT(*) FROM friends f JOIN friends g ON g.user_id = f.friend_id AND g.friend_id = f.user_id
        JOIN gauntlet x ON x.user_id = f.friend_id
        WHERE f.user_id = ?1 AND x.best > COALESCE((SELECT best FROM gauntlet WHERE user_id = ?1), 0)) AS gahead,
     (SELECT COUNT(*) FROM friends f JOIN friends g ON g.user_id = f.friend_id AND g.friend_id = f.user_id WHERE f.user_id = ?1) AS friends`)
-    .bind(user.id, dayStart(now())).first();
+    .bind(user.id, dayStart(now()), huntStart(now())).first();
   const sold = String(extra.shopped ?? '').split(',');
   const quests = await questsFor(db, user, prog, collection, extra, sold.filter(Boolean).length);
   const next = prog.cleared < OPEN_LEVELS ? CAMPAIGN[prog.cleared] : null;   // locked chapters count as done for now
@@ -203,7 +203,7 @@ async function profile(db, user) {
     },
     fused: (await fusedRows(db, user.id)).map(fusedView),
     quests,
-    hunt: { legend: dailyLegend(now()), status: extra.hunted ?? 'ready', next: dayStart(now()) + 86400000 },   // ready | playing | won | lost
+    hunt: { ...huntFoes(now()), status: extra.hunted ?? 'ready', next: huntStart(now()) + HUNT_MS },   // ready | playing | won | lost
     gauntlet: { best: extra.gbest || 0, rank: extra.gahead + 1 },   // rank among you and your friends
     wins: prog.wins,
     packs: prog.packs,
@@ -782,33 +782,34 @@ async function setAvatar(req, db, user) {
 }
 
 // ---- legend hunt ----
+// One try per 8-hour hunt. hunts.day = the start of the hunt (ms) the try belongs to.
 const getHunt = (db, userId) => db.prepare('SELECT * FROM hunts WHERE user_id = ?').bind(userId).first();
-const huntView = (h, day) => {
-  const today = h && h.day === day;
-  return { legend: today ? h.legend : dailyLegend(day), status: !today ? 'ready' : h.state ? 'playing' : h.result,
-    state: today && h.state ? JSON.parse(h.state) : null, next: day + 86400000 };
+const huntView = (h, period) => {
+  const now = h && h.day === period;
+  return { ...huntFoes(period), status: !now ? 'ready' : h.state ? 'playing' : h.result,
+    state: now && h.state ? JSON.parse(h.state) : null, next: period + HUNT_MS };
 };
 
 async function huntHome(db, user) {
-  return json(huntView(await getHunt(db, user.id), dayStart(now())));
+  return json(huntView(await getHunt(db, user.id), huntStart(now())));
 }
 
-// Uses today's try. A fight already on today picks up where it was.
+// Uses this hunt's try. A fight already on picks up where it was.
 async function startHunt(db, user) {
-  const day = dayStart(now()), h = await getHunt(db, user.id);
-  if (h && h.day === day) {
-    if (h.state) return json(huntView(h, day));
-    throw new HttpError(400, 'You already hunted today. A new legend appears at midnight UTC.');
+  const period = huntStart(now()), h = await getHunt(db, user.id);
+  if (h && h.day === period) {
+    if (h.state) return json(huntView(h, period));
+    throw new HttpError(400, 'You already hunted this one. A new legend appears soon.');
   }
   const team = JSON.parse(user.team);
   if (team.length < 3) throw new HttpError(400, 'Clear campaign level 6 to hunt legends.');
-  const legend = dailyLegend(day);
-  const state = JSON.stringify(huntBattle(team, legend, await fusionsFor(db, user.id)));
+  const foes = huntFoes(period);
+  const state = JSON.stringify(huntBattle(team, foes, await fusionsFor(db, user.id)));
   const res = await db.prepare(`INSERT INTO hunts (user_id, day, legend, state, result) VALUES (?1, ?2, ?3, ?4, NULL)
     ON CONFLICT (user_id) DO UPDATE SET day = ?2, legend = ?3, state = ?4, result = NULL WHERE hunts.day < ?2`)
-    .bind(user.id, day, legend, state).run();
+    .bind(user.id, period, foes.legend, state).run();
   if (!res.meta.changes) throw new HttpError(409, 'The hunt changed. Refreshing.');
-  return json(huntView(await getHunt(db, user.id), day));
+  return json(huntView(await getHunt(db, user.id), period));
 }
 
 // Saves the fight (or ends it) only if nobody else changed it first, so a double-submit can't pay twice.
@@ -818,9 +819,10 @@ async function saveHunt(db, userId, old, state, result) {
   if (!res.meta.changes) throw new HttpError(409, 'The hunt changed. Refreshing.');
 }
 
+// A fight started in one hunt can be finished after the next one begins.
 async function huntMove(req, db, user) {
-  const day = dayStart(now()), h = await getHunt(db, user.id);
-  if (!h || h.day !== day || !h.state) throw new HttpError(400, 'No hunt in progress.');
+  const h = await getHunt(db, user.id);
+  if (!h || !h.state) throw new HttpError(400, 'No hunt in progress.');
   const state = JSON.parse(h.state);
   const { from, move: kind, to } = await body(req);
   try {
@@ -843,15 +845,15 @@ async function huntMove(req, db, user) {
   await db.batch([...pack.cards.map(id => addCard(db, user.id, id)),
     db.prepare('UPDATE users SET packs_since_legend = ?, gold = gold + ?, xp = xp + ? WHERE id = ?')
       .bind(pack.packsSinceLegend, HUNT_GOLD, HUNT_XP, user.id),
-    bumpProgress(db, user.id, 'wins'), bumpProgress(db, user.id, 'packs')]);
+    bumpProgress(db, user.id, 'wins'), bumpProgress(db, user.id, 'packs'), questEvent(db, user.id, 'hunt')]);
   return json({ legend: h.legend, state, result: { won: true, pack: pack.cards, packType: 'overload', gold: HUNT_GOLD, xp: HUNT_XP },
     profile: await profile(db, await freshUser(db, user.id)) });
 }
 
-// Giving up mid-fight uses up today's try.
+// Giving up mid-fight uses up the try.
 async function leaveHunt(db, user) {
-  const day = dayStart(now()), h = await getHunt(db, user.id);
-  if (h && h.day === day && h.state) await saveHunt(db, user.id, h, null, 'lost');
+  const h = await getHunt(db, user.id);
+  if (h && h.state) await saveHunt(db, user.id, h, null, 'lost');
   return json({ profile: await profile(db, await freshUser(db, user.id)) });
 }
 
