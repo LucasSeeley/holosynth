@@ -12,7 +12,6 @@ export const CAMPAIGN_XP = [50, 100, 150, 200, 250];
 export const CHAPTERS_OPEN = 5;   // chapters past this show "More chapters are on the way"
 export const WIN_XP = 25;
 export const XP_PER_LEVEL = 100;
-export const RATES = [['Common', 81], ['Rare', 12], ['Epic', 6], ['Legendary', 1]];
 // +20% damage. Tech and magic each have a triangle, and every class also beats one class from the other side:
 // each class beats 2, is weak to 2 and is even with 1.
 export const BEATS = {
@@ -28,50 +27,72 @@ export const levelStart = level => XP_PER_LEVEL * (2 ** (level - 1) - 1);   // t
 export const levelFor = xp => { let l = 1; while (levelStart(l + 1) <= xp) l++; return l; };
 
 // ---- packs ----
-function rollRarity(rand, rates = RATES) {
+function rollRarity(rand, rates) {
   let r = rand() * 100;
   for (const [name, pct] of rates) { if ((r -= pct) < 0) return name; }
   return 'Common';
 }
+// Each rarity splits into a lower and an upper tier: the stronger half by total stats (HP + basic + special) is upper.
+const score = c => c.hp + c.basic.dmg + (c.special.dmg || 0) + (c.special.heal || 0);
+export const TIER_OF = {};
+for (const r of ['Common', 'Rare', 'Epic', 'Legendary']) {
+  const cs = CARDS.filter(c => c.rarity === r), mid = cs.map(score).sort((a, b) => a - b)[Math.floor(cs.length / 2)];
+  for (const c of cs) TIER_OF[c.id] = score(c) >= mid ? 'upper' : 'lower';
+}
+// Every pack card rolls one row of this ladder; each row is rarer than the one above it. 'power' = a power card of that rarity.
+export const SLOT_ODDS = [
+  ['Common', 'lower', 34], ['Common', 'power', 28], ['Common', 'upper', 17],
+  ['Rare', 'lower', 7], ['Rare', 'power', 5], ['Rare', 'upper', 4],
+  ['Epic', 'lower', 2], ['Epic', 'power', 1.4], ['Epic', 'upper', 1],
+  ['Legendary', 'lower', 0.3], ['Legendary', 'power', 0.18], ['Legendary', 'upper', 0.12],
+];
+// Guaranteed last cards (always a character): Overload's is Rare or better, Legends' is a Legendary.
+export const OVERLOAD_BEST = [['Rare', 'lower', 55], ['Rare', 'upper', 25], ['Epic', 'lower', 12], ['Epic', 'upper', 6], ['Legendary', 'lower', 1.4], ['Legendary', 'upper', 0.6]];
+export const LEGENDS_BEST = [['Legendary', 'lower', 80], ['Legendary', 'upper', 20]];
+const rollRow = (rand, rows) => {
+  let r = rand() * rows.reduce((a, x) => a + x[2], 0);
+  for (const row of rows) if ((r -= row[2]) < 0) return row;
+  return rows[0];
+};
 // Pack types and the classes each holds (omni = every card).
 export const PACK_TYPES = { cyber: ['Fighter', 'Beast', 'Mech'], magic: ['Arcanist', 'Spirit', 'Mystic'], omni: null, overload: null, legends: null, power: null };
-// The Overload Pack is a big Omni: 8 cards for 12,000, the last always Rare or better (OVERLOAD_BEST). The Legends Pack: a guaranteed Legendary plus 4 cards at the
-// normal odds, 25,000. Everything else is 3 cards for PACK_COST.
+// The Overload Pack is a big Omni: 8 cards for 12,000. The Legends Pack: 5 cards for 25,000. Everything else is 3 cards for PACK_COST.
 export const PACK_SIZES = { overload: 8, legends: 5, power: 3 };
 export const PACK_COSTS = { overload: 12000, legends: 25000, power: 3000 };
-export const OVERLOAD_BEST = [['Rare', 50], ['Epic', 48], ['Legendary', 2]];
 const FREE_TYPES = ['cyber', 'magic', 'omni'];   // free packs are never Overload
 export const PACKS_OPEN = ['cyber', 'magic', 'omni', 'overload', 'legends', 'power'];   // packs on sale; any left out show "Coming soon"
-const pickOf = (rarity, type, rand) => {
+const pickOf = (rarity, type, rand, tier) => {
   const classes = PACK_TYPES[type];
-  const pool = CARDS.filter(c => c.rarity === rarity && (!classes || classes.includes(c.cls)));
+  const all = CARDS.filter(c => c.rarity === rarity && (!classes || classes.includes(c.cls)));
+  const tiered = all.filter(c => TIER_OF[c.id] === tier), pool = tiered.length ? tiered : all;
   return pool[Math.floor(rand() * pool.length)].id;
 };
 
-// A random power card for a pack, rarer ones less often.
-const powerOf = (rand, skip = []) => {
-  const r = RARITY_I[rollRarity(rand, POWER_PACK.rates)], pool = POWER_POOLS[r].filter(id => !skip.includes(id));
-  return pool.length ? 'pw:' + pool[Math.floor(rand() * pool.length)] : powerOf(rand, skip);
+// A random power card for the Power Pack, rarer ones less often.
+const powerOf = rand => {
+  const pool = POWER_POOLS[RARITY_I[rollRarity(rand, POWER_PACK.rates)]];
+  return 'pw:' + pool[Math.floor(rand() * pool.length)];
 };
-// What a pack card that rolled Common turns into (see COMMON_SPLIT).
-function commonSlot(type, rand) {
-  const u = rand() * (COMMON_SPLIT.character + COMMON_SPLIT.favourites + COMMON_SPLIT.gear);
-  if (u < COMMON_SPLIT.character) return pickOf('Common', type, rand);
-  if (u < COMMON_SPLIT.character + COMMON_SPLIT.favourites) return 'pw:' + FAVOURITE_POWERS[Math.floor(rand() * FAVOURITE_POWERS.length)];
-  return powerOf(rand, FAVOURITE_POWERS);
-}
+// A power-card row in a character pack. Common: Deflector / Ricochet / Restore (FAVOURITE_POWERS) about 24 parts to the other
+// Common power cards' 21; higher rarities never give the favourites.
+const FAV_SHARE = 24 / 45;
+const powerRow = (rarity, rand) => {
+  const others = POWER_POOLS[RARITY_I[rarity]].filter(id => !FAVOURITE_POWERS.includes(id));
+  const pool = rarity === 'Common' && rand() < FAV_SHARE ? FAVOURITE_POWERS : others;
+  return 'pw:' + pool[Math.floor(rand() * pool.length)];
+};
 // Returns { cards: [ids], holo: [indexes of holo cards], packsSinceLegend } for one pack of `type`.
 export function openPack(packsSinceLegend, type = 'cyber', rand = Math.random) {
   const size = PACK_SIZES[type] ?? PACK_SIZE;
-  // a pack's guaranteed card (Overload's Rare-or-better, Legends' Legendary) is the last one, so it's revealed last
-  const last = { legends: () => 'Legendary', overload: () => rollRarity(rand, OVERLOAD_BEST) }[type];
   if (type === 'power') return { cards: Array.from({ length: POWER_PACK.size }, () => powerOf(rand)), holo: [], packsSinceLegend };   // power cards only
-  const rarities = Array.from({ length: size }, (_, i) => (last && i === size - 1 ? last() : rollRarity(rand)));
-  const cards = rarities.map((r, i) => (r === 'Common' && !(last && i === size - 1) ? commonSlot(type, rand) : pickOf(r, type, rand)));
+  // a pack's guaranteed card is the last one, so it's revealed last
+  const last = { legends: LEGENDS_BEST, overload: OVERLOAD_BEST }[type];
+  const rows = Array.from({ length: size }, (_, i) => rollRow(rand, last && i === size - 1 ? last : SLOT_ODDS));
+  const cards = rows.map(([r, t]) => (t === 'power' ? powerRow(r, rand) : pickOf(r, type, rand, t)));
   return {
     cards,
     holo: cards.map((_, i) => i).filter(i => !cards[i].startsWith('pw:') && rand() < HOLO_CHANCE),   // which of them came out holo
-    packsSinceLegend: rarities.includes('Legendary') ? 0 : packsSinceLegend + 1,
+    packsSinceLegend: rows.some(([r, t]) => r === 'Legendary' && t !== 'power') ? 0 : packsSinceLegend + 1,
   };
 }
 
@@ -319,11 +340,8 @@ export const POWERS = {
 };
 export const POWER_SLOTS = 2;
 export const rarityOf = id => (id.startsWith('pw:') ? POWERS[id.slice(3)].rarity : BY_ID[id].rarity);   // a pack card's rarity
-export const POWER_PACK = { cost: 3000, size: 3, rates: [['Common', 70], ['Rare', 22], ['Epic', 7], ['Legendary', 1]] };
-// Every pack card that rolls Common (81%) splits in these proportions: a Common character, Deflector / Ricochet / Restore
-// (even split), any other power card (rarer ones less often). Of all pack cards that's about 29% / 23% / 29%.
-// The guaranteed card of a pack never changes.
-export const COMMON_SPLIT = { character: 30.5, favourites: 24, gear: 30.5 };
+export const POWER_PACK = { cost: 3000, size: 3, rates: [['Common', 76], ['Rare', 19], ['Epic', 4.4], ['Legendary', 0.6]] };
+// The three staple power cards, boosted in character packs (see powerRow).
 export const FAVOURITE_POWERS = ['shield', 'mirror', 'restore'];
 const POWER_POOLS = TIERS.map(r => Object.keys(POWERS).filter(k => POWERS[k].rarity === r));
 // Two power cards for a computer opponent, from rarity tiers a and b (0 = Common ... 3 = Legendary).
