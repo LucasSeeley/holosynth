@@ -149,7 +149,8 @@ struct BattleBoard: View {
         let w = cardWidth
         let artH = (w / 1.3).rounded()
         let pct = CGFloat(unit.hp) / CGFloat(unit.max ?? card.hp)
-        let look = (healing && isTarget) || (f.flash && f.heal) ? outline(green: true)
+        let look = powerMove != nil && isTarget ? (Power.violet, Power.violet.opacity(pulse ? 0.8 : 0.4), CGFloat(2), CGFloat(16))
+            : (healing && isTarget) || (f.flash && f.heal) ? outline(green: true)
             : outline(red: f.flash || isTarget, gold: (isSelected && !isTarget) || f.lunge != 0, ready: ready)
         let small: CGFloat = w > 150 ? 13 : (w > 112 ? 12 : 11)
 
@@ -294,6 +295,7 @@ struct BattleBoard: View {
         let powers = s.pw?[you] ?? []
         return VStack(spacing: 10) {
             Text(error ?? prompt(card)).font(.barlow(15, semibold: true))
+                .padding(.bottom, (s.pw?[you] ?? []).isEmpty ? 0 : 6)   // room for a lifted power card
                 .foregroundColor(error != nil ? Theme.pink : (myTurn || playing ? Theme.fg : Color(hex: 0xFF7884)))
                 .multilineTextAlignment(.center).lineLimit(2).frame(minHeight: 20)
             HStack(spacing: 10) {
@@ -318,7 +320,7 @@ struct BattleBoard: View {
                     Button { if enabled { choosePower(p) } else { error = myTurn ? "Pick one of your cards first" : nil } } label: { miniPower(p, glow: picked || enabled) }
                         .buttonStyle(.plain)
                         .rotationEffect(.degrees(powers.count > 1 ? (k == 0 ? -9 : 7) : 0), anchor: .bottom)
-                        .offset(x: powers.count > 1 && k == 0 ? -30 : 0, y: picked ? -14 : 0)
+                        .offset(x: powers.count > 1 && k == 0 ? -30 : 0, y: picked ? -10 : 0)
                         .zIndex(picked ? 2 : Double(k))
                         .accessibilityLabel("Power card: \(p.name). \(p.effect)")
                 }
