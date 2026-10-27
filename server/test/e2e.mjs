@@ -4,8 +4,12 @@
 import { aiMove } from '../src/game.js';
 
 const base = process.argv[2] || 'http://localhost:8799';
+// The live server sometimes drops a connection (ECONNRESET) mid-run; retry those a couple of times.
+const send = async (url, init, tries = 3) => {
+  try { return await fetch(url, init); } catch (e) { if (tries <= 1) throw e; await new Promise(r => setTimeout(r, 1500)); return send(url, init, tries - 1); }
+};
 const call = async (path, token, body) => {
-  const res = await fetch(base + path, {
+  const res = await send(base + path, {
     method: body === undefined ? 'GET' : 'POST',
     headers: { 'Content-Type': 'application/json', ...(token && { Authorization: `Bearer ${token}` }) },
     body: body === undefined ? undefined : JSON.stringify(body),
