@@ -530,48 +530,6 @@ private struct Crown: Shape {
     }
 }
 
-// The Play tab's Ranked row: rank, place this week, and a dot when a week result or season reward is waiting.
-struct RankedTile: View {
-    let info: RankedTileInfo
-    let unlocked: Bool
-    let open: () -> Void
-
-    var body: some View {
-        Button(action: open) {
-            HStack(spacing: 12) {
-                RankEmblem(rank: info.rank, size: 56).saturation(unlocked ? 1 : 0)
-                    .overlay(alignment: .topTrailing) { if info.alert { Circle().fill(Theme.pink).frame(width: 12, height: 12) } }
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack {
-                        Text("Ranked").font(.chakra(18)).foregroundColor(Theme.fg)
-                        Spacer()
-                        Text(info.name).font(.chakra(13)).foregroundColor(RankedView.color(info.rank))
-                    }
-                    if unlocked {
-                        (Text("#\(info.place)").font(.chakra(13)).foregroundColor(Theme.fg) + Text(" this week · \(info.points) pts"))
-                            .font(.barlow(13)).foregroundColor(Color(hex: 0xA9A5C2))
-                    } else {
-                        Label("Unlocks at level 6", systemImage: "lock.fill").font(.barlow(13)).foregroundColor(Theme.muted)
-                    }
-                }
-                if unlocked {
-                    Text("Play").font(.chakra(15)).tracking(2.2).textCase(.uppercase).foregroundColor(Color(hex: 0x1A0D05))
-                        .frame(width: 80, height: 40)
-                        .background(LinearGradient(colors: [Color(hex: 0xFFD77A), Color(hex: 0xE0A12A)], startPoint: .top, endPoint: .bottom),
-                                    in: RoundedRectangle(cornerRadius: 14))
-                }
-            }
-            .padding(.leading, 10).padding(.trailing, 12).frame(height: 84)
-            .background(RadialGradient(colors: [RankedView.color(info.rank).opacity(0.22), .clear], center: .leading, startRadius: 0, endRadius: 220),
-                        in: RoundedRectangle(cornerRadius: 18))
-            .background(Theme.field, in: RoundedRectangle(cornerRadius: 18))
-            .overlay(RoundedRectangle(cornerRadius: 18).stroke(RankedView.color(info.rank).opacity(unlocked ? 0.5 : 0.2), lineWidth: 1))
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .disabled(!unlocked)
-    }
-}
 
 extension Array {
     subscript(safe i: Int) -> Element? { indices.contains(i) ? self[i] : nil }

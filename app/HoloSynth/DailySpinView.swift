@@ -205,43 +205,9 @@ enum SpinClock {
     static func ready(_ ms: Double) -> Bool { ms / 1000 <= Date().timeIntervalSince1970 }
 }
 
-// The Play tab's Daily Spin row: glows with a Spin button when ready, counts down once today's spin is used.
-struct SpinTile: View {
-    let nextSpin: Double
-    let open: () -> Void
-
-    var body: some View {
-        TimelineView(.periodic(from: .now, by: 1)) { _ in
-            let ready = SpinClock.ready(nextSpin)
-            HStack(spacing: 12) {
-                MiniWheel(lit: ready).frame(width: 46, height: 46)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Daily spin").font(.chakra(16)).foregroundColor(Theme.fg)
-                    Text(ready ? "Ready to spin!" : "Next spin in").font(.barlow(13)).foregroundColor(ready ? Theme.brass : Color(hex: 0xA9A5C2))
-                }
-                Spacer(minLength: 4)
-                if ready {
-                    Button("Spin", action: open).buttonStyle(GoldButton(height: 40)).frame(width: 90)
-                } else {
-                    Label(SpinClock.left(until: nextSpin), systemImage: "clock").font(.chakra(15)).monospacedDigit()
-                        .foregroundColor(Theme.fg).labelStyle(.titleAndIcon)
-                        .padding(.horizontal, 12).frame(height: 36)
-                        .background(Theme.ink.opacity(0.6), in: RoundedRectangle(cornerRadius: 10))
-                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.brass.opacity(0.25), lineWidth: 1))
-                }
-            }
-            .padding(.leading, 11).padding(.trailing, 12).frame(height: 68)
-            .background(Theme.field, in: RoundedRectangle(cornerRadius: 18))
-            .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.brass.opacity(ready ? 0.55 : 0.2), lineWidth: 1))
-            .shadow(color: Theme.brass.opacity(ready ? 0.15 : 0), radius: 12)
-            .contentShape(Rectangle())
-            .onTapGesture { if ready { open() } }
-        }
-    }
-}
 
 // Little wheel icon for the tile: coloured slices when ready, dimmed when used.
-private struct MiniWheel: View {
+struct MiniWheel: View {
     let lit: Bool
     var body: some View {
         let on: [String: UInt32] = ["gold": 0xE8B85A, "xp": 0x3FF0FF, "pack": 0xFF4D5E]

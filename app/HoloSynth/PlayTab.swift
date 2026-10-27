@@ -16,12 +16,8 @@ struct PlayTab: View {
                     VStack(spacing: 12) {
                         header(p)
                         campaignTile(p)
-                        SpinTile(nextSpin: p.nextSpin) { screen = .spin }
-                        if let q = p.quests { QuestTile(quests: q) { screen = .quests } }
-                        if let r = p.ranked { RankedTile(info: r, unlocked: p.team.count >= 3) { screen = .ranked } }
-                        GauntletTile(stats: p.gauntlet, unlocked: p.campaign.friendsUnlocked) { screen = .gauntlet }
-                        if let h = p.hunt { HuntTile(hunt: h, unlocked: p.team.count >= 3) { screen = .hunt } }
-                        HStack(spacing: 12) { friendTile(p); packTile }
+                        daily(p)
+                        modes(p)
                         teamPanel(p)
                         stats(p)
                     }
@@ -122,7 +118,7 @@ struct PlayTab: View {
             Color(hex: 0x02060F)
                 .overlay(alignment: .top) {
                     if let img = Art.image(c.next?.enemies.first ?? "card_bg") {   // chapter done: the shared card background
-                        Image(uiImage: img).resizable().aspectRatio(1.3, contentMode: .fill).padding(.top, 22)
+                        Image(uiImage: img).resizable().aspectRatio(1.3, contentMode: .fill)
                     }
                 }
                 .clipped()
@@ -159,68 +155,65 @@ struct PlayTab: View {
             }
             .padding(14)
         }
-        .frame(height: 210)
+        .frame(height: 170)
         .clipShape(RoundedRectangle(cornerRadius: 18))
         .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.brass.opacity(0.45), lineWidth: 1))
         .shadow(color: Theme.brass.opacity(0.15), radius: 12)
     }
 
-    private func friendTile(_ p: Profile) -> some View {
-        let open = p.campaign.friendsUnlocked
-        return Button { screen = .friend } label: {
-            VStack(alignment: .leading) {
-                Image(systemName: "bolt.fill").font(.system(size: 24)).foregroundColor(open ? Theme.brass : Theme.muted)
-                Spacer()
-                Text("Battle a friend").font(.chakra(16)).foregroundColor(Theme.fg)
-                HStack(spacing: 5) {
-                    if !open { Image(systemName: "lock.fill").font(.system(size: 10)) }
-                    Text(open ? "Create or join a match" : "Unlocks at level 6")
+    // MARK: daily + modes
+
+    private func daily(_ p: Profile) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Daily").sectionTitle()
+            HStack(spacing: 10) {
+                TimelineView(.periodic(from: .now, by: 1)) { _ in
+                    let ready = SpinClock.ready(p.nextSpin)
+                    PlayChip(title: "Spin", sub: ready ? "Ready!" : SpinClock.left(until: p.nextSpin), accent: 0xFF4D5E, alert: ready) {
+                        MiniWheel(lit: ready).frame(width: 36, height: 36)
+                    } action: { if ready { screen = .spin } }
                 }
-                .font(.barlow(13)).foregroundColor(open ? Theme.brass : Theme.muted)
+                if let q = p.quests {
+                    PlayChip(title: "Quests", sub: q.bonus == "claimed" ? "All done" : "\(q.finished) of \(q.list.count)", accent: 0x3DFF8A,
+                             alert: q.claimable > 0) {
+                        Image(systemName: "scroll").font(.system(size: 26, weight: .medium)).foregroundColor(Theme.brass)
+                    } action: { screen = .quests }
+                }
+                PlayChip(title: "Shop", sub: "New cards", accent: 0xB46BFF, alert: false) {
+                    if let img = Art.pack("omni") { Image(uiImage: img).resizable().scaledToFit().frame(height: 40) }
+                } action: { tab = 1 }
             }
-            .padding(14).frame(maxWidth: .infinity, minHeight: 120, maxHeight: 120, alignment: .leading)
-            .background(Theme.field, in: RoundedRectangle(cornerRadius: 18))
-            .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.brass.opacity(open ? 0.5 : 0.2), lineWidth: 1))
         }
-        .buttonStyle(.plain)
-        .disabled(!open)
     }
 
-    private var packTile: some View {
-        Button { tab = 1 } label: {
-            ZStack(alignment: .bottomLeading) {
-                // all three packs fanned out: Cyber and Magic behind, Omni in front
-                ZStack {
-                    fanned("cyber", angle: -16, x: -30, height: 88)
-                    fanned("magic", angle: 16, x: 28, height: 88)
-                    fanned("omni", angle: 0, x: 0, height: 96)
+    private func modes(_ p: Profile) -> some View {
+        let open = p.team.count >= 3
+        return VStack(alignment: .leading, spacing: 8) {
+            Text("Modes").sectionTitle()
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+                if let r = p.ranked {
+                    ModeTile(title: "Ranked", sub: "\(r.name) · #\(r.place) this week", accent: RankedView.color(r.rank), locked: !open, alert: r.alert) {
+                        RankEmblem(rank: r.rank, size: 70).padding(.top, 12)
+                    } action: { screen = .ranked }
                 }
-                .frame(width: 120, height: 120)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
-                // dark fade so the text reads over the packs
-                LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: Theme.ink.opacity(0.95), location: 0.6)],
-                               startPoint: .top, endPoint: .bottom)
-                    .frame(height: 72)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("Open a pack").font(.chakra(16)).foregroundColor(Theme.fg)
-                    Text("From 5,000 gold").font(.barlow(13)).foregroundColor(Theme.brass)
+                ModeTile(title: "Gauntlet", sub: "Best streak \(p.gauntlet.best)", accent: Theme.backRed, locked: !p.campaign.friendsUnlocked, alert: false) {
+                    Swords().fill(Theme.brass).frame(width: 60, height: 60).padding(.top, 18)
+                } action: { screen = .gauntlet }
+                if let h = p.hunt {
+                    ModeTile(title: "Legend Hunt", sub: huntLine(h), accent: HuntView.gold, locked: !open, alert: false, fill: true) {
+                        if let img = Art.image(h.legend) { Image(uiImage: img).resizable().scaledToFill() }
+                    } action: { screen = .hunt }
                 }
-                .padding(14)
+                ModeTile(title: "Friends", sub: "Battle a friend", accent: Color(hex: 0x3FF0FF), locked: !p.campaign.friendsUnlocked, alert: false) {
+                    Image(systemName: "bolt.fill").font(.system(size: 48)).foregroundColor(Theme.brass).padding(.top, 22)
+                } action: { screen = .friend }
             }
-            .frame(maxWidth: .infinity, minHeight: 120, maxHeight: 120)
-            .background(Theme.field, in: RoundedRectangle(cornerRadius: 18))
-            .clipShape(RoundedRectangle(cornerRadius: 18))
-            .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.brass.opacity(0.28), lineWidth: 1))
         }
-        .buttonStyle(.plain)
     }
 
-    @ViewBuilder private func fanned(_ type: String, angle: Double, x: CGFloat, height: CGFloat) -> some View {
-        if let img = Art.pack(type) {
-            Image(uiImage: img).resizable().scaledToFit().frame(height: height)
-                .shadow(color: .black.opacity(0.6), radius: 6, y: 5)
-                .rotationEffect(.degrees(angle)).offset(x: x, y: -6)
-        }
+    private func huntLine(_ h: HuntInfo) -> String {
+        let name = CardBook.card(h.legend)?.name ?? h.legend
+        return h.status == "ready" || h.status == "playing" ? "\(name) · 1 try" : "Back in \(HuntView.left(h.next))"
     }
 
     private func teamPanel(_ p: Profile) -> some View {
@@ -270,5 +263,70 @@ struct PlayTab: View {
         .frame(maxWidth: .infinity).padding(.vertical, 10)
         .background(Theme.field, in: RoundedRectangle(cornerRadius: 14))
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.brass.opacity(0.2), lineWidth: 1))
+    }
+}
+
+// A small square on the Play tab's Daily row: icon, name, one line of status, a dot when something's waiting.
+struct PlayChip<Icon: View>: View {
+    let title: String
+    let sub: String
+    let accent: UInt32
+    let alert: Bool
+    @ViewBuilder let icon: () -> Icon
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 6) {
+                icon().frame(height: 40)
+                Text(title).font(.chakra(13)).foregroundColor(Theme.fg)
+                Text(sub).font(.barlow(11)).foregroundColor(Color(hex: 0xA9A5C2)).lineLimit(1).minimumScaleFactor(0.7).monospacedDigit()
+            }
+            .frame(maxWidth: .infinity).frame(height: 104)
+            .background(Theme.field, in: RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(hex: accent).opacity(alert ? 0.7 : 0.35), lineWidth: 1))
+            .overlay(alignment: .topTrailing) { if alert { Circle().fill(Theme.pink).frame(width: 10, height: 10).padding(9) } }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(title), \(sub)")
+    }
+}
+
+// A big tile in the Play tab's Modes grid: art on top (or filling it), name and status over a dark fade at the bottom.
+struct ModeTile<Art: View>: View {
+    let title: String
+    let sub: String
+    let accent: Color
+    let locked: Bool
+    let alert: Bool
+    var fill = false            // the art fills the whole tile (a card picture)
+    @ViewBuilder let art: () -> Art
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            ZStack(alignment: .bottomLeading) {
+                RadialGradient(colors: [accent.opacity(0.3), Theme.field], center: UnitPoint(x: 0.5, y: 0.35), startRadius: 0, endRadius: 120)
+                Color.clear.overlay(alignment: fill ? .center : .top) { art() }.clipped()
+                LinearGradient(stops: [.init(color: .clear, location: 0.35), .init(color: Theme.ink.opacity(0.92), location: 1)],
+                               startPoint: .top, endPoint: .bottom)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title).font(.chakra(17)).foregroundColor(Theme.fg)
+                    if locked { Label("Unlocks at level 6", systemImage: "lock.fill").font(.barlow(12)).foregroundColor(Theme.muted) }
+                    else { Text(sub).font(.barlow(12)).foregroundColor(Color(hex: 0xA9A5C2)).lineLimit(1).minimumScaleFactor(0.7) }
+                }
+                .padding(12)
+            }
+            .frame(height: 128)
+            .saturation(locked ? 0 : 1)
+            .clipShape(RoundedRectangle(cornerRadius: 18))
+            .overlay(RoundedRectangle(cornerRadius: 18).stroke(accent.opacity(locked ? 0.2 : 0.55), lineWidth: 1))
+            .overlay(alignment: .topTrailing) { if alert && !locked { Circle().fill(Theme.pink).frame(width: 12, height: 12).padding(10) } }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(locked)
+        .accessibilityLabel("\(title), \(locked ? "unlocks at level 6" : sub)")
     }
 }
