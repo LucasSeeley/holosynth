@@ -12,6 +12,7 @@ struct RankedView: View {
     @State private var view: Ranked?
     @State private var match: MatchView?          // live match
     @State private var state: BattleState?        // the fight on the board
+    @State private var opp: Ranked.Opp?           // who the computer is playing as (kept until the result shows)
     @State private var pending: RankedResult?     // result waiting for the last hits to play out
     @State private var searchStart = Date()
     @State private var error: String?
@@ -255,7 +256,7 @@ struct RankedView: View {
                         },
                         onSettled: { if let w = match?.state?.winner { Task { await liveOver(won: w == m.you) } } })
                 .task(id: m.id) { await poll(m.id) }
-        } else if let s = state, let opp = view?.run?.opp {
+        } else if let s = state, let opp = opp ?? view?.run?.opp {
             BattleBoard(state: s, you: 0, eyebrow: "Ranked", title: "vs \(opp.name)", foeName: opp.name,
                         leaveLabel: "Give up", leaveQuestion: "Give up? It counts as a loss.",
                         onMove: { from, mv, to in
@@ -408,7 +409,7 @@ struct RankedView: View {
         do {
             let v: Ranked = try await API.call("ranked", token: store.token)
             view = v
-            state = v.run?.state
+            if let run = v.run { state = run.state; opp = run.opp }
             if keepPhase { return }
             if let r = v.reward { phase = .season(r) }
             else if let m = v.moved { phase = .week(m) }
@@ -435,6 +436,7 @@ struct RankedView: View {
                     }
                     if let run = r.view.run {
                         state = run.state
+                        opp = run.opp
                         if phase == .searching { withAnimation { phase = .found } }
                         return
                     }

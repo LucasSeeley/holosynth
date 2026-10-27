@@ -922,8 +922,8 @@ async function rankedGhost(db, user) {
     ? { name: pick.username, rank: pick.rank, team: JSON.parse(pick.team), avatar: avatarOf(pick.avatar, pick.team), fus: await fusionsFor(db, pick.id) }
     : { name: 'HoloBot', rank: me.rank, team: rankedTeam(me.rank), avatar: null, fus: {} };
   opp.avatar ??= opp.team[0];
-  const run = { opp, state: newBattle(JSON.parse(user.team), opp.team, Math.random, await fusionsFor(db, user.id), opp.fus) };
-  while (run.state.winner === null && run.state.turn === 1) { const m = aiMove(run.state, 1); applyMove(run.state, 1, m.from, m.move, m.to); }
+  // you move first (like the Gauntlet), so no computer move happens before the board is on screen
+  const run = { opp, state: newBattle(JSON.parse(user.team), opp.team, () => 0, await fusionsFor(db, user.id), opp.fus) };
   await db.prepare(`INSERT INTO ranked (user_id, rank, week, points, best, run) VALUES (?1, ?2, ?3, ?4, ?5, ?6)
     ON CONFLICT (user_id) DO UPDATE SET run = ?6`).bind(user.id, me.rank, me.week, me.points, me.best, JSON.stringify(run)).run();
   return json({ view: await rankedView(db, user) });
