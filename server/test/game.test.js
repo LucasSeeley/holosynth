@@ -124,7 +124,7 @@ test('each level needs double the XP of the last', () => {
 });
 
 test('fusion boosts stats and unlocks a stronger second special', () => {
-  assert.equal(Object.keys(SECOND).length, 27);
+  assert.equal(Object.keys(SECOND).length, 45);
   assert.deepEqual(FUSE_GOLD, [1000, 2500, 5000]);
   for (const [id, m] of Object.entries(SECOND)) {
     assert.ok(['Epic', 'Legendary'].includes(BY_ID[id].rarity), id);
@@ -217,7 +217,7 @@ test('computer heals a teammate in trouble, but takes a knockout first', () => {
 
 test('every magic card is complete', () => {
   const magic = Object.values(BY_ID).filter(c => ['Arcanist', 'Spirit', 'Mystic'].includes(c.cls));
-  assert.equal(magic.length, 51);
+  assert.equal(magic.length, 72);
   for (const c of magic) {
     assert.ok(c.hp > 0 && c.basic.dmg > 0 && c.special.dmg > 0 && c.special.cd >= 1 && c.quip && c.color, c.id);
     assert.equal(!!c.special.heal, c.cls === 'Mystic', c.id);

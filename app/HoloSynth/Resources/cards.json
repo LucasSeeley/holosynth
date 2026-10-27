@@ -3570,5 +3570,942 @@
    "dmg": 90,
    "cd": 4
   }
+ },
+ {
+  "id": "bladestorm",
+  "num": 172,
+  "name": "Bladestorm",
+  "rarity": "Epic",
+  "cls": "Fighter",
+  "hp": 110,
+  "basic": {
+   "name": "Blade Dance",
+   "dmg": 25
+  },
+  "special": {
+   "name": "Cyclone Edge",
+   "dmg": 50,
+   "cd": 3
+  },
+  "look": "Duelist android with six hardlight blades orbiting it.",
+  "color": "#ff3d6e",
+  "quip": "Brought six swords to a knife fight.",
+  "special2": {
+   "name": "Hurricane Cut",
+   "dmg": 65,
+   "cd": 4
+  }
+ },
+ {
+  "id": "ironclad",
+  "num": 173,
+  "name": "Ironclad",
+  "rarity": "Epic",
+  "cls": "Fighter",
+  "hp": 125,
+  "basic": {
+   "name": "Tower Bash",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Bulwark Slam",
+   "dmg": 50,
+   "cd": 3
+  },
+  "look": "Armoured knight android behind a tower shield of neon glass.",
+  "color": "#9aa4b5",
+  "quip": "Hasn't taken a hit in years. Dodges conversations too.",
+  "special2": {
+   "name": "Fortress Charge",
+   "dmg": 65,
+   "cd": 4
+  }
+ },
+ {
+  "id": "ghostwire",
+  "num": 174,
+  "name": "Ghostwire",
+  "rarity": "Epic",
+  "cls": "Fighter",
+  "hp": 95,
+  "basic": {
+   "name": "Ghost Strike",
+   "dmg": 25
+  },
+  "special": {
+   "name": "Code Slip",
+   "dmg": 50,
+   "cd": 3
+  },
+  "look": "Assassin android dissolving into streams of green code.",
+  "color": "#00ffb3",
+  "quip": "You won't see him coming. Or leaving.",
+  "special2": {
+   "name": "Blackout",
+   "dmg": 65,
+   "cd": 4
+  }
+ },
+ {
+  "id": "hydra",
+  "num": 175,
+  "name": "Hydra",
+  "rarity": "Epic",
+  "cls": "Beast",
+  "hp": 120,
+  "basic": {
+   "name": "Hydra Bite",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Venom Coil",
+   "dmg": 50,
+   "cd": 3
+  },
+  "look": "Three-headed mechanical serpent in violet chrome.",
+  "color": "#b84dff",
+  "quip": "Three heads, zero agreement.",
+  "special2": {
+   "name": "Many Heads",
+   "dmg": 65,
+   "cd": 4
+  }
+ },
+ {
+  "id": "stormclaw",
+  "num": 176,
+  "name": "Stormclaw",
+  "rarity": "Epic",
+  "cls": "Beast",
+  "hp": 110,
+  "basic": {
+   "name": "Static Pounce",
+   "dmg": 25
+  },
+  "special": {
+   "name": "Arc Claw",
+   "dmg": 50,
+   "cd": 3
+  },
+  "look": "Electric chrome tiger crackling with yellow lightning.",
+  "color": "#ffe03d",
+  "quip": "Purrs at 10,000 volts.",
+  "special2": {
+   "name": "Thunder Maul",
+   "dmg": 65,
+   "cd": 4
+  }
+ },
+ {
+  "id": "sandscorch",
+  "num": 177,
+  "name": "Sandscorch",
+  "rarity": "Epic",
+  "cls": "Beast",
+  "hp": 115,
+  "basic": {
+   "name": "Pincer Snap",
+   "dmg": 25
+  },
+  "special": {
+   "name": "Venom Lance",
+   "dmg": 50,
+   "cd": 3
+  },
+  "look": "Giant mechanical desert scorpion with an amber plasma stinger.",
+  "color": "#ffb347",
+  "quip": "Has a tail for every occasion.",
+  "special2": {
+   "name": "Sandstorm Sting",
+   "dmg": 65,
+   "cd": 4
+  }
+ },
+ {
+  "id": "ravager",
+  "num": 178,
+  "name": "Ravager",
+  "rarity": "Epic",
+  "cls": "Mech",
+  "hp": 120,
+  "basic": {
+   "name": "Leg Spears",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Siege Lines",
+   "dmg": 50,
+   "cd": 3
+  },
+  "look": "Eight-legged spider-tank mech with red sensor eyes.",
+  "color": "#ff3d3d",
+  "quip": "Eight legs, zero chill.",
+  "special2": {
+   "name": "Siege Barrage",
+   "dmg": 65,
+   "cd": 4
+  }
+ },
+ {
+  "id": "aegis",
+  "num": 179,
+  "name": "Aegis",
+  "rarity": "Epic",
+  "cls": "Mech",
+  "hp": 125,
+  "basic": {
+   "name": "Pulse Wall",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Shield Ram",
+   "dmg": 50,
+   "cd": 3
+  },
+  "look": "Floating fortress drone ringed with hex-light shields.",
+  "color": "#3dd6ff",
+  "quip": "Blocks everything. Including your calls.",
+  "special2": {
+   "name": "Barrier Break",
+   "dmg": 65,
+   "cd": 4
+  }
+ },
+ {
+  "id": "havoc",
+  "num": 180,
+  "name": "Havoc",
+  "rarity": "Epic",
+  "cls": "Mech",
+  "hp": 110,
+  "basic": {
+   "name": "Shell Shock",
+   "dmg": 25
+  },
+  "special": {
+   "name": "Cannon Volley",
+   "dmg": 50,
+   "cd": 3
+  },
+  "look": "Heavy artillery walker with twin yellow-hot cannons.",
+  "color": "#ffef3d",
+  "quip": "Aims for subtle. Hits the whole block.",
+  "special2": {
+   "name": "Carpet Bomb",
+   "dmg": 65,
+   "cd": 4
+  }
+ },
+ {
+  "id": "spellforge",
+  "num": 181,
+  "name": "Spellforge",
+  "rarity": "Epic",
+  "cls": "Arcanist",
+  "hp": 115,
+  "basic": {
+   "name": "Rune Hammer",
+   "dmg": 25
+  },
+  "special": {
+   "name": "Anvil Spell",
+   "dmg": 50,
+   "cd": 3
+  },
+  "look": "Blacksmith android hammering molten orange runes into shape.",
+  "color": "#ff8a1f",
+  "quip": "Forges spells. Also toasts sandwiches.",
+  "special2": {
+   "name": "Molten Sigil",
+   "dmg": 65,
+   "cd": 4
+  }
+ },
+ {
+  "id": "nebulon",
+  "num": 182,
+  "name": "Nebulon",
+  "rarity": "Epic",
+  "cls": "Arcanist",
+  "hp": 110,
+  "basic": {
+   "name": "Star Bolt",
+   "dmg": 25
+  },
+  "special": {
+   "name": "Gravity Well",
+   "dmg": 50,
+   "cd": 3
+  },
+  "look": "Star-mage android wrapped in a cloak full of galaxies.",
+  "color": "#5c7cff",
+  "quip": "Has a cloak full of stars. Still loses keys.",
+  "special2": {
+   "name": "Star Collapse",
+   "dmg": 65,
+   "cd": 4
+  }
+ },
+ {
+  "id": "hexqueen",
+  "num": 183,
+  "name": "Hexqueen",
+  "rarity": "Epic",
+  "cls": "Arcanist",
+  "hp": 100,
+  "basic": {
+   "name": "Curse Touch",
+   "dmg": 25
+  },
+  "special": {
+   "name": "Crown Hex",
+   "dmg": 50,
+   "cd": 3
+  },
+  "look": "Witch-queen android with a crown of floating magenta hexes.",
+  "color": "#ff3db8",
+  "quip": "Rules by curse. Mostly paperwork.",
+  "special2": {
+   "name": "Hex Storm",
+   "dmg": 65,
+   "cd": 4
+  }
+ },
+ {
+  "id": "kitsune",
+  "num": 184,
+  "name": "Kitsune",
+  "rarity": "Epic",
+  "cls": "Spirit",
+  "hp": 110,
+  "basic": {
+   "name": "Foxfire",
+   "dmg": 25
+  },
+  "special": {
+   "name": "Spirit Flame",
+   "dmg": 50,
+   "cd": 3
+  },
+  "look": "Nine-tailed fox made of amber spirit light.",
+  "color": "#ff9a3d",
+  "quip": "Nine tails. Nine excuses.",
+  "special2": {
+   "name": "Nine Tails",
+   "dmg": 65,
+   "cd": 4
+  }
+ },
+ {
+  "id": "glacia",
+  "num": 185,
+  "name": "Glacia",
+  "rarity": "Epic",
+  "cls": "Spirit",
+  "hp": 115,
+  "basic": {
+   "name": "Frost Feather",
+   "dmg": 25
+  },
+  "special": {
+   "name": "Ice Gale",
+   "dmg": 50,
+   "cd": 3
+  },
+  "look": "Phoenix made of living ice crystals and pale blue light.",
+  "color": "#bff4ff",
+  "quip": "Cool under pressure. Freezing, actually.",
+  "special2": {
+   "name": "Blizzard Wing",
+   "dmg": 65,
+   "cd": 4
+  }
+ },
+ {
+  "id": "raiju",
+  "num": 186,
+  "name": "Raiju",
+  "rarity": "Epic",
+  "cls": "Spirit",
+  "hp": 100,
+  "basic": {
+   "name": "Spark Dash",
+   "dmg": 25
+  },
+  "special": {
+   "name": "Lightning Leap",
+   "dmg": 50,
+   "cd": 3
+  },
+  "look": "Lightning beast of pure yellow electricity with a thundercloud mane.",
+  "color": "#ffe84d",
+  "quip": "Naps in thunderclouds. Doesn't share.",
+  "special2": {
+   "name": "Storm Call",
+   "dmg": 65,
+   "cd": 4
+  }
+ },
+ {
+  "id": "lumina",
+  "num": 187,
+  "name": "Lumina",
+  "rarity": "Epic",
+  "cls": "Mystic",
+  "hp": 120,
+  "basic": {
+   "name": "Light Shard",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Radiance",
+   "dmg": 50,
+   "cd": 3,
+   "heal": true
+  },
+  "look": "Floating crystal chandelier construct pouring warm healing light.",
+  "color": "#fff3d6",
+  "quip": "Lights up every room. And the bill.",
+  "special2": {
+   "name": "Prism Flare",
+   "dmg": 65,
+   "cd": 4
+  }
+ },
+ {
+  "id": "mendforge",
+  "num": 188,
+  "name": "Mendforge",
+  "rarity": "Epic",
+  "cls": "Mystic",
+  "hp": 115,
+  "basic": {
+   "name": "Gear Bite",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Repair Pulse",
+   "dmg": 50,
+   "cd": 3,
+   "heal": true
+  },
+  "look": "Clockwork medic beetle construct with glowing green repair arms.",
+  "color": "#7dff9a",
+  "quip": "Fixes anything. Except your attitude.",
+  "special2": {
+   "name": "Overhaul",
+   "dmg": 65,
+   "cd": 4
+  }
+ },
+ {
+  "id": "coralheart",
+  "num": 189,
+  "name": "Coralheart",
+  "rarity": "Epic",
+  "cls": "Mystic",
+  "hp": 125,
+  "basic": {
+   "name": "Reef Spike",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Tidal Mend",
+   "dmg": 50,
+   "cd": 3,
+   "heal": true
+  },
+  "look": "Reef construct of pink coral and glowing sea light.",
+  "color": "#ff7f9a",
+  "quip": "Sensitive to temperature. And criticism.",
+  "special2": {
+   "name": "Coral Crush",
+   "dmg": 65,
+   "cd": 4
+  }
+ },
+ {
+  "id": "deadeye",
+  "num": 190,
+  "name": "Deadeye",
+  "rarity": "Rare",
+  "cls": "Fighter",
+  "hp": 80,
+  "basic": {
+   "name": "Quick Shot",
+   "dmg": 25
+  },
+  "special": {
+   "name": "Headshot",
+   "dmg": 35,
+   "cd": 2
+  },
+  "look": "Sniper android with a long red rail rifle and a single scope eye.",
+  "color": "#ff5a5a",
+  "quip": "Never misses. Sometimes forgets to shoot."
+ },
+ {
+  "id": "bruiser",
+  "num": 191,
+  "name": "Bruiser",
+  "rarity": "Rare",
+  "cls": "Fighter",
+  "hp": 100,
+  "basic": {
+   "name": "Jab",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Uppercut",
+   "dmg": 35,
+   "cd": 2
+  },
+  "look": "Boxer android with huge orange piston gloves.",
+  "color": "#ffa53d",
+  "quip": "Floats like a brick."
+ },
+ {
+  "id": "kunai",
+  "num": 192,
+  "name": "Kunai",
+  "rarity": "Rare",
+  "cls": "Fighter",
+  "hp": 85,
+  "basic": {
+   "name": "Shadow Step",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Shadow Star",
+   "dmg": 40,
+   "cd": 3
+  },
+  "look": "Ninja android throwing glowing violet kunai.",
+  "color": "#c43dff",
+  "quip": "Silent. Except the kunai."
+ },
+ {
+  "id": "paladin",
+  "num": 193,
+  "name": "Paladin",
+  "rarity": "Rare",
+  "cls": "Fighter",
+  "hp": 100,
+  "basic": {
+   "name": "Shield Strike",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Holy Halberd",
+   "dmg": 40,
+   "cd": 3
+  },
+  "look": "Knight android with a glowing pale-gold halberd.",
+  "color": "#ffe9a3",
+  "quip": "Polishes the armour between turns."
+ },
+ {
+  "id": "falcon",
+  "num": 194,
+  "name": "Falcon",
+  "rarity": "Rare",
+  "cls": "Beast",
+  "hp": 80,
+  "basic": {
+   "name": "Sky Rake",
+   "dmg": 25
+  },
+  "special": {
+   "name": "Dive Bomb",
+   "dmg": 35,
+   "cd": 2
+  },
+  "look": "Sleek mechanical falcon with sky-blue jet wings.",
+  "color": "#3dc4ff",
+  "quip": "Fast. Smug about it."
+ },
+ {
+  "id": "smilodon",
+  "num": 195,
+  "name": "Smilodon",
+  "rarity": "Rare",
+  "cls": "Beast",
+  "hp": 95,
+  "basic": {
+   "name": "Saber Leap",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Sabre Fang",
+   "dmg": 40,
+   "cd": 3
+  },
+  "look": "Mechanical sabre-tooth cat with long golden fangs.",
+  "color": "#ffc43d",
+  "quip": "Built for the ice age. Wrong era."
+ },
+ {
+  "id": "octopod",
+  "num": 196,
+  "name": "Octopod",
+  "rarity": "Rare",
+  "cls": "Beast",
+  "hp": 90,
+  "basic": {
+   "name": "Tentacle Slap",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Ink Lash",
+   "dmg": 35,
+   "cd": 2
+  },
+  "look": "Mechanical octopus with eight hot-pink neon arms.",
+  "color": "#ff3da8",
+  "quip": "Eight arms, all busy."
+ },
+ {
+  "id": "bison",
+  "num": 197,
+  "name": "Bison",
+  "rarity": "Rare",
+  "cls": "Beast",
+  "hp": 110,
+  "basic": {
+   "name": "Horn Butt",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Thunder Herd",
+   "dmg": 40,
+   "cd": 3
+  },
+  "look": "Armoured mechanical bison with bronze plating.",
+  "color": "#b07a45",
+  "quip": "Takes the scenic route. Through walls."
+ },
+ {
+  "id": "drillbot",
+  "num": 198,
+  "name": "Drillbot",
+  "rarity": "Rare",
+  "cls": "Mech",
+  "hp": 100,
+  "basic": {
+   "name": "Drill Grind",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Core Drill",
+   "dmg": 40,
+   "cd": 3
+  },
+  "look": "Stocky mining mech with a giant yellow drill arm.",
+  "color": "#ffd23d",
+  "quip": "Loves boring work."
+ },
+ {
+  "id": "gunship",
+  "num": 199,
+  "name": "Gunship",
+  "rarity": "Rare",
+  "cls": "Mech",
+  "hp": 85,
+  "basic": {
+   "name": "Chain Gun",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Rocket Pod",
+   "dmg": 35,
+   "cd": 2
+  },
+  "look": "Small attack-copter mech with green rotor lights.",
+  "color": "#3dff8a",
+  "quip": "Hovers. Judges. Shoots."
+ },
+ {
+  "id": "tankette",
+  "num": 200,
+  "name": "Tankette",
+  "rarity": "Rare",
+  "cls": "Mech",
+  "hp": 110,
+  "basic": {
+   "name": "Tread Bump",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Shell Volley",
+   "dmg": 40,
+   "cd": 3
+  },
+  "look": "Tiny olive-green tank mech with an oversized cannon.",
+  "color": "#9bb36b",
+  "quip": "Small. Loud. Proud."
+ },
+ {
+  "id": "pulsar",
+  "num": 201,
+  "name": "Pulsar",
+  "rarity": "Rare",
+  "cls": "Mech",
+  "hp": 85,
+  "basic": {
+   "name": "Laser Zap",
+   "dmg": 25
+  },
+  "special": {
+   "name": "Pulse Beam",
+   "dmg": 35,
+   "cd": 2
+  },
+  "look": "Laser turret mech on walking legs, violet beam core.",
+  "color": "#a33dff",
+  "quip": "Has one move. It's a good one."
+ },
+ {
+  "id": "runesmith",
+  "num": 202,
+  "name": "Runesmith",
+  "rarity": "Rare",
+  "cls": "Arcanist",
+  "hp": 95,
+  "basic": {
+   "name": "Rune Strike",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Sigil Burst",
+   "dmg": 35,
+   "cd": 2
+  },
+  "look": "Android carving glowing orange runes into the air with a chisel.",
+  "color": "#ff7a3d",
+  "quip": "Writes in a font only he can read."
+ },
+ {
+  "id": "stormcaller",
+  "num": 203,
+  "name": "Stormcaller",
+  "rarity": "Rare",
+  "cls": "Arcanist",
+  "hp": 90,
+  "basic": {
+   "name": "Spark",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Chain Lightning",
+   "dmg": 40,
+   "cd": 3
+  },
+  "look": "Android mage holding a staff that crackles with blue lightning.",
+  "color": "#3d9bff",
+  "quip": "Forecast: you, getting hit."
+ },
+ {
+  "id": "shade",
+  "num": 204,
+  "name": "Shade",
+  "rarity": "Rare",
+  "cls": "Arcanist",
+  "hp": 85,
+  "basic": {
+   "name": "Dark Touch",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Umbral Bolt",
+   "dmg": 40,
+   "cd": 3
+  },
+  "look": "Shadow-mage android in robes of drifting purple smoke.",
+  "color": "#7a3dff",
+  "quip": "Prefers the dark. Bad with stairs."
+ },
+ {
+  "id": "alchemist",
+  "num": 205,
+  "name": "Alchemist",
+  "rarity": "Rare",
+  "cls": "Arcanist",
+  "hp": 90,
+  "basic": {
+   "name": "Toss",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Acid Flask",
+   "dmg": 35,
+   "cd": 2
+  },
+  "look": "Android chemist with a bandolier of glowing lime potions.",
+  "color": "#d4ff3d",
+  "quip": "Ninety percent sure that one is safe."
+ },
+ {
+  "id": "nightowl",
+  "num": 206,
+  "name": "Nightowl",
+  "rarity": "Rare",
+  "cls": "Spirit",
+  "hp": 85,
+  "basic": {
+   "name": "Wing Gust",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Talon Glow",
+   "dmg": 35,
+   "cd": 2
+  },
+  "look": "Owl made of amber starlight with glowing moon eyes.",
+  "color": "#ffb03d",
+  "quip": "Stays up late. Every night."
+ },
+ {
+  "id": "dreamjelly",
+  "num": 207,
+  "name": "Dreamjelly",
+  "rarity": "Rare",
+  "cls": "Spirit",
+  "hp": 90,
+  "basic": {
+   "name": "Drift",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Sting Glow",
+   "dmg": 40,
+   "cd": 3
+  },
+  "look": "Floating jellyfish of soft pink light trailing glowing tendrils.",
+  "color": "#ff9fe0",
+  "quip": "Floats through life. Literally."
+ },
+ {
+  "id": "wavesprite",
+  "num": 208,
+  "name": "Wavesprite",
+  "rarity": "Rare",
+  "cls": "Spirit",
+  "hp": 85,
+  "basic": {
+   "name": "Splash Kick",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Riptide",
+   "dmg": 40,
+   "cd": 3
+  },
+  "look": "Little water spirit riding a curling wave of cyan light.",
+  "color": "#3dd9ff",
+  "quip": "Always making waves."
+ },
+ {
+  "id": "ashwolf",
+  "num": 209,
+  "name": "Ashwolf",
+  "rarity": "Rare",
+  "cls": "Spirit",
+  "hp": 95,
+  "basic": {
+   "name": "Ember Bite",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Ember Fang",
+   "dmg": 35,
+   "cd": 2
+  },
+  "look": "Wolf made of glowing embers and drifting ash.",
+  "color": "#ff4d3d",
+  "quip": "All bark. Also a lot of bite."
+ },
+ {
+  "id": "cauldron",
+  "num": 210,
+  "name": "Cauldron",
+  "rarity": "Rare",
+  "cls": "Mystic",
+  "hp": 100,
+  "basic": {
+   "name": "Brew Splash",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Healing Brew",
+   "dmg": 40,
+   "cd": 3,
+   "heal": true
+  },
+  "look": "Bubbling cauldron construct on iron legs, glowing green brew.",
+  "color": "#3dff9b",
+  "quip": "Soup of the day: you, but better."
+ },
+ {
+  "id": "prismheart",
+  "num": 211,
+  "name": "Prismheart",
+  "rarity": "Rare",
+  "cls": "Mystic",
+  "hp": 95,
+  "basic": {
+   "name": "Refract",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Spectrum Mend",
+   "dmg": 35,
+   "cd": 2,
+   "heal": true
+  },
+  "look": "Floating prism-crystal construct splitting light into rainbows.",
+  "color": "#ff3df0",
+  "quip": "Sees every side of you."
+ },
+ {
+  "id": "orrery",
+  "num": 212,
+  "name": "Orrery",
+  "rarity": "Rare",
+  "cls": "Mystic",
+  "hp": 90,
+  "basic": {
+   "name": "Orbit Hit",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Starlight Mend",
+   "dmg": 40,
+   "cd": 3,
+   "heal": true
+  },
+  "look": "Brass orrery construct with glowing planets circling it.",
+  "color": "#ffd36b",
+  "quip": "Knows where every planet is. Not the remote."
+ },
+ {
+  "id": "moss",
+  "num": 213,
+  "name": "Moss",
+  "rarity": "Rare",
+  "cls": "Mystic",
+  "hp": 110,
+  "basic": {
+   "name": "Moss Pebble",
+   "dmg": 15
+  },
+  "special": {
+   "name": "Regrowth",
+   "dmg": 35,
+   "cd": 2,
+   "heal": true
+  },
+  "look": "Mossy stone golem construct sprouting glowing green ferns.",
+  "color": "#7dff3d",
+  "quip": "Slow to anger. Slow to everything."
  }
 ]
