@@ -38,7 +38,7 @@ export const PACK_TYPES = { cyber: ['Fighter', 'Beast', 'Mech'], magic: ['Arcani
 // The Overload Pack is a big Omni: 8 cards for 12,000, the last always Rare or better (OVERLOAD_BEST). The Legends Pack: a guaranteed Legendary plus 4 cards at the
 // normal odds, 25,000. Everything else is 3 cards for PACK_COST.
 export const PACK_SIZES = { overload: 8, legends: 5, power: 3 };
-export const PACK_COSTS = { overload: 12000, legends: 25000, power: 5000 };
+export const PACK_COSTS = { overload: 12000, legends: 25000, power: 3000 };
 export const OVERLOAD_BEST = [['Rare', 50], ['Epic', 48], ['Legendary', 2]];
 const FREE_TYPES = ['cyber', 'magic', 'omni'];   // free packs are never Overload
 export const PACKS_OPEN = ['cyber', 'magic', 'omni', 'overload', 'legends', 'power'];   // packs on sale; any left out show "Coming soon"
@@ -48,18 +48,16 @@ const pickOf = (rarity, type, rand) => {
   return pool[Math.floor(rand() * pool.length)].id;
 };
 
+// A random power card for a pack, rarer ones less often.
+const powerOf = rand => { const r = RARITY_I[rollRarity(rand, POWER_PACK.rates)]; return 'pw:' + POWER_POOLS[r][Math.floor(rand() * POWER_POOLS[r].length)]; };
 // Returns { cards: [ids], holo: [indexes of holo cards], packsSinceLegend } for one pack of `type`.
 export function openPack(packsSinceLegend, type = 'cyber', rand = Math.random) {
   const size = PACK_SIZES[type] ?? PACK_SIZE;
   // a pack's guaranteed card (Overload's Rare-or-better, Legends' Legendary) is the last one, so it's revealed last
   const last = { legends: () => 'Legendary', overload: () => rollRarity(rand, OVERLOAD_BEST) }[type];
-  if (type === 'power') {   // the Power Pack: power cards only
-    const cards = Array.from({ length: POWER_PACK.size }, () => { const r = RARITY_I[rollRarity(rand, POWER_PACK.rates)]; return 'pw:' + POWER_POOLS[r][Math.floor(rand() * POWER_POOLS[r].length)]; });
-    return { cards, holo: [], packsSinceLegend };
-  }
+  if (type === 'power') return { cards: Array.from({ length: POWER_PACK.size }, () => powerOf(rand)), holo: [], packsSinceLegend };   // power cards only
   const rarities = Array.from({ length: size }, (_, i) => (last && i === size - 1 ? last() : rollRarity(rand)));
-  const cards = rarities.map((r, i) => (!(last && i === size - 1) && rand() < POWER_IN_PACK
-    ? 'pw:' + POWER_POOLS[RARITY_I[r]][Math.floor(rand() * POWER_POOLS[RARITY_I[r]].length)] : pickOf(r, type, rand)));
+  const cards = rarities.map((r, i) => (r === 'Common' && !(last && i === size - 1) && rand() < POWER_IN_PACK ? powerOf(rand) : pickOf(r, type, rand)));
   return {
     cards,
     holo: cards.map((_, i) => i).filter(i => !cards[i].startsWith('pw:') && rand() < HOLO_CHANCE),   // which of them came out holo
@@ -295,23 +293,24 @@ const RARITY_I = { Common: 0, Rare: 1, Epic: 2, Legendary: 3 };
 // target: 'ally' = one of your standing cards, 'ko' = one of your knocked-out cards, 'acted' = one of yours that already acted,
 // 'none' = no target. In packs and inventories they're "pw:<id>".
 export const POWERS = {
-  repair: { name: 'Repair Kit', rarity: 'Common', target: 'ally' },        // heal 25 HP
-  overclock: { name: 'Overclock', rarity: 'Common', target: 'ally' },      // its next attack +40%
-  shield: { name: 'Shield', rarity: 'Common', target: 'ally' },            // the next hit on it does nothing
+  // kept weak on purpose: a nudge, not a win button
+  repair: { name: 'Repair Kit', rarity: 'Common', target: 'ally' },        // heal 15 HP
+  overclock: { name: 'Overclock', rarity: 'Common', target: 'ally' },      // its next attack +25%
+  shield: { name: 'Shield', rarity: 'Common', target: 'ally' },            // the next hit on it does half damage
   recharge: { name: 'Recharge', rarity: 'Rare', target: 'ally' },          // its specials are ready now
   emp: { name: 'EMP', rarity: 'Rare', target: 'none' },                    // every enemy special +1 cooldown
-  nanoswarm: { name: 'Nanoswarm', rarity: 'Rare', target: 'none' },        // 20 damage to every enemy
-  revive: { name: 'Revive Chip', rarity: 'Epic', target: 'ko' },           // back at 30% HP
+  nanoswarm: { name: 'Nanoswarm', rarity: 'Rare', target: 'none' },        // 10 damage to every enemy
+  revive: { name: 'Revive Chip', rarity: 'Epic', target: 'ko' },           // back at 15% HP
   timeskip: { name: 'Time Skip', rarity: 'Epic', target: 'acted' },        // it can act again this round
-  mirror: { name: 'Mirror', rarity: 'Epic', target: 'ally' },              // the next hit on it bounces back at the attacker
-  overdrive: { name: 'Overdrive', rarity: 'Legendary', target: 'none' },   // every card's next attack +30%
-  restore: { name: 'Full Restore', rarity: 'Legendary', target: 'ally' },  // full HP
-  singularity: { name: 'Singularity', rarity: 'Legendary', target: 'none' }, // every enemy loses 25% of its max HP
+  mirror: { name: 'Mirror', rarity: 'Epic', target: 'ally' },              // half of the next hit on it bounces back at the attacker
+  overdrive: { name: 'Overdrive', rarity: 'Legendary', target: 'none' },   // every card's next attack +15%
+  restore: { name: 'Restore', rarity: 'Legendary', target: 'ally' },       // heal half its max HP
+  singularity: { name: 'Singularity', rarity: 'Legendary', target: 'none' }, // every enemy loses 10% of its max HP
 };
 export const POWER_SLOTS = 2;
 export const rarityOf = id => (id.startsWith('pw:') ? POWERS[id.slice(3)].rarity : BY_ID[id].rarity);   // a pack card's rarity
-export const POWER_PACK = { cost: 5000, size: 3, rates: [['Common', 70], ['Rare', 22], ['Epic', 7], ['Legendary', 1]] };
-export const POWER_IN_PACK = 0.05;   // chance any normal pack card (not the guaranteed one) is a power card instead
+export const POWER_PACK = { cost: 3000, size: 3, rates: [['Common', 70], ['Rare', 22], ['Epic', 7], ['Legendary', 1]] };
+export const POWER_IN_PACK = 0.5;   // share of the Common drops in every pack that are power cards instead (not the guaranteed card)
 const POWER_POOLS = TIERS.map(r => Object.keys(POWERS).filter(k => POWERS[k].rarity === r));
 // Two power cards for a computer opponent, from rarity tiers a and b (0 = Common ... 3 = Legendary).
 export const botPowers = (a, b, rand = Math.random) => [a, b].map(t => POWER_POOLS[t][Math.floor(rand() * POWER_POOLS[t].length)]);
@@ -366,9 +365,9 @@ const low = u => u.hp < unitMax(u) * 0.3;
 // Damage `a` would deal to `t` with `move` right now, passives and power cards included. No side effects (the AI uses it too).
 // raw: ignore the target's Shield / Mirror (for working out what Mirror sends back).
 function hitFor(a, t, move, raw = false) {
-  if (!raw && (t.sh || t.mi)) return 0;
+  if (!raw && (t.sh || t.mi)) return Math.round(hitFor(a, t, move, true) / 2);   // Shield halves the hit; Mirror sends the other half back
   const card = BY_ID[a.id];
-  let pct = 100 + (a.oc ? 40 : 0) + (a.od ? 30 : 0);
+  let pct = 100 + (a.oc ? 25 : 0) + (a.od ? 15 : 0);
   if (a.ps === 'firststrike' && !a.hit) pct += pv(a);
   if (a.ps === 'momentum' && move === 'basic') pct += pv(a) * (a.mom || 0);
   if (a.ps === 'executioner' && low(t)) pct += pv(a);
@@ -419,9 +418,9 @@ export function applyMove(state, p, from, move, to) {
     if (boosted) mine(attacker, p, from, 0);
     if (guarded && !target.sh && !target.mi) mine(target, 1 - p, to, 0);
     if (target.sh) { target.sh = false; pas.push({ p: 1 - p, i: to, n: 'Shield', v: 0 }); }
-    else if (target.mi) {   // Mirror: the hit goes back at the attacker instead
+    else if (target.mi) {   // Mirror: the other half of the hit goes back at the attacker
       target.mi = false;
-      const back = Math.min(hitFor(attacker, target, move, true), attacker.hp);
+      const back = Math.min(hitFor(attacker, target, move, true) - dmg, attacker.hp);
       attacker.hp -= back;
       pas.push({ p, i: from, n: 'Mirror', v: -back });
     }
@@ -474,17 +473,17 @@ function playPower(state, p, from, id, to) {
   const touch = (side, i) => fx.push({ p: side, i, hp: state.teams[side][i].hp });
   const each = (team, side, f) => team.forEach((u, i) => { if (alive(u)) { f(u); touch(side, i); } });
   switch (id) {
-    case 'repair': t.hp = Math.min(unitMax(t), t.hp + 25); break;
+    case 'repair': t.hp = Math.min(unitMax(t), t.hp + 15); break;
     case 'overclock': t.oc = true; break;
     case 'shield': t.sh = true; break;
     case 'recharge': t.cd = 0; if (t.cd2 !== undefined) t.cd2 = 0; break;
-    case 'revive': t.hp = Math.max(1, Math.round(unitMax(t) * 0.3)); state.acted[p][to] = true; break;
+    case 'revive': t.hp = Math.max(1, Math.round(unitMax(t) * 0.15)); state.acted[p][to] = true; break;
     case 'timeskip': state.acted[p][to] = false; break;
     case 'mirror': t.mi = true; break;
-    case 'restore': t.hp = unitMax(t); break;
+    case 'restore': t.hp = Math.min(unitMax(t), t.hp + Math.round(unitMax(t) / 2)); break;
     case 'emp': each(foe, 1 - p, u => { u.cd += 1; if (u.cd2 !== undefined) u.cd2 += 1; }); break;
-    case 'nanoswarm': each(foe, 1 - p, u => { u.hp = Math.max(0, u.hp - 20); }); break;
-    case 'singularity': each(foe, 1 - p, u => { u.hp = Math.max(0, u.hp - Math.round(unitMax(u) * 0.25)); }); break;
+    case 'nanoswarm': each(foe, 1 - p, u => { u.hp = Math.max(0, u.hp - 10); }); break;
+    case 'singularity': each(foe, 1 - p, u => { u.hp = Math.max(0, u.hp - Math.round(unitMax(u) * 0.1)); }); break;
     case 'overdrive': each(me, p, u => { u.od = true; }); break;
   }
   if (pw.target !== 'none') touch(p, to);
@@ -520,10 +519,10 @@ function powerChoice(state, p) {
   for (const id of left) {
     if (id === 'revive') { const ko = me.findIndex(u => !alive(u)); if (ko >= 0) consider(id, ko, 9000); }
     if (id === 'restore' && hurtPct < 0.4) consider(id, hurt, 7000 + unitMax(me[hurt]) - me[hurt].hp);
-    if (id === 'repair' && hurtPct < 0.5 && unitMax(me[hurt]) - me[hurt].hp >= 20) consider(id, hurt, 6500);
+    if (id === 'repair' && hurtPct < 0.5 && unitMax(me[hurt]) - me[hurt].hp >= 15) consider(id, hurt, 6500);
     if (id === 'shield' || id === 'mirror') { if (hurtPct < 0.6 && !me[hurt].sh && !me[hurt].mi) consider(id, hurt, 5300); }
     if (id === 'nanoswarm' || id === 'singularity') {
-      const kos = foesUp.filter(u => u.hp <= (id === 'nanoswarm' ? 20 : Math.round(unitMax(u) * 0.25))).length;
+      const kos = foesUp.filter(u => u.hp <= (id === 'nanoswarm' ? 10 : Math.round(unitMax(u) * 0.1))).length;
       consider(id, from, kos ? 9500 : foesUp.length >= 2 ? 6000 : 0);
     }
     if (id === 'emp' && foesUp.filter(u => u.cd === 0).length >= 2) consider(id, from, 5500);

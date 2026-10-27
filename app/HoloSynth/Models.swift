@@ -30,18 +30,18 @@ struct Card: Decodable, Identifiable, Hashable {
 struct Power: Identifiable, Hashable {
     let id: String, name: String, rarity: String, target: String, effect: String, short: String, symbol: String
     static let all: [Power] = [
-        Power(id: "repair", name: "Repair Kit", rarity: "Common", target: "ally", effect: "Heal one of your cards 25 HP", short: "+25 HP", symbol: "wrench.and.screwdriver.fill"),
-        Power(id: "overclock", name: "Overclock", rarity: "Common", target: "ally", effect: "One card's next attack +40%", short: "Next attack +40%", symbol: "bolt.fill"),
-        Power(id: "shield", name: "Shield", rarity: "Common", target: "ally", effect: "One card takes no damage from the next hit", short: "Blocks a hit", symbol: "shield.fill"),
+        Power(id: "repair", name: "Repair Kit", rarity: "Common", target: "ally", effect: "Heal one of your cards 15 HP", short: "+15 HP", symbol: "wrench.and.screwdriver.fill"),
+        Power(id: "overclock", name: "Overclock", rarity: "Common", target: "ally", effect: "One card's next attack +25%", short: "Next attack +25%", symbol: "bolt.fill"),
+        Power(id: "shield", name: "Shield", rarity: "Common", target: "ally", effect: "The next hit on one card does half damage", short: "Halves a hit", symbol: "shield.fill"),
         Power(id: "recharge", name: "Recharge", rarity: "Rare", target: "ally", effect: "One card's specials are ready right now", short: "Special ready", symbol: "arrow.clockwise.circle.fill"),
         Power(id: "emp", name: "EMP", rarity: "Rare", target: "none", effect: "Every enemy special +1 turn of cooldown", short: "Enemy specials +1", symbol: "dot.radiowaves.left.and.right"),
-        Power(id: "nanoswarm", name: "Nanoswarm", rarity: "Rare", target: "none", effect: "20 damage to every enemy", short: "20 to all enemies", symbol: "aqi.medium"),
-        Power(id: "revive", name: "Revive Chip", rarity: "Epic", target: "ko", effect: "Bring back a knocked-out card at 30% HP", short: "Back at 30% HP", symbol: "heart.circle.fill"),
+        Power(id: "nanoswarm", name: "Nanoswarm", rarity: "Rare", target: "none", effect: "10 damage to every enemy", short: "10 to all enemies", symbol: "aqi.medium"),
+        Power(id: "revive", name: "Revive Chip", rarity: "Epic", target: "ko", effect: "Bring back a knocked-out card at 15% HP", short: "Back at 15% HP", symbol: "heart.circle.fill"),
         Power(id: "timeskip", name: "Time Skip", rarity: "Epic", target: "acted", effect: "One card can act again this round", short: "Act again", symbol: "clock.arrow.circlepath"),
-        Power(id: "mirror", name: "Mirror", rarity: "Epic", target: "ally", effect: "The next hit on one card bounces back at the attacker", short: "Bounces a hit", symbol: "arrow.left.arrow.right"),
-        Power(id: "overdrive", name: "Overdrive", rarity: "Legendary", target: "none", effect: "Every card's next attack +30%", short: "Team +30%", symbol: "flame.fill"),
-        Power(id: "restore", name: "Full Restore", rarity: "Legendary", target: "ally", effect: "Fully heal one card", short: "Full HP", symbol: "cross.fill"),
-        Power(id: "singularity", name: "Singularity", rarity: "Legendary", target: "none", effect: "Every enemy loses 25% of its max HP", short: "−25% to all", symbol: "circle.circle.fill"),
+        Power(id: "mirror", name: "Mirror", rarity: "Epic", target: "ally", effect: "Half of the next hit on one card bounces back at the attacker", short: "Bounces half a hit", symbol: "arrow.left.arrow.right"),
+        Power(id: "overdrive", name: "Overdrive", rarity: "Legendary", target: "none", effect: "Every card's next attack +15%", short: "Team +15%", symbol: "flame.fill"),
+        Power(id: "restore", name: "Restore", rarity: "Legendary", target: "ally", effect: "Heal one card half its max HP", short: "+50% HP", symbol: "cross.fill"),
+        Power(id: "singularity", name: "Singularity", rarity: "Legendary", target: "none", effect: "Every enemy loses 10% of its max HP", short: "−10% to all", symbol: "circle.circle.fill"),
     ]
     static func of(_ id: String) -> Power? { all.first { $0.id == id || "pw:" + $0.id == id } }
     static let violet = Color(hex: 0xB46BFF)

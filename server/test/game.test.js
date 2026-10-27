@@ -48,11 +48,11 @@ test('no pity: a pack never forces a Legendary', () => {
   assert.ok(p.cards.every(id => rarityOf(id) === 'Common'));
 });
 
-test('drop rates roughly match 85/10/4/1', () => {
-  const n = { Common: 0, Rare: 0, Epic: 0, Legendary: 0 };
-  for (let i = 0; i < 20000; i++) for (const id of openPack(0).cards) n[rarityOf(id)]++;
+test('drop rates: characters 42.5/10/4/1, power cards the other half of the Commons', () => {
+  const n = { Common: 0, Rare: 0, Epic: 0, Legendary: 0, power: 0 };
+  for (let i = 0; i < 20000; i++) for (const id of openPack(0).cards) n[id.startsWith('pw:') ? 'power' : rarityOf(id)]++;
   const pct = r => (100 * n[r]) / 60000;
-  assert.ok(Math.abs(pct('Common') - 85) < 1.5 && Math.abs(pct('Legendary') - 1) < 0.5, JSON.stringify(n));
+  assert.ok(Math.abs(pct('Common') - 42.5) < 1.5 && Math.abs(pct('power') - 42.5) < 1.5 && Math.abs(pct('Legendary') - 1) < 0.5, JSON.stringify(n));
 });
 
 test('teams smaller than 3 play out', () => {
@@ -290,9 +290,9 @@ test('the Legends Pack: 5 cards, the last always a Legendary', () => {
   for (let i = 0; i < 50; i++) assert.notEqual(freePack(), 'legends');
 });
 
-test('holo: about 1 in 250 pack cards, +20% to every stat, stacking with fusion', () => {
+test('holo: about 1 in 250 character cards from packs (never a power card), +20% to every stat, stacking with fusion', () => {
   let n = 0, holo = 0;
-  for (let i = 0; i < 40000; i++) { const p = openPack(5); n += p.cards.length; holo += p.holo.length; assert.ok(p.holo.every(k => k < p.cards.length)); }
+  for (let i = 0; i < 40000; i++) { const p = openPack(5); n += p.cards.filter(c => !c.startsWith('pw:')).length; holo += p.holo.length; assert.ok(p.holo.every(k => k < p.cards.length && !p.cards[k].startsWith('pw:'))); }
   assert.ok(holo / n > 1 / 320 && holo / n < 1 / 190, `holo rate 1 in ${Math.round(n / holo)}`);
   assert.equal(fusedHp('apex', { o: true }), Math.round(BY_ID.apex.hp * 1.2));
   assert.equal(fusedDmg('apex', { b: 1, o: true }, 'basic'), Math.round(BY_ID.apex.basic.dmg * 1.2 * 1.2));
@@ -376,32 +376,32 @@ test('power cards: each does its job, is used up, and counts as the card\'s move
   let s = fresh(['repair', 'repair']);
   s.teams[0][1].hp = 10;
   play(s, 'repair', 1);
-  assert.equal(s.teams[0][1].hp, 35);
+  assert.equal(s.teams[0][1].hp, 25);
   assert.deepEqual(s.pw[0], ['repair']);
   assert.ok(s.acted[0][0] && s.turn === 1, 'uses the card\'s move');
   assert.throws(() => { s.turn = 0; applyMove(s, 0, 1, 'pw:shield', 1); }, /don't have/);
-  // shield: the next hit does nothing
+  // shield: the next hit does half damage (sentry's basic: 5, +20% vs a Fighter = 6, halved = 3)
   s = fresh(['shield']); play(s, 'shield', 0); s.turn = 1; s.acted = [[false, false], [false, false]];
   applyMove(s, 1, 0, 'basic', 0);
-  assert.equal(s.teams[0][0].hp, 50);
-  // mirror: the hit goes back at the attacker
+  assert.equal(s.teams[0][0].hp, 50 - 3);
+  // mirror: half the hit goes back at the attacker
   s = fresh(['mirror']); play(s, 'mirror', 1); s.turn = 1; s.acted = [[false, false], [false, false]];
   const before = s.teams[1][0].hp; applyMove(s, 1, 0, 'basic', 1);
-  assert.equal(s.teams[0][1].hp, 55); assert.ok(s.teams[1][0].hp < before);
+  assert.ok(s.teams[0][1].hp < 55 && s.teams[1][0].hp < before);
   // nanoswarm / singularity hit every enemy; revive needs a knocked-out card
   s = fresh(['nanoswarm']); play(s, 'nanoswarm');
-  assert.deepEqual(s.teams[1].map(u => u.hp), [60, 50]);
+  assert.deepEqual(s.teams[1].map(u => u.hp), [70, 60]);
   s = fresh(['revive']); assert.throws(() => play(s, 'revive', 1), /knocked-out/);
-  s.teams[0][1].hp = 0; play(s, 'revive', 1); assert.equal(s.teams[0][1].hp, Math.round(55 * 0.3));
-  // overclock: next attack +40%
+  s.teams[0][1].hp = 0; play(s, 'revive', 1); assert.equal(s.teams[0][1].hp, Math.round(55 * 0.15));
+  // overclock: next attack +25%
   s = fresh(['overclock']); play(s, 'overclock', 1); s.turn = 0; applyMove(s, 0, 1, 'basic', 0);
-  assert.equal(80 - s.teams[1][0].hp, Math.round(Math.round(15 * 1.2) * 1.4));
+  assert.equal(80 - s.teams[1][0].hp, Math.round(15 * 1.25 * 1.2));
   // the computer plays its powers
   s = fresh([], ['nanoswarm', 'repair']); s.turn = 1;
   const m = aiMove(s, 1); assert.ok(m.move.startsWith('pw:'));
   // packs: power cards turn up in normal packs, Power Packs are all power cards; campaign chapter 1 enemies have none
   let found = 0; for (let i = 0; i < 2000; i++) found += op(0).cards.filter(c => c.startsWith('pw:')).length;
-  assert.ok(found > 150 && found < 450, `${found} power cards in 6000 pack cards`);
+  assert.ok(Math.abs(found / 6000 - 0.425) < 0.03, `${found} power cards in 6000 pack cards`);   // half of the Commons
   assert.ok(op(0, 'power').cards.every(c => POWERS[c.slice(3)]));
   assert.deepEqual(campaignPowers(0), []);
   assert.ok(campaignPowers(31).length >= 1);
