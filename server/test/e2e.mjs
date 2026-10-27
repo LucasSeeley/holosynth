@@ -166,6 +166,23 @@ if (done.gold >= 5000) {
   const pack = await call('/packs', a.token, {});
   console.log('bought pack:', pack.cards, 'gold left', pack.profile.gold, 'packs opened', pack.profile.packs);
 } else await expectError(call('/packs', a.token, {}), 400);   // packs cost 5000
+// daily quests: three a day, claim the finished ones; the bonus pack needs all three
+const qs = (await call('/me', a.token)).quests;
+check(qs.list.length === 3 && qs.bonus === 'locked', 'three daily quests');
+console.log('quests:', qs.list.map(q => `${q.id} ${q.n}/${q.goal}`).join(', '));
+await expectError(call('/quests/claim', a.token, { quest: 'bonus' }), 400);
+const doneQ = qs.list.findIndex(q => q.n >= q.goal), openQ = qs.list.findIndex(q => q.n < q.goal);
+if (openQ >= 0) await expectError(call('/quests/claim', a.token, { quest: openQ }), 400);
+if (doneQ >= 0) {
+  const g0 = (await call('/me', a.token)).gold, got = await call('/quests/claim', a.token, { quest: doneQ });
+  check(got.profile.gold === g0 + qs.list[doneQ].gold && got.profile.quests.list[doneQ].claimed, 'claimed a quest');
+  await expectError(call('/quests/claim', a.token, { quest: doneQ }), 400);   // once
+}
+if (qs.list.every(q => q.n >= q.goal)) {
+  for (let i = 0; i < 3; i++) if (i !== doneQ) await call('/quests/claim', a.token, { quest: i });
+  const bonus = await call('/quests/claim', a.token, { quest: 'bonus' });
+  check(bonus.cards.length === 3 && bonus.type === 'omni' && bonus.profile.quests.bonus === 'claimed', 'all three done: free Omni pack');
+}
 // legend hunt: one try a day against a fully fused Legendary
 check(done.hunt.status === 'ready' && done.hunt.legend, 'hunt ready');
 let hunt = await call('/hunt/start', a.token, {});

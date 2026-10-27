@@ -83,14 +83,18 @@ export const dailyPack = t => {
 // ---- daily shop ----
 // One Rare and three Commons a day, the same for everyone; resets at midnight UTC. Each player can buy each card once.
 export const SHOP_PRICES = { Common: 500, Rare: 2500 };
-export function dailyShop(t) {
-  let h = (Math.floor(t / DAY_MS) * 2246822519 + 374761393) >>> 0;
-  const rand = () => {   // mulberry32, seeded by the day
+// mulberry32: the same seed always gives the same numbers.
+function seeded(seed) {
+  let h = seed >>> 0;
+  return () => {
     h = (h + 0x6D2B79F5) >>> 0;
     let x = Math.imul(h ^ (h >>> 15), 1 | h);
     x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
     return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
   };
+}
+export function dailyShop(t) {
+  const rand = seeded(Math.floor(t / DAY_MS) * 2246822519 + 374761393);
   const pick = pool => pool.splice(Math.floor(rand() * pool.length), 1)[0].id;
   const rares = CARDS.filter(c => c.rarity === 'Rare'), commons = CARDS.filter(c => c.rarity === 'Common');
   return [pick(rares), pick(commons), pick(commons), pick(commons)];
@@ -124,6 +128,32 @@ export function gauntletBattle(team, hp, enemies, fus = {}) {
   return s;
 }
 export const gauntletHeal = team => team.map(u => (u.hp === 0 ? 0 : Math.min(unitMax(u), u.hp + Math.round(unitMax(u) * GAUNTLET_HEAL))));
+
+// ---- daily quests ----
+// Three a day per player (midnight UTC): one easy, one medium, one hard. Finish all three for a free Omni pack.
+export const QUESTS = {
+  spin: { tier: 0, name: 'Spin the wheel', goal: 1 },
+  pack: { tier: 0, name: 'Open a pack', goal: 1, hint: 'Bought or won' },
+  shop: { tier: 0, name: 'Buy a shop card', goal: 1 },
+  wins: { tier: 1, name: 'Win 3 battles', goal: 3, hint: 'Any mode' },
+  levels: { tier: 1, name: 'Clear 2 campaign levels', goal: 2 },
+  fuse: { tier: 1, name: 'Fuse a card', goal: 1 },
+  friend: { tier: 2, name: 'Win a friend battle', goal: 1 },
+  streak: { tier: 2, name: 'Reach a 15-win Gauntlet streak', goal: 15 },
+  hunt: { tier: 2, name: 'Beat the Legend Hunt', goal: 1 },
+};
+export const QUEST_PAY = [{ gold: 750, xp: 500 }, { gold: 1000, xp: 750 }, { gold: 1500, xp: 1000 }];   // by tier
+export const QUEST_BONUS = 'omni';
+// `can` = quest ids this player can do right now. A missing hard quest is swapped for another medium one.
+export function pickQuests(userId, t, can, rand = seeded((userId * 2654435761) ^ (Math.floor(t / DAY_MS) * 40503))) {
+  const picked = [];
+  for (const tier of [0, 1, 2]) {
+    let pool = Object.keys(QUESTS).filter(id => QUESTS[id].tier === tier && can.includes(id));
+    if (!pool.length) pool = Object.keys(QUESTS).filter(id => QUESTS[id].tier === tier - 1 && can.includes(id) && !picked.includes(id));
+    if (pool.length) picked.push(pool[Math.floor(rand() * pool.length)]);
+  }
+  return picked;
+}
 
 // ---- legend hunt ----
 // Once a day (midnight UTC) one Legendary, fully fused, the same for everyone. You get one try with your team.

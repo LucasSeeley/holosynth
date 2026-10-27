@@ -114,3 +114,20 @@ CREATE TABLE IF NOT EXISTS hunts (
   state TEXT,
   result TEXT
 );
+-- Daily quests: today's three quest ids, the counters they count from, which are claimed, and whether the bonus pack was taken.
+CREATE TABLE IF NOT EXISTS daily_quests (
+  user_id INTEGER PRIMARY KEY,
+  day INTEGER NOT NULL,
+  quests TEXT NOT NULL,
+  base TEXT NOT NULL,
+  claimed TEXT NOT NULL,
+  bonus INTEGER NOT NULL DEFAULT 0
+);
+-- Quest progress that no other counter keeps (fuses, friend wins, best Gauntlet streak), per player per day.
+CREATE TABLE IF NOT EXISTS quest_events (
+  user_id INTEGER NOT NULL,
+  day INTEGER NOT NULL,
+  kind TEXT NOT NULL,
+  n INTEGER NOT NULL,
+  PRIMARY KEY (user_id, day, kind)
+);

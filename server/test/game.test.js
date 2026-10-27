@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS, levelFor, levelStart, fusedHp, fusedDmg, SECOND, FUSE_GOLD, dailyShop, dailyLegend, huntBattle, huntPack, HUNT_FUSION } from '../src/game.js';
+import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS, levelFor, levelStart, fusedHp, fusedDmg, SECOND, FUSE_GOLD, dailyShop, dailyLegend, huntBattle, huntPack, HUNT_FUSION, pickQuests, QUESTS, QUEST_PAY } from '../src/game.js';
 
 const fixed = v => () => v;
 
@@ -251,4 +251,17 @@ test('legend hunt: a fully fused Legendary a day, you move first, the pack holds
     if (p.cards.includes(legend)) hits++;
   }
   assert.ok(hits / 4000 > 0.45 && hits / 4000 < 0.6, `legend in ${hits / 40}% of packs`);
+});
+
+test('daily quests: one per tier, the same all day, a missing hard one becomes another medium one', () => {
+  const day = 20000 * 86400000, all = Object.keys(QUESTS);
+  const q = pickQuests(7, day, all);
+  assert.deepEqual(q.map(id => QUESTS[id].tier), [0, 1, 2]);
+  assert.deepEqual(pickQuests(7, day + 3600000, all), q);
+  assert.ok(new Set(Array.from({ length: 20 }, (_, u) => pickQuests(u, day, all).join())).size > 3);
+  const early = pickQuests(7, day, ['spin', 'pack', 'shop', 'wins', 'levels']);
+  assert.equal(early.length, 3);
+  assert.deepEqual(early.slice(1).sort(), ['levels', 'wins']);
+  assert.deepEqual(QUEST_PAY.map(p => [p.gold, p.xp]), [[750, 500], [1000, 750], [1500, 1000]]);
+  assert.equal(QUESTS.streak.goal, 15);
 });

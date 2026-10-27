@@ -64,6 +64,7 @@ struct Profile: Decodable, Equatable {
     let packsOpen: [String]?    // packs on sale (server decides); the rest say "Coming soon"
     let shop: Shop?             // today's shop cards
     let hunt: HuntInfo?         // today's Legend Hunt
+    let quests: Quests?         // today's daily quests
     let fused: [FusedCopy]?     // fused copies you own
     let gauntlet: GauntletStats
     let campaign: Campaign
@@ -163,6 +164,24 @@ enum CardSort {
         }
     }
 }
+// MARK: Daily quests
+
+// Three a day (new at `next`, ms since 1970). bonus: locked | ready | claimed (the free pack for finishing all three).
+struct Quests: Decodable, Equatable {
+    struct Quest: Decodable, Equatable, Identifiable {
+        let id: String; let name: String; let hint: String?
+        let n: Int; let goal: Int; let gold: Int; let xp: Int; let claimed: Bool
+        var done: Bool { n >= goal }
+    }
+    let list: [Quest]
+    let bonus: String
+    let bonusPack: String
+    let next: Double
+    var finished: Int { list.filter(\.done).count }
+    var claimable: Int { list.filter { $0.done && !$0.claimed }.count + (bonus == "ready" ? 1 : 0) }
+}
+struct QuestReply: Decodable { let cards: [String]?; let type: String?; let profile: Profile }
+
 // MARK: Legend Hunt
 
 // status: ready | playing | won | lost. next = when a new legend appears (ms since 1970).
