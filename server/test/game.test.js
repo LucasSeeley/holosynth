@@ -265,3 +265,13 @@ test('daily quests: one per tier, the same all day, a missing hard one becomes a
   assert.deepEqual(QUEST_PAY.map(p => [p.gold, p.xp]), [[750, 500], [1000, 750], [1500, 1000]]);
   assert.equal(QUESTS.streak.goal, 15);
 });
+
+test('the Legends Pack: 5 cards, the last always a Legendary', () => {
+  for (let i = 0; i < 200; i++) {
+    const p = openPack(7, 'legends');
+    assert.equal(p.cards.length, 5);
+    assert.equal(BY_ID[p.cards[4]].rarity, 'Legendary');
+    assert.equal(p.packsSinceLegend, 0);
+  }
+  for (let i = 0; i < 50; i++) assert.notEqual(freePack(), 'legends');
+});

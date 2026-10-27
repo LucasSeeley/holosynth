@@ -34,12 +34,13 @@ function rollRarity(rand) {
   return 'Common';
 }
 // Pack types and the classes each holds (omni = every card).
-export const PACK_TYPES = { cyber: ['Fighter', 'Beast', 'Mech'], magic: ['Arcanist', 'Spirit', 'Mystic'], omni: null, overload: null };
-// The Overload Pack is a big Omni: 8 cards for 12,000. Everything else is 3 cards for PACK_COST.
-export const PACK_SIZES = { overload: 8 };
-export const PACK_COSTS = { overload: 12000 };
+export const PACK_TYPES = { cyber: ['Fighter', 'Beast', 'Mech'], magic: ['Arcanist', 'Spirit', 'Mystic'], omni: null, overload: null, legends: null };
+// The Overload Pack is a big Omni: 8 cards for 12,000. The Legends Pack: a guaranteed Legendary plus 4 cards at the
+// normal odds, 25,000. Everything else is 3 cards for PACK_COST.
+export const PACK_SIZES = { overload: 8, legends: 5 };
+export const PACK_COSTS = { overload: 12000, legends: 25000 };
 const FREE_TYPES = ['cyber', 'magic', 'omni'];   // free packs are never Overload
-export const PACKS_OPEN = ['cyber', 'magic', 'omni', 'overload'];   // packs on sale; any left out show "Coming soon"
+export const PACKS_OPEN = ['cyber', 'magic', 'omni', 'overload', 'legends'];   // packs on sale; any left out show "Coming soon"
 const pickOf = (rarity, type, rand) => {
   const classes = PACK_TYPES[type];
   const pool = CARDS.filter(c => c.rarity === rarity && (!classes || classes.includes(c.cls)));
@@ -48,7 +49,9 @@ const pickOf = (rarity, type, rand) => {
 
 // Returns { cards: [ids], packsSinceLegend } for one pack of `type`.
 export function openPack(packsSinceLegend, type = 'cyber', rand = Math.random) {
-  const rarities = Array.from({ length: PACK_SIZES[type] ?? PACK_SIZE }, () => rollRarity(rand));
+  const size = PACK_SIZES[type] ?? PACK_SIZE;
+  // the Legends Pack's guaranteed Legendary is the last card, so it's the last one revealed
+  const rarities = Array.from({ length: size }, (_, i) => (type === 'legends' && i === size - 1 ? 'Legendary' : rollRarity(rand)));
   return {
     cards: rarities.map(r => pickOf(r, type, rand)),
     packsSinceLegend: rarities.includes('Legendary') ? 0 : packsSinceLegend + 1,

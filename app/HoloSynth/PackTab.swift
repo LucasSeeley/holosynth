@@ -31,6 +31,7 @@ struct PackTab: View {
         ("magic", "Magic Pack", "Arcanist, Spirit and Mystic cards", 0xB46BFF, 3, 5000),
         ("omni", "Omni Pack", "Any card from both sets", 0xE8B85A, 3, 5000),
         ("overload", "Overload Pack", "Any card from both sets", 0xFFD77A, 8, 12000),
+        ("legends", "Legends Pack", "A guaranteed Legendary + 4 more cards", 0xFFF3C4, 5, 25000),
     ]
 
     var body: some View {
