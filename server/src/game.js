@@ -28,17 +28,18 @@ export const levelStart = level => XP_PER_LEVEL * (2 ** (level - 1) - 1);   // t
 export const levelFor = xp => { let l = 1; while (levelStart(l + 1) <= xp) l++; return l; };
 
 // ---- packs ----
-function rollRarity(rand) {
+function rollRarity(rand, rates = RATES) {
   let r = rand() * 100;
-  for (const [name, pct] of RATES) { if ((r -= pct) < 0) return name; }
+  for (const [name, pct] of rates) { if ((r -= pct) < 0) return name; }
   return 'Common';
 }
 // Pack types and the classes each holds (omni = every card).
 export const PACK_TYPES = { cyber: ['Fighter', 'Beast', 'Mech'], magic: ['Arcanist', 'Spirit', 'Mystic'], omni: null, overload: null, legends: null };
-// The Overload Pack is a big Omni: 8 cards for 12,000. The Legends Pack: a guaranteed Legendary plus 4 cards at the
+// The Overload Pack is a big Omni: 8 cards for 12,000, the last always Rare or better (OVERLOAD_BEST). The Legends Pack: a guaranteed Legendary plus 4 cards at the
 // normal odds, 25,000. Everything else is 3 cards for PACK_COST.
 export const PACK_SIZES = { overload: 8, legends: 5 };
 export const PACK_COSTS = { overload: 12000, legends: 25000 };
+export const OVERLOAD_BEST = [['Rare', 50], ['Epic', 48], ['Legendary', 2]];
 const FREE_TYPES = ['cyber', 'magic', 'omni'];   // free packs are never Overload
 export const PACKS_OPEN = ['cyber', 'magic', 'omni', 'overload', 'legends'];   // packs on sale; any left out show "Coming soon"
 const pickOf = (rarity, type, rand) => {
@@ -50,8 +51,9 @@ const pickOf = (rarity, type, rand) => {
 // Returns { cards: [ids], holo: [indexes of holo cards], packsSinceLegend } for one pack of `type`.
 export function openPack(packsSinceLegend, type = 'cyber', rand = Math.random) {
   const size = PACK_SIZES[type] ?? PACK_SIZE;
-  // the Legends Pack's guaranteed Legendary is the last card, so it's the last one revealed
-  const rarities = Array.from({ length: size }, (_, i) => (type === 'legends' && i === size - 1 ? 'Legendary' : rollRarity(rand)));
+  // a pack's guaranteed card (Overload's Rare-or-better, Legends' Legendary) is the last one, so it's revealed last
+  const last = { legends: () => 'Legendary', overload: () => rollRarity(rand, OVERLOAD_BEST) }[type];
+  const rarities = Array.from({ length: size }, (_, i) => (last && i === size - 1 ? last() : rollRarity(rand)));
   const cards = rarities.map(r => pickOf(r, type, rand));
   return {
     cards,
