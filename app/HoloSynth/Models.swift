@@ -292,14 +292,17 @@ struct FusedCopy: Decodable, Equatable, Identifiable, Hashable {
 // Same sums as the server: HP +10%, basic +20%, special (and second special) +10% per level.
 extension Card {
     // Same maths as the server: fusion levels, then +20% for a holo copy.
-    func maxHP(_ f: Fusion?) -> Int { Int((Double(hp) * (1 + 0.1 * Double(f?.h ?? 0)) * Self.holoX(f)).rounded()) }
+    func maxHP(_ f: Fusion?) -> Int { Self.boost(hp, per: 0.1, levels: f?.h ?? 0, f) }
     func dmg(_ move: String, _ f: Fusion?) -> Int {
-        let x = Self.holoX(f)
         switch move {
-        case "basic": return Int((Double(basic.dmg) * (1 + 0.2 * Double(f?.b ?? 0)) * x).rounded())
-        case "special2": return Int((Double(special2?.dmg ?? 0) * (1 + 0.1 * Double(f?.s ?? 0)) * x).rounded())
-        default: return Int((Double(special.dmg) * (1 + 0.1 * Double(f?.s ?? 0)) * x).rounded())
+        case "basic": return Self.boost(basic.dmg, per: 0.2, levels: f?.b ?? 0, f)
+        case "special2": return Self.boost(special2?.dmg ?? 0, per: 0.1, levels: f?.s ?? 0, f)
+        default: return Self.boost(special.dmg, per: 0.1, levels: f?.s ?? 0, f)
         }
+    }
+    private static func boost(_ base: Int, per: Double, levels: Int, _ f: Fusion?) -> Int {
+        let fused: Double = Double(base) * (1 + per * Double(levels))
+        return Int((fused * holoX(f)).rounded())
     }
     private static func holoX(_ f: Fusion?) -> Double { f?.holo == true ? 1.2 : 1 }
 }
