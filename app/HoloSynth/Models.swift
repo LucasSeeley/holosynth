@@ -151,9 +151,9 @@ struct TradeDone: Decodable { let received: [String]; let gold: Int; let from: S
 
 // Collection order, shared by the Cards tab and the trade picker: 0 Synth #, 1 HP (highest first), 2 Rarity (best first).
 enum CardSort {
-    static let names = ["Synth #", "HP", "Rarity", "Duplicates"]
+    static let names = ["Synth #", "HP", "Rarity", "Dups"]
     private static let rank = ["Legendary": 0, "Epic": 1, "Rare": 2, "Common": 3]
-    // `cards` must already be in number order so ties keep it. `counts` (copies per card) is only used by Duplicates.
+    // `cards` must already be in number order so ties keep it. `counts` (copies per card) is only used by Dups.
     static func apply(_ cards: [Card], _ mode: Int, counts: [String: Int] = [:]) -> [Card] {
         switch mode % names.count {
         case 3: return cards.enumerated().sorted { (counts[$1.element.id] ?? 0, $0.offset) < (counts[$0.element.id] ?? 0, $1.offset) }.map(\.element)
