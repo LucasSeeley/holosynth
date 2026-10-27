@@ -97,7 +97,8 @@ CREATE TABLE IF NOT EXISTS fused (
   b INTEGER NOT NULL DEFAULT 0,
   s INTEGER NOT NULL DEFAULT 0,
   x INTEGER NOT NULL DEFAULT 0,
-  o INTEGER NOT NULL DEFAULT 0   -- holo copy (added to the live table by hand: ALTER TABLE fused ADD COLUMN o ...)
+  o INTEGER NOT NULL DEFAULT 0,  -- holo copy (added to the live table by hand: ALTER TABLE fused ADD COLUMN o ...)
+  p INTEGER NOT NULL DEFAULT 0   -- passive unlocked (added to the live table by hand: ALTER TABLE fused ADD COLUMN p ...)
 );
 CREATE INDEX IF NOT EXISTS fused_user ON fused (user_id, card_id);
 -- Daily shop: which of today's cards (slot 0-3) each player has bought. day = midnight UTC in ms.

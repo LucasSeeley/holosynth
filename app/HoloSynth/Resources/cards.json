@@ -17,7 +17,8 @@
   },
   "look": "Brawler android with neon-blue electric gauntlets and a cracked chrome faceplate.",
   "color": "#3ff0ff",
-  "quip": "Cracked his faceplate punching a vending machine. It still owes him a soda."
+  "quip": "Cracked his faceplate punching a vending machine. It still owes him a soda.",
+  "passive": "momentum"
  },
  {
   "id": "fang",
@@ -37,7 +38,8 @@
   },
   "look": "Chrome cyber-wolf with glowing pink fangs.",
   "color": "#ff3fa4",
-  "quip": "Good boy. Bites anyway."
+  "quip": "Good boy. Bites anyway.",
+  "passive": "lifesteal"
  },
  {
   "id": "goliath",
@@ -57,7 +59,8 @@
   },
   "look": "Squat walker mech with orange vents and a heavy arm cannon.",
   "color": "#ff8a3d",
-  "quip": "Short, loud, and absolutely not compensating for anything."
+  "quip": "Short, loud, and absolutely not compensating for anything.",
+  "passive": "armor"
  },
  {
   "id": "razor",
@@ -77,7 +80,8 @@
   },
   "look": "Samurai android with a violet hardlight katana and a split visor.",
   "color": "#8f7bff",
-  "quip": "Split his own visor showing off. Calls it a style choice."
+  "quip": "Split his own visor showing off. Calls it a style choice.",
+  "passive": "firststrike"
  },
  {
   "id": "stinger",
@@ -97,7 +101,8 @@
   },
   "look": "Chrome cyber-scorpion with a dripping green neon tail.",
   "color": "#3dff8a",
-  "quip": "The green drip is venom. Probably. Don't lick it."
+  "quip": "The green drip is venom. Probably. Don't lick it.",
+  "passive": "executioner"
  },
  {
   "id": "sentry",
@@ -117,7 +122,8 @@
   },
   "look": "Tripod turret drone with a red scanning eye and twin barrels.",
   "color": "#ff4d5e",
-  "quip": "Three legs, two barrels, zero chill."
+  "quip": "Three legs, two barrels, zero chill.",
+  "passive": "thorns"
  },
  {
   "id": "hex",
@@ -137,7 +143,8 @@
   },
   "look": "Slim hacker android surrounded by floating holo keyboards.",
   "color": "#ff3fa4",
-  "quip": "Types 400 words a minute. All of them are insults."
+  "quip": "Types 400 words a minute. All of them are insults.",
+  "passive": "momentum"
  },
  {
   "id": "mantis",
@@ -157,7 +164,8 @@
   },
   "look": "Chrome praying mantis with teal blade arms.",
   "color": "#2fe3c4",
-  "quip": "Prays before every fight. Mostly that you hold still."
+  "quip": "Prays before every fight. Mostly that you hold still.",
+  "passive": "lifesteal"
  },
  {
   "id": "rook",
@@ -177,7 +185,8 @@
   },
   "look": "Boxy walker tank with a hazard-striped cannon.",
   "color": "#ffd23d",
-  "quip": "Moves in straight lines only. Refuses to explain why."
+  "quip": "Moves in straight lines only. Refuses to explain why.",
+  "passive": "armor"
  },
  {
   "id": "wirelash",
@@ -197,7 +206,8 @@
   },
   "look": "Scrapyard android whose arm unspools into a sparking cable whip.",
   "color": "#3ff0ff",
-  "quip": "Made entirely of extension cords and bad decisions."
+  "quip": "Made entirely of extension cords and bad decisions.",
+  "passive": "firststrike"
  },
  {
   "id": "raptor",
@@ -217,7 +227,8 @@
   },
   "look": "Cyber-hawk with glowing amber wings.",
   "color": "#ffb03d",
-  "quip": "Screams like an eagle. Is legally a hawk."
+  "quip": "Screams like an eagle. Is legally a hawk.",
+  "passive": "executioner"
  },
  {
   "id": "crusher",
@@ -237,7 +248,8 @@
   },
   "look": "Heavy cargo-loader mech with giant hydraulic fists and blue warning lights.",
   "color": "#4a7dff",
-  "quip": "Was hired to lift crates. Now lifts people. Same pay."
+  "quip": "Was hired to lift crates. Now lifts people. Same pay.",
+  "passive": "thorns"
  },
  {
   "id": "nyx",
@@ -257,7 +269,8 @@
   },
   "look": "Stealth android whose plating bends light.",
   "color": "#8f7bff",
-  "quip": "You won't see him coming. He won't see you leaving either."
+  "quip": "You won't see him coming. He won't see you leaving either.",
+  "passive": "momentum"
  },
  {
   "id": "mongoose",
@@ -277,7 +290,8 @@
   },
   "look": "Lightning-fast cyber-mongoose with amber reflex sensors.",
   "color": "#ffb03d",
-  "quip": "Has never lost a staring contest. Or blinked."
+  "quip": "Has never lost a staring contest. Or blinked.",
+  "passive": "lifesteal"
  },
  {
   "id": "harvester",
@@ -297,7 +311,8 @@
   },
   "look": "Farm combine mech with glowing lime thresher blades.",
   "color": "#b6ff3d",
-  "quip": "Retired from farming. The crops know why."
+  "quip": "Retired from farming. The crops know why.",
+  "passive": "armor"
  },
  {
   "id": "blaze",
@@ -317,7 +332,8 @@
   },
   "look": "Brawler android with plasma-flame fists and vented shoulders.",
   "color": "#ff8a3d",
-  "quip": "Has never once held a cold drink."
+  "quip": "Has never once held a cold drink.",
+  "passive": "firststrike"
  },
  {
   "id": "narwhal",
@@ -337,7 +353,8 @@
   },
   "look": "Hovering cyber-narwhal with a frosted crystal tusk.",
   "color": "#9fe8ff",
-  "quip": "The unicorn of the sea, now with a frost setting."
+  "quip": "The unicorn of the sea, now with a frost setting.",
+  "passive": "executioner"
  },
  {
   "id": "siphon",
@@ -357,7 +374,8 @@
   },
   "look": "Spindly mech that plugs cables into its targets.",
   "color": "#ff3df0",
-  "quip": "Your battery's on 1%? That was him."
+  "quip": "Your battery's on 1%? That was him.",
+  "passive": "thorns"
  },
  {
   "id": "ronin",
@@ -377,7 +395,8 @@
   },
   "look": "Battered swordsman android with a red neon tanto.",
   "color": "#ff4d5e",
-  "quip": "No master, no shop, no warranty."
+  "quip": "No master, no shop, no warranty.",
+  "passive": "momentum"
  },
  {
   "id": "viper",
@@ -397,7 +416,8 @@
   },
   "look": "Cyber-cobra with a hood made of light panels.",
   "color": "#3dff8a",
-  "quip": "Hood lights up like a billboard. Subtle, it is not."
+  "quip": "Hood lights up like a billboard. Subtle, it is not.",
+  "passive": "lifesteal"
  },
  {
   "id": "juggernaut",
@@ -417,7 +437,8 @@
   },
   "look": "Hulking siege mech that never stops walking.",
   "color": "#ff4d5e",
-  "quip": "Doesn't know how to stop. Literally. The brakes are missing."
+  "quip": "Doesn't know how to stop. Literally. The brakes are missing.",
+  "passive": "armor"
  },
  {
   "id": "glitch",
@@ -437,7 +458,8 @@
   },
   "look": "Flickering android that skips frames when it moves.",
   "color": "#ff3fa4",
-  "quip": "Lags in real life. Somehow still wins."
+  "quip": "Lags in real life. Somehow still wins.",
+  "passive": "firststrike"
  },
  {
   "id": "rhino",
@@ -457,7 +479,8 @@
   },
   "look": "Armored cyber-rhino with a chrome drill horn.",
   "color": "#ffd23d",
-  "quip": "Horn upgraded to a drill. Doorbells are a thing of the past."
+  "quip": "Horn upgraded to a drill. Doorbells are a thing of the past.",
+  "passive": "executioner"
  },
  {
   "id": "scout",
@@ -477,7 +500,8 @@
   },
   "look": "Recon drone with a sweeping blue laser.",
   "color": "#3ff0ff",
-  "quip": "Points a laser at you. Then his friends show up."
+  "quip": "Points a laser at you. Then his friends show up.",
+  "passive": "thorns"
  },
  {
   "id": "cipher",
@@ -497,7 +521,8 @@
   },
   "look": "Codebreaker android with a spinning cipher-wheel face.",
   "color": "#3ff0ff",
-  "quip": "Spins its own face to think. It's a lot."
+  "quip": "Spins its own face to think. It's a lot.",
+  "passive": "momentum"
  },
  {
   "id": "arachne",
@@ -517,7 +542,8 @@
   },
   "look": "Mechanical spider spinning glowing violet webs.",
   "color": "#8f7bff",
-  "quip": "Eight legs, glowing webs, ruins every dinner party."
+  "quip": "Eight legs, glowing webs, ruins every dinner party.",
+  "passive": "lifesteal"
  },
  {
   "id": "gyro",
@@ -537,7 +563,8 @@
   },
   "look": "Gyrocopter mech with spinning saw rotors.",
   "color": "#2fe3c4",
-  "quip": "Flies with saws. The neighbors have filed complaints."
+  "quip": "Flies with saws. The neighbors have filed complaints.",
+  "passive": "armor"
  },
  {
   "id": "bounty",
@@ -557,7 +584,8 @@
   },
   "look": "Hunter android in a long coat with a neon revolver arm.",
   "color": "#ffb03d",
-  "quip": "Wanted: Dead or Alive. Accepts both, prefers whichever's quicker."
+  "quip": "Wanted: Dead or Alive. Accepts both, prefers whichever's quicker.",
+  "passive": "firststrike"
  },
  {
   "id": "shark",
@@ -577,7 +605,8 @@
   },
   "look": "Cyber-shark that swims through the air on hover fins.",
   "color": "#4a7dff",
-  "quip": "Hates water. Loves you."
+  "quip": "Hates water. Loves you.",
+  "passive": "executioner"
  },
  {
   "id": "forge",
@@ -597,7 +626,8 @@
   },
   "look": "Foundry mech with a glowing molten core.",
   "color": "#ff8a3d",
-  "quip": "Runs hot. Bring oven mitts to the handshake."
+  "quip": "Runs hot. Bring oven mitts to the handshake.",
+  "passive": "thorns"
  },
  {
   "id": "spike",
@@ -617,7 +647,8 @@
   },
   "look": "Brawler android covered in chrome spikes.",
   "color": "#b6ff3d",
-  "quip": "Cannot be hugged. Has tried."
+  "quip": "Cannot be hugged. Has tried.",
+  "passive": "momentum"
  },
  {
   "id": "silverback",
@@ -637,7 +668,8 @@
   },
   "look": "Chrome gorilla with glowing blue knuckles.",
   "color": "#9fe8ff",
-  "quip": "Chest beat registers on seismographs."
+  "quip": "Chest beat registers on seismographs.",
+  "passive": "lifesteal"
  },
  {
   "id": "burrower",
@@ -657,7 +689,8 @@
   },
   "look": "Mining mech with a massive spiral drill.",
   "color": "#ffd23d",
-  "quip": "Arrives from below. Leaves a sinkhole and a bad review."
+  "quip": "Arrives from below. Leaves a sinkhole and a bad review.",
+  "passive": "armor"
  },
  {
   "id": "echo",
@@ -677,7 +710,8 @@
   },
   "look": "Android with speaker cones built into its shoulders.",
   "color": "#2fe3c4",
-  "quip": "Echo. Echo. Echo. She won't stop."
+  "quip": "Echo. Echo. Echo. She won't stop.",
+  "passive": "firststrike"
  },
  {
   "id": "panther",
@@ -697,7 +731,8 @@
   },
   "look": "Sleek black cyber-panther with violet eyes.",
   "color": "#8f7bff",
-  "quip": "A cat in every way. Knocks your stuff off tables at 90 mph."
+  "quip": "A cat in every way. Knocks your stuff off tables at 90 mph.",
+  "passive": "executioner"
  },
  {
   "id": "mortar",
@@ -717,7 +752,8 @@
   },
   "look": "Artillery walker with stubby launch tubes.",
   "color": "#ffb03d",
-  "quip": "Can't aim. Doesn't need to."
+  "quip": "Can't aim. Doesn't need to.",
+  "passive": "thorns"
  },
  {
   "id": "rivet",
@@ -737,7 +773,8 @@
   },
   "look": "Dockworker android with a hydraulic wrench arm.",
   "color": "#ffd23d",
-  "quip": "Clocked in for overtime. Never clocked out."
+  "quip": "Clocked in for overtime. Never clocked out.",
+  "passive": "momentum"
  },
  {
   "id": "croc",
@@ -757,7 +794,8 @@
   },
   "look": "Swamp cyber-croc with a lime neon jaw.",
   "color": "#b6ff3d",
-  "quip": "Smiles a lot. That's the problem."
+  "quip": "Smiles a lot. That's the problem.",
+  "passive": "lifesteal"
  },
  {
   "id": "bastion",
@@ -777,7 +815,8 @@
   },
   "look": "Fortress mech with fold-out armor walls.",
   "color": "#4a7dff",
-  "quip": "A building with legs and anger issues."
+  "quip": "A building with legs and anger issues.",
+  "passive": "armor"
  },
  {
   "id": "vandal",
@@ -797,7 +836,8 @@
   },
   "look": "Android with spray-nozzle hands that shoot blinding neon paint.",
   "color": "#ff3df0",
-  "quip": "Every wall is a canvas. Every face too."
+  "quip": "Every wall is a canvas. Every face too.",
+  "passive": "firststrike"
  },
  {
   "id": "hornet",
@@ -817,7 +857,8 @@
   },
   "look": "Fist-sized robo-hornet with a plasma stinger.",
   "color": "#ffd23d",
-  "quip": "Fist-sized. Somehow that's worse."
+  "quip": "Fist-sized. Somehow that's worse.",
+  "passive": "executioner"
  },
  {
   "id": "magnus",
@@ -837,7 +878,8 @@
   },
   "look": "Junkyard crane mech with a giant magnet.",
   "color": "#ff4d5e",
-  "quip": "Your belt buckle is now his belt buckle."
+  "quip": "Your belt buckle is now his belt buckle.",
+  "passive": "thorns"
  },
  {
   "id": "phantom",
@@ -857,7 +899,8 @@
   },
   "look": "Hologram android that is barely there.",
   "color": "#9fe8ff",
-  "quip": "Barely there. Still shows up to fights, technically."
+  "quip": "Barely there. Still shows up to fights, technically.",
+  "passive": "momentum"
  },
  {
   "id": "vesper",
@@ -877,7 +920,8 @@
   },
   "look": "Cyber-bat that maps the arena with pink sonar.",
   "color": "#ff3df0",
-  "quip": "Sees with sound. Screams with purpose."
+  "quip": "Sees with sound. Screams with purpose.",
+  "passive": "lifesteal"
  },
  {
   "id": "buzzsaw",
@@ -897,7 +941,8 @@
   },
   "look": "Scrap mech with a spinning buzzsaw arm.",
   "color": "#b6ff3d",
-  "quip": "Built from scrap. Turns things back into scrap."
+  "quip": "Built from scrap. Turns things back into scrap.",
+  "passive": "armor"
  },
  {
   "id": "brick",
@@ -917,7 +962,8 @@
   },
   "look": "Huge bouncer android with slab-like chrome forearms.",
   "color": "#ff8a3d",
-  "quip": "Bouncer. Your name is not on the list."
+  "quip": "Bouncer. Your name is not on the list.",
+  "passive": "firststrike"
  },
  {
   "id": "boar",
@@ -937,7 +983,8 @@
   },
   "look": "Chrome boar with glowing red tusks.",
   "color": "#ff4d5e",
-  "quip": "Doesn't do turns. Only forward."
+  "quip": "Doesn't do turns. Only forward.",
+  "passive": "executioner"
  },
  {
   "id": "skyburst",
@@ -957,7 +1004,8 @@
   },
   "look": "Jetpack mech that rains micro-missiles.",
   "color": "#ff3fa4",
-  "quip": "Flies on a jetpack held together with tape and hope."
+  "quip": "Flies on a jetpack held together with tape and hope.",
+  "passive": "thorns"
  },
  {
   "id": "shiv",
@@ -977,7 +1025,8 @@
   },
   "look": "Small scavenger android with twin hardlight knives.",
   "color": "#3dff8a",
-  "quip": "Small. Stabby. Sincerely sorry."
+  "quip": "Small. Stabby. Sincerely sorry.",
+  "passive": "momentum"
  },
  {
   "id": "kraken",
@@ -997,7 +1046,8 @@
   },
   "look": "Neon octopus that sprays glowing ink.",
   "color": "#2fe3c4",
-  "quip": "Eight arms, all of them slapping."
+  "quip": "Eight arms, all of them slapping.",
+  "passive": "lifesteal"
  },
  {
   "id": "welder",
@@ -1017,7 +1067,8 @@
   },
   "look": "Repair bot with a white-hot welding arm.",
   "color": "#3ff0ff",
-  "quip": "Fixes friends. Melts enemies. Same tool."
+  "quip": "Fixes friends. Melts enemies. Same tool.",
+  "passive": "armor"
  },
  {
   "id": "neon",
@@ -1037,7 +1088,8 @@
   },
   "look": "Android whose glowing circuit lines pulse when it fights.",
   "color": "#ff3fa4",
-  "quip": "Lights up when angry. Visible from orbit most days."
+  "quip": "Lights up when angry. Visible from orbit most days.",
+  "passive": "firststrike"
  },
  {
   "id": "hyena",
@@ -1057,7 +1109,8 @@
   },
   "look": "Laughing cyber-hyena with a cracked amber visor.",
   "color": "#ffb03d",
-  "quip": "Laughs at every joke. Especially the ones you didn't make."
+  "quip": "Laughs at every joke. Especially the ones you didn't make.",
+  "passive": "executioner"
  },
  {
   "id": "hive",
@@ -1077,7 +1130,8 @@
   },
   "look": "Cloud of tiny worker drones moving as one.",
   "color": "#ffd23d",
-  "quip": "A thousand drones and one shared opinion."
+  "quip": "A thousand drones and one shared opinion.",
+  "passive": "thorns"
  },
  {
   "id": "static",
@@ -1097,7 +1151,8 @@
   },
   "look": "Android that stores lightning in coils down its back.",
   "color": "#3ff0ff",
-  "quip": "Pet him once and your hair stands up for a week."
+  "quip": "Pet him once and your hair stands up for a week.",
+  "passive": "momentum"
  },
  {
   "id": "grizzly",
@@ -1117,7 +1172,8 @@
   },
   "look": "Massive cyber-bear with exhaust pipes on its back.",
   "color": "#ff8a3d",
-  "quip": "Bear hugs are not a gesture. They're a move."
+  "quip": "Bear hugs are not a gesture. They're a move.",
+  "passive": "lifesteal"
  },
  {
   "id": "hoist",
@@ -1137,7 +1193,8 @@
   },
   "look": "Construction crane mech with a swinging hook.",
   "color": "#ffb03d",
-  "quip": "Picks you up. Drops you off. Not at your stop."
+  "quip": "Picks you up. Drops you off. Not at your stop.",
+  "passive": "armor"
  },
  {
   "id": "ember",
@@ -1157,7 +1214,8 @@
   },
   "look": "Dancer android with molten-glow legs.",
   "color": "#ff4d5e",
-  "quip": "Dances like the floor is lava, because it is now."
+  "quip": "Dances like the floor is lava, because it is now.",
+  "passive": "firststrike"
  },
  {
   "id": "komodo",
@@ -1177,7 +1235,8 @@
   },
   "look": "Cyber-lizard dripping green static.",
   "color": "#b6ff3d",
-  "quip": "One lick and your firmware is never the same."
+  "quip": "One lick and your firmware is never the same.",
+  "passive": "executioner"
  },
  {
   "id": "watchtower",
@@ -1197,7 +1256,8 @@
   },
   "look": "Tall tower mech with a blinding spotlight head.",
   "color": "#9fe8ff",
-  "quip": "Shines a light in your face and asks where you were Tuesday."
+  "quip": "Shines a light in your face and asks where you were Tuesday.",
+  "passive": "thorns"
  },
  {
   "id": "jackal",
@@ -1217,7 +1277,8 @@
   },
   "look": "Gang-leader android with a jackal-shaped chrome head.",
   "color": "#ffb03d",
-  "quip": "Runs a gang of three. Two are pipes."
+  "quip": "Runs a gang of three. Two are pipes.",
+  "passive": "momentum"
  },
  {
   "id": "moth",
@@ -1237,7 +1298,8 @@
   },
   "look": "Giant cyber-moth drawn to neon signs.",
   "color": "#9fe8ff",
-  "quip": "Will abandon any fight for a nice neon sign."
+  "quip": "Will abandon any fight for a nice neon sign.",
+  "passive": "lifesteal"
  },
  {
   "id": "dozer",
@@ -1257,7 +1319,8 @@
   },
   "look": "Bulldozer mech with a scarred chrome blade.",
   "color": "#ff8a3d",
-  "quip": "Ask him to move. He'll move you."
+  "quip": "Ask him to move. He'll move you.",
+  "passive": "armor"
  },
  {
   "id": "monk",
@@ -1277,7 +1340,8 @@
   },
   "look": "Monk android wrapped in a glowing data-bead necklace.",
   "color": "#2fe3c4",
-  "quip": "Achieved inner peace. Uses it to punch harder."
+  "quip": "Achieved inner peace. Uses it to punch harder.",
+  "passive": "firststrike"
  },
  {
   "id": "vixen",
@@ -1297,7 +1361,8 @@
   },
   "look": "Two-tailed cyber-fox with pink fire tips.",
   "color": "#ff3fa4",
-  "quip": "Two tails, both on fire, zero regrets."
+  "quip": "Two tails, both on fire, zero regrets.",
+  "passive": "executioner"
  },
  {
   "id": "overclock",
@@ -1317,7 +1382,8 @@
   },
   "look": "Overclocked mech venting red steam.",
   "color": "#ff4d5e",
-  "quip": "Runs at 300%. Warranty voided on day one."
+  "quip": "Runs at 300%. Warranty voided on day one.",
+  "passive": "thorns"
  },
  {
   "id": "riot",
@@ -1337,7 +1403,8 @@
   },
   "look": "Riot-control android with a hardlight shield.",
   "color": "#4a7dff",
-  "quip": "Brought a shield to a party. Wasn't invited back."
+  "quip": "Brought a shield to a party. Wasn't invited back.",
+  "passive": "momentum"
  },
  {
   "id": "scarab",
@@ -1357,7 +1424,8 @@
   },
   "look": "Armored beetle with an oil-slick teal shell.",
   "color": "#2fe3c4",
-  "quip": "Shell looks like an oil spill. Personality too."
+  "quip": "Shell looks like an oil spill. Personality too.",
+  "passive": "lifesteal"
  },
  {
   "id": "lancer",
@@ -1377,7 +1445,8 @@
   },
   "look": "Jousting mech with a violet plasma lance.",
   "color": "#8f7bff",
-  "quip": "Jousting is dead. Nobody told him."
+  "quip": "Jousting is dead. Nobody told him.",
+  "passive": "armor"
  },
  {
   "id": "lotus",
@@ -1397,7 +1466,8 @@
   },
   "look": "Martial-arts android whose kicks leave pink light petals.",
   "color": "#ff3df0",
-  "quip": "Kicks so pretty you'll forget it hurt. It still hurt."
+  "quip": "Kicks so pretty you'll forget it hurt. It still hurt.",
+  "passive": "firststrike"
  },
  {
   "id": "crow",
@@ -1417,7 +1487,8 @@
   },
   "look": "Cyber-crow with a cracked camera eye.",
   "color": "#8f7bff",
-  "quip": "Steals shiny things. You are slightly shiny."
+  "quip": "Steals shiny things. You are slightly shiny.",
+  "passive": "executioner"
  },
  {
   "id": "railer",
@@ -1437,7 +1508,8 @@
   },
   "look": "Sniper mech with a long rail cannon.",
   "color": "#9fe8ff",
-  "quip": "Shoots you from three districts away, then texts \"gg\"."
+  "quip": "Shoots you from three districts away, then texts \"gg\".",
+  "passive": "thorns"
  },
  {
   "id": "gunner",
@@ -1457,7 +1529,8 @@
   },
   "look": "Mercenary android with a smoking neon rifle arm.",
   "color": "#ff4d5e",
-  "quip": "Hasn't cooled his rifle since the last update."
+  "quip": "Hasn't cooled his rifle since the last update.",
+  "passive": "momentum"
  },
  {
   "id": "hare",
@@ -1477,7 +1550,8 @@
   },
   "look": "Speedy cyber-hare with spring-loaded legs.",
   "color": "#3ff0ff",
-  "quip": "Hops into combat. Burrows out of responsibility."
+  "quip": "Hops into combat. Burrows out of responsibility.",
+  "passive": "lifesteal"
  },
  {
   "id": "shredder",
@@ -1497,7 +1571,8 @@
   },
   "look": "Recycling mech with shredder jaws.",
   "color": "#3dff8a",
-  "quip": "Reduce. Reuse. Ruin."
+  "quip": "Reduce. Reuse. Ruin.",
+  "passive": "armor"
  },
  {
   "id": "drifter",
@@ -1517,7 +1592,8 @@
   },
   "look": "Racer android with wheel hubs in its legs and a chain fist.",
   "color": "#ff8a3d",
-  "quip": "Never turns. Just slides sideways and hopes."
+  "quip": "Never turns. Just slides sideways and hopes.",
+  "passive": "firststrike"
  },
  {
   "id": "eel",
@@ -1537,7 +1613,8 @@
   },
   "look": "Electric eel crackling with cyan current.",
   "color": "#3ff0ff",
-  "quip": "Swims through power lines for fun."
+  "quip": "Swims through power lines for fun.",
+  "passive": "executioner"
  },
  {
   "id": "pylon",
@@ -1557,7 +1634,8 @@
   },
   "look": "Walking power pylon crackling with arcs.",
   "color": "#3ff0ff",
-  "quip": "Do not touch. Seriously. Read the sign."
+  "quip": "Do not touch. Seriously. Read the sign.",
+  "passive": "thorns"
  },
  {
   "id": "siren",
@@ -1577,7 +1655,8 @@
   },
   "look": "Android with a resonator throat that cracks glass.",
   "color": "#9fe8ff",
-  "quip": "Hit one high note. Lost three windows and a friend."
+  "quip": "Hit one high note. Lost three windows and a friend.",
+  "passive": "momentum"
  },
  {
   "id": "ram",
@@ -1597,7 +1676,8 @@
   },
   "look": "Chrome ram with spiraling neon horns.",
   "color": "#ff8a3d",
-  "quip": "Solves every problem with his forehead."
+  "quip": "Solves every problem with his forehead.",
+  "passive": "lifesteal"
  },
  {
   "id": "quake",
@@ -1617,7 +1697,8 @@
   },
   "look": "Squat mech with piston-driven fists.",
   "color": "#ffb03d",
-  "quip": "Every step is a 4.2 on the Richter scale."
+  "quip": "Every step is a 4.2 on the Richter scale.",
+  "passive": "armor"
  },
  {
   "id": "warden",
@@ -1637,7 +1718,8 @@
   },
   "look": "Guard android with magnetic shackle hands.",
   "color": "#4a7dff",
-  "quip": "You have the right to remain shocked."
+  "quip": "You have the right to remain shocked.",
+  "passive": "firststrike"
  },
  {
   "id": "piranha",
@@ -1657,7 +1739,8 @@
   },
   "look": "Swarm of flying robo-piranhas.",
   "color": "#ff4d5e",
-  "quip": "Individually adorable. Collectively a blender."
+  "quip": "Individually adorable. Collectively a blender.",
+  "passive": "executioner"
  },
  {
   "id": "cyclone",
@@ -1677,7 +1760,8 @@
   },
   "look": "Turbine mech that whips up neon wind.",
   "color": "#2fe3c4",
-  "quip": "Bad hair day guaranteed."
+  "quip": "Bad hair day guaranteed.",
+  "passive": "thorns"
  },
  {
   "id": "dynamo",
@@ -1697,7 +1781,8 @@
   },
   "look": "Power-plant android with spinning turbine gauntlets.",
   "color": "#ffd23d",
-  "quip": "Powers a whole block. Charges you rent."
+  "quip": "Powers a whole block. Charges you rent.",
+  "passive": "momentum"
  },
  {
   "id": "mammoth",
@@ -1717,7 +1802,8 @@
   },
   "look": "Frozen cyber-mammoth with glowing ice tusks.",
   "color": "#9fe8ff",
-  "quip": "Thawed out last Tuesday. Still grumpy about it."
+  "quip": "Thawed out last Tuesday. Still grumpy about it.",
+  "passive": "lifesteal"
  },
  {
   "id": "chopper",
@@ -1737,7 +1823,8 @@
   },
   "look": "Attack-helicopter mech with twin rotors.",
   "color": "#ff4d5e",
-  "quip": "Two rotors means twice the loud."
+  "quip": "Two rotors means twice the loud.",
+  "passive": "armor"
  },
  {
   "id": "rogue",
@@ -1757,7 +1844,8 @@
   },
   "look": "Thief android that fights from inside a cloud of neon smoke.",
   "color": "#8f7bff",
-  "quip": "Fights inside a smoke cloud. Nobody's sure he's actually there."
+  "quip": "Fights inside a smoke cloud. Nobody's sure he's actually there.",
+  "passive": "firststrike"
  },
  {
   "id": "sabre",
@@ -1777,7 +1865,8 @@
   },
   "look": "Sabertooth cyber-cat with amber plasma fangs.",
   "color": "#ffb03d",
-  "quip": "Teeth sized for a bigger cat. Doesn't care."
+  "quip": "Teeth sized for a bigger cat. Doesn't care.",
+  "passive": "executioner"
  },
  {
   "id": "crawler",
@@ -1797,7 +1886,8 @@
   },
   "look": "Six-legged crawler mech built for climbing walls.",
   "color": "#8f7bff",
-  "quip": "Climbs walls, ceilings and your nerves."
+  "quip": "Climbs walls, ceilings and your nerves.",
+  "passive": "thorns"
  },
  {
   "id": "vanta",
@@ -1817,7 +1907,8 @@
   },
   "look": "Martial-arts android in light-eating black plating with a blue edge.",
   "color": "#8f7bff",
-  "quip": "Absorbs light, sound and criticism."
+  "quip": "Absorbs light, sound and criticism.",
+  "passive": "momentum"
  },
  {
   "id": "basilisk",
@@ -1837,7 +1928,8 @@
   },
   "look": "Chrome serpent whose stare freezes circuits solid.",
   "color": "#3ff0ff",
-  "quip": "Don't make eye contact. Seriously, look away."
+  "quip": "Don't make eye contact. Seriously, look away.",
+  "passive": "lifesteal"
  },
  {
   "id": "warlord",
@@ -1857,7 +1949,8 @@
   },
   "look": "Command mech that calls down satellite strikes.",
   "color": "#ff4d5e",
-  "quip": "Doesn't fight. Calls in a favor from space."
+  "quip": "Doesn't fight. Calls in a favor from space.",
+  "passive": "armor"
  },
  {
   "id": "shogun",
@@ -1877,7 +1970,8 @@
   },
   "look": "Warlord android with a twin-bladed hardlight naginata.",
   "color": "#ff4d5e",
-  "quip": "Two blades on one stick, because one blade is for amateurs."
+  "quip": "Two blades on one stick, because one blade is for amateurs.",
+  "passive": "firststrike"
  },
  {
   "id": "chimera",
@@ -1897,7 +1991,8 @@
   },
   "look": "Three-headed cyber-beast, each head a different neon color.",
   "color": "#ff3df0",
-  "quip": "Three heads, one stomach, constant arguments."
+  "quip": "Three heads, one stomach, constant arguments.",
+  "passive": "executioner"
  },
  {
   "id": "colossus",
@@ -1917,7 +2012,8 @@
   },
   "look": "Towering mech that blocks out the city lights.",
   "color": "#4a7dff",
-  "quip": "Blocks out the sun. Doesn't apologize."
+  "quip": "Blocks out the sun. Doesn't apologize.",
+  "passive": "thorns"
  },
  {
   "id": "specter",
@@ -1937,7 +2033,8 @@
   },
   "look": "Spy android that phases through walls in a shimmer of static.",
   "color": "#9fe8ff",
-  "quip": "Phases through walls. Still uses doors to be polite."
+  "quip": "Phases through walls. Still uses doors to be polite.",
+  "passive": "momentum"
  },
  {
   "id": "wyvern",
@@ -1957,7 +2054,8 @@
   },
   "look": "Small cyber-dragon with green plasma in its throat.",
   "color": "#3dff8a",
-  "quip": "Small dragon, huge attitude, terrible breath."
+  "quip": "Small dragon, huge attitude, terrible breath.",
+  "passive": "lifesteal"
  },
  {
   "id": "valkyrie",
@@ -1977,7 +2075,8 @@
   },
   "look": "Winged combat mech that dives from the sky.",
   "color": "#ff3fa4",
-  "quip": "Dives from the clouds. Lands on you specifically."
+  "quip": "Dives from the clouds. Lands on you specifically.",
+  "passive": "armor"
  },
  {
   "id": "overdrive",
@@ -1997,7 +2096,8 @@
   },
   "look": "Racer android with turbo-boosted legs.",
   "color": "#ff8a3d",
-  "quip": "Zero to sixty before you finish blinking."
+  "quip": "Zero to sixty before you finish blinking.",
+  "passive": "firststrike"
  },
  {
   "id": "manticore",
@@ -2017,7 +2117,8 @@
   },
   "look": "Lion-bodied cyber-beast with a scorpion tail.",
   "color": "#ffb03d",
-  "quip": "A lion that said yes to every upgrade."
+  "quip": "A lion that said yes to every upgrade.",
+  "passive": "executioner"
  },
  {
   "id": "reactor",
@@ -2037,7 +2138,8 @@
   },
   "look": "Walking power core leaking lime radiation.",
   "color": "#b6ff3d",
-  "quip": "Glows lime. Should not be hugged."
+  "quip": "Glows lime. Should not be hugged.",
+  "passive": "thorns"
  },
  {
   "id": "prism",
@@ -2057,7 +2159,8 @@
   },
   "look": "Crystal-bodied android that splits light into rainbow blades.",
   "color": "#3ff0ff",
-  "quip": "Turns a flashlight into a rainbow of pain."
+  "quip": "Turns a flashlight into a rainbow of pain.",
+  "passive": "momentum"
  },
  {
   "id": "thunderhide",
@@ -2077,7 +2180,8 @@
   },
   "look": "Armored cyber-bison with lightning arcing between its horns.",
   "color": "#4a7dff",
-  "quip": "Charges on his own lightning. Never pays the bill."
+  "quip": "Charges on his own lightning. Never pays the bill.",
+  "passive": "lifesteal"
  },
  {
   "id": "hellfire",
@@ -2097,7 +2201,8 @@
   },
   "look": "Flamethrower tank mech with glowing fuel tanks.",
   "color": "#ff8a3d",
-  "quip": "Sees a problem, sets it on fire."
+  "quip": "Sees a problem, sets it on fire.",
+  "passive": "armor"
  },
  {
   "id": "paragon",
@@ -2122,7 +2227,8 @@
    "name": "Supernova",
    "dmg": 55,
    "cd": 4
-  }
+  },
+  "passive": "firststrike"
  },
  {
   "id": "leviathan",
@@ -2147,7 +2253,8 @@
    "name": "Maelstrom",
    "dmg": 55,
    "cd": 4
-  }
+  },
+  "passive": "executioner"
  },
  {
   "id": "dreadnought",
@@ -2172,7 +2279,8 @@
    "name": "Orbital Strike",
    "dmg": 55,
    "cd": 4
-  }
+  },
+  "passive": "thorns"
  },
  {
   "id": "nightblade",
@@ -2197,7 +2305,8 @@
    "name": "New Moon",
    "dmg": 55,
    "cd": 4
-  }
+  },
+  "passive": "momentum"
  },
  {
   "id": "phoenix",
@@ -2222,7 +2331,8 @@
    "name": "Inferno Dive",
    "dmg": 50,
    "cd": 3
-  }
+  },
+  "passive": "rebirth"
  },
  {
   "id": "omega",
@@ -2247,7 +2357,8 @@
    "name": "Deletion",
    "dmg": 55,
    "cd": 4
-  }
+  },
+  "passive": "armor"
  },
  {
   "id": "sovereign",
@@ -2272,7 +2383,8 @@
    "name": "Royal Decree",
    "dmg": 70,
    "cd": 4
-  }
+  },
+  "passive": "firststrike"
  },
  {
   "id": "apex",
@@ -2297,7 +2409,8 @@
    "name": "Alpha Howl",
    "dmg": 70,
    "cd": 4
-  }
+  },
+  "passive": "executioner"
  },
  {
   "id": "genesis",
@@ -2322,7 +2435,8 @@
    "name": "Big Bang",
    "dmg": 75,
    "cd": 4
-  }
+  },
+  "passive": "thorns"
  },
  {
   "id": "rune",
@@ -2342,7 +2456,8 @@
   },
   "look": "Chrome android sorcerer in an armoured coat, violet rune circles spinning around both hands.",
   "color": "#9b6bff",
-  "quip": "Read the manual. Then rewrote it in ancient runes."
+  "quip": "Read the manual. Then rewrote it in ancient runes.",
+  "passive": "quickcharge"
  },
  {
   "id": "wisp",
@@ -2362,7 +2477,8 @@
   },
   "look": "A three-tailed fox made of living teal spirit-flame.",
   "color": "#2fe3c4",
-  "quip": "Follow the light. It's probably fine."
+  "quip": "Follow the light. It's probably fine.",
+  "passive": "phaseshift"
  },
  {
   "id": "halo",
@@ -2383,7 +2499,8 @@
   },
   "look": "Floating crystal construct with a golden halo and healing light in its hands.",
   "color": "#ffc53d",
-  "quip": "Turns you off and on again. Works every time."
+  "quip": "Turns you off and on again. Works every time.",
+  "passive": "regen"
  },
  {
   "id": "glyph",
@@ -2403,7 +2520,8 @@
   },
   "look": "Matte-black android scribe covered in glowing scarlet glyph tattoos, writing spells in the air with a stylus finger.",
   "color": "#ff5a2e",
-  "quip": "Has terrible handwriting. The spells work anyway."
+  "quip": "Has terrible handwriting. The spells work anyway.",
+  "passive": "laststand"
  },
  {
   "id": "moonhare",
@@ -2423,7 +2541,8 @@
   },
   "look": "A hare made of silver moonlight with crescent-moon ears and drifting lilac motes.",
   "color": "#c9b8ff",
-  "quip": "Only comes out at night. Mostly to steal your carrots."
+  "quip": "Only comes out at night. Mostly to steal your carrots.",
+  "passive": "rebirth"
  },
  {
   "id": "lantern",
@@ -2444,7 +2563,8 @@
   },
   "look": "Small floating paper-lantern bot with a crimson shell, gold tassels and a soft glowing heart.",
   "color": "#e0283c",
-  "quip": "Lights the way home. Will not stop talking about it."
+  "quip": "Lights the way home. Will not stop talking about it.",
+  "passive": "blessing"
  },
  {
   "id": "hexcoil",
@@ -2464,7 +2584,8 @@
   },
   "look": "Warlock android wound in serpentine copper coils that spit acid-green hexfire.",
   "color": "#b8ff2e",
-  "quip": "Curses you, then apologises. Then curses you again."
+  "quip": "Curses you, then apologises. Then curses you again.",
+  "passive": "quickcharge"
  },
  {
   "id": "emberkoi",
@@ -2484,7 +2605,8 @@
   },
   "look": "A pair of koi fish made of tangerine-gold flame, swimming through the air in a loop.",
   "color": "#ff9a1f",
-  "quip": "Two fish, one brain cell, infinite swagger."
+  "quip": "Two fish, one brain cell, infinite swagger.",
+  "passive": "phaseshift"
  },
  {
   "id": "bloom",
@@ -2505,7 +2627,8 @@
   },
   "look": "Flower construct of glowing spring-green leaves with pink blossoms opening across its body.",
   "color": "#5cff7a",
-  "quip": "Heals you with petals. Mildly allergic to itself."
+  "quip": "Heals you with petals. Mildly allergic to itself.",
+  "passive": "regen"
  },
  {
   "id": "rime",
@@ -2525,7 +2648,8 @@
   },
   "look": "Frost-mage android with crystalline ice-blue armour and snowflake sigils orbiting its head.",
   "color": "#9fe8ff",
-  "quip": "Cool under pressure. And everywhere else."
+  "quip": "Cool under pressure. And everywhere else.",
+  "passive": "laststand"
  },
  {
   "id": "wraithhound",
@@ -2545,7 +2669,8 @@
   },
   "look": "Lean hound of ghost-green fire with a black smoke body and hollow glowing eyes.",
   "color": "#6bff9e",
-  "quip": "Fetches souls. Will not fetch sticks."
+  "quip": "Fetches souls. Will not fetch sticks.",
+  "passive": "rebirth"
  },
  {
   "id": "chime",
@@ -2566,7 +2691,8 @@
   },
   "look": "Floating wind-chime construct of hanging silver bells that ripple sky-blue sound waves.",
   "color": "#7cc8ff",
-  "quip": "Heals with music. Only knows one song."
+  "quip": "Heals with music. Only knows one song.",
+  "passive": "blessing"
  },
  {
   "id": "tome",
@@ -2586,7 +2712,8 @@
   },
   "look": "Librarian android with emerald plating, reading from a floating cream-paged spellbook that glows.",
   "color": "#1fd17a",
-  "quip": "Spoilers are a spell. A very evil one."
+  "quip": "Spoilers are a spell. A very evil one.",
+  "passive": "quickcharge"
  },
  {
   "id": "nocturne",
@@ -2606,7 +2733,8 @@
   },
   "look": "Great owl made of midnight-blue night sky, its feathers dotted with constellations.",
   "color": "#3b5bff",
-  "quip": "Asks 'who' a lot. Already knows the answer."
+  "quip": "Asks 'who' a lot. Already knows the answer.",
+  "passive": "phaseshift"
  },
  {
   "id": "tide",
@@ -2627,7 +2755,8 @@
   },
   "look": "Flowing water construct shaped like a fountain, deep ocean blue with seafoam crests.",
   "color": "#1f7aff",
-  "quip": "Go with the flow. Or get washed away. Your call."
+  "quip": "Go with the flow. Or get washed away. Your call.",
+  "passive": "regen"
  },
  {
   "id": "tempest",
@@ -2647,7 +2776,8 @@
   },
   "look": "Storm-caller android in a navy cloak, holding a floating orb of electric-yellow lightning.",
   "color": "#ffe62e",
-  "quip": "Brings an umbrella to every fight. For you."
+  "quip": "Brings an umbrella to every fight. For you.",
+  "passive": "laststand"
  },
  {
   "id": "glimmerstag",
@@ -2667,7 +2797,8 @@
   },
   "look": "Stag spirit with a pearl-white glowing body and branching antlers of peach-coral crystal.",
   "color": "#ff9a7a",
-  "quip": "Majestic until it gets its antlers stuck in a doorway."
+  "quip": "Majestic until it gets its antlers stuck in a doorway.",
+  "passive": "rebirth"
  },
  {
   "id": "vital",
@@ -2688,7 +2819,8 @@
   },
   "look": "Rounded white medical drone with a neon-red cross visor and heartbeat lights pulsing down its arms.",
   "color": "#ff2e4d",
-  "quip": "Your vitals are fine. Your choices are not."
+  "quip": "Your vitals are fine. Your choices are not.",
+  "passive": "blessing"
  },
  {
   "id": "mirage",
@@ -2708,7 +2840,8 @@
   },
   "look": "Desert illusionist android with sand-gold plates, flickering turquoise mirror-copies of itself around it.",
   "color": "#2ee6d6",
-  "quip": "Which one is the real one? Not that one."
+  "quip": "Which one is the real one? Not that one.",
+  "passive": "quickcharge"
  },
  {
   "id": "mistwyrm",
@@ -2728,7 +2861,8 @@
   },
   "look": "Small eel-like dragon made of swirling lavender mist with mint-green glowing whiskers.",
   "color": "#c39bff",
-  "quip": "Mostly fog. Partly attitude."
+  "quip": "Mostly fog. Partly attitude.",
+  "passive": "phaseshift"
  },
  {
   "id": "geode",
@@ -2749,7 +2883,8 @@
   },
   "look": "Stocky slate-grey rock golem split open to show glowing citrine crystals inside.",
   "color": "#ffd21f",
-  "quip": "Hard on the outside. Also hard on the inside."
+  "quip": "Hard on the outside. Also hard on the inside.",
+  "passive": "regen"
  },
  {
   "id": "sigil",
@@ -2769,7 +2904,8 @@
   },
   "look": "Android with a hexagonal lens in its chest projecting spinning magenta sigils with teal edges.",
   "color": "#ff2ec4",
-  "quip": "Signs everything with a magic circle. Including takeout orders."
+  "quip": "Signs everything with a magic circle. Including takeout orders.",
+  "passive": "laststand"
  },
  {
   "id": "flutter",
@@ -2789,7 +2925,8 @@
   },
   "look": "A swirling swarm of iridescent glass butterflies that catch and split the light.",
   "color": "#ff7ae0",
-  "quip": "Beautiful, fragile and absolutely furious."
+  "quip": "Beautiful, fragile and absolutely furious.",
+  "passive": "rebirth"
  },
  {
   "id": "plume",
@@ -2810,7 +2947,8 @@
   },
   "look": "Floating construct of layered white feathers around a cobalt-blue light ring.",
   "color": "#2e6bff",
-  "quip": "Softest healer in the game. Sheds everywhere."
+  "quip": "Softest healer in the game. Sheds everywhere.",
+  "passive": "blessing"
  },
  {
   "id": "origami",
@@ -2830,7 +2968,8 @@
   },
   "look": "Slim android whose body folds like paper, conjuring a flock of rose-pink paper cranes.",
   "color": "#ff8ab8",
-  "quip": "Paper cuts, but make it magic."
+  "quip": "Paper cuts, but make it magic.",
+  "passive": "quickcharge"
  },
  {
   "id": "drift",
@@ -2850,7 +2989,8 @@
   },
   "look": "Floating jellyfish spirit with an aqua bell and long hot-pink bioluminescent tendrils.",
   "color": "#ff3da8",
-  "quip": "No brain, no heart, no problem."
+  "quip": "No brain, no heart, no problem.",
+  "passive": "phaseshift"
  },
  {
   "id": "wick",
@@ -2871,7 +3011,8 @@
   },
   "look": "Small ivory candle golem with a calm cyan flame for a head and melted-wax drips.",
   "color": "#3df2ff",
-  "quip": "Burns the midnight oil. Also itself."
+  "quip": "Burns the midnight oil. Also itself.",
+  "passive": "regen"
  },
  {
   "id": "flask",
@@ -2891,7 +3032,8 @@
   },
   "look": "Alchemist android with a bandolier of bubbling lime and purple potion vials.",
   "color": "#a8ff3d",
-  "quip": "Labels are for people who want to live."
+  "quip": "Labels are for people who want to live.",
+  "passive": "laststand"
  },
  {
   "id": "totem",
@@ -2911,7 +3053,8 @@
   },
   "look": "Big bear spirit of amber light, carved with glowing patterns like a living totem pole.",
   "color": "#ffae3d",
-  "quip": "Hugs are free. Escaping costs extra."
+  "quip": "Hugs are free. Escaping costs extra.",
+  "passive": "rebirth"
  },
  {
   "id": "mender",
@@ -2932,7 +3075,8 @@
   },
   "look": "Spider-like bronze repair drone whose eight arms stitch wounds closed with glowing teal thread.",
   "color": "#2ec7b4",
-  "quip": "Fixes anything. Bills you in compliments."
+  "quip": "Fixes anything. Bills you in compliments.",
+  "passive": "blessing"
  },
  {
   "id": "archon",
@@ -2952,7 +3096,8 @@
   },
   "look": "Tall high-mage android with a crown of six spellbooks orbiting its head.",
   "color": "#3d6bff",
-  "quip": "Has read every book. Has opinions about all of them."
+  "quip": "Has read every book. Has opinions about all of them.",
+  "passive": "quickcharge"
  },
  {
   "id": "thunderbird",
@@ -2972,7 +3117,8 @@
   },
   "look": "Huge bird of storm light with lightning crackling along violet-white wings.",
   "color": "#d9b8ff",
-  "quip": "Every flap is a weather warning."
+  "quip": "Every flap is a weather warning.",
+  "passive": "phaseshift"
  },
  {
   "id": "sanctum",
@@ -2993,7 +3139,8 @@
   },
   "look": "Walking shrine construct of white marble with a glowing jade healing pool on its back.",
   "color": "#3dd9a0",
-  "quip": "Open 24/7. No appointment needed."
+  "quip": "Open 24/7. No appointment needed.",
+  "passive": "regen"
  },
  {
   "id": "hexblade",
@@ -3013,7 +3160,8 @@
   },
   "look": "Spellsword android in black plate with a rune-etched blade dripping blood-red void magic.",
   "color": "#ff1f3d",
-  "quip": "The sword talks. Mostly trash."
+  "quip": "The sword talks. Mostly trash.",
+  "passive": "laststand"
  },
  {
   "id": "aurora",
@@ -3033,7 +3181,8 @@
   },
   "look": "A sky whale made of aurora borealis, its body rippling green, pink and purple light.",
   "color": "#7affc0",
-  "quip": "Hums in frequencies only dogs and wizards hear."
+  "quip": "Hums in frequencies only dogs and wizards hear.",
+  "passive": "rebirth"
  },
  {
   "id": "choir",
@@ -3054,7 +3203,8 @@
   },
   "look": "Ring of floating pearl crystal tuning forks that hum healing harmonies in prismatic light.",
   "color": "#f0e6ff",
-  "quip": "Practises 24 hours a day. Neighbours hate it."
+  "quip": "Practises 24 hours a day. Neighbours hate it.",
+  "passive": "blessing"
  },
  {
   "id": "chronos",
@@ -3074,7 +3224,8 @@
   },
   "look": "Time-mage android with a clockwork halo and glowing aquamarine sand falling through an hourglass chest.",
   "color": "#4dffd2",
-  "quip": "Always on time. Usually yesterday's."
+  "quip": "Always on time. Usually yesterday's.",
+  "passive": "quickcharge"
  },
  {
   "id": "solmane",
@@ -3094,7 +3245,8 @@
   },
   "look": "Lion spirit with a mane of erupting solar flares and white-hot eyes.",
   "color": "#ff6a1f",
-  "quip": "King of the jungle. And the sun. Ask him."
+  "quip": "King of the jungle. And the sun. Ask him.",
+  "passive": "phaseshift"
  },
  {
   "id": "lifeline",
@@ -3115,7 +3267,8 @@
   },
   "look": "Slim charcoal android surgeon with six coral-light arms and a halo of tiny med-drones.",
   "color": "#ff6f61",
-  "quip": "Steady hands. All six of them."
+  "quip": "Steady hands. All six of them.",
+  "passive": "regen"
  },
  {
   "id": "voidweaver",
@@ -3140,7 +3293,8 @@
    "name": "Event Horizon",
    "dmg": 55,
    "cd": 4
-  }
+  },
+  "passive": "laststand"
  },
  {
   "id": "starwyrm",
@@ -3165,7 +3319,8 @@
    "name": "Meteor Shower",
    "dmg": 55,
    "cd": 4
-  }
+  },
+  "passive": "rebirth"
  },
  {
   "id": "petalcore",
@@ -3191,7 +3346,8 @@
    "name": "Thorn Storm",
    "dmg": 55,
    "cd": 4
-  }
+  },
+  "passive": "blessing"
  },
  {
   "id": "omnis",
@@ -3216,7 +3372,8 @@
    "name": "Final Word",
    "dmg": 70,
    "cd": 4
-  }
+  },
+  "passive": "quickcharge"
  },
  {
   "id": "dawnbringer",
@@ -3241,7 +3398,8 @@
    "name": "Solar Crown",
    "dmg": 70,
    "cd": 4
-  }
+  },
+  "passive": "phaseshift"
  },
  {
   "id": "eternity",
@@ -3267,7 +3425,8 @@
    "name": "Endless Light",
    "dmg": 70,
    "cd": 4
-  }
+  },
+  "passive": "regen"
  },
  {
   "id": "valor",
@@ -3292,7 +3451,8 @@
    "name": "Last Stand",
    "dmg": 70,
    "cd": 4
-  }
+  },
+  "passive": "momentum"
  },
  {
   "id": "overlord",
@@ -3317,7 +3477,8 @@
    "name": "Worldbreaker",
    "dmg": 90,
    "cd": 4
-  }
+  },
+  "passive": "firststrike"
  },
  {
   "id": "fenrir",
@@ -3342,7 +3503,8 @@
    "name": "Endless Winter",
    "dmg": 70,
    "cd": 4
-  }
+  },
+  "passive": "lifesteal"
  },
  {
   "id": "tyrannos",
@@ -3367,7 +3529,8 @@
    "name": "Tyrant Reign",
    "dmg": 90,
    "cd": 4
-  }
+  },
+  "passive": "executioner"
  },
  {
   "id": "atlas",
@@ -3392,7 +3555,8 @@
    "name": "World Engine",
    "dmg": 90,
    "cd": 4
-  }
+  },
+  "passive": "armor"
  },
  {
   "id": "zenith",
@@ -3417,7 +3581,8 @@
    "name": "Zero Hour",
    "dmg": 70,
    "cd": 4
-  }
+  },
+  "passive": "thorns"
  },
  {
   "id": "grimoire",
@@ -3442,7 +3607,8 @@
    "name": "Final Page",
    "dmg": 70,
    "cd": 4
-  }
+  },
+  "passive": "laststand"
  },
  {
   "id": "paradox",
@@ -3467,7 +3633,8 @@
    "name": "Undo",
    "dmg": 85,
    "cd": 4
-  }
+  },
+  "passive": "quickcharge"
  },
  {
   "id": "celestia",
@@ -3492,7 +3659,8 @@
    "name": "Galaxy Wave",
    "dmg": 90,
    "cd": 4
-  }
+  },
+  "passive": "rebirth"
  },
  {
   "id": "ifrit",
@@ -3517,7 +3685,8 @@
    "name": "Wish of Ash",
    "dmg": 70,
    "cd": 4
-  }
+  },
+  "passive": "phaseshift"
  },
  {
   "id": "seraph",
@@ -3543,7 +3712,8 @@
    "name": "Judgment Light",
    "dmg": 70,
    "cd": 4
-  }
+  },
+  "passive": "blessing"
  },
  {
   "id": "gaia",
@@ -3569,7 +3739,8 @@
    "name": "Overgrowth",
    "dmg": 90,
    "cd": 4
-  }
+  },
+  "passive": "regen"
  },
  {
   "id": "bladestorm",
@@ -3594,7 +3765,8 @@
    "name": "Hurricane Cut",
    "dmg": 65,
    "cd": 4
-  }
+  },
+  "passive": "momentum"
  },
  {
   "id": "ironclad",
@@ -3619,7 +3791,8 @@
    "name": "Fortress Charge",
    "dmg": 65,
    "cd": 4
-  }
+  },
+  "passive": "firststrike"
  },
  {
   "id": "ghostwire",
@@ -3644,7 +3817,8 @@
    "name": "Blackout",
    "dmg": 65,
    "cd": 4
-  }
+  },
+  "passive": "momentum"
  },
  {
   "id": "hydra",
@@ -3669,7 +3843,8 @@
    "name": "Many Heads",
    "dmg": 65,
    "cd": 4
-  }
+  },
+  "passive": "lifesteal"
  },
  {
   "id": "stormclaw",
@@ -3694,7 +3869,8 @@
    "name": "Thunder Maul",
    "dmg": 65,
    "cd": 4
-  }
+  },
+  "passive": "executioner"
  },
  {
   "id": "sandscorch",
@@ -3719,7 +3895,8 @@
    "name": "Sandstorm Sting",
    "dmg": 65,
    "cd": 4
-  }
+  },
+  "passive": "lifesteal"
  },
  {
   "id": "ravager",
@@ -3744,7 +3921,8 @@
    "name": "Siege Barrage",
    "dmg": 65,
    "cd": 4
-  }
+  },
+  "passive": "armor"
  },
  {
   "id": "aegis",
@@ -3769,7 +3947,8 @@
    "name": "Barrier Break",
    "dmg": 65,
    "cd": 4
-  }
+  },
+  "passive": "thorns"
  },
  {
   "id": "havoc",
@@ -3794,7 +3973,8 @@
    "name": "Carpet Bomb",
    "dmg": 65,
    "cd": 4
-  }
+  },
+  "passive": "armor"
  },
  {
   "id": "spellforge",
@@ -3819,7 +3999,8 @@
    "name": "Molten Sigil",
    "dmg": 65,
    "cd": 4
-  }
+  },
+  "passive": "laststand"
  },
  {
   "id": "nebulon",
@@ -3844,7 +4025,8 @@
    "name": "Star Collapse",
    "dmg": 65,
    "cd": 4
-  }
+  },
+  "passive": "quickcharge"
  },
  {
   "id": "hexqueen",
@@ -3869,7 +4051,8 @@
    "name": "Hex Storm",
    "dmg": 65,
    "cd": 4
-  }
+  },
+  "passive": "laststand"
  },
  {
   "id": "kitsune",
@@ -3894,7 +4077,8 @@
    "name": "Nine Tails",
    "dmg": 65,
    "cd": 4
-  }
+  },
+  "passive": "rebirth"
  },
  {
   "id": "glacia",
@@ -3919,7 +4103,8 @@
    "name": "Blizzard Wing",
    "dmg": 65,
    "cd": 4
-  }
+  },
+  "passive": "phaseshift"
  },
  {
   "id": "raiju",
@@ -3944,7 +4129,8 @@
    "name": "Storm Call",
    "dmg": 65,
    "cd": 4
-  }
+  },
+  "passive": "rebirth"
  },
  {
   "id": "lumina",
@@ -3970,7 +4156,8 @@
    "name": "Prism Flare",
    "dmg": 65,
    "cd": 4
-  }
+  },
+  "passive": "blessing"
  },
  {
   "id": "mendforge",
@@ -3996,7 +4183,8 @@
    "name": "Overhaul",
    "dmg": 65,
    "cd": 4
-  }
+  },
+  "passive": "regen"
  },
  {
   "id": "coralheart",
@@ -4022,7 +4210,8 @@
    "name": "Coral Crush",
    "dmg": 65,
    "cd": 4
-  }
+  },
+  "passive": "blessing"
  },
  {
   "id": "deadeye",
@@ -4042,7 +4231,8 @@
   },
   "look": "Sniper android with a long red rail rifle and a single scope eye.",
   "color": "#ff5a5a",
-  "quip": "Never misses. Sometimes forgets to shoot."
+  "quip": "Never misses. Sometimes forgets to shoot.",
+  "passive": "firststrike"
  },
  {
   "id": "bruiser",
@@ -4062,7 +4252,8 @@
   },
   "look": "Boxer android with huge orange piston gloves.",
   "color": "#ffa53d",
-  "quip": "Floats like a brick."
+  "quip": "Floats like a brick.",
+  "passive": "momentum"
  },
  {
   "id": "kunai",
@@ -4082,7 +4273,8 @@
   },
   "look": "Ninja android throwing glowing violet kunai.",
   "color": "#c43dff",
-  "quip": "Silent. Except the kunai."
+  "quip": "Silent. Except the kunai.",
+  "passive": "firststrike"
  },
  {
   "id": "paladin",
@@ -4102,7 +4294,8 @@
   },
   "look": "Knight android with a glowing pale-gold halberd.",
   "color": "#ffe9a3",
-  "quip": "Polishes the armour between turns."
+  "quip": "Polishes the armour between turns.",
+  "passive": "momentum"
  },
  {
   "id": "falcon",
@@ -4122,7 +4315,8 @@
   },
   "look": "Sleek mechanical falcon with sky-blue jet wings.",
   "color": "#3dc4ff",
-  "quip": "Fast. Smug about it."
+  "quip": "Fast. Smug about it.",
+  "passive": "executioner"
  },
  {
   "id": "smilodon",
@@ -4142,7 +4336,8 @@
   },
   "look": "Mechanical sabre-tooth cat with long golden fangs.",
   "color": "#ffc43d",
-  "quip": "Built for the ice age. Wrong era."
+  "quip": "Built for the ice age. Wrong era.",
+  "passive": "lifesteal"
  },
  {
   "id": "octopod",
@@ -4162,7 +4357,8 @@
   },
   "look": "Mechanical octopus with eight hot-pink neon arms.",
   "color": "#ff3da8",
-  "quip": "Eight arms, all busy."
+  "quip": "Eight arms, all busy.",
+  "passive": "executioner"
  },
  {
   "id": "bison",
@@ -4182,7 +4378,8 @@
   },
   "look": "Armoured mechanical bison with bronze plating.",
   "color": "#b07a45",
-  "quip": "Takes the scenic route. Through walls."
+  "quip": "Takes the scenic route. Through walls.",
+  "passive": "lifesteal"
  },
  {
   "id": "drillbot",
@@ -4202,7 +4399,8 @@
   },
   "look": "Stocky mining mech with a giant yellow drill arm.",
   "color": "#ffd23d",
-  "quip": "Loves boring work."
+  "quip": "Loves boring work.",
+  "passive": "thorns"
  },
  {
   "id": "gunship",
@@ -4222,7 +4420,8 @@
   },
   "look": "Small attack-copter mech with green rotor lights.",
   "color": "#3dff8a",
-  "quip": "Hovers. Judges. Shoots."
+  "quip": "Hovers. Judges. Shoots.",
+  "passive": "armor"
  },
  {
   "id": "tankette",
@@ -4242,7 +4441,8 @@
   },
   "look": "Tiny olive-green tank mech with an oversized cannon.",
   "color": "#9bb36b",
-  "quip": "Small. Loud. Proud."
+  "quip": "Small. Loud. Proud.",
+  "passive": "thorns"
  },
  {
   "id": "pulsar",
@@ -4262,7 +4462,8 @@
   },
   "look": "Laser turret mech on walking legs, violet beam core.",
   "color": "#a33dff",
-  "quip": "Has one move. It's a good one."
+  "quip": "Has one move. It's a good one.",
+  "passive": "armor"
  },
  {
   "id": "runesmith",
@@ -4282,7 +4483,8 @@
   },
   "look": "Android carving glowing orange runes into the air with a chisel.",
   "color": "#ff7a3d",
-  "quip": "Writes in a font only he can read."
+  "quip": "Writes in a font only he can read.",
+  "passive": "quickcharge"
  },
  {
   "id": "stormcaller",
@@ -4302,7 +4504,8 @@
   },
   "look": "Android mage holding a staff that crackles with blue lightning.",
   "color": "#3d9bff",
-  "quip": "Forecast: you, getting hit."
+  "quip": "Forecast: you, getting hit.",
+  "passive": "laststand"
  },
  {
   "id": "shade",
@@ -4322,7 +4525,8 @@
   },
   "look": "Shadow-mage android in robes of drifting purple smoke.",
   "color": "#7a3dff",
-  "quip": "Prefers the dark. Bad with stairs."
+  "quip": "Prefers the dark. Bad with stairs.",
+  "passive": "quickcharge"
  },
  {
   "id": "alchemist",
@@ -4342,7 +4546,8 @@
   },
   "look": "Android chemist with a bandolier of glowing lime potions.",
   "color": "#d4ff3d",
-  "quip": "Ninety percent sure that one is safe."
+  "quip": "Ninety percent sure that one is safe.",
+  "passive": "laststand"
  },
  {
   "id": "nightowl",
@@ -4362,7 +4567,8 @@
   },
   "look": "Owl made of amber starlight with glowing moon eyes.",
   "color": "#ffb03d",
-  "quip": "Stays up late. Every night."
+  "quip": "Stays up late. Every night.",
+  "passive": "phaseshift"
  },
  {
   "id": "dreamjelly",
@@ -4382,7 +4588,8 @@
   },
   "look": "Floating jellyfish of soft pink light trailing glowing tendrils.",
   "color": "#ff9fe0",
-  "quip": "Floats through life. Literally."
+  "quip": "Floats through life. Literally.",
+  "passive": "rebirth"
  },
  {
   "id": "wavesprite",
@@ -4402,7 +4609,8 @@
   },
   "look": "Little water spirit riding a curling wave of cyan light.",
   "color": "#3dd9ff",
-  "quip": "Always making waves."
+  "quip": "Always making waves.",
+  "passive": "phaseshift"
  },
  {
   "id": "ashwolf",
@@ -4422,7 +4630,8 @@
   },
   "look": "Wolf made of glowing embers and drifting ash.",
   "color": "#ff4d3d",
-  "quip": "All bark. Also a lot of bite."
+  "quip": "All bark. Also a lot of bite.",
+  "passive": "rebirth"
  },
  {
   "id": "cauldron",
@@ -4443,7 +4652,8 @@
   },
   "look": "Bubbling cauldron construct on iron legs, glowing green brew.",
   "color": "#3dff9b",
-  "quip": "Soup of the day: you, but better."
+  "quip": "Soup of the day: you, but better.",
+  "passive": "regen"
  },
  {
   "id": "prismheart",
@@ -4464,7 +4674,8 @@
   },
   "look": "Floating prism-crystal construct splitting light into rainbows.",
   "color": "#ff3df0",
-  "quip": "Sees every side of you."
+  "quip": "Sees every side of you.",
+  "passive": "blessing"
  },
  {
   "id": "orrery",
@@ -4485,7 +4696,8 @@
   },
   "look": "Brass orrery construct with glowing planets circling it.",
   "color": "#ffd36b",
-  "quip": "Knows where every planet is. Not the remote."
+  "quip": "Knows where every planet is. Not the remote.",
+  "passive": "regen"
  },
  {
   "id": "moss",
@@ -4506,6 +4718,7 @@
   },
   "look": "Mossy stone golem construct sprouting glowing green ferns.",
   "color": "#7dff3d",
-  "quip": "Slow to anger. Slow to everything."
+  "quip": "Slow to anger. Slow to everything.",
+  "passive": "blessing"
  }
 ]

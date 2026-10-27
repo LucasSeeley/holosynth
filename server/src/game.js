@@ -171,7 +171,7 @@ export function pickQuests(userId, t, can, rand = seeded((userId * 2654435761) ^
 // Beat them for an Overload pack: 1 in 5 hold that Legendary (the plain card, no fusion), the rest a guaranteed Epic.
 export const HUNT_MS = 8 * 60 * 60 * 1000;
 export const huntStart = t => Math.floor(t / HUNT_MS) * HUNT_MS;
-export const HUNT_FUSION = { h: 3, b: 3, s: 3, x: true };
+export const HUNT_FUSION = { h: 3, b: 3, s: 3, x: true, p: true };
 export const HUNT_GOLD = 5000, HUNT_XP = 1000;   // also paid for a win, on top of the pack
 const LEGENDS = CARDS.filter(c => c.rarity === 'Legendary').map(c => c.id);
 export function huntFoes(t) {
@@ -243,14 +243,15 @@ export function rankTable(real, week, rank, t) {
   return rows.map((r, i) => ({ ...r, place: i + 1 }));
 }
 export const botName = (rand = Math.random) => BOT_NAMES[Math.floor(rand() * BOT_NAMES.length)] + (rand() < 0.5 ? '' : '_' + Math.floor(rand() * 99));
-// Computer players' fusions by rank: none at the bottom, fully fused (second special unlocked) at Legend, some holo near the top.
+// Computer players' fusions by rank: none at the bottom, fully fused (second special unlocked) at Legend, some holo near the top,
+// passives from Champion up.
 export function rankedFusions(rank, team, rand = Math.random) {
   const [lo, hi] = [[0, 0], [0, 0], [0, 1], [0, 1], [1, 2], [1, 2], [2, 3], [3, 3]][rank];
   const lvl = () => lo + Math.floor(rand() * (hi - lo + 1));
   const out = {};
   for (const id of team) {
-    const f = { h: lvl(), b: lvl(), s: lvl(), x: rank >= 5 && !!SECOND[id], o: rand() < [0, 0, 0, 0, 0, 0.1, 0.33, 0.5][rank] };
-    if (f.h || f.b || f.s || f.x || f.o) out[id] = f;
+    const f = { h: lvl(), b: lvl(), s: lvl(), x: rank >= 5 && !!SECOND[id], o: rand() < [0, 0, 0, 0, 0, 0.1, 0.33, 0.5][rank], p: rank >= 4 };
+    if (f.h || f.b || f.s || f.x || f.o || f.p) out[id] = f;
   }
   return out;
 }
@@ -261,12 +262,25 @@ export function rankedTeam(rank, rand = Math.random) {
 }
 
 // ---- fusion ----
-// Fuse 5 spare copies into one copy for +10% HP, +20% basic or +10% special (max 3 each).
+// Fuse spare copies into one copy for +10% HP, +20% basic or +10% special (max 3 each): 1, 3, then 5 copies.
 // Epic and Legendary cards can also unlock a second, stronger special (10 copies + 10,000 gold); the special bonus applies to it too.
-export const FUSE_COST = 5, FUSE_MAX = 3, SECOND_COST = { copies: 10, gold: 10000 };
+export const FUSE_COPIES = [1, 3, 5], FUSE_MAX = 3, SECOND_COST = { copies: 10, gold: 10000 };
 export const FUSE_GOLD = [1000, 2500, 5000];   // gold for a stat's 1st, 2nd and 3rd fusion
 export const SECOND = Object.fromEntries(CARDS.filter(c => c.special2).map(c => [c.id, c.special2]));   // Epic & Legendary only
-// f = { h, b, s, x, o }: fusion levels for HP, basic, special, whether the second special is unlocked, and holo.
+// Every card has a passive (cards.json "passive"), switched on by fusion for 1 copy + 2,500 gold. Values by rarity
+// (Common, Rare, Epic, Legendary), in % except Quick Charge (turns off the special's cooldown).
+export const PASSIVE_COST = { copies: 1, gold: 2500 };
+export const PASSIVES = {
+  momentum: ['Momentum', [5, 7, 9, 12]], firststrike: ['First Strike', [25, 35, 45, 60]],
+  lifesteal: ['Lifesteal', [15, 20, 25, 30]], executioner: ['Executioner', [20, 30, 40, 50]],
+  armor: ['Armor', [8, 10, 12, 15]], thorns: ['Thorns', [10, 15, 20, 25]],
+  quickcharge: ['Quick Charge', [1, 1, 1, 1]], laststand: ['Last Stand', [20, 30, 40, 50]],
+  phaseshift: ['Phase Shift', [40, 50, 60, 75]], rebirth: ['Rebirth', [10, 15, 20, 25]],
+  regen: ['Regen', [4, 5, 6, 8]], blessing: ['Blessing', [15, 20, 25, 30]],
+};
+const RARITY_I = { Common: 0, Rare: 1, Epic: 2, Legendary: 3 };
+export const passiveOf = id => { const c = BY_ID[id]; return { kind: c.passive, name: PASSIVES[c.passive][0], v: PASSIVES[c.passive][1][RARITY_I[c.rarity]] }; };
+// f = { h, b, s, x, o, p }: fusion levels for HP, basic, special, whether the second special is unlocked, holo, passive on.
 // f.o = holo: +20% on top.
 const holoX = f => (f?.o ? HOLO_BOOST : 1);
 export const fusedHp = (id, f) => Math.round(BY_ID[id].hp * (1 + 0.1 * (f?.h || 0)) * holoX(f));
@@ -286,7 +300,7 @@ export function newBattle(teamA, teamB, rand = Math.random, fusA = {}, fusB = {}
     const f = fus[id];
     if (!f) return { id, hp: BY_ID[id].hp, cd: 0 };
     const max = fusedHp(id, f);
-    return { id, hp: max, cd: 0, max, f, ...(f.x && SECOND[id] ? { cd2: 0 } : {}) };
+    return { id, hp: max, cd: 0, max, f, ...(f.x && SECOND[id] ? { cd2: 0 } : {}), ...(f.p ? { ps: BY_ID[id].passive } : {}) };
   });
   return {
     teams: [side(teamA, fusA), side(teamB, fusB)],
@@ -298,6 +312,22 @@ export function newBattle(teamA, teamB, rand = Math.random, fusA = {}, fusB = {}
 }
 
 const alive = u => u.hp > 0;
+const pv = u => PASSIVES[u.ps][1][RARITY_I[BY_ID[u.id].rarity]];   // the unit's passive value (only call when u.ps is set)
+const low = u => u.hp < unitMax(u) * 0.3;
+
+// Damage `a` would deal to `t` with `move` right now, passives included. No side effects (the AI uses it too).
+function hitFor(a, t, move) {
+  const card = BY_ID[a.id];
+  let pct = 100;
+  if (a.ps === 'firststrike' && !a.hit) pct += pv(a);
+  if (a.ps === 'momentum' && move === 'basic') pct += pv(a) * (a.mom || 0);
+  if (a.ps === 'executioner' && low(t)) pct += pv(a);
+  if (a.ps === 'laststand' && low(a)) pct += pv(a);
+  let dmg = Math.round(fusedDmg(a.id, a.f, move) * pct / 100 * (beats(card.cls, BY_ID[t.id].cls) ? 1.2 : 1));
+  if (t.ps === 'armor') dmg = Math.round(dmg * (1 - pv(t) / 100));
+  if (t.ps === 'phaseshift' && !t.ph) dmg = Math.round(dmg * (1 - pv(t) / 100));
+  return dmg;
+}
 
 // Once every living card on a side has acted, all of them are ready again.
 function refreshActed(state, p) {
@@ -322,26 +352,49 @@ export function applyMove(state, p, from, move, to) {
   if (!target || !alive(target)) throw new Error(heal ? 'Pick one of your cards that is still standing.' : 'Pick a target that is still standing.');
 
   let dmg = 0, healed = 0, adv = false;
+  const pas = [];   // passives that kicked in: { p: side, i: card, n: name, v: amount }
+  const mine = (u, side, i, v) => pas.push({ p: side, i, n: PASSIVES[u.ps][0], v });
+  const heal_ = (u, amount) => { const h = Math.min(amount, unitMax(u) - u.hp); u.hp += h; return h; };   // never above full HP
   if (heal) {
-    healed = Math.min(fusedDmg(attacker.id, attacker.f, 'special'), unitMax(target) - target.hp);   // never above full HP
-    target.hp += healed;
+    let amount = fusedDmg(attacker.id, attacker.f, 'special');
+    if (attacker.ps === 'blessing') { amount = Math.round(amount * (1 + pv(attacker) / 100)); mine(attacker, p, from, 0); }
+    healed = heal_(target, amount);
   } else {
-    const base = fusedDmg(attacker.id, attacker.f, move);
     adv = beats(card.cls, BY_ID[target.id].cls);
-    dmg = Math.round(base * (adv ? 1.2 : 1));
+    // checked before the hit lands, the same way hitFor does
+    const boosted = { firststrike: !attacker.hit, momentum: move === 'basic' && attacker.mom > 0, executioner: low(target), laststand: low(attacker) }[attacker.ps];
+    const guarded = target.ps === 'armor' || (target.ps === 'phaseshift' && !target.ph);
+    dmg = hitFor(attacker, target, move);
+    if (boosted) mine(attacker, p, from, 0);
+    if (guarded) mine(target, 1 - p, to, 0);
+    if (target.ps === 'phaseshift') target.ph = true;
     target.hp = Math.max(0, target.hp - dmg);
+    if (target.hp === 0 && target.ps === 'rebirth' && !target.rb) {
+      target.rb = true;
+      target.hp = Math.max(1, Math.round(unitMax(target) * pv(target) / 100));
+      mine(target, 1 - p, to, target.hp);
+    }
+    if (target.ps === 'thorns' && dmg > 0) {   // thorns can't knock the attacker out
+      const back = Math.min(Math.round(dmg * pv(target) / 100), attacker.hp - 1);
+      if (back > 0) { attacker.hp -= back; mine(target, p, from, -back); }   // shown on the attacker, who loses the HP
+    }
+    if (attacker.ps === 'lifesteal' && dmg > 0) { const h = heal_(attacker, Math.round(dmg * pv(attacker) / 100)); if (h) mine(attacker, p, from, h); }
+    if (attacker.ps === 'momentum') attacker.mom = move === 'basic' ? Math.min(3, (attacker.mom || 0) + 1) : attacker.mom;
+    attacker.hit = true;
   }
+  if (attacker.ps === 'regen') { const h = heal_(attacker, Math.round(unitMax(attacker) * pv(attacker) / 100)); if (h) mine(attacker, p, from, h); }
 
-  // Cooldown counts the card's own later actions.
-  attacker.cd = move === 'special' ? card.special.cd : Math.max(0, attacker.cd - 1);
-  if (attacker.cd2 !== undefined) attacker.cd2 = move === 'special2' ? SECOND[attacker.id].cd : Math.max(0, attacker.cd2 - 1);
+  // Cooldown counts the card's own later actions. Quick Charge: specials come back one action sooner.
+  const qc = attacker.ps === 'quickcharge' ? 1 : 0;
+  attacker.cd = move === 'special' ? Math.max(1, card.special.cd - qc) : Math.max(0, attacker.cd - 1);
+  if (attacker.cd2 !== undefined) attacker.cd2 = move === 'special2' ? Math.max(1, SECOND[attacker.id].cd - qc) : Math.max(0, attacker.cd2 - 1);
 
   state.acted[p][from] = true;
   refreshActed(state, p);
   refreshActed(state, 1 - p);
   state.moves = (state.moves || 0) + 1;   // total so far; the log is capped, so the app uses this to spot new moves
-  state.log.push(heal ? { p, from, to, move, dmg: 0, heal: healed, adv: false, ko: false }
-                      : { p, from, to, move, dmg, adv, ko: target.hp === 0 });
+  state.log.push(heal ? { p, from, to, move, dmg: 0, heal: healed, adv: false, ko: false, ...(pas.length ? { pas } : {}) }
+                      : { p, from, to, move, dmg, adv, ko: target.hp === 0, ...(pas.length ? { pas } : {}) });
   if (state.log.length > 30) state.log.shift();
 
   if (!foe.some(alive)) state.winner = p;
@@ -356,7 +409,7 @@ function moveDamage(state, p, from, move, to) {
   const card = BY_ID[a.id];
   if (move === 'special' && (a.cd > 0 || heals(card, move))) return null;
   if (move === 'special2' && !(a.cd2 === 0)) return null;
-  return Math.round(fusedDmg(a.id, a.f, move) * (beats(card.cls, BY_ID[t.id].cls) ? 1.2 : 1));
+  return hitFor(a, t, move);
 }
 
 // Computer opponent: knocks a card out if it can, otherwise deals the most damage it can, hitting the weakest card on ties.

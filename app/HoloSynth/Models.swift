@@ -22,6 +22,36 @@ struct Card: Decodable, Identifiable, Hashable {
     let look: String
     let color: String   // character's neon colour, "#rrggbb"; tints the card face
     let quip: String    // one-line joke printed small at the bottom of the card
+    let passive: String?    // passive kind (see Passives), switched on by fusion
+}
+
+// Same table as the server's PASSIVES: name, what it does ("{}" = the value), values by rarity (Common, Rare, Epic, Legendary).
+enum Passives {
+    static let all: [String: (name: String, text: String, values: [Int])] = [
+        "momentum": ("Momentum", "Each basic hit adds +{}% to its next basic (stacks 3 times)", [5, 7, 9, 12]),
+        "firststrike": ("First Strike", "Its first attack of the battle deals +{}% damage", [25, 35, 45, 60]),
+        "lifesteal": ("Lifesteal", "Heals {}% of the damage it deals", [15, 20, 25, 30]),
+        "executioner": ("Executioner", "+{}% damage to targets under 30% HP", [20, 30, 40, 50]),
+        "armor": ("Armor", "Takes {}% less damage", [8, 10, 12, 15]),
+        "thorns": ("Thorns", "Reflects {}% of damage taken back at the attacker", [10, 15, 20, 25]),
+        "quickcharge": ("Quick Charge", "Special cooldown 1 turn shorter", [1, 1, 1, 1]),
+        "laststand": ("Last Stand", "+{}% damage while under 30% HP", [20, 30, 40, 50]),
+        "phaseshift": ("Phase Shift", "The first hit it takes deals {}% less", [40, 50, 60, 75]),
+        "rebirth": ("Rebirth", "Once per battle, survives a knockout with {}% HP", [10, 15, 20, 25]),
+        "regen": ("Regen", "Heals {}% of its max HP each time it acts", [4, 5, 6, 8]),
+        "blessing": ("Blessing", "Its heals are {}% stronger", [15, 20, 25, 30]),
+    ]
+
+    // This card's passive: name, description, and the short value shown on the card ("30%", "−1").
+    static func of(_ card: Card) -> (name: String, text: String, short: String)? {
+        guard let k = card.passive, let p = all[k] else { return nil }
+        let v = p.values[["Common", "Rare", "Epic", "Legendary"].firstIndex(of: card.rarity) ?? 0]
+        return (p.name, p.text.replacingOccurrences(of: "{}", with: "\(v)"), k == "quickcharge" ? "−1" : "\(v)%")
+    }
+    static func value(_ card: Card) -> Double {
+        guard let k = card.passive, let p = all[k] else { return 0 }
+        return Double(p.values[["Common", "Rare", "Epic", "Legendary"].firstIndex(of: card.rarity) ?? 0])
+    }
 }
 
 enum CardBook {
@@ -302,6 +332,10 @@ struct Unit: Decodable, Equatable {
     let max: Int?
     let f: Fusion?
     var cd2: Int?
+    let ps: String?             // its passive, when unlocked
+    let hit: Bool?              // has attacked (First Strike)
+    let mom: Int?               // Momentum stacks
+    let ph: Bool?               // Phase Shift used
 }
 
 // Fusion levels: h/b/s = HP, basic, special (0-3 each); x = second special unlocked.
@@ -309,7 +343,9 @@ struct Fusion: Decodable, Equatable, Hashable {
     var h = 0, b = 0, s = 0
     var x = false
     var o: Bool? = nil          // holo copy: rainbow foil, +20% to every stat
-    var total: Int { h + b + s + (x ? 1 : 0) }
+    var p: Bool? = nil          // passive unlocked
+    var total: Int { h + b + s + (x ? 1 : 0) + (p == true ? 1 : 0) }
+    var passive: Bool { p == true }
     var holo: Bool { o == true }
     static let holoCopy = Fusion(o: true)
 }
@@ -320,7 +356,8 @@ struct FusedCopy: Decodable, Equatable, Identifiable, Hashable {
     let h: Int, b: Int, s: Int
     let x: Bool
     let o: Bool?
-    var fusion: Fusion { Fusion(h: h, b: b, s: s, x: x, o: o) }
+    let p: Bool?
+    var fusion: Fusion { Fusion(h: h, b: b, s: s, x: x, o: o, p: p) }
 }
 
 // Same sums as the server: HP +10%, basic +20%, special (and second special) +10% per level.
@@ -348,7 +385,10 @@ struct LogEntry: Decodable, Equatable {
     let heal: Int?              // a Mystic's heal: `to` is on the mover's own side
     let adv: Bool
     let ko: Bool
+    let pas: [PassiveHit]?      // passives that kicked in on this move
 }
+// A passive kicking in: card `i` on side `p`; `v` = HP it gained (+) or lost (−), or for Rebirth the HP it came back with.
+struct PassiveHit: Decodable, Equatable { let p: Int; let i: Int; let n: String; let v: Int }
 
 struct BattleState: Decodable, Equatable {
     var teams: [[Unit]]

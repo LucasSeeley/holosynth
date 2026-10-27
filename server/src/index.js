@@ -3,7 +3,7 @@
 import {
   BY_ID, STARTER_TEAM, START_GOLD, PACK_COST, PACK_COSTS, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN_XP, CAMPAIGN, CHAPTERS, NEW_CARD_AFTER, OPEN_LEVELS,
   levelFor, levelStart, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, dailyShop, SHOP_PRICES, huntFoes, huntStart, HUNT_MS, huntBattle, huntPack, HUNT_GOLD, HUNT_XP, QUESTS, QUEST_PAY, QUEST_BONUS, pickQuests, RANKS, RANK_REWARDS, RANKED_WIN, RANKED_LOSS, RANKED_GOLD, RANKED_XP, WEEK_MS, weekStart, seasonOf, seasonEnd, rankMove, rankTable, rankedTeam, botName, rankedFusions,
-  gauntletEnemies, gauntletBattle, gauntletHeal, fusedHp, FUSE_COST, FUSE_GOLD, FUSE_MAX, SECOND, SECOND_COST, gauntletGold, GAUNTLET_PACK_EVERY, newCampaignBattle, applyMove, aiMove,
+  gauntletEnemies, gauntletBattle, gauntletHeal, fusedHp, FUSE_COPIES, FUSE_GOLD, FUSE_MAX, SECOND, SECOND_COST, PASSIVE_COST, gauntletGold, GAUNTLET_PACK_EVERY, newCampaignBattle, applyMove, aiMove,
 } from './game.js';
 
 class HttpError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
@@ -57,32 +57,34 @@ const pendingChoice = (prog, owned) => {
 const fusedRows = async (db, userId, cardId) => (await (cardId
   ? db.prepare('SELECT * FROM fused WHERE user_id = ? AND card_id = ?').bind(userId, cardId)
   : db.prepare('SELECT * FROM fused WHERE user_id = ?').bind(userId)).all()).results;
-const fusionScore = r => r.h + r.b + r.s + r.x * 3 + (r.o ? 4 : 0);   // a holo copy beats a lightly fused one
-const fusedView = r => ({ id: r.id, card: r.card_id, h: r.h, b: r.b, s: r.s, x: !!r.x, o: !!r.o });
+const fusionScore = r => r.h + r.b + r.s + r.x * 3 + (r.p ? 2 : 0) + (r.o ? 4 : 0);   // a holo copy beats a lightly fused one
+const fusedView = r => ({ id: r.id, card: r.card_id, h: r.h, b: r.b, s: r.s, x: !!r.x, o: !!r.o, p: !!r.p });
 // The best fused copy of each card a player owns: what their battles use.
 async function fusionsFor(db, userId) {
   const best = {};
   for (const r of await fusedRows(db, userId)) if (!best[r.card_id] || fusionScore(r) > fusionScore(best[r.card_id])) best[r.card_id] = r;
-  return Object.fromEntries(Object.entries(best).map(([id, r]) => [id, { h: r.h, b: r.b, s: r.s, x: !!r.x, o: !!r.o }]));
+  return Object.fromEntries(Object.entries(best).map(([id, r]) => [id, { h: r.h, b: r.b, s: r.s, x: !!r.x, o: !!r.o, p: !!r.p }]));
 }
 // Fuse spare (plain) copies into your best normal copy of a card, or your best holo copy when `holo` is set
 // (a normal copy becomes a fused copy the first time).
 async function fuseCard(req, db, user) {
   const { card = '', stat = '', holo = false } = await body(req);
-  if (!BY_ID[card] || !['h', 'b', 's', 'x'].includes(stat)) throw new HttpError(400, 'Pick a card and a stat to fuse.');
+  if (!BY_ID[card] || !['h', 'b', 's', 'x', 'p'].includes(stat)) throw new HttpError(400, 'Pick a card and a stat to fuse.');
   const count = (await db.prepare('SELECT count FROM collection WHERE user_id = ? AND card_id = ?').bind(user.id, card).first())?.count ?? 0;
   const rows = await fusedRows(db, user.id, card);
   const target = rows.filter(r => !!r.o === !!holo).sort((a, b) => fusionScore(b) - fusionScore(a))[0];
   if (holo && !target) throw new HttpError(400, "You don't have a holo copy of that card.");
-  const need = stat === 'x' ? SECOND_COST.copies : FUSE_COST;
+  const need = stat === 'x' ? SECOND_COST.copies : stat === 'p' ? PASSIVE_COST.copies : FUSE_COPIES[Math.min(target?.[stat] ?? 0, FUSE_MAX - 1)];
   const plain = count - rows.length;                  // copies not already fused
   if (plain < need + (target ? 0 : 1)) throw new HttpError(400, `You need ${need} spare copies to fuse.`);
   if (stat === 'x') {
     if (!SECOND[card]) throw new HttpError(400, 'Only Epic and Legendary cards have a second special.');
     if (target?.x) throw new HttpError(400, 'Already unlocked.');
     if (user.gold < SECOND_COST.gold) throw new HttpError(400, `You need ${SECOND_COST.gold.toLocaleString('en-US')} gold.`);
+  } else if (stat === 'p') {
+    if (target?.p) throw new HttpError(400, 'Already unlocked.');
   } else if ((target?.[stat] ?? 0) >= FUSE_MAX) throw new HttpError(400, 'That stat is already maxed.');
-  const gold = stat === 'x' ? SECOND_COST.gold : FUSE_GOLD[target?.[stat] ?? 0];
+  const gold = stat === 'x' ? SECOND_COST.gold : stat === 'p' ? PASSIVE_COST.gold : FUSE_GOLD[target?.[stat] ?? 0];
   if (user.gold < gold) throw new HttpError(400, `You need ${gold.toLocaleString('en-US')} gold.`);
   const paid = await db.prepare('UPDATE users SET gold = gold - ? WHERE id = ? AND gold >= ?').bind(gold, user.id, gold).run();
   if (!paid.meta.changes) throw new HttpError(400, `You need ${gold.toLocaleString('en-US')} gold.`);
@@ -93,7 +95,7 @@ async function fuseCard(req, db, user) {
     throw new HttpError(400, `You need ${need} spare copies to fuse.`);
   }
   const writes = [];
-  if (target) writes.push(db.prepare(`UPDATE fused SET ${stat} = ${stat === 'x' ? 1 : `${stat} + 1`} WHERE id = ?`).bind(target.id));
+  if (target) writes.push(db.prepare(`UPDATE fused SET ${stat} = ${stat === 'x' || stat === 'p' ? 1 : `${stat} + 1`} WHERE id = ?`).bind(target.id));
   else writes.push(db.prepare(`INSERT INTO fused (user_id, card_id, ${stat}) VALUES (?, ?, 1)`).bind(user.id, card));
   writes.push(questEvent(db, user.id, 'fuse'));
   await db.batch(writes);
@@ -112,7 +114,7 @@ async function questsFor(db, user, prog, collection, extra, shopped) {
   if (!row || row.day !== day) {
     const can = ['spin', 'pack', 'shop', 'wins'];
     if (prog.cleared + 2 <= OPEN_LEVELS) can.push('levels');
-    if (Object.values(collection).some(n => n > FUSE_COST)) can.push('fuse');
+    if (Object.values(collection).some(n => n > 1)) can.push('fuse');
     if (prog.cleared >= NEW_CARD_AFTER[1] && extra.friends > 0) can.push('friend');
     if (JSON.parse(user.team).length >= 3) can.push('streak', 'hunt');
     const base = { wins: prog.wins, packs: prog.packs, cleared: prog.cleared };

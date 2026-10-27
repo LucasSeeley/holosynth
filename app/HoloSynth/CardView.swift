@@ -55,6 +55,19 @@ struct CardView: View {
                             .foregroundColor(Self.goldText)
                     }
                 }
+                if fusion?.passive == true, let ps = Passives.of(card) {
+                    HStack(spacing: w * 0.02) {
+                        Image(systemName: "diamond.fill").font(.system(size: w * 0.035))
+                        Text(ps.name).lineLimit(1).minimumScaleFactor(0.6)
+                        Spacer(minLength: 2)
+                        Text(ps.short).font(.system(size: w * 0.043, design: .monospaced))
+                    }
+                    .font(.system(size: w * 0.044, weight: .bold)).foregroundColor(Theme.cyan)
+                    .padding(.horizontal, w * 0.025).padding(.vertical, w * 0.012)
+                    .background(Theme.cyan.opacity(0.12), in: RoundedRectangle(cornerRadius: w * 0.03))
+                    .overlay(RoundedRectangle(cornerRadius: w * 0.03).stroke(Theme.cyan.opacity(0.55), lineWidth: 1))
+                    .accessibilityLabel("Passive: \(ps.name), \(ps.text)")
+                }
                 Spacer(minLength: 0)
                 Text(card.quip)
                     .font(.system(size: w * 0.036).italic())

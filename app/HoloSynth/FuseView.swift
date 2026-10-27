@@ -1,8 +1,9 @@
 import SwiftUI
 
 // Fusion (v1.2): tap a card in the collection to see it big; Fuse spends spare copies on your best copy of it.
-// HP +10%, basic +20%, special +10% per fusion (5 copies each, max 3 per stat). Epic & Legendary cards can also unlock a
-// stronger second special for 10 copies + 10,000 gold. The server checks the costs; these screens only show them.
+// HP +10%, basic +20%, special +10% per fusion (1, 3, then 5 copies; max 3 per stat). Every card can switch on its passive
+// for 1 copy + 2,500 gold; Epic & Legendary cards can also unlock a stronger second special for 10 copies + 10,000 gold.
+// The server checks the costs; these screens only show them.
 struct FuseSheet: View {
     @EnvironmentObject var store: GameStore
     let card: Card
@@ -15,7 +16,7 @@ struct FuseSheet: View {
     @State private var result: (line: String, before: Int, after: Int, stat: String)?
 
     private static let gold = Color(hex: 0xFFD77A)
-    private let cost = 5, maxLevel = 3, secondCopies = 10, secondGold = 10_000
+    private let fuseCopies = [1, 3, 5], maxLevel = 3, secondCopies = 10, secondGold = 10_000, passiveGold = 2_500
     private let fuseGold = [1000, 2500, 5000]   // a stat's 1st, 2nd and 3rd fusion (same as the server)
 
     private var fusion: Fusion? { holo ? store.profile?.holo(card.id) : store.profile?.fusion(card.id) }
@@ -47,7 +48,7 @@ struct FuseSheet: View {
             .font(.barlow(14)).foregroundColor(Theme.muted)
             Button { fusing = true } label: { Label("Fuse", systemImage: "sparkles") }.buttonStyle(GoldButton())
                 .padding(.horizontal, 24)
-            Text("Fusing uses \(cost) spare copies and some gold").font(.barlow(13)).foregroundColor(Theme.muted)
+            Text("Fusing uses spare copies and some gold").font(.barlow(13)).foregroundColor(Theme.muted)
             Spacer(minLength: 0)
         }
         .padding(.vertical, 20)
@@ -68,13 +69,14 @@ struct FuseSheet: View {
                     HStack(spacing: 14) {
                         CardView(card: card, fusion: fusion).frame(width: 120)
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("\(cost) copies + gold per fusion").sectionTitle()
+                            Text("Copies + gold per fusion").sectionTitle()
                             (Text("You have ") + Text("\(spare) spare").font(.chakra(14)).foregroundColor(Theme.fg) + Text(" copies."))
                                 .font(.barlow(14)).foregroundColor(Theme.muted)
                             Text("Each stat can be fused \(maxLevel) times.").font(.barlow(13)).foregroundColor(Theme.muted)
                         }
                         Spacer(minLength: 0)
                     }
+                    if let ps = Passives.of(card) { passiveRow(ps) }
                     VStack(spacing: 0) {
                         statRow("HP +10%", sub: "HP", stat: "h", level: fusion?.h ?? 0,
                                 now: card.maxHP(fusion), next: card.maxHP(bumped("h")))
@@ -100,6 +102,7 @@ struct FuseSheet: View {
         case "h": f.h = min(maxLevel, f.h + 1)
         case "b": f.b = min(maxLevel, f.b + 1)
         case "s": f.s = min(maxLevel, f.s + 1)
+        case "p": f.p = true
         default: f.x = true
         }
         return f
@@ -108,6 +111,7 @@ struct FuseSheet: View {
     private func statRow(_ title: String, sub: String, stat: String, level: Int, now: Int, next: Int, last: Bool = false) -> some View {
         let maxed = level >= maxLevel
         let price = maxed ? 0 : fuseGold[level]
+        let need = maxed ? 0 : fuseCopies[level]
         let gold = store.profile?.gold ?? 0
         return HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 5) {
@@ -122,7 +126,7 @@ struct FuseSheet: View {
                 }
                 .font(.barlow(13)).foregroundColor(Theme.muted)
                 if !maxed {
-                    Text("\(cost) copies + \(price.formatted()) gold").font(.barlow(12))
+                    Text("\(need) \(need == 1 ? "copy" : "copies") + \(price.formatted()) gold").font(.barlow(12))
                         .foregroundColor(gold < price ? Color(hex: 0xFF7884) : Theme.muted)
                 }
             }
@@ -133,11 +137,44 @@ struct FuseSheet: View {
             } else {
                 Button("Fuse") { fuse(stat, title: sub, before: now, after: next) }
                     .buttonStyle(GoldButton(height: 40)).frame(width: 84)
-                    .disabled(busy || spare < cost || gold < price)
+                    .disabled(busy || spare < need || gold < price)
             }
         }
         .padding(.vertical, 12)
         .overlay(alignment: .bottom) { if !last { Rectangle().fill(Theme.brass.opacity(0.1)).frame(height: 1) } }
+    }
+
+    // The card's passive: a slim cyan row above the stats.
+    private func passiveRow(_ ps: (name: String, text: String, short: String)) -> some View {
+        let on = fusion?.passive == true
+        let gold = store.profile?.gold ?? 0
+        return HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 6) {
+                    Image(systemName: "diamond.fill").font(.system(size: 10)).foregroundColor(Theme.cyan)
+                    Text(ps.name).font(.chakra(15)).foregroundColor(Theme.cyan)
+                    Text("Passive").font(.chakra(10, semibold: true)).tracking(2).textCase(.uppercase).foregroundColor(Theme.muted)
+                }
+                Text(ps.text).font(.barlow(12)).foregroundColor(Theme.muted).fixedSize(horizontal: false, vertical: true)
+                if !on {
+                    (Text("1 copy").font(.chakra(12)).foregroundColor(Theme.fg) + Text(" + ") + Text(Image(systemName: "circle.hexagongrid.fill")).foregroundColor(Theme.brass)
+                     + Text(" \(passiveGold.formatted())").font(.chakra(12)).foregroundColor(gold < passiveGold ? Color(hex: 0xFF7884) : Theme.fg))
+                        .font(.barlow(12)).foregroundColor(Theme.muted)
+                }
+            }
+            Spacer(minLength: 4)
+            if on {
+                Label("On", systemImage: "checkmark").font(.barlow(13, semibold: true)).foregroundColor(Theme.online)
+            } else {
+                Button("Unlock") { fuse("p", title: ps.name, before: 0, after: 0) }
+                    .buttonStyle(GoldButton(height: 36)).frame(width: 84)
+                    .disabled(busy || spare < 1 || gold < passiveGold)
+            }
+        }
+        .padding(.horizontal, 14).padding(.vertical, 10)
+        .background(Theme.field, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.cyan.opacity(0.45), lineWidth: 1))
+        .accessibilityElement(children: .combine)
     }
 
     private func secondSpecial(_ s2: Card.Special) -> some View {
@@ -181,17 +218,21 @@ struct FuseSheet: View {
     private func done(_ r: (line: String, before: Int, after: Int, stat: String)) -> some View {
         VStack(spacing: 18) {
             Spacer()
-            Text(r.stat == "x" ? "Unlocked!" : "Fused!").font(.chakra(34)).textCase(.uppercase).foregroundColor(Self.gold)
+            Text(r.stat == "x" || r.stat == "p" ? "Unlocked!" : "Fused!").font(.chakra(34)).textCase(.uppercase).foregroundColor(Self.gold)
                 .shadow(color: Self.gold.opacity(0.6), radius: 12)
             CardView(card: card, fusion: fusion).frame(width: 210).shadow(color: Self.gold.opacity(0.7), radius: 22)
             HStack(spacing: 8) {
                 Image(systemName: "arrow.up").font(.system(size: 14, weight: .bold)).foregroundColor(Self.gold)
                 Text(r.line)
-                if r.stat != "x" {
-                    Text("\(r.before)").font(.system(size: 16, design: .monospaced))
-                    Image(systemName: "arrow.right").font(.system(size: 11, weight: .bold))
+                if r.stat == "p" {
+                    Text("passive is on").foregroundColor(Theme.cyan)
+                } else {
+                    if r.stat != "x" {
+                        Text("\(r.before)").font(.system(size: 16, design: .monospaced))
+                        Image(systemName: "arrow.right").font(.system(size: 11, weight: .bold))
+                    }
+                    Text("\(r.after)").font(.system(size: 16, weight: .bold, design: .monospaced)).foregroundColor(Self.gold)
                 }
-                Text("\(r.after)").font(.system(size: 16, weight: .bold, design: .monospaced)).foregroundColor(Self.gold)
             }
             .font(.barlow(16)).foregroundColor(Theme.muted)
             Button("Nice") { result = nil }.buttonStyle(GoldButton()).frame(width: 240)

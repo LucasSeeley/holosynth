@@ -37,6 +37,7 @@ struct BattleBoard: View {
         var pop: Int?
         var ghostHP: Int?
         var heal = false             // the flash and number are a heal (green, +) rather than a hit
+        var callout: String?         // a passive kicking in: "◆ LIFESTEAL +13"
     }
 
     private var s: BattleState { shown ?? state }
@@ -159,6 +160,18 @@ struct BattleBoard: View {
                         .shadow(color: Color(hex: f.heal ? 0x3DFF8A : 0xFF4D5E), radius: 8).shadow(color: .black, radius: 1, y: 2)
                         .transition(.asymmetric(insertion: .scale(scale: 0.3).combined(with: .opacity),
                                                 removal: .opacity.combined(with: .offset(y: -26))))
+                }
+                if let c = f.callout {
+                    VStack {
+                        Text(c).font(.chakra(small)).tracking(1).foregroundColor(Theme.cyan).lineLimit(1).minimumScaleFactor(0.6)
+                            .padding(.horizontal, 7).padding(.vertical, 3)
+                            .background(Theme.ink.opacity(0.9), in: RoundedRectangle(cornerRadius: 8))
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.cyan, lineWidth: 1))
+                            .shadow(color: Theme.cyan.opacity(0.6), radius: 6)
+                        Spacer()
+                    }
+                    .padding(.top, 8).padding(.horizontal, 4)
+                    .transition(.scale(scale: 0.5).combined(with: .opacity))
                 }
                 if ko {
                     Text("KO").font(.chakra(w > 150 ? 40 : 28)).foregroundColor(Theme.pink)
@@ -358,13 +371,26 @@ struct BattleBoard: View {
         return c.special.heals
     }
 
-    // Same sum as the server: +20% when the attacker's class beats the target's.
+    // Same sum as the server's hitFor: passives, then +20% when the attacker's class beats the target's, then the target's guard.
     private func previewDamage(to target: Unit) -> Int? {
         guard let sel = selected, let mv = move, let a = CardBook.card(s.teams[you][sel].id), let t = CardBook.card(target.id) else { return nil }
-        let f = s.teams[you][sel].f
-        let base = Double(a.dmg(mv, f))
-        if healing { return min(a.dmg("special", f), (target.max ?? t.hp) - target.hp) }
-        return Int((base * (Self.beats[a.cls, default: []].contains(t.cls) ? 1.2 : 1)).rounded())
+        let u = s.teams[you][sel], f = u.f
+        if healing {
+            let amount = Double(a.dmg("special", f)) * (u.ps == "blessing" ? 1 + Passives.value(a) / 100 : 1)
+            return min(Int(amount.rounded()), (target.max ?? t.hp) - target.hp)
+        }
+        let low = { (x: Unit, c: Card) in Double(x.hp) < Double(x.max ?? c.hp) * 0.3 }
+        var pct = 100.0
+        switch u.ps ?? "" {
+        case "firststrike" where u.hit != true: pct += Passives.value(a)
+        case "momentum" where mv == "basic": pct += Passives.value(a) * Double(u.mom ?? 0)
+        case "executioner" where low(target, t): pct += Passives.value(a)
+        case "laststand" where low(u, a): pct += Passives.value(a)
+        default: break
+        }
+        var dmg = (Double(a.dmg(mv, f)) * pct / 100 * (Self.beats[a.cls, default: []].contains(t.cls) ? 1.2 : 1)).rounded()
+        if target.ps == "armor" || (target.ps == "phaseshift" && target.ph != true) { dmg = (dmg * (1 - Passives.value(t) / 100)).rounded() }
+        return Int(dmg)
     }
 
     // MARK: input
@@ -411,6 +437,20 @@ struct BattleBoard: View {
 
     private func pause(_ seconds: Double) async { try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000)) }
 
+    // Passives that kicked in on a move: a cyan callout over each card, and the HP it gained or lost.
+    private func playPassives(_ e: LogEntry, _ start: BattleState) async -> BattleState {
+        var cur = start
+        for pa in e.pas ?? [] where cur.teams.indices.contains(pa.p) && cur.teams[pa.p].indices.contains(pa.i) {
+            let k = key(pa.p, pa.i)
+            if pa.n == "Rebirth" { cur.teams[pa.p][pa.i].hp = pa.v } else { cur.teams[pa.p][pa.i].hp = max(0, cur.teams[pa.p][pa.i].hp + pa.v) }
+            let amount = pa.n == "Rebirth" || pa.v == 0 ? "" : pa.v > 0 ? " +\(pa.v)" : " −\(-pa.v)"
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { fx[k, default: HitFX()].callout = "◆ \(pa.n.uppercased())\(amount)"; shown = cur }
+            await pause(0.75)
+            withAnimation(.easeOut(duration: 0.3)) { fx[k]?.callout = nil }
+        }
+        return cur
+    }
+
     private func playBack() async {
         guard !playing else { return }      // the running playback picks up later states itself
         playing = true
@@ -434,6 +474,7 @@ struct BattleBoard: View {
                     withAnimation(.easeOut(duration: 0.5)) { fx[t]?.pop = nil }
                     await pause(max(0.45, Sound.heal.duration - 0.65 + 0.1))
                     fx[t]?.heal = false
+                    cur = await playPassives(e, cur)
                     continue
                 }
                 guard cur.teams.indices.contains(1 - e.p), cur.teams[1 - e.p].indices.contains(e.to) else { continue }
@@ -457,6 +498,7 @@ struct BattleBoard: View {
                 withAnimation(.easeOut(duration: 0.5)) { fx[t]?.ghostHP = nil; fx[t]?.pop = nil }
                 // wait for the hit sound to finish before anything else plays
                 await pause(max(0.45, sound.duration - 0.65 + 0.1))
+                cur = await playPassives(e, cur)
             }
             withAnimation(.easeOut(duration: 0.25)) { shown = target; acting = nil }
             if target.turn == you && target.winner == nil { UIImpactFeedbackGenerator(style: .light).impactOccurred(); Sound.turn.play() }

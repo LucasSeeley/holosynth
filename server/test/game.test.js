@@ -321,3 +321,47 @@ test('ranked: Monday weeks, monthly seasons, 30-player tables, moves by place', 
   const top = rankedTeam(7), f = rankedFusions(7, top);
   assert.ok(top.every(id => f[id].h === 3 && f[id].b === 3 && f[id].s === 3 && f[id].x === !!SECOND[id]), 'Legend computer players are fully fused');
 });
+
+test('passives: only with f.p, and each one does its job', async () => {
+  const { PASSIVES, passiveOf, newBattle: nb, applyMove: am } = await import('../src/game.js');
+  const P = { h: 0, b: 0, s: 0, x: false, o: false, p: true };
+  const hit = (st, p, move = 'basic') => { st.turn = p; st.acted = [[false], [false]]; return am(st, p, 0, move, 0); };
+  // thorns: sentry reflects 10% back, but never knocks the attacker out
+  let st = nb(['fang'], ['sentry'], () => 0, {}, { sentry: P });
+  hit(st, 0);
+  assert.equal(st.teams[1][0].hp, 80 - 18);
+  assert.equal(st.teams[0][0].hp, 55 - 2);
+  assert.deepEqual(st.log.at(-1).pas, [{ p: 0, i: 0, n: 'Thorns', v: -2 }]);
+  // no passive without the unlock
+  st = nb(['fang'], ['sentry'], () => 0, {}, { sentry: { ...P, p: false } });
+  hit(st, 0);
+  assert.equal(st.teams[0][0].hp, 55);
+  // lifesteal heals 15% of the damage dealt
+  st = nb(['fang'], ['sentry'], () => 0, { fang: P });
+  st.teams[0][0].hp = 40;
+  hit(st, 0);
+  assert.equal(st.teams[0][0].hp, 43);
+  // rebirth: once per battle, back with 10% HP
+  st = nb(['razor'], ['moonhare'], () => 0, {}, { moonhare: P });
+  st.teams[1][0].hp = 1;
+  hit(st, 0);
+  assert.equal(st.teams[1][0].hp, 5);
+  assert.equal(st.winner, null);
+  hit(st, 0);
+  assert.equal(st.teams[1][0].hp, 0);
+  // quick charge: special back one action sooner (never below 1)
+  st = nb(['rune'], ['sentry'], () => 0, { rune: P });
+  hit(st, 0, 'special');
+  assert.equal(st.teams[0][0].cd, 2);
+  // first strike: +25% on the first attack only
+  st = nb(['razor'], ['goliath'], () => 0, { razor: P });
+  hit(st, 0); const first = 70 - st.teams[1][0].hp;
+  hit(st, 0); const second = 70 - first - st.teams[1][0].hp;
+  assert.equal(first, Math.round(second * 1.25));
+  // armor: 8% less damage on a Common
+  st = nb(['razor'], ['goliath'], () => 0, {}, { goliath: P });
+  hit(st, 0);
+  assert.equal(70 - st.teams[1][0].hp, Math.round(second * 0.92));
+  // every card has a known passive with 4 rarity values
+  for (const id of Object.keys(BY_ID)) assert.ok(PASSIVES[BY_ID[id].passive] && passiveOf(id).v > 0, id);
+});

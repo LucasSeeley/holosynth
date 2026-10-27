@@ -16,7 +16,7 @@ struct HuntView: View {
     @State private var busy = false
 
     static let gold = Color(hex: 0xFFD77A)
-    static let full = Fusion(h: 3, b: 3, s: 3, x: true)   // same as the server's HUNT_FUSION
+    static let full = Fusion(h: 3, b: 3, s: 3, x: true, p: true)   // same as the server's HUNT_FUSION
     private var legend: Card? { home.flatMap { CardBook.card($0.legend) } }
 
     var body: some View {
