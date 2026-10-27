@@ -41,7 +41,6 @@ struct CollectionTab: View {
             }
         }
         .background(ScreenBackground())
-        .onDisappear { store.clearNew() }
         .sheet(item: $zoomed) { e in FuseSheet(card: e.card, holo: e.holo) { zoomed = nil } }
     }
 
@@ -204,7 +203,7 @@ struct CollectionTab: View {
                         RoundedRectangle(cornerRadius: 10).stroke(Color(hex: 0xFFD77A), lineWidth: 3).shadow(color: Theme.brass, radius: 8)
                     }
                 }
-                .onTapGesture { if pending != nil { pending = nil } else { zoomed = Entry(card: card, holo: holo) } }
+                .onTapGesture { if pending != nil { pending = nil } else { zoomed = Entry(card: card, holo: holo); store.seen(card.id) } }
                 .draggable(card.id) { CardView(card: card).frame(width: 110) }
         } else {
             CardBack().opacity(0.35)
