@@ -144,14 +144,11 @@ struct BattleBoard: View {
         let acted = s.acted[side][i]
         let ready = mine && myTurn && !ko && !acted
         let isSelected = mine && selected == i && myTurn
-        let isTarget = myTurn && selected != nil && move != nil && (powerMove.map { mine && powerCanTarget($0, unit: unit, index: i) }
-                                                                       ?? (!ko && (healing ? mine : !mine)))
+        let isTarget = targetable(unit, mine: mine, ko: ko, index: i)
         let w = cardWidth
         let artH = (w / 1.3).rounded()
         let pct = CGFloat(unit.hp) / CGFloat(unit.max ?? card.hp)
-        let look = powerMove != nil && isTarget ? (Power.violet, Power.violet.opacity(pulse ? 0.8 : 0.4), CGFloat(2), CGFloat(16))
-            : (healing && isTarget) || (f.flash && f.heal) ? outline(green: true)
-            : outline(red: f.flash || isTarget, gold: (isSelected && !isTarget) || f.lunge != 0, ready: ready)
+        let look = ring(f, isTarget: isTarget, isSelected: isSelected, ready: ready)
         let small: CGFloat = w > 150 ? 13 : (w > 112 ? 12 : 11)
 
         return VStack(spacing: 0) {
@@ -164,19 +161,7 @@ struct BattleBoard: View {
                         .transition(.asymmetric(insertion: .scale(scale: 0.3).combined(with: .opacity),
                                                 removal: .opacity.combined(with: .offset(y: -26))))
                 }
-                if let c = f.callout {
-                    let tint = f.calloutPower ? Power.violet : Theme.cyan
-                    VStack {
-                        Text(c).font(.chakra(small)).tracking(1).foregroundColor(tint).lineLimit(1).minimumScaleFactor(0.6)
-                            .padding(.horizontal, 7).padding(.vertical, 3)
-                            .background(Theme.ink.opacity(0.9), in: RoundedRectangle(cornerRadius: 8))
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(tint, lineWidth: 1))
-                            .shadow(color: tint.opacity(0.6), radius: 6)
-                        Spacer()
-                    }
-                    .padding(.top, 8).padding(.horizontal, 4)
-                    .transition(.scale(scale: 0.5).combined(with: .opacity))
-                }
+                if let c = f.callout { callout(c, power: f.calloutPower, size: small) }
                 if ko {
                     Text("KO").font(.chakra(w > 150 ? 40 : 28)).foregroundColor(Theme.pink)
                         .shadow(color: .black, radius: 1, y: 2)
@@ -197,14 +182,7 @@ struct BattleBoard: View {
                         if unit.cd > 0 && !ko { chip("⟳ \(unit.cd)", size: small - 2) }
                     }
                     Spacer()
-                    HStack(spacing: 3) {   // power cards waiting on this card
-                        ForEach([(unit.sh, "shield.fill"), (unit.mi, "arrow.left.arrow.right"), (unit.oc, "bolt.fill"), (unit.od, "flame.fill")]
-                                    .filter { $0.0 == true }.map { $0.1 }, id: \.self) { sym in
-                            Image(systemName: sym).font(.system(size: small - 1, weight: .bold)).foregroundColor(Power.violet)
-                                .padding(3).background(Theme.ink.opacity(0.85), in: Circle())
-                        }
-                        Spacer()
-                    }
+                    statusIcons(unit, size: small)
                 }
                 .padding(5)
             }
@@ -254,6 +232,44 @@ struct BattleBoard: View {
     }
 
     // Card outline: red when targeted or hit, bright gold when selected or attacking, soft pulsing gold when ready.
+    // Split out of token() so the compiler can type-check it in time.
+    private func ring(_ f: HitFX, isTarget: Bool, isSelected: Bool, ready: Bool) -> (ring: Color, glow: Color, width: CGFloat, radius: CGFloat) {
+        if powerMove != nil && isTarget { return (Power.violet, Power.violet.opacity(pulse ? 0.8 : 0.4), 2, 16) }
+        if (healing && isTarget) || (f.flash && f.heal) { return outline(green: true) }
+        return outline(red: f.flash || isTarget, gold: (isSelected && !isTarget) || f.lunge != 0, ready: ready)
+    }
+
+    // A passive (cyan) or power card (violet) callout over a card.
+    private func callout(_ text: String, power: Bool, size: CGFloat) -> some View {
+        let tint = power ? Power.violet : Theme.cyan
+        return VStack {
+            Text(text).font(.chakra(size)).tracking(1).foregroundColor(tint).lineLimit(1).minimumScaleFactor(0.6)
+                .padding(.horizontal, 7).padding(.vertical, 3)
+                .background(Theme.ink.opacity(0.9), in: RoundedRectangle(cornerRadius: 8))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(tint, lineWidth: 1))
+                .shadow(color: tint.opacity(0.6), radius: 6)
+            Spacer()
+        }
+        .padding(.top, 8).padding(.horizontal, 4)
+        .transition(.scale(scale: 0.5).combined(with: .opacity))
+    }
+
+    // Power cards waiting on this card: Deflector, Ricochet, Overclock, Rally.
+    private func statusIcons(_ unit: Unit, size: CGFloat) -> some View {
+        var syms: [String] = []
+        if unit.sh == true { syms.append("shield.fill") }
+        if unit.mi == true { syms.append("arrow.left.arrow.right") }
+        if unit.oc == true { syms.append("bolt.fill") }
+        if unit.od == true { syms.append("flame.fill") }
+        return HStack(spacing: 3) {
+            ForEach(syms, id: \.self) { sym in
+                Image(systemName: sym).font(.system(size: size - 1, weight: .bold)).foregroundColor(Power.violet)
+                    .padding(3).background(Theme.ink.opacity(0.85), in: Circle())
+            }
+            Spacer()
+        }
+    }
+
     private func outline(green: Bool) -> (ring: Color, glow: Color, width: CGFloat, radius: CGFloat) {
         (Color(hex: 0x3DFF8A), Color(hex: 0x3DFF8A).opacity(0.7), 2, 16)
     }
@@ -423,6 +439,12 @@ struct BattleBoard: View {
     ]
 
     // The selected card is about to use a healing special: targets are your own cards.
+    private func targetable(_ unit: Unit, mine: Bool, ko: Bool, index i: Int) -> Bool {
+        guard myTurn, selected != nil, move != nil else { return false }
+        if let p = powerMove { return mine && powerCanTarget(p, unit: unit, index: i) }
+        return !ko && (healing ? mine : !mine)
+    }
+
     // The power card picked and waiting for a target, if any.
     private var powerMove: Power? { move.flatMap { $0.hasPrefix("pw:") ? Power.of($0) : nil } }
     private func powerCanTarget(_ p: Power, unit: Unit, index i: Int) -> Bool {
