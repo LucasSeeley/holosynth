@@ -186,7 +186,7 @@ struct RankedView: View {
                 let s = Int(t.date.timeIntervalSince(searchStart))
                 Text(String(format: "%d:%02d", s / 60, s % 60)).font(.chakra(18)).foregroundColor(Color(hex: 0xA9A5C2))
             }
-            Text("Looking for a player to battle live. If nobody's on,\nyou'll face a real player's team, played by the computer.")
+            Text("Looking for a player to battle live. If nobody's on,\nyou'll face a computer player or another player's team.")
                 .font(.barlow(13)).foregroundColor(Theme.muted).multilineTextAlignment(.center)
             Button { cancelSearch() } label: { Text("Cancel").frame(width: 160) }.buttonStyle(OutlineButton())
             Spacer()
@@ -206,7 +206,9 @@ struct RankedView: View {
                 Text("VS").font(.chakra(22)).foregroundColor(Theme.pink)
                 side(foeName, rank: match == nil ? view?.run?.opp.rank : nil, team: foeTeam, me: false)
             }
-            Text(match == nil ? "\(foeName) isn't online: you're facing their team, played by the computer." : "Live match: you're both playing now.")
+            Text(match != nil ? "Live match: you're both playing now."
+                 : opp?.bot == true ? "\(foeName) is a computer player."
+                 : "\(foeName) isn't online: you're facing their team, played by the computer.")
                 .font(.barlow(13)).foregroundColor(Theme.muted).multilineTextAlignment(.center)
             (Text("Win ") + Text("+25").font(.chakra(14)).foregroundColor(QuestsView.green)
              + Text(" · Lose ") + Text("−20").font(.chakra(14)).foregroundColor(Color(hex: 0xFF7884)))

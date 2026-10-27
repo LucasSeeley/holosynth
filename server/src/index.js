@@ -2,7 +2,7 @@
 // It also serves the iPhone app download (IPA + SideStore source) from the KV namespace bound as FILES.
 import {
   BY_ID, STARTER_TEAM, START_GOLD, PACK_COST, PACK_COSTS, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN_XP, CAMPAIGN, CHAPTERS, NEW_CARD_AFTER, OPEN_LEVELS,
-  levelFor, levelStart, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, dailyShop, SHOP_PRICES, huntFoes, huntStart, HUNT_MS, huntBattle, huntPack, HUNT_GOLD, HUNT_XP, QUESTS, QUEST_PAY, QUEST_BONUS, pickQuests, RANKS, RANK_REWARDS, RANKED_WIN, RANKED_LOSS, RANKED_GOLD, RANKED_XP, WEEK_MS, weekStart, seasonOf, seasonEnd, rankMove, rankTable, rankedTeam,
+  levelFor, levelStart, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, dailyShop, SHOP_PRICES, huntFoes, huntStart, HUNT_MS, huntBattle, huntPack, HUNT_GOLD, HUNT_XP, QUESTS, QUEST_PAY, QUEST_BONUS, pickQuests, RANKS, RANK_REWARDS, RANKED_WIN, RANKED_LOSS, RANKED_GOLD, RANKED_XP, WEEK_MS, weekStart, seasonOf, seasonEnd, rankMove, rankTable, rankedTeam, botName,
   gauntletEnemies, gauntletBattle, gauntletHeal, fusedHp, FUSE_COST, FUSE_GOLD, FUSE_MAX, SECOND, SECOND_COST, gauntletGold, GAUNTLET_PACK_EVERY, newCampaignBattle, applyMove, aiMove,
 } from './game.js';
 
@@ -906,7 +906,7 @@ async function rankedCancel(db, user) {
   return json({ ok: true });
 }
 
-// Nobody to play live: face a real player's team (nearest rank first), played by the computer; a computer team if there's nobody.
+// Nobody to play live: face a computer player, or a real player's team (nearest rank first) played by the computer.
 async function rankedGhost(db, user) {
   needFullTeam(user);
   await db.prepare('DELETE FROM ranked_queue WHERE user_id = ?').bind(user.id).run();
@@ -917,10 +917,11 @@ async function rankedGhost(db, user) {
     LEFT JOIN ranked r ON r.user_id = u.id LEFT JOIN presence p ON p.user_id = u.id WHERE u.id != ?`).bind(user.id).all();
   const pool = results.filter(u => JSON.parse(u.team).length >= 3).sort((a, b) => Math.abs(a.rank - me.rank) - Math.abs(b.rank - me.rank));
   const near = pool.filter(u => Math.abs(u.rank - pool[0]?.rank) === 0);
-  const pick = near[Math.floor(Math.random() * near.length)];
+  // With only a few players around, mostly face computer players so you're not always fighting the same team.
+  const pick = Math.random() < Math.max(0.5, 1 - pool.length / 10) ? null : near[Math.floor(Math.random() * near.length)];
   const opp = pick
     ? { name: pick.username, rank: pick.rank, team: JSON.parse(pick.team), avatar: avatarOf(pick.avatar, pick.team), fus: await fusionsFor(db, pick.id) }
-    : { name: 'HoloBot', rank: me.rank, team: rankedTeam(me.rank), avatar: null, fus: {} };
+    : { name: botName(), rank: me.rank, team: rankedTeam(me.rank), avatar: null, fus: {}, bot: true };
   opp.avatar ??= opp.team[0];
   // you move first (like the Gauntlet), so no computer move happens before the board is on screen
   const run = { opp, state: newBattle(JSON.parse(user.team), opp.team, () => 0, await fusionsFor(db, user.id), opp.fus) };

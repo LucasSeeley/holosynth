@@ -180,7 +180,7 @@ enum CardSort {
 struct Ranked: Decodable, Equatable {
     struct Row: Decodable, Equatable { let place: Int; let name: String; let points: Int; let me: Bool; let bot: Bool }
     struct Reward: Decodable, Equatable { let gold: Int; let pack: String? }
-    struct Opp: Decodable, Equatable { let name: String; let rank: Int; let team: [String]; let avatar: String? }
+    struct Opp: Decodable, Equatable { let name: String; let rank: Int; let team: [String]; let avatar: String?; let bot: Bool? }
     struct Run: Decodable, Equatable { let opp: Opp; let state: BattleState }
     struct Moved: Decodable, Equatable { let place: Int; let from: Int; let to: Int; let points: Int }
     struct SeasonReward: Decodable, Equatable { let season: Int; let rank: Int; let gold: Int; let pack: String? }

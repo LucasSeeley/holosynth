@@ -240,7 +240,8 @@ export function rankTable(real, week, rank, t) {
   rows.sort((a, b) => b.points - a.points || (a.bot - b.bot) || a.id - b.id);
   return rows.map((r, i) => ({ ...r, place: i + 1 }));
 }
-// A computer team for a rank, when there's no real player to face: tougher cards as you climb.
+export const botName = (rand = Math.random) => BOT_NAMES[Math.floor(rand() * BOT_NAMES.length)] + (rand() < 0.5 ? '' : '_' + Math.floor(rand() * 99));
+// A computer team for a rank (a computer player to face): tougher cards as you climb.
 export function rankedTeam(rank, rand = Math.random) {
   const tiers = [[0, 0, 0], [0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 1, 2], [1, 2, 2], [2, 2, 3], [2, 3, 3]][rank];
   return tiers.map(t => POOLS[t][Math.floor(rand() * POOLS[t].length)]);
