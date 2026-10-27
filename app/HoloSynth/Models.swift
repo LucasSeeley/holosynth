@@ -63,6 +63,7 @@ struct Profile: Decodable, Equatable {
     let spinPack: String?       // which pack the wheel's pack slot gives today
     let packsOpen: [String]?    // packs on sale (server decides); the rest say "Coming soon"
     let shop: Shop?             // today's shop cards
+    let hunt: HuntInfo?         // today's Legend Hunt
     let fused: [FusedCopy]?     // fused copies you own
     let gauntlet: GauntletStats
     let campaign: Campaign
@@ -162,6 +163,15 @@ enum CardSort {
         }
     }
 }
+// MARK: Legend Hunt
+
+// status: ready | playing | won | lost. next = when a new legend appears (ms since 1970).
+struct HuntInfo: Decodable, Equatable { let legend: String; let status: String; let next: Double }
+struct HuntHome: Decodable { let legend: String; let status: String; let state: BattleState?; let next: Double }
+struct HuntResult: Decodable, Equatable { let won: Bool; let pack: [String]?; let packType: String? }
+struct HuntReply: Decodable { let legend: String; let state: BattleState; let result: HuntResult?; let profile: Profile? }
+struct ProfileReply: Decodable { let profile: Profile }
+
 // MARK: Gauntlet
 
 struct GauntletStats: Decodable, Equatable { let best: Int; let rank: Int }   // rank among you and your friends

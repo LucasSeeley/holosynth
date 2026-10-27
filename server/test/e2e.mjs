@@ -166,7 +166,22 @@ if (done.gold >= 5000) {
   const pack = await call('/packs', a.token, {});
   console.log('bought pack:', pack.cards, 'gold left', pack.profile.gold, 'packs opened', pack.profile.packs);
 } else await expectError(call('/packs', a.token, {}), 400);   // packs cost 5000
-const shop = done.shop.cards;
+// legend hunt: one try a day against a fully fused Legendary
+check(done.hunt.status === 'ready' && done.hunt.legend, 'hunt ready');
+let hunt = await call('/hunt/start', a.token, {});
+check(hunt.status === 'playing' && hunt.state.teams[1][0].f.x, 'hunt started vs a fully fused legend');
+check((await call('/hunt/start', a.token, {})).status === 'playing', 'starting again picks the fight back up');
+let hres = null;
+for (let i = 0; i < 100 && !hres; i++) {
+  const st = hunt.state, from = st.teams[0].findIndex((u, k) => u.hp > 0 && !st.acted[0][k]);
+  const r = await call('/hunt/move', a.token, { from, move: 'basic', to: 0 });
+  hunt = { state: r.state }; hres = r.result;
+}
+check(hres && (hres.won ? hres.pack.length === 8 : true), 'hunt over');
+check((await call('/me', a.token)).hunt.status === (hres.won ? 'won' : 'lost'), 'hunt used for today');
+await expectError(call('/hunt/start', a.token, {}), 400);   // one try a day
+console.log('hunt:', hres.won ? 'won ' + hres.pack : 'lost');
+const shop = (await call('/me', a.token)).shop.cards;
 check(shop.length === 4 && shop[0].price === 2500 && shop[1].price === 500 && !shop[1].sold, 'daily shop: 1 Rare + 3 Commons');
 await expectError(call('/shop', a.token, { slot: 1, card: shop[2].id }), 400);   // wrong card for that slot
 if (done.gold >= 500) {

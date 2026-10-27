@@ -2,7 +2,7 @@
 // It also serves the iPhone app download (IPA + SideStore source) from the KV namespace bound as FILES.
 import {
   BY_ID, STARTER_TEAM, START_GOLD, PACK_COST, PACK_COSTS, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN_XP, CAMPAIGN, CHAPTERS, NEW_CARD_AFTER, OPEN_LEVELS,
-  levelFor, levelStart, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, dailyShop, SHOP_PRICES,
+  levelFor, levelStart, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, dailyShop, SHOP_PRICES, dailyLegend, huntBattle, huntPack,
   gauntletEnemies, gauntletBattle, gauntletHeal, fusedHp, FUSE_COST, FUSE_GOLD, FUSE_MAX, SECOND, SECOND_COST, gauntletGold, GAUNTLET_PACK_EVERY, newCampaignBattle, applyMove, aiMove,
 } from './game.js';
 
@@ -104,6 +104,7 @@ async function profile(db, user) {
   const extra = await db.prepare(`SELECT (SELECT avatar FROM presence WHERE user_id = ?1) AS avatar,
     (SELECT last FROM spins WHERE user_id = ?1) AS spun,
     (SELECT GROUP_CONCAT(slot) FROM shop_buys WHERE user_id = ?1 AND day = ?2) AS shopped,
+    (SELECT CASE WHEN state IS NOT NULL THEN 'playing' ELSE result END FROM hunts WHERE user_id = ?1 AND day = ?2) AS hunted,
     (SELECT best FROM gauntlet WHERE user_id = ?1) AS gbest,
     (SELECT COUNT(*) FROM friends f JOIN friends g ON g.user_id = f.friend_id AND g.friend_id = f.user_id
        JOIN gauntlet x ON x.user_id = f.friend_id
@@ -134,6 +135,7 @@ async function profile(db, user) {
       next: dayStart(now()) + 86400000,
     },
     fused: (await fusedRows(db, user.id)).map(fusedView),
+    hunt: { legend: dailyLegend(now()), status: extra.hunted ?? 'ready', next: dayStart(now()) + 86400000 },   // ready | playing | won | lost
     gauntlet: { best: extra.gbest || 0, rank: extra.gahead + 1 },   // rank among you and your friends
     wins: prog.wins,
     packs: prog.packs,
@@ -711,6 +713,79 @@ async function setAvatar(req, db, user) {
   return json(await profile(db, user));
 }
 
+// ---- legend hunt ----
+const getHunt = (db, userId) => db.prepare('SELECT * FROM hunts WHERE user_id = ?').bind(userId).first();
+const huntView = (h, day) => {
+  const today = h && h.day === day;
+  return { legend: today ? h.legend : dailyLegend(day), status: !today ? 'ready' : h.state ? 'playing' : h.result,
+    state: today && h.state ? JSON.parse(h.state) : null, next: day + 86400000 };
+};
+
+async function huntHome(db, user) {
+  return json(huntView(await getHunt(db, user.id), dayStart(now())));
+}
+
+// Uses today's try. A fight already on today picks up where it was.
+async function startHunt(db, user) {
+  const day = dayStart(now()), h = await getHunt(db, user.id);
+  if (h && h.day === day) {
+    if (h.state) return json(huntView(h, day));
+    throw new HttpError(400, 'You already hunted today. A new legend appears at midnight UTC.');
+  }
+  const team = JSON.parse(user.team);
+  if (team.length < 3) throw new HttpError(400, 'Clear campaign level 6 to hunt legends.');
+  const legend = dailyLegend(day);
+  const state = JSON.stringify(huntBattle(team, legend, await fusionsFor(db, user.id)));
+  const res = await db.prepare(`INSERT INTO hunts (user_id, day, legend, state, result) VALUES (?1, ?2, ?3, ?4, NULL)
+    ON CONFLICT (user_id) DO UPDATE SET day = ?2, legend = ?3, state = ?4, result = NULL WHERE hunts.day < ?2`)
+    .bind(user.id, day, legend, state).run();
+  if (!res.meta.changes) throw new HttpError(409, 'The hunt changed. Refreshing.');
+  return json(huntView(await getHunt(db, user.id), day));
+}
+
+// Saves the fight (or ends it) only if nobody else changed it first, so a double-submit can't pay twice.
+async function saveHunt(db, userId, old, state, result) {
+  const res = await db.prepare('UPDATE hunts SET state = ?, result = ? WHERE user_id = ? AND day = ? AND state = ?')
+    .bind(state && JSON.stringify(state), result, userId, old.day, old.state).run();
+  if (!res.meta.changes) throw new HttpError(409, 'The hunt changed. Refreshing.');
+}
+
+async function huntMove(req, db, user) {
+  const day = dayStart(now()), h = await getHunt(db, user.id);
+  if (!h || h.day !== day || !h.state) throw new HttpError(400, 'No hunt in progress.');
+  const state = JSON.parse(h.state);
+  const { from, move: kind, to } = await body(req);
+  try {
+    applyMove(state, 0, from, kind, to);
+    while (state.winner === null && state.turn === 1) {
+      const m = aiMove(state, 1);
+      applyMove(state, 1, m.from, m.move, m.to);
+    }
+  } catch (e) { throw new HttpError(400, e.message); }
+  if (state.winner === null) {
+    await saveHunt(db, user.id, h, state, null);
+    return json({ legend: h.legend, state, result: null, profile: null });
+  }
+  if (state.winner === 1) {
+    await saveHunt(db, user.id, h, null, 'lost');
+    return json({ legend: h.legend, state, result: { won: false }, profile: await profile(db, await freshUser(db, user.id)) });
+  }
+  await saveHunt(db, user.id, h, null, 'won');   // claim the win first
+  const pack = huntPack(user.packs_since_legend, h.legend);
+  await db.batch([...pack.cards.map(id => addCard(db, user.id, id)),
+    db.prepare('UPDATE users SET packs_since_legend = ? WHERE id = ?').bind(pack.packsSinceLegend, user.id),
+    bumpProgress(db, user.id, 'wins'), bumpProgress(db, user.id, 'packs')]);
+  return json({ legend: h.legend, state, result: { won: true, pack: pack.cards, packType: 'overload' },
+    profile: await profile(db, await freshUser(db, user.id)) });
+}
+
+// Giving up mid-fight uses up today's try.
+async function leaveHunt(db, user) {
+  const day = dayStart(now()), h = await getHunt(db, user.id);
+  if (h && h.day === day && h.state) await saveHunt(db, user.id, h, null, 'lost');
+  return json({ profile: await profile(db, await freshUser(db, user.id)) });
+}
+
 // ---- gauntlet ----
 // run: { team, hp, fight (the fight in progress or up next), wins, gold, packs, enemies, state (null between fights) }
 const getGauntlet = async (db, userId) =>
@@ -839,7 +914,7 @@ async function deleteAccount(db, user) {
     db.prepare('DELETE FROM matches WHERE p0 = ?1 OR p1 = ?1').bind(id),
     db.prepare('DELETE FROM trades WHERE from_id = ?1 OR to_id = ?1').bind(id),
     db.prepare('DELETE FROM fused WHERE user_id = ?1').bind(id),
-    ...['collection', 'sessions', 'progress', 'presence', 'spins', 'gauntlet', 'shop_buys'].map(t => db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(id)),
+    ...['collection', 'sessions', 'progress', 'presence', 'spins', 'gauntlet', 'shop_buys', 'hunts'].map(t => db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(id)),
     db.prepare('DELETE FROM users WHERE id = ?').bind(id),
   ]);
   return json({ ok: true });
@@ -902,6 +977,12 @@ async function route(req, env) {
     if (method === 'POST' && b === 'move') return campaignMove(req, db, user);
     if (method === 'POST' && b === 'leave') return leaveCampaign(db, user);
     if (method === 'POST' && b === 'reward') return pickReward(req, db, user);
+  }
+  if (a === 'hunt') {
+    if (method === 'GET' && !b) return huntHome(db, user);
+    if (method === 'POST' && b === 'start') return startHunt(db, user);
+    if (method === 'POST' && b === 'move') return huntMove(req, db, user);
+    if (method === 'POST' && b === 'leave') return leaveHunt(db, user);
   }
   if (a === 'gauntlet') {
     if (method === 'GET' && !b) return gauntletHome(db, user);

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS, levelFor, levelStart, fusedHp, fusedDmg, SECOND, FUSE_GOLD, dailyShop } from '../src/game.js';
+import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS, levelFor, levelStart, fusedHp, fusedDmg, SECOND, FUSE_GOLD, dailyShop, dailyLegend, huntBattle, huntPack, HUNT_FUSION } from '../src/game.js';
 
 const fixed = v => () => v;
 
@@ -232,4 +232,23 @@ test('daily shop: one Rare then three different Commons, the same all day, new t
   assert.deepEqual(dailyShop(day + 86399999), a);
   const week = Array.from({ length: 7 }, (_, d) => dailyShop(day + d * 86400000).join());
   assert.ok(new Set(week).size > 1);
+});
+
+test('legend hunt: a fully fused Legendary a day, you move first, the pack holds it half the time', () => {
+  const day = 20000 * 86400000, legend = dailyLegend(day);
+  assert.equal(BY_ID[legend].rarity, 'Legendary');
+  assert.equal(dailyLegend(day + 86399999), legend);
+  assert.ok(new Set(Array.from({ length: 30 }, (_, d) => dailyLegend(day + d * 86400000))).size > 3);
+  const s = huntBattle(['volt', 'fang', 'goliath'], legend);
+  assert.equal(s.turn, 0);
+  assert.deepEqual(s.teams[1][0].f, HUNT_FUSION);
+  assert.equal(s.teams[1][0].max, Math.round(BY_ID[legend].hp * 1.3));
+  assert.equal(s.teams[1][0].cd2, 0);
+  let hits = 0;
+  for (let i = 0; i < 4000; i++) {
+    const p = huntPack(5, legend);
+    assert.equal(p.cards.length, 8);
+    if (p.cards.includes(legend)) hits++;
+  }
+  assert.ok(hits / 4000 > 0.45 && hits / 4000 < 0.6, `legend in ${hits / 40}% of packs`);
 });

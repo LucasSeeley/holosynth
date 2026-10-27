@@ -125,6 +125,27 @@ export function gauntletBattle(team, hp, enemies, fus = {}) {
 }
 export const gauntletHeal = team => team.map(u => (u.hp === 0 ? 0 : Math.min(unitMax(u), u.hp + Math.round(unitMax(u) * GAUNTLET_HEAL))));
 
+// ---- legend hunt ----
+// Once a day (midnight UTC) one Legendary, fully fused, the same for everyone. You get one try with your team.
+// Beat it for an Overload pack; half the time one of its 8 cards is that Legendary (the plain card, no fusion).
+export const HUNT_FUSION = { h: 3, b: 3, s: 3, x: true };
+const LEGENDS = CARDS.filter(c => c.rarity === 'Legendary').map(c => c.id);
+export const dailyLegend = t => {
+  let h = (Math.floor(t / DAY_MS) + 7) * 2654435761 >>> 0;
+  h = Math.imul(h ^ (h >>> 16), 2246822519) >>> 0;
+  return LEGENDS[((h ^ (h >>> 13)) >>> 0) % LEGENDS.length];
+};
+// You move first. Tuned with the computer playing both sides: all Rares win about 1 in 10, all Epics about half.
+export const huntBattle = (team, legend, fus = {}) => newBattle(team, [legend], () => 0, fus, { [legend]: HUNT_FUSION });
+export function huntPack(packsSinceLegend, legend, rand = Math.random) {
+  const pack = openPack(packsSinceLegend, 'overload', rand);
+  if (rand() < 0.5) {
+    pack.cards[Math.floor(rand() * pack.cards.length)] = legend;
+    pack.packsSinceLegend = 0;
+  }
+  return pack;
+}
+
 // ---- fusion ----
 // Fuse 5 spare copies into one copy for +10% HP, +20% basic or +10% special (max 3 each).
 // Epic and Legendary cards can also unlock a second, stronger special (10 copies + 10,000 gold); the special bonus applies to it too.

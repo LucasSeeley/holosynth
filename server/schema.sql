@@ -106,3 +106,11 @@ CREATE TABLE IF NOT EXISTS shop_buys (
   slot INTEGER NOT NULL,
   PRIMARY KEY (user_id, day, slot)
 );
+-- Legend Hunt: one try a day. day = midnight UTC (ms) of the try; state = the fight while it's on; result = won | lost.
+CREATE TABLE IF NOT EXISTS hunts (
+  user_id INTEGER PRIMARY KEY,
+  day INTEGER NOT NULL,
+  legend TEXT NOT NULL,
+  state TEXT,
+  result TEXT
+);
