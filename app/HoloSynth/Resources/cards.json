@@ -3268,5 +3268,307 @@
    "dmg": 70,
    "cd": 4
   }
+ },
+ {
+  "id": "valor",
+  "num": 160,
+  "name": "Valor",
+  "rarity": "Legendary",
+  "cls": "Fighter",
+  "hp": 115,
+  "basic": {
+   "name": "Starlance",
+   "dmg": 25
+  },
+  "special": {
+   "name": "Starfall Slash",
+   "dmg": 50,
+   "cd": 3
+  },
+  "look": "Android samurai general in midnight-navy armour, twin hardlight katanas, a cape trailing falling stars.",
+  "color": "#2ee6d6",
+  "quip": "Undefeated in duels. Several losses to stairs.",
+  "special2": {
+   "name": "Last Stand",
+   "dmg": 70,
+   "cd": 4
+  }
+ },
+ {
+  "id": "overlord",
+  "num": 161,
+  "name": "Overlord",
+  "rarity": "Legendary",
+  "cls": "Fighter",
+  "hp": 145,
+  "basic": {
+   "name": "Iron Fist",
+   "dmg": 30
+  },
+  "special": {
+   "name": "Meteor Drop",
+   "dmg": 65,
+   "cd": 3
+  },
+  "look": "Towering gladiator champion android in gunmetal armour with molten bronze-gold seams and wrecking-ball fists.",
+  "color": "#d4a72c",
+  "quip": "Retired from the arena. The arena did not retire from him.",
+  "special2": {
+   "name": "Worldbreaker",
+   "dmg": 90,
+   "cd": 4
+  }
+ },
+ {
+  "id": "fenrir",
+  "num": 162,
+  "name": "Fenrir",
+  "rarity": "Legendary",
+  "cls": "Beast",
+  "hp": 120,
+  "basic": {
+   "name": "Frostbite",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Ragnarok",
+   "dmg": 50,
+   "cd": 3
+  },
+  "look": "Giant mechanical wolf of frosted chrome, ice crystals growing from its back, breathing blue frost.",
+  "color": "#9cc8ff",
+  "quip": "Was told to sit. Ate the instructions.",
+  "special2": {
+   "name": "Endless Winter",
+   "dmg": 70,
+   "cd": 4
+  }
+ },
+ {
+  "id": "tyrannos",
+  "num": 163,
+  "name": "Tyrannos",
+  "rarity": "Legendary",
+  "cls": "Beast",
+  "hp": 145,
+  "basic": {
+   "name": "Bone Crusher",
+   "dmg": 30
+  },
+  "special": {
+   "name": "Meteor Roar",
+   "dmg": 65,
+   "cd": 3
+  },
+  "look": "Mechanical tyrannosaurus king in black chrome with a crown of toxic-lime neon spikes.",
+  "color": "#8dff3d",
+  "quip": "Short arms. Long reach.",
+  "special2": {
+   "name": "Tyrant Reign",
+   "dmg": 90,
+   "cd": 4
+  }
+ },
+ {
+  "id": "atlas",
+  "num": 164,
+  "name": "Atlas",
+  "rarity": "Legendary",
+  "cls": "Mech",
+  "hp": 145,
+  "basic": {
+   "name": "Gravity Fist",
+   "dmg": 30
+  },
+  "special": {
+   "name": "Planet Drop",
+   "dmg": 65,
+   "cd": 3
+  },
+  "look": "Mountain-sized titan mech carrying a glowing ringed planet on its shoulders.",
+  "color": "#3d6bff",
+  "quip": "Carries the world. Still asks for help with groceries.",
+  "special2": {
+   "name": "World Engine",
+   "dmg": 90,
+   "cd": 4
+  }
+ },
+ {
+  "id": "zenith",
+  "num": 165,
+  "name": "Zenith",
+  "rarity": "Legendary",
+  "cls": "Mech",
+  "hp": 115,
+  "basic": {
+   "name": "Ion Lance",
+   "dmg": 25
+  },
+  "special": {
+   "name": "Skyfall",
+   "dmg": 50,
+   "cd": 3
+  },
+  "look": "Sleek silver-white sky-fortress mech, half jet fighter, half walking fortress, red running lights.",
+  "color": "#d6dcec",
+  "quip": "Peaked early. Stayed there.",
+  "special2": {
+   "name": "Zero Hour",
+   "dmg": 70,
+   "cd": 4
+  }
+ },
+ {
+  "id": "grimoire",
+  "num": 166,
+  "name": "Grimoire",
+  "rarity": "Legendary",
+  "cls": "Arcanist",
+  "hp": 120,
+  "basic": {
+   "name": "Paper Edge",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Forbidden Chapter",
+   "dmg": 50,
+   "cd": 3
+  },
+  "look": "Android golem whose body is a giant open spellbook, pages fanned into armour, violet runes flying off.",
+  "color": "#a35cff",
+  "quip": "Spoiler: everyone loses.",
+  "special2": {
+   "name": "Final Page",
+   "dmg": 70,
+   "cd": 4
+  }
+ },
+ {
+  "id": "paradox",
+  "num": 167,
+  "name": "Paradox",
+  "rarity": "Legendary",
+  "cls": "Arcanist",
+  "hp": 135,
+  "basic": {
+   "name": "Backstep",
+   "dmg": 35
+  },
+  "special": {
+   "name": "Time Fracture",
+   "dmg": 60,
+   "cd": 3
+  },
+  "look": "Slender android time-sorceress with floating clock-rune rings and a cracked hourglass heart.",
+  "color": "#3dffc4",
+  "quip": "Already won this fight. Doing it again for fun.",
+  "special2": {
+   "name": "Undo",
+   "dmg": 85,
+   "cd": 4
+  }
+ },
+ {
+  "id": "celestia",
+  "num": 168,
+  "name": "Celestia",
+  "rarity": "Legendary",
+  "cls": "Spirit",
+  "hp": 145,
+  "basic": {
+   "name": "Starsong",
+   "dmg": 30
+  },
+  "special": {
+   "name": "Comet Tide",
+   "dmg": 65,
+   "cd": 3
+  },
+  "look": "Huge celestial whale of living starlight and nebula, constellations across its body.",
+  "color": "#7a6bff",
+  "quip": "Sings to the stars. The stars sing back, badly.",
+  "special2": {
+   "name": "Galaxy Wave",
+   "dmg": 90,
+   "cd": 4
+  }
+ },
+ {
+  "id": "ifrit",
+  "num": 169,
+  "name": "Ifrit",
+  "rarity": "Legendary",
+  "cls": "Spirit",
+  "hp": 115,
+  "basic": {
+   "name": "Ember Lash",
+   "dmg": 25
+  },
+  "special": {
+   "name": "Inferno Gale",
+   "dmg": 50,
+   "cd": 3
+  },
+  "look": "Fire djinn of living flame and black smoke with a molten-gold mask for a face.",
+  "color": "#ff5a1f",
+  "quip": "Grants wishes. Mostly for more fire.",
+  "special2": {
+   "name": "Wish of Ash",
+   "dmg": 70,
+   "cd": 4
+  }
+ },
+ {
+  "id": "seraph",
+  "num": 170,
+  "name": "Seraph",
+  "rarity": "Legendary",
+  "cls": "Mystic",
+  "hp": 120,
+  "basic": {
+   "name": "Halo Ray",
+   "dmg": 20
+  },
+  "special": {
+   "name": "Grace",
+   "dmg": 50,
+   "cd": 3,
+   "heal": true
+  },
+  "look": "Six-winged angelic healer construct of white porcelain and pale-gold light, faceless halo visor.",
+  "color": "#fff0a0",
+  "quip": "Watches over everyone. Judges a little.",
+  "special2": {
+   "name": "Judgment Light",
+   "dmg": 70,
+   "cd": 4
+  }
+ },
+ {
+  "id": "gaia",
+  "num": 171,
+  "name": "Gaia",
+  "rarity": "Legendary",
+  "cls": "Mystic",
+  "hp": 145,
+  "basic": {
+   "name": "Thorn Whip",
+   "dmg": 30
+  },
+  "special": {
+   "name": "Lifebloom",
+   "dmg": 65,
+   "cd": 3,
+   "heal": true
+  },
+  "look": "World-tree healer construct of crystal and glowing vines, a leaf-canopy crown and a faceless crystal mask.",
+  "color": "#4dff88",
+  "quip": "Plants one seed. Grows a forest. Nobody asked.",
+  "special2": {
+   "name": "Overgrowth",
+   "dmg": 90,
+   "cd": 4
+  }
  }
 ]
