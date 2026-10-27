@@ -41,6 +41,7 @@ struct DailySpinView: View {
             .shadow(color: Theme.brass.opacity(0.18), radius: 30)
             .padding(.horizontal, 16)
         }
+        .task { await store.refresh() }   // today's wheel pack, in case the app was left open past midnight
     }
 
     private var ready: some View {
