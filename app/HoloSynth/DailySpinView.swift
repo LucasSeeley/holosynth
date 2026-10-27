@@ -126,8 +126,7 @@ struct DailySpinView: View {
             Slice().fill(lit ? fg : bg).overlay(Slice().stroke(Theme.ink, lineWidth: 3))
             VStack(spacing: 1) {
                 if kind == "pack" {
-                    if let img = Art.pack(store.profile?.spinPack ?? "cyber") { Image(uiImage: img).resizable().scaledToFit().frame(height: size * 0.16) }
-                    Text("Pack").font(.chakra(size * 0.038)).tracking(1.5).textCase(.uppercase)
+                    if let img = Art.pack(store.profile?.spinPack ?? "cyber") { Image(uiImage: img).resizable().scaledToFit().frame(height: size * 0.19) }
                 } else {
                     Text("\(amount)").font(.chakra(size * 0.075))
                     if kind == "gold" { Image(systemName: "circle.hexagongrid.fill").font(.system(size: size * 0.045)) }
