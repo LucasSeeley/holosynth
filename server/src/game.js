@@ -241,6 +241,17 @@ export function rankTable(real, week, rank, t) {
   return rows.map((r, i) => ({ ...r, place: i + 1 }));
 }
 export const botName = (rand = Math.random) => BOT_NAMES[Math.floor(rand() * BOT_NAMES.length)] + (rand() < 0.5 ? '' : '_' + Math.floor(rand() * 99));
+// Computer players' fusions by rank: none at the bottom, fully fused (second special unlocked) at Legend, some holo near the top.
+export function rankedFusions(rank, team, rand = Math.random) {
+  const [lo, hi] = [[0, 0], [0, 0], [0, 1], [0, 1], [1, 2], [1, 2], [2, 3], [3, 3]][rank];
+  const lvl = () => lo + Math.floor(rand() * (hi - lo + 1));
+  const out = {};
+  for (const id of team) {
+    const f = { h: lvl(), b: lvl(), s: lvl(), x: rank >= 5 && !!SECOND[id], o: rand() < [0, 0, 0, 0, 0, 0.1, 0.33, 0.5][rank] };
+    if (f.h || f.b || f.s || f.x || f.o) out[id] = f;
+  }
+  return out;
+}
 // A computer team for a rank (a computer player to face): tougher cards as you climb.
 export function rankedTeam(rank, rand = Math.random) {
   const tiers = [[0, 0, 0], [0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 1, 2], [1, 2, 2], [2, 2, 3], [2, 3, 3]][rank];

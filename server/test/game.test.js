@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS, levelFor, levelStart, fusedHp, fusedDmg, SECOND, FUSE_GOLD, dailyShop, huntFoes, HUNT_MS, huntBattle, huntPack, HUNT_FUSION, pickQuests, QUESTS, QUEST_PAY, weekStart, seasonOf, seasonEnd, rankMove, rankTable, rankBots, rankedTeam, RANKS, RANK_REWARDS, WEEK_MS } from '../src/game.js';
+import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS, levelFor, levelStart, fusedHp, fusedDmg, SECOND, FUSE_GOLD, dailyShop, huntFoes, HUNT_MS, huntBattle, huntPack, HUNT_FUSION, pickQuests, QUESTS, QUEST_PAY, weekStart, seasonOf, seasonEnd, rankMove, rankTable, rankBots, rankedTeam, rankedFusions, RANKS, RANK_REWARDS, WEEK_MS } from '../src/game.js';
 
 const fixed = v => () => v;
 
@@ -314,4 +314,7 @@ test('ranked: Monday weeks, monthly seasons, 30-player tables, moves by place', 
   assert.ok(Math.max(...rankBots(mon, 7, 28, mon + WEEK_MS).map(b => b.points)) > Math.max(...rankBots(mon, 0, 28, mon + WEEK_MS).map(b => b.points)));
   assert.equal(rankedTeam(0, () => 0).every(id => BY_ID[id].rarity === 'Common'), true);
   assert.equal(RANKS.length, RANK_REWARDS.length);
+  assert.deepEqual(rankedFusions(0, ['volt', 'fang', 'goliath']), {});
+  const top = rankedTeam(7), f = rankedFusions(7, top);
+  assert.ok(top.every(id => f[id].h === 3 && f[id].b === 3 && f[id].s === 3 && f[id].x === !!SECOND[id]), 'Legend computer players are fully fused');
 });
