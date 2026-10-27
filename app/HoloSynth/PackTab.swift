@@ -572,7 +572,6 @@ struct FlipCard: View {
         }
         .rotation3DEffect(.degrees(flipped ? 180 : 0), axis: (x: 0, y: 1, z: 0))
         .shadow(color: glow.opacity(flipped ? 0.9 : 0), radius: 16)
-        .scaleEffect(flipped && card?.rarity == "Legendary" ? 1.08 : 1)
         .offset(x: shake)
         .onChange(of: flipped) { isFlipped in
             guard isFlipped, let r = card?.rarity, r == "Epic" || r == "Legendary" else { return }
