@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-// Buy a pack, drag a finger across the top to tear it open, watch the cards rise out, then reveal them
+// The Shop tab: daily cards and packs. Buy a pack, drag a finger across the top to tear it open, watch the cards rise out, then reveal them
 // one at a time: swipe the top card of the stack to turn it over, swipe again (or wait) for the next.
 // Rarity tells early: light leaking from the tear takes the colour of the best card inside.
 struct PackTab: View {
@@ -21,16 +21,16 @@ struct PackTab: View {
     @State private var sparkOut = false
     @State private var shakes: CGFloat = 0
     @State private var burst: Color?
-    @State private var shown = 0                  // which pack the shop carousel is on
-    @State private var swipeX: CGFloat = 0
+    @State private var zoomed: Card?              // shop card tapped for a closer look
     @State private var openType = "cyber"         // wrapper of the pack being opened
 
     private let tearLine: CGFloat = 0.05          // just under the crimped top of the pack art
-    private static let packs: [(type: String, name: String, contents: String, glow: UInt32, cards: Int, price: Int)] = [
-        ("cyber", "Cyber Pack", "Fighter, Beast and Mech cards", 0x3FF0FF, 3, 1000),
-        ("magic", "Magic Pack", "Arcanist, Spirit and Mystic cards", 0xB46BFF, 3, 1000),
-        ("omni", "Omni Pack", "Any card from both sets", 0xE8B85A, 3, 1000),
-        ("overload", "Overload Pack", "Any card from both sets", 0xFFD77A, 8, 2500),
+    private typealias PackInfo = (type: String, name: String, contents: String, glow: UInt32, cards: Int, price: Int)
+    private static let packs: [PackInfo] = [   // prices match the server
+        ("cyber", "Cyber Pack", "Fighter, Beast and Mech cards", 0x3FF0FF, 3, 5000),
+        ("magic", "Magic Pack", "Arcanist, Spirit and Mystic cards", 0xB46BFF, 3, 5000),
+        ("omni", "Omni Pack", "Any card from both sets", 0xE8B85A, 3, 5000),
+        ("overload", "Overload Pack", "Any card from both sets", 0xFFD77A, 8, 12000),
     ]
 
     var body: some View {
@@ -51,7 +51,10 @@ struct PackTab: View {
                 }
             }
         }
-        .onAppear(perform: openPending)
+        .onAppear {
+            openPending()
+            if let next = store.profile?.shop?.next, SpinClock.ready(next) { Task { await store.refresh() } }   // a new day's shop
+        }
         .onChange(of: store.pendingPack) { _ in openPending() }
     }
 
@@ -71,51 +74,118 @@ struct PackTab: View {
         pulled = cards
     }
 
-    // Swipe left/right between the packs; the neighbours peek in at the sides.
+    // The shop: today's Rare up top, three Commons under it, then a row of packs you can scroll sideways.
     private var shop: some View {
-        let pack = Self.packs[shown]
         let gold = store.profile?.gold ?? 0
-        let isOpen = (store.profile?.packsOpen ?? ["cyber"]).contains(pack.type)
-        return VStack(spacing: 14) {
-            Spacer(minLength: 0)
-            GeometryReader { geo in
-                let w = min(geo.size.width * 0.62, geo.size.height * 631 / 1050)
-                ZStack {
-                    ForEach(Self.packs.indices, id: \.self) { i in
-                        let d = CGFloat(i - shown)
-                        packImage(Self.packs[i].type)
-                            .frame(width: w)
-                            .scaleEffect(i == shown ? 1 : 0.62)
-                            .opacity(i == shown ? 1 : 0.45)
-                            .shadow(color: Color(hex: Self.packs[i].glow).opacity(i == shown ? 0.55 : 0), radius: 26)
-                            .offset(x: d * w * 0.86 + swipeX)
-                            .zIndex(i == shown ? 1 : 0)
-                            .onTapGesture { withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) { shown = i } }
+        let open = store.profile?.packsOpen ?? ["cyber"]
+        return ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 14) {
+                if let s = store.profile?.shop, let rare = s.cards.first, let rc = CardBook.card(rare.id) {
+                    HStack {
+                        Text("Today in the shop").sectionTitle()
+                        Spacer()
+                        TimelineView(.periodic(from: .now, by: 30)) { _ in
+                            (Text(Image(systemName: "clock")) + Text(" New in ") + Text(Self.left(s.next)).font(.chakra(13)).foregroundColor(Theme.fg))
+                                .font(.barlow(12)).foregroundColor(Theme.muted)
+                        }
+                    }
+                    featured(rc, rare, gold: gold)
+                    HStack(spacing: 10) {
+                        ForEach(1..<s.cards.count, id: \.self) { i in
+                            if let c = CardBook.card(s.cards[i].id) { commonTile(c, s.cards[i], slot: i, gold: gold) }
+                        }
                     }
                 }
-                .frame(width: geo.size.width, height: geo.size.height)
-                .contentShape(Rectangle())
-                .gesture(DragGesture()
-                    .onChanged { swipeX = $0.translation.width }
-                    .onEnded { v in
-                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                            if v.translation.width < -50 { shown = min(shown + 1, Self.packs.count - 1) }
-                            if v.translation.width > 50 { shown = max(shown - 1, 0) }
-                            swipeX = 0
-                        }
-                    })
-            }
-            .frame(maxHeight: 400)
-            HStack(spacing: 6) {
-                ForEach(Self.packs.indices, id: \.self) { i in
-                    Capsule().fill(i == shown ? Theme.brass : Theme.fg.opacity(0.3)).frame(width: i == shown ? 22 : 7, height: 7)
+                Text("Packs").sectionTitle().padding(.top, 6)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(alignment: .top, spacing: 14) {
+                        ForEach(Self.packs.indices, id: \.self) { packTile(Self.packs[$0], open: open.contains(Self.packs[$0].type), gold: gold) }
+                    }
+                    .padding(.vertical, 6)
                 }
+                if let error = store.error { Text(error).font(.barlow(14, semibold: true)).foregroundColor(Theme.pink) }
             }
-            .accessibilityHidden(true)
-            VStack(spacing: 4) {
-                Text(pack.name).font(.chakra(22)).tracking(1.5).textCase(.uppercase).foregroundColor(Color(hex: pack.glow))
-                Text("\(pack.cards) cards · \(pack.contents)").font(.barlow(14)).foregroundColor(Theme.muted)
+            .padding(16)
+        }
+        .sheet(item: $zoomed) { card in
+            ZStack { ScreenBackground(); CardView(card: card).padding(40) }
+        }
+    }
+
+    // "4h 12m" until the shop changes.
+    private static func left(_ ms: Double) -> String {
+        let m = max(0, Int(ms / 1000 - Date().timeIntervalSince1970)) / 60
+        return m >= 60 ? "\(m / 60)h \(m % 60)m" : "\(m)m"
+    }
+
+    private func featured(_ c: Card, _ item: Shop.Item, gold: Int) -> some View {
+        let tint = Theme.rarityColor(c.rarity)
+        return HStack(spacing: 14) {
+            CardView(card: c).frame(width: 132).opacity(item.sold ? 0.5 : 1).onTapGesture { zoomed = c }
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Featured \(c.rarity)").font(.chakra(11, semibold: true)).tracking(2).textCase(.uppercase).foregroundColor(tint)
+                Text(c.name).font(.chakra(24)).foregroundColor(Theme.fg).lineLimit(1).minimumScaleFactor(0.6)
+                Text("\(c.hp) HP · \(c.basic.name) \(c.basic.dmg) · \(c.special.name) \(c.special.dmg)")
+                    .font(.barlow(13)).foregroundColor(Theme.muted)
+                buyButton(item, slot: 0, gold: gold, height: 42)
             }
+        }
+        .padding(12)
+        .background(RadialGradient(colors: [tint.opacity(0.22), Theme.field], center: UnitPoint(x: 0.2, y: 0.3), startRadius: 0, endRadius: 260),
+                    in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(tint.opacity(0.6), lineWidth: 1))
+        .shadow(color: tint.opacity(0.18), radius: 24)
+    }
+
+    private func commonTile(_ c: Card, _ item: Shop.Item, slot: Int, gold: Int) -> some View {
+        VStack(spacing: 6) {
+            Color.clear.frame(height: 92)
+                .overlay { if let img = Art.image(c.id) { Image(uiImage: img).resizable().scaledToFill() } else { Theme.panel } }
+                .overlay(alignment: .bottomLeading) {
+                    Text(c.name).font(.chakra(12)).foregroundColor(Theme.fg).lineLimit(1).minimumScaleFactor(0.7)
+                        .padding(.horizontal, 6).padding(.top, 14).padding(.bottom, 4)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(LinearGradient(colors: [.clear, Theme.ink.opacity(0.95)], startPoint: .top, endPoint: .bottom))
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.rarityColor(c.rarity), lineWidth: 1))
+                .opacity(item.sold ? 0.5 : 1)
+                .contentShape(Rectangle())
+                .onTapGesture { zoomed = c }
+                .accessibilityLabel("\(c.name), \(c.rarity)")
+            buyButton(item, slot: slot, gold: gold, height: 32)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    @ViewBuilder private func buyButton(_ item: Shop.Item, slot: Int, gold: Int, height: CGFloat) -> some View {
+        if item.sold {
+            Label("Bought", systemImage: "checkmark").font(.chakra(12)).tracking(1.5).textCase(.uppercase).foregroundColor(Theme.muted)
+                .frame(maxWidth: .infinity).frame(height: height)
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.fg.opacity(0.2), lineWidth: 1))
+        } else {
+            Button {
+                buying = true
+                Task {
+                    if await store.buyShopCard(slot, item.id) {
+                        UINotificationFeedbackGenerator().notificationOccurred(.success)
+                        Sound.rare.play()
+                    }
+                    buying = false
+                }
+            } label: {
+                Label(item.price.formatted(), systemImage: "circle.hexagongrid.fill").lineLimit(1).minimumScaleFactor(0.7)
+            }
+            .buttonStyle(GoldButton(height: height))
+            .disabled(buying || gold < item.price)
+        }
+    }
+
+    private func packTile(_ pack: PackInfo, open: Bool, gold: Int) -> some View {
+        VStack(spacing: 6) {
+            packImage(pack.type).frame(height: 150).shadow(color: Color(hex: pack.glow).opacity(0.35), radius: 10)
+            Text(pack.name).font(.chakra(13)).foregroundColor(Color(hex: pack.glow)).lineLimit(1).minimumScaleFactor(0.7)
+            Text("\(pack.cards) cards").font(.barlow(12)).foregroundColor(Theme.muted)
             Button {
                 buying = true
                 Task {
@@ -123,18 +193,15 @@ struct PackTab: View {
                     buying = false
                 }
             } label: {
-                if isOpen { Label(buying ? "Opening…" : "Buy · \(pack.price.formatted())", systemImage: "circle.hexagongrid.fill") }
-                else { Text("Coming soon") }
+                if open { Label(pack.price.formatted(), systemImage: "circle.hexagongrid.fill").lineLimit(1).minimumScaleFactor(0.7) }
+                else { Text("Soon") }
             }
-            .buttonStyle(GoldButton())
-            .disabled(!isOpen || buying || gold < pack.price)
-            if isOpen && gold < pack.price {
-                Text("Clear campaign levels and win battles to earn gold.").font(.barlow(14)).foregroundColor(Theme.muted)
-            }
-            if let error = store.error { Text(error).font(.barlow(14, semibold: true)).foregroundColor(Theme.pink) }
-            Spacer(minLength: 0)
+            .buttonStyle(GoldButton(height: 32))
+            .disabled(!open || buying || gold < pack.price)
         }
-        .padding(24)
+        .frame(width: 108)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("\(pack.name), \(pack.cards) cards, \(pack.contents)")
     }
 
     private func packImage(_ type: String) -> some View {

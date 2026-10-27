@@ -3,11 +3,12 @@ import SwiftUI
 // The once-a-day prize wheel. The server picks the prize; the wheel spins to land on it.
 struct DailySpinView: View {
     @EnvironmentObject var store: GameStore
-    let onClose: (_ pack: [String]?) -> Void   // the pack won, to open on the Packs tab
+    let onClose: (_ pack: [String]?) -> Void   // the pack won, to open on the Shop tab
 
     // must match SPIN_SLOTS in server/src/game.js (clockwise from the top)
-    static let slots: [(kind: String, amount: Int)] = [("gold", 50), ("xp", 25), ("gold", 100), ("pack", 1),
-                                                        ("gold", 25), ("xp", 50), ("gold", 250), ("xp", 25)]
+    static let slots: [(kind: String, amount: Int)] = [("gold", 100), ("xp", 100), ("gold", 250), ("pack", 1), ("xp", 100),
+                                                        ("gold", 500), ("xp", 250), ("gold", 100), ("xp", 500)]
+    static let step = 360 / Double(slots.count)   // degrees per slice
     @State private var angle: Double = 0
     @State private var spinning = false
     @State private var reply: SpinReply?
@@ -94,12 +95,12 @@ struct DailySpinView: View {
             ZStack {
                 Circle().fill(Color(hex: 0x0B0A14))
                 ZStack {
-                    ForEach(0..<8, id: \.self) { i in slice(i, size: size) }
+                    ForEach(Self.slots.indices, id: \.self) { i in slice(i, size: size) }
                 }
                 .rotationEffect(.degrees(angle))
-                ForEach(0..<8, id: \.self) { i in   // gold pegs between slices
+                ForEach(Self.slots.indices, id: \.self) { i in   // gold pegs between slices
                     Circle().fill(Color(hex: 0xFFD77A)).frame(width: size * 0.025, height: size * 0.025)
-                        .offset(y: -size * 0.456).rotationEffect(.degrees(Double(i) * 45 - 22.5))
+                        .offset(y: -size * 0.456).rotationEffect(.degrees((Double(i) - 0.5) * Self.step))
                 }
                 Circle().stroke(Theme.brass, lineWidth: 3)
                 Circle().fill(LinearGradient(colors: [Color(hex: 0xFFD77A), Color(hex: 0xE0A12A)], startPoint: .top, endPoint: .bottom))
@@ -137,7 +138,7 @@ struct DailySpinView: View {
             .padding(.top, size * 0.1)
         }
         .frame(width: size * 0.91, height: size * 0.91)
-        .rotationEffect(.degrees(Double(i) * 45))
+        .rotationEffect(.degrees(Double(i) * Self.step))
     }
 
     // MARK: actions
@@ -151,7 +152,7 @@ struct DailySpinView: View {
                 let r: SpinReply = try await API.call("spin", token: store.token, body: [:])
                 reply = r
                 // land the won slot under the pointer after 5 full turns, a little off-centre so it looks natural
-                let target = 360 * 5 - Double(r.slot) * 45 + Double.random(in: -15...15)
+                let target = 360 * 5 - Double(r.slot) * Self.step + Double.random(in: -13...13)
                 withAnimation(.timingCurve(0.12, 0.7, 0.1, 1, duration: 4.2)) { angle = target }
                 try? await Task.sleep(nanoseconds: 4_300_000_000)
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
@@ -177,7 +178,7 @@ private struct Slice: Shape {
         let c = CGPoint(x: rect.midX, y: rect.midY), r = min(rect.width, rect.height) / 2
         var p = Path()
         p.move(to: c)
-        p.addArc(center: c, radius: r, startAngle: .degrees(-90 - 22.5), endAngle: .degrees(-90 + 22.5), clockwise: false)
+        p.addArc(center: c, radius: r, startAngle: .degrees(-90 - DailySpinView.step / 2), endAngle: .degrees(-90 + DailySpinView.step / 2), clockwise: false)
         p.closeSubpath()
         return p
     }
@@ -243,13 +244,14 @@ struct SpinTile: View {
 private struct MiniWheel: View {
     let lit: Bool
     var body: some View {
-        let on: [UInt32] = [0xE8B85A, 0x3FF0FF, 0xE8B85A, 0xFF4D5E, 0xE8B85A, 0x3FF0FF, 0xE8B85A, 0x3FF0FF]
-        let off: [UInt32] = [0x3A2A0E, 0x0D2A33, 0x3A2A0E, 0x3A0A14, 0x3A2A0E, 0x0D2A33, 0x3A2A0E, 0x0D2A33]
+        let on: [String: UInt32] = ["gold": 0xE8B85A, "xp": 0x3FF0FF, "pack": 0xFF4D5E]
+        let off: [String: UInt32] = ["gold": 0x3A2A0E, "xp": 0x0D2A33, "pack": 0x3A0A14]
         ZStack {
             Circle().fill(Color(hex: 0x0B0A14))
-            ForEach(0..<8, id: \.self) { i in
-                Slice().fill(Color(hex: (lit ? on : off)[i])).overlay(Slice().stroke(Theme.ink, lineWidth: 1.5))
-                    .padding(3).rotationEffect(.degrees(Double(i) * 45))
+            ForEach(DailySpinView.slots.indices, id: \.self) { i in
+                Slice().fill(Color(hex: (lit ? on : off)[DailySpinView.slots[i].kind] ?? 0))
+                    .overlay(Slice().stroke(Theme.ink, lineWidth: 1.5))
+                    .padding(3).rotationEffect(.degrees(Double(i) * DailySpinView.step))
             }
             Circle().stroke(Theme.brass, lineWidth: 1.5)
             Circle().fill(Theme.brass).frame(width: 12, height: 12).overlay(Circle().stroke(Theme.ink, lineWidth: 1.5))

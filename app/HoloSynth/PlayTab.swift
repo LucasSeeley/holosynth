@@ -180,7 +180,7 @@ struct PlayTab: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Open a pack").font(.chakra(16)).foregroundColor(Theme.fg)
-                    Text("1,000 gold").font(.barlow(13)).foregroundColor(Theme.brass)
+                    Text("From 5,000 gold").font(.barlow(13)).foregroundColor(Theme.brass)
                 }
                 .padding(14)
             }

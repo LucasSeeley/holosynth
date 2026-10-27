@@ -43,7 +43,7 @@ final class GameStore: ObservableObject {
     }
     @Published var profile: Profile?
     @Published var error: String?
-    @Published var pendingPack: [String]?   // a pack won in the campaign, opened on the Packs tab
+    @Published var pendingPack: [String]?   // a pack won in the campaign, opened on the Shop tab
     var pendingPackType = "cyber"           // which wrapper it opens in
     @Published var social: Social?
 
@@ -97,6 +97,19 @@ final class GameStore: ObservableObject {
         } catch {
             self.error = error.localizedDescription
             return nil
+        }
+    }
+
+    func buyShopCard(_ slot: Int, _ id: String) async -> Bool {
+        do {
+            let reply: ShopReply = try await API.call("shop", token: token, body: ["slot": slot, "card": id])
+            profile = reply.profile
+            error = nil
+            return true
+        } catch {
+            self.error = error.localizedDescription
+            await refresh()   // e.g. the shop changed at midnight
+            return false
         }
     }
 

@@ -4,11 +4,11 @@ import CARDS from '../../shared/cards.json' with { type: 'json' };
 export const BY_ID = Object.fromEntries(CARDS.map(c => [c.id, c]));
 export const STARTER_TEAM = ['volt', 'fang', 'goliath'];
 export const START_GOLD = 0;           // gold comes from the campaign
-export const PACK_COST = 1000;
+export const PACK_COST = 5000;
 export const PACK_SIZE = 3;
 export const WIN_GOLD = 50;            // friend battle win
-export const CAMPAIGN_GOLD = [25, 50, 100, 100, 100];   // first clear of a campaign level, by chapter
-export const CAMPAIGN_XP = [25, 25, 25, 50, 50];
+export const CAMPAIGN_GOLD = [25, 50, 100, 150, 200];   // first clear of a campaign level, by chapter
+export const CAMPAIGN_XP = [25, 50, 100, 150, 200];
 export const CHAPTERS_OPEN = 5;   // chapters past this show "More chapters are on the way"
 export const WIN_XP = 25;
 export const XP_PER_LEVEL = 100;
@@ -35,9 +35,9 @@ function rollRarity(rand) {
 }
 // Pack types and the classes each holds (omni = every card).
 export const PACK_TYPES = { cyber: ['Fighter', 'Beast', 'Mech'], magic: ['Arcanist', 'Spirit', 'Mystic'], omni: null, overload: null };
-// The Overload Pack is a big Omni: 8 cards for 2,500. Everything else is 3 cards for PACK_COST.
+// The Overload Pack is a big Omni: 8 cards for 12,000. Everything else is 3 cards for PACK_COST.
 export const PACK_SIZES = { overload: 8 };
-export const PACK_COSTS = { overload: 2500 };
+export const PACK_COSTS = { overload: 12000 };
 const FREE_TYPES = ['cyber', 'magic', 'omni'];   // free packs are never Overload
 export const PACKS_OPEN = ['cyber', 'magic', 'omni', 'overload'];   // packs on sale; any left out show "Coming soon"
 const pickOf = (rarity, type, rand) => {
@@ -56,16 +56,17 @@ export function openPack(packsSinceLegend, type = 'cyber', rand = Math.random) {
 }
 
 // ---- daily spin ----
-// The wheel's 8 slots clockwise from the top, as drawn in the app, with their chance out of 100.
+// The wheel's 9 slots clockwise from the top, as drawn in the app, with their chance out of 100.
 export const SPIN_SLOTS = [
-  { kind: 'gold', amount: 50, weight: 18 },
-  { kind: 'xp', amount: 25, weight: 17 },
-  { kind: 'gold', amount: 100, weight: 12 },
-  { kind: 'pack', amount: 1, weight: 5 },
-  { kind: 'gold', amount: 25, weight: 20 },
-  { kind: 'xp', amount: 50, weight: 11 },
-  { kind: 'gold', amount: 250, weight: 5 },
-  { kind: 'xp', amount: 25, weight: 12 },
+  { kind: 'gold', amount: 100, weight: 17 },
+  { kind: 'xp', amount: 100, weight: 17 },
+  { kind: 'gold', amount: 250, weight: 9 },
+  { kind: 'pack', amount: 1, weight: 6 },
+  { kind: 'xp', amount: 100, weight: 17 },
+  { kind: 'gold', amount: 500, weight: 4 },
+  { kind: 'xp', amount: 250, weight: 9 },
+  { kind: 'gold', amount: 100, weight: 17 },
+  { kind: 'xp', amount: 500, weight: 4 },
 ];
 // The wheel resets at midnight UTC: one spin per UTC day.
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -79,6 +80,21 @@ export const dailyPack = t => {
   h = Math.imul(h ^ (h >>> 15), 2246822519) >>> 0;
   return freeOpen()[((h ^ (h >>> 13)) >>> 0) % freeOpen().length];
 };
+// ---- daily shop ----
+// One Rare and three Commons a day, the same for everyone; resets at midnight UTC. Each player can buy each card once.
+export const SHOP_PRICES = { Common: 500, Rare: 2500 };
+export function dailyShop(t) {
+  let h = (Math.floor(t / DAY_MS) * 2246822519 + 374761393) >>> 0;
+  const rand = () => {   // mulberry32, seeded by the day
+    h = (h + 0x6D2B79F5) >>> 0;
+    let x = Math.imul(h ^ (h >>> 15), 1 | h);
+    x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
+    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+  };
+  const pick = pool => pool.splice(Math.floor(rand() * pool.length), 1)[0].id;
+  const rares = CARDS.filter(c => c.rarity === 'Rare'), commons = CARDS.filter(c => c.rarity === 'Common');
+  return [pick(rares), pick(commons), pick(commons), pick(commons)];
+}
 export function spinWheel(rand = Math.random) {
   let r = rand() * 100;
   for (let i = 0; i < SPIN_SLOTS.length; i++) if ((r -= SPIN_SLOTS[i].weight) < 0) return i;

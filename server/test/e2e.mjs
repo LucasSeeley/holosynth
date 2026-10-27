@@ -162,10 +162,18 @@ console.log('gauntlet streak', fights);
 
 const done = await campaign(a.token, 10);
 check(done.campaign.next?.num === 11 && done.campaign.chapterNum === 1, 'boss beaten, on to level 11');
-if (done.gold >= 1000) {
+if (done.gold >= 5000) {
   const pack = await call('/packs', a.token, {});
   console.log('bought pack:', pack.cards, 'gold left', pack.profile.gold, 'packs opened', pack.profile.packs);
-} else await expectError(call('/packs', a.token, {}), 400);   // packs cost 1000
+} else await expectError(call('/packs', a.token, {}), 400);   // packs cost 5000
+const shop = done.shop.cards;
+check(shop.length === 4 && shop[0].price === 2500 && shop[1].price === 500 && !shop[1].sold, 'daily shop: 1 Rare + 3 Commons');
+await expectError(call('/shop', a.token, { slot: 1, card: shop[2].id }), 400);   // wrong card for that slot
+if (done.gold >= 500) {
+  const got = await call('/shop', a.token, { slot: 1, card: shop[1].id });
+  check(got.card === shop[1].id && got.profile.shop.cards[1].sold && got.profile.collection[shop[1].id] >= 1, 'bought a shop card');
+  await expectError(call('/shop', a.token, { slot: 1, card: shop[1].id }), 400);   // once a day
+} else await expectError(call('/shop', a.token, { slot: 1, card: shop[1].id }), 400);   // not enough gold
 // leave no test players behind (they'd show up on the live leaderboard)
 for (const t of [a.token, b.token]) await call('/me/delete', t, {});
 await expectError(call('/me', a.token), 401);

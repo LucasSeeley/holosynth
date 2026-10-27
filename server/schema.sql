@@ -99,3 +99,10 @@ CREATE TABLE IF NOT EXISTS fused (
   x INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS fused_user ON fused (user_id, card_id);
+-- Daily shop: which of today's cards (slot 0-3) each player has bought. day = midnight UTC in ms.
+CREATE TABLE IF NOT EXISTS shop_buys (
+  user_id INTEGER NOT NULL,
+  day INTEGER NOT NULL,
+  slot INTEGER NOT NULL,
+  PRIMARY KEY (user_id, day, slot)
+);

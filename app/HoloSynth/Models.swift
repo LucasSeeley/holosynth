@@ -62,6 +62,7 @@ struct Profile: Decodable, Equatable {
     let nextSpin: Double        // when the daily spin is ready again, ms since 1970; 0 = ready now
     let spinPack: String?       // which pack the wheel's pack slot gives today
     let packsOpen: [String]?    // packs on sale (server decides); the rest say "Coming soon"
+    let shop: Shop?             // today's shop cards
     let fused: [FusedCopy]?     // fused copies you own
     let gauntlet: GauntletStats
     let campaign: Campaign
@@ -208,6 +209,14 @@ struct SpinReply: Decodable {
 }
 struct SocialReply: Decodable { let message: String?; let social: Social }
 struct PackReply: Decodable { let cards: [String]; let profile: Profile }
+struct ShopReply: Decodable { let card: String; let profile: Profile }
+
+// The daily shop: one Rare (first) and three Commons, the same for everyone, new at `next` (ms since 1970).
+struct Shop: Decodable, Equatable {
+    struct Item: Decodable, Equatable { let id: String; let price: Int; let sold: Bool }
+    let cards: [Item]
+    let next: Double
+}
 
 // A card in battle. Fused cards also carry their max HP, fusion levels and the second special's cooldown.
 struct Unit: Decodable, Equatable {

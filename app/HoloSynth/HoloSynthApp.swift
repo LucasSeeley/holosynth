@@ -137,7 +137,7 @@ struct HomeView: View {
     var body: some View {
         TabView(selection: $tab) {
             PlayTab(tab: $tab).tabItem { Label("Play", systemImage: "bolt.fill") }.tag(0)
-            PackTab().tabItem { Label("Packs", systemImage: "gift.fill") }.tag(1)
+            PackTab().tabItem { Label("Shop", systemImage: "bag.fill") }.tag(1)
             CollectionTab().tabItem { Label("Cards", systemImage: "square.grid.3x3.fill") }.tag(2)
             SocialTab().tabItem { Label("Social", systemImage: "person.2.fill") }.tag(3)
                 .badge(socialBadge)

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS, levelFor, levelStart, fusedHp, fusedDmg, SECOND, FUSE_GOLD } from '../src/game.js';
+import { newBattle, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS, levelFor, levelStart, fusedHp, fusedDmg, SECOND, FUSE_GOLD, dailyShop } from '../src/game.js';
 
 const fixed = v => () => v;
 
@@ -102,7 +102,7 @@ test('packs only hold cards of their type, and only open types are free', () => 
 });
 
 test('five chapters of 30 with a boss every 10th level, all real cards', () => {
-  assert.deepEqual([0, 30, 60, 90, 120].map(l => [CAMPAIGN_GOLD[CAMPAIGN[l].chapter], CAMPAIGN_XP[CAMPAIGN[l].chapter]]), [[25, 25], [50, 25], [100, 25], [100, 50], [100, 50]]);
+  assert.deepEqual([0, 30, 60, 90, 120].map(l => [CAMPAIGN_GOLD[CAMPAIGN[l].chapter], CAMPAIGN_XP[CAMPAIGN[l].chapter]]), [[25, 25], [50, 50], [100, 100], [150, 150], [200, 200]]);
   assert.deepEqual(CHAPTERS.map(c => c.levels.length), [30, 30, 30, 30, 30]);
   assert.equal(OPEN_LEVELS, CHAPTERS_OPEN * 30);
   assert.deepEqual(CAMPAIGN.filter(l => l.boss).map(l => l.pack), [...Array(9).fill('cyber'), 'magic', 'magic', 'magic', 'cyber', 'magic', 'omni']);
@@ -146,10 +146,12 @@ test('fusion boosts stats and unlocks a stronger second special', () => {
 
 test('daily spin odds add up and the pack is rare', () => {
   assert.equal(SPIN_SLOTS.reduce((a, s) => a + s.weight, 0), 100);
-  const n = Array(8).fill(0);
+  const n = Array(9).fill(0);
   for (let i = 0; i < 20000; i++) n[spinWheel()]++;
-  assert.ok(Math.abs(n[3] / 200 - 5) < 1, `pack ${n[3] / 200}%`);
-  assert.equal(spinWheel(() => 0.999), 7);
+  assert.ok(Math.abs(n[3] / 200 - 6) < 1, `pack ${n[3] / 200}%`);
+  assert.equal(spinWheel(() => 0.999), 8);
+  assert.deepEqual(SPIN_SLOTS.filter(s => s.kind === 'gold').map(s => s.amount).sort((a, b) => a - b), [100, 100, 250, 500]);
+  assert.deepEqual(SPIN_SLOTS.filter(s => s.kind === 'xp').map(s => s.amount).sort((a, b) => a - b), [100, 100, 250, 500]);
 });
 
 test('the wheel resets at midnight UTC', () => {
@@ -220,4 +222,14 @@ test('every magic card is complete', () => {
     assert.ok(c.hp > 0 && c.basic.dmg > 0 && c.special.dmg > 0 && c.special.cd >= 1 && c.quip && c.color, c.id);
     assert.equal(!!c.special.heal, c.cls === 'Mystic', c.id);
   }
+});
+
+test('daily shop: one Rare then three different Commons, the same all day, new the next day', () => {
+  const day = 20000 * 86400000, a = dailyShop(day);
+  assert.equal(BY_ID[a[0]].rarity, 'Rare');
+  assert.ok(a.slice(1).every(id => BY_ID[id].rarity === 'Common'));
+  assert.equal(new Set(a).size, 4);
+  assert.deepEqual(dailyShop(day + 86399999), a);
+  const week = Array.from({ length: 7 }, (_, d) => dailyShop(day + d * 86400000).join());
+  assert.ok(new Set(week).size > 1);
 });

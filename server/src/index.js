@@ -2,7 +2,7 @@
 // It also serves the iPhone app download (IPA + SideStore source) from the KV namespace bound as FILES.
 import {
   BY_ID, STARTER_TEAM, START_GOLD, PACK_COST, PACK_COSTS, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN_XP, CAMPAIGN, CHAPTERS, NEW_CARD_AFTER, OPEN_LEVELS,
-  levelFor, levelStart, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack,
+  levelFor, levelStart, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, dailyShop, SHOP_PRICES,
   gauntletEnemies, gauntletBattle, gauntletHeal, fusedHp, FUSE_COST, FUSE_GOLD, FUSE_MAX, SECOND, SECOND_COST, gauntletGold, GAUNTLET_PACK_EVERY, newCampaignBattle, applyMove, aiMove,
 } from './game.js';
 
@@ -103,12 +103,14 @@ async function profile(db, user) {
   const prog = await getProgress(db, user.id);
   const extra = await db.prepare(`SELECT (SELECT avatar FROM presence WHERE user_id = ?1) AS avatar,
     (SELECT last FROM spins WHERE user_id = ?1) AS spun,
+    (SELECT GROUP_CONCAT(slot) FROM shop_buys WHERE user_id = ?1 AND day = ?2) AS shopped,
     (SELECT best FROM gauntlet WHERE user_id = ?1) AS gbest,
     (SELECT COUNT(*) FROM friends f JOIN friends g ON g.user_id = f.friend_id AND g.friend_id = f.user_id
        JOIN gauntlet x ON x.user_id = f.friend_id
        WHERE f.user_id = ?1 AND x.best > COALESCE((SELECT best FROM gauntlet WHERE user_id = ?1), 0)) AS gahead,
     (SELECT COUNT(*) FROM friends f JOIN friends g ON g.user_id = f.friend_id AND g.friend_id = f.user_id WHERE f.user_id = ?1) AS friends`)
-    .bind(user.id).first();
+    .bind(user.id, dayStart(now())).first();
+  const sold = String(extra.shopped ?? '').split(',');
   const next = prog.cleared < OPEN_LEVELS ? CAMPAIGN[prog.cleared] : null;   // locked chapters count as done for now
   const chapter = next ? next.chapter : CAMPAIGN[OPEN_LEVELS - 1].chapter;
   return {
@@ -127,6 +129,10 @@ async function profile(db, user) {
     nextSpin: nextSpinAt(extra.spun, now()),   // ms when the wheel resets (midnight UTC); 0 = spin now
     spinPack: dailyPack(now()),   // which pack the wheel's pack slot gives today
     packsOpen: PACKS_OPEN,        // packs on sale; the rest say "Coming soon"
+    shop: {   // today's cards (slot 0 is the Rare); new ones at midnight UTC
+      cards: dailyShop(now()).map((id, i) => ({ id, price: SHOP_PRICES[BY_ID[id].rarity], sold: sold.includes(String(i)) })),
+      next: dayStart(now()) + 86400000,
+    },
     fused: (await fusedRows(db, user.id)).map(fusedView),
     gauntlet: { best: extra.gbest || 0, rank: extra.gahead + 1 },   // rank among you and your friends
     wins: prog.wins,
@@ -198,6 +204,25 @@ async function buyPack(db, user, type = 'cyber') {
   if (!res.meta.changes) throw new HttpError(400, `You need ${cost} gold.`);
   await db.batch([...pack.cards.map(id => addCard(db, user.id, id)), bumpProgress(db, user.id, 'packs')]);
   return json({ cards: pack.cards, type, profile: await profile(db, await freshUser(db, user.id)) });
+}
+
+// Buys one of today's shop cards. The app sends the card too, so a tap just after midnight can't buy a different one.
+async function buyShop(req, db, user) {
+  const { slot, card } = await body(req);
+  const day = dayStart(now());
+  const id = dailyShop(day)[slot];
+  if (!Number.isInteger(slot) || !id) throw new HttpError(400, 'Unknown shop card.');
+  if (id !== card) throw new HttpError(400, 'The shop just changed. Take another look.');
+  const price = SHOP_PRICES[BY_ID[id].rarity];
+  const claim = await db.prepare('INSERT OR IGNORE INTO shop_buys (user_id, day, slot) VALUES (?, ?, ?)').bind(user.id, day, slot).run();
+  if (!claim.meta.changes) throw new HttpError(400, 'You already bought that one today.');
+  const paid = await db.prepare('UPDATE users SET gold = gold - ? WHERE id = ? AND gold >= ?').bind(price, user.id, price).run();
+  if (!paid.meta.changes) {
+    await db.prepare('DELETE FROM shop_buys WHERE user_id = ? AND day = ? AND slot = ?').bind(user.id, day, slot).run();
+    throw new HttpError(400, `You need ${price} gold.`);
+  }
+  await addCard(db, user.id, id).run();
+  return json({ card: id, profile: await profile(db, await freshUser(db, user.id)) });
 }
 
 const bumpProgress = (db, userId, field) => db.prepare(
@@ -814,7 +839,7 @@ async function deleteAccount(db, user) {
     db.prepare('DELETE FROM matches WHERE p0 = ?1 OR p1 = ?1').bind(id),
     db.prepare('DELETE FROM trades WHERE from_id = ?1 OR to_id = ?1').bind(id),
     db.prepare('DELETE FROM fused WHERE user_id = ?1').bind(id),
-    ...['collection', 'sessions', 'progress', 'presence', 'spins', 'gauntlet'].map(t => db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(id)),
+    ...['collection', 'sessions', 'progress', 'presence', 'spins', 'gauntlet', 'shop_buys'].map(t => db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(id)),
     db.prepare('DELETE FROM users WHERE id = ?').bind(id),
   ]);
   return json({ ok: true });
@@ -856,6 +881,7 @@ async function route(req, env) {
   if (method === 'POST' && pathname === '/me/delete') return deleteAccount(db, user);
   if (method === 'POST' && pathname === '/team') return setTeam(req, db, user);
   if (method === 'POST' && pathname === '/fuse') return fuseCard(req, db, user);
+  if (method === 'POST' && pathname === '/shop') return buyShop(req, db, user);
   if (method === 'POST' && pathname === '/packs') return buyPack(db, user, String((await body(req)).type ?? 'cyber'));
   if (method === 'POST' && pathname === '/starter') return pickStarter(req, db, user);
   if (method === 'POST' && pathname === '/avatar') return setAvatar(req, db, user);
