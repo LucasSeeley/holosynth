@@ -136,7 +136,7 @@
   .bb-prompt { text-align: center; min-height: 20px; }
   .bb-btns { flex-direction: row; }
   .bb-move { min-height: 66px; flex-direction: column; justify-content: center; text-align: center; gap: 3px; padding: 0 8px; }
-  .bb-move b { font-size: 16px; } .bb-move .col { align-items: center; }
+  .bb-move b { font-size: 16px; } .bb-move .col { align-items: center; justify-content: center; }   /* name + damage centred both ways */
   .bb-handwrap { order: 0; display: flex; justify-content: flex-end; }
   .bb-hand { gap: 0; flex-wrap: nowrap; }
   .bb-pw { width: 70px; height: 98px; padding: 5px; gap: 3px; border-radius: 8px; transform-origin: bottom center; }
