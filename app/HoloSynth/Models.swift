@@ -94,6 +94,13 @@ extension Profile {
     // Your best normal (non-holo) fused copy of a card, and your best holo copy.
     func fusion(_ id: String) -> Fusion? { best(id, holo: false) }
     func holo(_ id: String) -> Fusion? { best(id, holo: true) }
+    // The copy battles use (same rule as the server): a holo copy unless a normal one is fused well past it.
+    func battleUsesHolo(_ id: String) -> Bool {
+        let score = { (f: Fusion?) -> Int in f.map { $0.h + $0.b + $0.s + ($0.x ? 3 : 0) + ($0.holo ? 4 : 0) } ?? -1 }
+        guard let h = holo(id) else { return false }
+        return score(h) >= score(fusion(id))
+    }
+    func battleFusion(_ id: String) -> Fusion? { battleUsesHolo(id) ? holo(id) : fusion(id) }
     func holoCount(_ id: String) -> Int { fused?.filter { $0.card == id && $0.o == true }.count ?? 0 }
     private func best(_ id: String, holo: Bool) -> Fusion? {
         fused?.filter { $0.card == id && ($0.o == true) == holo }.max { $0.fusion.total < $1.fusion.total }?.fusion

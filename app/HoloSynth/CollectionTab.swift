@@ -271,17 +271,10 @@ struct CollectionTab: View {
         return e.holo ? holo : (owned[e.card.id] ?? 0) - holo
     }
 
-    // Battles use your strongest copy (same rule as the server): a holo copy unless a normal one is fused well past it.
-    private func battleUsesHolo(_ id: String) -> Bool {
-        let score = { (f: Fusion?) -> Int in f.map { $0.h + $0.b + $0.s + ($0.x ? 3 : 0) + ($0.holo ? 4 : 0) } ?? -1 }
-        guard let h = store.profile?.holo(id) else { return false }
-        return score(h) >= score(store.profile?.fusion(id))
-    }
-
     @ViewBuilder
     private func cell(_ card: Card, count: Int, holo: Bool) -> some View {
         if count > 0 {
-            let onTeam = team.contains(card.id) && holo == battleUsesHolo(card.id)
+            let onTeam = team.contains(card.id) && holo == (store.profile?.battleUsesHolo(card.id) ?? false)
             CardView(card: card, fusion: holo ? store.profile?.holo(card.id) : store.profile?.fusion(card.id))
                 .overlay(alignment: .topTrailing) {
                     if count > 1 {

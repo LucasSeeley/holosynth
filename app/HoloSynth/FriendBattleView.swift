@@ -42,7 +42,7 @@ struct FriendBattleView: View {
                 Text("Your team").sectionTitle()
                 HStack(spacing: 8) {
                     ForEach(store.profile?.team ?? [], id: \.self) { id in
-                        if let card = CardBook.card(id) { CardView(card: card) }
+                        if let card = CardBook.card(id) { CardView(card: card, fusion: store.profile?.battleFusion(id)) }
                     }
                 }
                 Text("Change it in Cards").font(.barlow(14)).foregroundColor(Theme.muted)
