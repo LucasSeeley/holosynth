@@ -2,7 +2,7 @@
 // It also serves the iPhone app download (IPA + SideStore source) from the KV namespace bound as FILES.
 import {
   BY_ID, STARTER_TEAM, START_GOLD, PACK_COST, PACK_COSTS, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN_XP, CAMPAIGN, CHAPTERS, NEW_CARD_AFTER, OPEN_LEVELS,
-  levelFor, levelStart, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, dailyShop, SHOP_PRICES, huntFoes, huntStart, HUNT_MS, huntBattle, huntPack, HUNT_GOLD, HUNT_XP, QUESTS, QUEST_PAY, QUEST_BONUS, pickQuests, RANKS, RANK_REWARDS, RANKED_WIN, RANKED_LOSS, RANKED_GOLD, RANKED_XP, WEEK_MS, weekStart, seasonOf, seasonEnd, rankMove, rankTable, rankedTeam, botName, rankedFusions,
+  levelFor, levelStart, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, dailyShop, SHOP_PRICES, huntFoes, huntStart, HUNT_MS, huntBattle, huntPack, HUNT_GOLD, HUNT_XP, QUESTS, QUEST_PAY, questBonus, pickQuests, RANKS, RANK_REWARDS, RANKED_WIN, RANKED_LOSS, RANKED_GOLD, RANKED_XP, WEEK_MS, weekStart, seasonOf, seasonEnd, rankMove, rankTable, rankedTeam, botName, rankedFusions,
   gauntletEnemies, gauntletBattle, gauntletHeal, gauntletCooldowns, fusedHp, FUSE_COPIES, FUSE_GOLD, FUSE_MAX, SECOND, SECOND_COST, PASSIVE_COST, POWERS, POWER_SLOTS, rankedPowers, gauntletGold, GAUNTLET_PACK_EVERY, newCampaignBattle, applyMove, aiMove,
   UNLOCKS, isUnlocked, recruitsOwed, mainProgress, MAIN_QUESTS, gauntletXp,
 } from './game.js';
@@ -139,11 +139,12 @@ async function questsFor(db, user, prog, collection, extra, shopped) {
     return { id, name: q.name, hint: q.hint ?? null, n: Math.max(0, Math.min(q.goal, have[id])), goal: q.goal, ...pay, claimed: claimed.includes(i) };
   });
   const bonus = row.bonus ? 'claimed' : list.length && list.every(q => q.claimed) ? 'ready' : 'locked';
-  return { list, bonus, bonusPack: QUEST_BONUS, next: day + 86400000 };
+  return { list, bonus, bonusPack: questBonus(prog.cleared, now()), next: day + 86400000 };
 }
 
 // Claim a finished quest (0-2), or "bonus" for the free pack once all three are claimed.
 async function claimQuest(req, db, user) {
+  await needUnlock(db, user, 'quests');
   const { quest } = await body(req);
   const day = dayStart(now());
   const { quests } = await profile(db, user);
@@ -153,10 +154,11 @@ async function claimQuest(req, db, user) {
     if (quests.bonus !== 'ready') throw new HttpError(400, quests.bonus === 'claimed' ? 'You already got today\'s pack.' : 'Finish all three quests first.');
     const res = await db.prepare('UPDATE daily_quests SET bonus = 1 WHERE user_id = ? AND day = ? AND bonus = 0').bind(user.id, day).run();
     if (!res.meta.changes) throw new HttpError(400, "You already got today's pack.");
-    const pack = openPack(user.packs_since_legend, QUEST_BONUS);
-    await db.batch([...packWrites(db, user.id, pack, QUEST_BONUS),
+    const type = questBonus((await getProgress(db, user.id)).cleared, now());
+    const pack = openPack(user.packs_since_legend, type);
+    await db.batch([...packWrites(db, user.id, pack, type),
       db.prepare('UPDATE users SET packs_since_legend = ? WHERE id = ?').bind(pack.packsSinceLegend, user.id)]);
-    return json({ cards: pack.cards, holo: pack.holo, type: QUEST_BONUS, profile: await profile(db, await freshUser(db, user.id)) });
+    return json({ cards: pack.cards, holo: pack.holo, type, profile: await profile(db, await freshUser(db, user.id)) });
   }
   const q = Number.isInteger(quest) ? quests.list[quest] : null;
   if (!q) throw new HttpError(400, 'Unknown quest.');

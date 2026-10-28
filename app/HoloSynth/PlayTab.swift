@@ -7,6 +7,7 @@ struct PlayTab: View {
 
     enum Screen: Identifiable { case campaign, friend, recruit, spin, gauntlet, hunt, quests, ranked, packs; var id: Self { self } }
     @State var screen: Screen?
+    @State private var claiming = false
 
     var body: some View {
         ZStack {
@@ -116,7 +117,12 @@ struct PlayTab: View {
                 }
             }
             if q.done {
-                Button("Claim") { Task { await store.claimMainQuest() } }.buttonStyle(GoldButton(height: 40)).frame(width: 96)
+                Button("Claim") {
+                    guard !claiming else { return }   // one tap = one claim
+                    claiming = true
+                    Task { await store.claimMainQuest(); claiming = false }
+                }
+                .buttonStyle(GoldButton(height: 40)).frame(width: 96).disabled(claiming)
             } else {
                 HStack(spacing: 4) {
                     if q.gold > 0 { Image(systemName: "circle.hexagongrid.fill").font(.system(size: 12)) }
@@ -222,7 +228,7 @@ struct PlayTab: View {
             HStack(spacing: 10) {
                 if let q = p.quests {
                     PlayChip(title: "Quests", sub: q.bonus == "claimed" ? "All done" : "\(q.finished) of \(q.list.count)", accent: 0x3DFF8A,
-                             alert: q.claimable > 0) {
+                             alert: q.claimable > 0, lockText: p.locked?["quests"]) {
                         Image(systemName: "scroll").font(.system(size: 26, weight: .medium)).foregroundColor(Theme.brass)
                     } action: { screen = .quests }
                 }

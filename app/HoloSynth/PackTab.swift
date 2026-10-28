@@ -64,6 +64,7 @@ struct PackTab: View {
             }
         }
         .onAppear {
+            if onClose != nil { store.error = nil }   // don't carry another screen's message in here
             if let next = store.profile?.shop?.next, SpinClock.ready(next) { Task { await store.refresh() } }   // a new day's shop
         }
     }

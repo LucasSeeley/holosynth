@@ -194,7 +194,8 @@ export const QUESTS = {
   hunt: { tier: 2, name: 'Beat the Legend Hunt', goal: 1 },
 };
 export const QUEST_PAY = [{ gold: 750, xp: 500 }, { gold: 1000, xp: 750 }, { gold: 1500, xp: 1000 }];   // by tier
-export const QUEST_BONUS = 'omni';
+// The all-three-quests pack: Cyber through chapter 1, then the day's free pack type (Cyber, Magic or Omni).
+export const questBonus = (cleared, t) => (cleared < 30 ? 'cyber' : dailyPack(t));
 // `can` = quest ids this player can do right now. A missing hard quest is swapped for another medium one.
 export function pickQuests(userId, t, can, rand = seeded((userId * 2654435761) ^ (Math.floor(t / DAY_MS) * 40503))) {
   const picked = [];
@@ -793,6 +794,7 @@ export const newCampaignBattle = (team, level, fus = {}, powers = []) =>
 // What opens each feature: campaign levels cleared, or player level. `text` is what a locked tile/tab shows.
 export const UNLOCKS = {
   friends: { cleared: 6, text: 'Clear Ch 1 · Lv 6' },
+  quests: { cleared: 10, text: 'Clear Ch 1 · Lv 10' },
   spin: { cleared: 10, text: 'Clear Ch 1 · Lv 10' },
   gauntlet: { cleared: 20, text: 'Clear Ch 1 · Lv 20' },
   ranked: { cleared: 40, text: 'Clear Ch 2 · Lv 10' },
