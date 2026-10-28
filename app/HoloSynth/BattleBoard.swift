@@ -244,14 +244,14 @@ struct BattleBoard: View {
     private func callout(_ text: String, power: Bool, size: CGFloat) -> some View {
         let tint = power ? Power.violet : Theme.cyan
         return VStack {
+            Spacer()
             Text(text).font(.chakra(size)).tracking(1).foregroundColor(tint).lineLimit(1).minimumScaleFactor(0.6)
                 .padding(.horizontal, 7).padding(.vertical, 3)
                 .background(Theme.ink.opacity(0.9), in: RoundedRectangle(cornerRadius: 8))
                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(tint, lineWidth: 1))
                 .shadow(color: tint.opacity(0.6), radius: 6)
-            Spacer()
         }
-        .padding(.top, 8).padding(.horizontal, 4)
+        .padding(.bottom, 8).padding(.horizontal, 4)
         .transition(.scale(scale: 0.5).combined(with: .opacity))
     }
 
@@ -414,7 +414,7 @@ struct BattleBoard: View {
     // MARK: rules shown on screen
 
     private func prompt(_ card: Card?) -> String {
-        if playing { return acting == you ? "Hit!" : "\(foeName) attacks…" }
+        if playing || preHit != nil { return acting == you ? "Hit!" : "\(foeName) attacks…" }
         if s.winner != nil { return "" }
         if s.turn != you { return "Waiting for \(foeName)…" }
         if let p = powerMove {
@@ -521,11 +521,7 @@ struct BattleBoard: View {
         guard let from = selected else { return }
         UISelectionFeedbackGenerator().selectionChanged()
         Sound.move.play()
-        move = kind
-        // only one possible target: no need to tap it
-        let side = healing ? you : 1 - you
-        let living = s.teams[side].indices.filter { s.teams[side][$0].hp > 0 }
-        if living.count == 1 { send(from: from, move: kind, to: living[0]) }
+        move = kind   // then tap the target, even when there's only one
     }
 
     private func send(from: Int, move mv: String, to: Int) {
@@ -555,13 +551,16 @@ struct BattleBoard: View {
     private func pause(_ seconds: Double) async { try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000)) }
 
     // Passives that kicked in on a move: a cyan callout over each card, and the HP it gained or lost.
-    // A block on the target (Deflector, Armor, Phase Shift: no HP change) is shown at the impact instead, by hit().
-    private func guards(_ e: LogEntry) -> [String] { (e.pas ?? []).filter { $0.p == 1 - e.p && $0.i == e.to && $0.v == 0 }.map(\.n) }
+    // Callouts with no HP change on this hit's cards (the attacker's boost: Executioner, First Strike...; the target's
+    // block: Deflector, Armor, Phase Shift) land with the impact, by hit(); the rest play after it.
+    private func atImpact(_ pa: PassiveHit, _ e: LogEntry) -> Bool { pa.v == 0 && ((pa.p == 1 - e.p && pa.i == e.to) || (pa.p == e.p && pa.i == e.from)) }
+    private func guards(_ e: LogEntry) -> [String] { (e.pas ?? []).filter { atImpact($0, e) && $0.p == 1 - e.p }.map(\.n) }
+    private func boosts(_ e: LogEntry) -> [String] { (e.pas ?? []).filter { atImpact($0, e) && $0.p == e.p }.map(\.n) }
 
     private func playPassives(_ e: LogEntry, _ start: BattleState, skipGuards: Bool = false) async -> BattleState {
         var cur = start
         for pa in e.pas ?? [] where cur.teams.indices.contains(pa.p) && cur.teams[pa.p].indices.contains(pa.i)
-            && !(skipGuards && pa.p == 1 - e.p && pa.i == e.to && pa.v == 0) {
+            && !(skipGuards && atImpact(pa, e)) {
             let k = key(pa.p, pa.i)
             if pa.n == "Rebirth" { cur.teams[pa.p][pa.i].hp = pa.v } else { cur.teams[pa.p][pa.i].hp = max(0, cur.teams[pa.p][pa.i].hp + pa.v) }
             let amount = pa.n == "Rebirth" || pa.v == 0 ? "" : pa.v > 0 ? " +\(pa.v)" : " −\(-pa.v)"
@@ -582,7 +581,7 @@ struct BattleBoard: View {
     // One attack: the attacker lunges, the target shakes and flashes, the number pops and the HP bar drains.
     // `lunged`: your own attack, already wound up while the server answered. `guards`: blocks shown on the impact.
     private func hit(_ start: BattleState, p: Int, from: Int, to: Int, dmg: Int, ko: Bool, special: Bool, dodge: Bool = false,
-                     guards: [String] = [], lunged: Bool = false) async -> BattleState {
+                     guards: [String] = [], boosts: [String] = [], lunged: Bool = false) async -> BattleState {
         var cur = start
         let a = key(p, from), t = key(1 - p, to)
         if !lunged {
@@ -598,9 +597,9 @@ struct BattleBoard: View {
             return cur
         }
         // impact (a block's callout lands with it)
-        let blocked = dmg == 0
+        let blocked = guards.contains("Deflector")
         UIImpactFeedbackGenerator(style: ko ? .heavy : blocked ? .rigid : .medium).impactOccurred()
-        let sound = blocked ? Sound.deflect : ko ? Sound.ko : special ? Sound.crit : Sound.hit
+        let sound = ko ? Sound.ko : blocked ? Sound.deflect : special ? Sound.crit : Sound.hit
         sound.play()
         fx[t, default: HitFX()].ghostHP = cur.teams[1 - p][to].hp
         cur.teams[1 - p][to].hp = max(0, cur.teams[1 - p][to].hp - dmg)
@@ -608,13 +607,15 @@ struct BattleBoard: View {
         withAnimation(.linear(duration: 0.45)) { fx[t]?.shakes += 1 }
         withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
             if let g = guards.first { fx[t]?.callout = "◆ " + g.uppercased() }
-            if !blocked { fx[t]?.flash = true; fx[t]?.pop = dmg }
+            if let b = boosts.first { fx[a]?.callout = "◆ " + b.uppercased() }
+            fx[t]?.flash = true; fx[t]?.pop = dmg
         }
         withAnimation(.easeOut(duration: 0.45)) { shown = cur }
         await pause(0.3)
         withAnimation(.easeOut(duration: 0.3)) { fx[t]?.flash = false }
-        await pause(guards.isEmpty ? 0.35 : 0.55)
-        withAnimation(.easeOut(duration: 0.5)) { fx[t]?.ghostHP = nil; fx[t]?.pop = nil; if !guards.isEmpty { fx[t]?.callout = nil } }
+        let called = !guards.isEmpty || !boosts.isEmpty
+        await pause(called ? 0.55 : 0.35)
+        withAnimation(.easeOut(duration: 0.5)) { fx[t]?.ghostHP = nil; fx[t]?.pop = nil; if called { fx[t]?.callout = nil; fx[a]?.callout = nil } }
         // wait for the hit sound to finish before anything else plays
         await pause(max(0.45, sound.duration - 0.65 + 0.1))
         return cur
@@ -666,10 +667,9 @@ struct BattleBoard: View {
                 guard cur.teams.indices.contains(1 - e.p), cur.teams[1 - e.p].indices.contains(e.to) else { continue }
                 var wound = false
                 if let pre = preHit, e.p == you, pre.from == e.from, pre.to == e.to, pre.move == e.move { wound = true; preHit = nil }
-                let g = guards(e)
                 cur = await hit(cur, p: e.p, from: e.from, to: e.to, dmg: e.dmg, ko: e.ko, special: e.move != "basic", dodge: e.dodge == true,
-                                guards: g, lunged: wound)
-                cur = await playPassives(e, cur, skipGuards: !g.isEmpty)
+                                guards: guards(e), boosts: boosts(e), lunged: wound)
+                cur = await playPassives(e, cur, skipGuards: e.dodge != true)
             }
             if let pre = preHit { preHit = nil; withAnimation { fx[key(you, pre.from)]?.lunge = 0 } }   // a wind-up the answer didn't match
             withAnimation(.easeOut(duration: 0.25)) { shown = target; acting = nil }
