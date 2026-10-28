@@ -382,6 +382,7 @@ async function buyShop(req, db, user) {
   const id = dailyShop(day)[slot];
   if (!Number.isInteger(slot) || !id) throw new HttpError(400, 'Unknown shop card.');
   if (id !== card) throw new HttpError(400, 'The shop just changed. Take another look.');
+  if (PACK_TYPES.magic.includes(BY_ID[id].cls)) await needUnlock(db, user, 'packs');   // magic cards wait for chapter 1 too
   const price = SHOP_PRICES[BY_ID[id].rarity];
   const claim = await db.prepare('INSERT OR IGNORE INTO shop_buys (user_id, day, slot) VALUES (?, ?, ?)').bind(user.id, day, slot).run();
   if (!claim.meta.changes) throw new HttpError(400, 'You already bought that one today.');

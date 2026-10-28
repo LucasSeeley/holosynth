@@ -280,13 +280,16 @@ struct PackTab: View {
     private func featured(_ c: Card, _ item: Shop.Item, gold: Int) -> some View {
         let tint = Theme.rarityColor(c.rarity)
         return HStack(spacing: 14) {
-            CardView(card: c).frame(width: 132).opacity(item.sold ? 0.5 : 1).onTapGesture { zoomed = c }
+            CardView(card: c).frame(width: 132).opacity(item.sold ? 0.5 : 1)
+                .brightness(cardLock(c) == nil ? 0 : -0.3)
+                .overlay { if let t = cardLock(c) { lockBand(t, width: 144) } }
+                .onTapGesture { zoomed = c }
             VStack(alignment: .leading, spacing: 8) {
                 Text("Featured \(c.rarity)").font(.chakra(11, semibold: true)).tracking(2).textCase(.uppercase).foregroundColor(tint)
                 Text(c.name).font(.chakra(24)).foregroundColor(Theme.fg).lineLimit(1).minimumScaleFactor(0.6)
                 Text("\(c.hp) HP · \(c.basic.name) \(c.basic.dmg) · \(c.special.name) \(c.special.dmg)")
                     .font(.barlow(13)).foregroundColor(Theme.muted)
-                buyButton(item, slot: 0, gold: gold, height: 42)
+                if cardLock(c) != nil { lockedButton(height: 42) } else { buyButton(item, slot: 0, gold: gold, height: 42) }
             }
         }
         .padding(12)
@@ -309,10 +312,12 @@ struct PackTab: View {
                 .clipShape(RoundedRectangle(cornerRadius: 10))
                 .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.rarityColor(c.rarity), lineWidth: 1))
                 .opacity(item.sold ? 0.5 : 1)
+                .brightness(cardLock(c) == nil ? 0 : -0.3)
+                .overlay { if let t = cardLock(c) { lockBand(t, width: 120) } }
                 .contentShape(Rectangle())
                 .onTapGesture { zoomed = c }
                 .accessibilityLabel("\(c.name), \(c.rarity)")
-            buyButton(item, slot: slot, gold: gold, height: 32)
+            if cardLock(c) != nil { lockedButton(height: 32) } else { buyButton(item, slot: slot, gold: gold, height: 32) }
         }
         .frame(maxWidth: .infinity)
     }
@@ -346,26 +351,11 @@ struct PackTab: View {
         return VStack(spacing: 6) {
             packImage(pack.type).frame(height: 150).brightness(lockText == nil ? 0 : -0.3)
                 .shadow(color: Color(hex: pack.glow).opacity(lockText == nil ? 0.35 : 0), radius: 10)
-                .overlay {
-                    if let lockText {
-                        VStack(spacing: 2) {
-                            Image(systemName: "lock.fill").font(.system(size: 12)).foregroundColor(Theme.brass)
-                            Text(lockText).font(.chakra(10)).tracking(1.6).textCase(.uppercase).foregroundColor(Theme.brass).lineLimit(1).minimumScaleFactor(0.7)
-                        }
-                        .frame(width: 120).padding(.vertical, 6)
-                        .background(Theme.ink.opacity(0.88))
-                        .overlay(alignment: .top) { Rectangle().fill(Theme.brass.opacity(0.6)).frame(height: 1) }
-                        .overlay(alignment: .bottom) { Rectangle().fill(Theme.brass.opacity(0.6)).frame(height: 1) }
-                    }
-                }
+                .overlay { if let lockText { lockBand(lockText, width: 120) } }
             Text(pack.name).font(.chakra(13)).foregroundColor(Color(hex: pack.glow)).lineLimit(1).minimumScaleFactor(0.7)
             Text("\(pack.cards) cards").font(.barlow(12)).foregroundColor(Theme.muted)
             if lockText != nil {
-                Label("Locked", systemImage: "lock.fill").font(.chakra(12)).tracking(1.4).textCase(.uppercase).foregroundColor(Theme.brass)
-                    .frame(maxWidth: .infinity).frame(height: 32)
-                    .background(Theme.field, in: RoundedRectangle(cornerRadius: 10))
-                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.brass.opacity(0.5), lineWidth: 1))
-                    .opacity(0.55)
+                lockedButton(height: 32)
             } else {
             Button {
                 buying = true
@@ -389,6 +379,31 @@ struct PackTab: View {
         .frame(width: 108)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("\(pack.name), \(pack.cards) cards, \(pack.contents)")
+    }
+
+    // Shop things you can't buy yet: a dark band across the art saying what opens them, and a dimmed Locked button.
+    private func lockBand(_ text: String, width: CGFloat) -> some View {
+        VStack(spacing: 2) {
+            Image(systemName: "lock.fill").font(.system(size: 12)).foregroundColor(Theme.brass)
+            Text(text).font(.chakra(10)).tracking(1.6).textCase(.uppercase).foregroundColor(Theme.brass).lineLimit(1).minimumScaleFactor(0.7)
+        }
+        .frame(width: width).padding(.vertical, 6)
+        .background(Theme.ink.opacity(0.88))
+        .overlay(alignment: .top) { Rectangle().fill(Theme.brass.opacity(0.6)).frame(height: 1) }
+        .overlay(alignment: .bottom) { Rectangle().fill(Theme.brass.opacity(0.6)).frame(height: 1) }
+    }
+
+    private func lockedButton(height: CGFloat) -> some View {
+        Label("Locked", systemImage: "lock.fill").font(.chakra(12)).tracking(1.4).textCase(.uppercase).foregroundColor(Theme.brass)
+            .frame(maxWidth: .infinity).frame(height: height)
+            .background(Theme.field, in: RoundedRectangle(cornerRadius: 10))
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.brass.opacity(0.5), lineWidth: 1))
+            .opacity(0.55)
+    }
+
+    // Magic-class shop cards wait for chapter 1, like the magic packs.
+    private func cardLock(_ c: Card) -> String? {
+        ["Arcanist", "Spirit", "Mystic"].contains(c.cls) ? store.profile?.locked?["packs"] : nil
     }
 
     private func packImage(_ type: String) -> some View {
