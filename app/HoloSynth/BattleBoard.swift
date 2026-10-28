@@ -25,7 +25,7 @@ struct BattleBoard: View {
     @State var selected: Int?
     @State var move: String?
     @State var sending = false
-    @State var preHit: (from: Int, to: Int, move: String, hp: Int)?   // your attack, played before the server answers (hp: the target's before it)
+    @State var preHit: (from: Int, to: Int, move: String)?   // your attack, already winding up while the server answers
     @State var playing = false
     @State var error: String?
     @State var confirmLeave = false
@@ -106,7 +106,7 @@ struct BattleBoard: View {
         let side = acting ?? s.turn
         let mine = side == you
         return Group {
-            if s.winner == nil && s.teams[1 - you].contains(where: { $0.hp > 0 }) {   // not after your hit takes the last enemy
+            if s.winner == nil {
                 Text(mine ? "Your turn" : "Enemy turn")
                     .font(.chakra(14)).tracking(2.5).textCase(.uppercase)
                     .padding(.horizontal, 18).padding(.vertical, 7)
@@ -525,13 +525,12 @@ struct BattleBoard: View {
     }
 
     private func send(from: Int, move mv: String, to: Int) {
-        // an attack on the enemy plays straight away: same sums as the server, dodge included (seeded by the battle),
-        // so the answer only confirms it; if it ever differs, the answer puts the HP right
-        let foe = 1 - you
-        if ["basic", "special", "special2"].contains(mv), !healing, !playing, s.teams[foe].indices.contains(to), let pr = predict(from: from, move: mv, to: to) {
-            preHit = (from, to, mv, s.teams[foe][to].hp)
+        // an attack on the enemy winds up right away (the lunge); the hit, dodge or block lands once the server answers
+        if (mv == "basic" || mv == "special") && !healing && !playing {
+            preHit = (from, to, mv)
             selected = nil; move = nil
-            Task { await prePlay(from: from, move: mv, to: to, pr) }
+            withAnimation { acting = you }
+            withAnimation(.easeIn(duration: 0.16)) { fx[key(you, from), default: HitFX()].lunge = 1 }
         }
         sending = true
         error = nil
@@ -540,56 +539,9 @@ struct BattleBoard: View {
             do { try await onMove(from, mv, to) }
             catch {
                 self.error = error.localizedDescription; move = nil; sending = false
-                if preHit != nil { preHit = nil; withAnimation { shown = latest; acting = nil } }
+                if let pre = preHit { preHit = nil; withAnimation { fx[key(you, pre.from)]?.lunge = 0; acting = nil } }
             }
         }
-    }
-
-    private func prePlay(from: Int, move mv: String, to: Int, _ pr: Prediction) async {
-        guard let start = shown else { return }
-        playing = true
-        _ = await hit(start, p: you, from: from, to: to, dmg: pr.dmg, ko: pr.ko, special: mv != "basic", dodge: pr.dodge,
-                      guards: pr.guards, boosts: pr.boosts)
-        playing = false
-        if preHit == nil && !sending { withAnimation { shown = latest; acting = nil } }   // the server refused the move
-        // the server answered while the hit played: carry on with the rest
-        if let l = latest, let sh = shown, (l.moves ?? l.log.count) > (sh.moves ?? sh.log.count) { await playBack() }
-    }
-
-    struct Prediction { let dmg: Int; let ko: Bool; let dodge: Bool; let guards: [String]; let boosts: [String] }
-
-    // The server's dodge roll for the next move (mulberry32 of seed + moves × 2654435761, as in game.js dodgeRoll).
-    static func dodgeRoll(seed: UInt32, moves: Int) -> Double {
-        var h = seed &+ UInt32(truncatingIfNeeded: moves) &* 2654435761
-        h = h &+ 0x6D2B79F5
-        var x = (h ^ (h >> 15)) &* (1 | h)
-        x = (x &+ ((x ^ (x >> 7)) &* (61 | x))) ^ x
-        return Double(x ^ (x >> 14)) / 4294967296
-    }
-
-    // Your attack's outcome, worked out like the server's applyMove/hitFor.
-    private func predict(from: Int, move mv: String, to: Int) -> Prediction? {
-        let u = s.teams[you][from], t = s.teams[1 - you][to]
-        guard let a = CardBook.card(u.id), let tc = CardBook.card(t.id) else { return nil }
-        if Self.dodgeRoll(seed: s.seed ?? 0, moves: s.moves ?? 0) < 0.05 { return Prediction(dmg: 0, ko: false, dodge: true, guards: [], boosts: []) }
-        let low = { (x: Unit, c: Card) in Double(x.hp) < Double(x.max ?? c.hp) * 0.3 }
-        let boosted: Bool
-        switch u.ps ?? "" {
-        case "firststrike": boosted = u.hit != true
-        case "momentum": boosted = mv == "basic" && (u.mom ?? 0) > 0
-        case "executioner": boosted = low(t, tc)
-        case "laststand": boosted = low(u, a)
-        default: boosted = false
-        }
-        var pct = 100.0 + (u.oc == true ? 25 : 0) + (u.od == true ? 15 : 0)
-        if boosted { pct += u.ps == "momentum" ? Passives.value(a) * Double(u.mom ?? 0) : Passives.value(a) }
-        var dmg = (Double(a.dmg(mv, u.f)) * pct / 100 * (Self.beats[a.cls, default: []].contains(tc.cls) ? 1.2 : 1)).rounded()
-        let guarded = t.ps == "armor" || (t.ps == "phaseshift" && t.ph != true)
-        if guarded { dmg = (dmg * (1 - Passives.value(tc) / 100)).rounded() }
-        if t.sh == true || t.mi == true { dmg = (dmg / 2).rounded() }
-        let guards = t.sh == true ? ["Deflector"] : guarded && t.mi != true ? [Passives.all[t.ps ?? ""]?.name ?? ""] : []
-        let boosts = boosted ? [Passives.all[u.ps ?? ""]?.name ?? ""] : []
-        return Prediction(dmg: Int(dmg), ko: Int(dmg) >= t.hp, dodge: false, guards: guards, boosts: boosts)
     }
 
     // MARK: playback
@@ -627,14 +579,16 @@ struct BattleBoard: View {
     }
 
     // One attack: the attacker lunges, the target shakes and flashes, the number pops and the HP bar drains.
-    // `guards`: blocks shown on the impact, `boosts`: the attacker's boost.
+    // `lunged`: your own attack, already wound up while the server answered. `guards`: blocks shown on the impact.
     private func hit(_ start: BattleState, p: Int, from: Int, to: Int, dmg: Int, ko: Bool, special: Bool, dodge: Bool = false,
-                     guards: [String] = [], boosts: [String] = []) async -> BattleState {
+                     guards: [String] = [], boosts: [String] = [], lunged: Bool = false) async -> BattleState {
         var cur = start
         let a = key(p, from), t = key(1 - p, to)
-        if acting != p { withAnimation { acting = p }; if p != you { await pause(0.35) } }   // your own tap starts at once
-        withAnimation(.easeIn(duration: 0.16)) { fx[a, default: HitFX()].lunge = 1 }
-        await pause(0.16)
+        if !lunged {
+            if acting != p { withAnimation { acting = p }; await pause(0.35) }
+            withAnimation(.easeIn(duration: 0.16)) { fx[a, default: HitFX()].lunge = 1 }
+            await pause(0.16)
+        }
         if dodge {   // the target slips aside: no damage
             withAnimation(.spring(response: 0.35, dampingFraction: 0.55)) { fx[a]?.lunge = 0 }
             Sound.dodge.play()
@@ -711,18 +665,13 @@ struct BattleBoard: View {
                     continue
                 }
                 guard cur.teams.indices.contains(1 - e.p), cur.teams[1 - e.p].indices.contains(e.to) else { continue }
-                if let pre = preHit, e.p == you, pre.from == e.from, pre.to == e.to, pre.move == e.move {
-                    // already played: put right any difference from the prediction (the server's word is final)
-                    preHit = nil
-                    let real = max(0, pre.hp - e.dmg)
-                    if real != cur.teams[1 - e.p][e.to].hp { cur.teams[1 - e.p][e.to].hp = real; withAnimation(.easeOut(duration: 0.3)) { shown = cur } }
-                } else {
-                    cur = await hit(cur, p: e.p, from: e.from, to: e.to, dmg: e.dmg, ko: e.ko, special: e.move != "basic", dodge: e.dodge == true,
-                                    guards: guards(e), boosts: boosts(e))
-                }
+                var wound = false
+                if let pre = preHit, e.p == you, pre.from == e.from, pre.to == e.to, pre.move == e.move { wound = true; preHit = nil }
+                cur = await hit(cur, p: e.p, from: e.from, to: e.to, dmg: e.dmg, ko: e.ko, special: e.move != "basic", dodge: e.dodge == true,
+                                guards: guards(e), boosts: boosts(e), lunged: wound)
                 cur = await playPassives(e, cur, skipGuards: e.dodge != true)
             }
-            preHit = nil
+            if let pre = preHit { preHit = nil; withAnimation { fx[key(you, pre.from)]?.lunge = 0 } }   // a wind-up the answer didn't match
             withAnimation(.easeOut(duration: 0.25)) { shown = target; acting = nil }
             if target.turn == you && target.winner == nil { UIImpactFeedbackGenerator(style: .light).impactOccurred(); Sound.turn.play() }
         }

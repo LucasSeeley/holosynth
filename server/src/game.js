@@ -394,7 +394,6 @@ export function newBattle(teamA, teamB, rand = Math.random, fusA = {}, fusB = {}
     winner: null,
     log: [],
     pw: [[], []],   // power cards each side still has to play
-    seed: (Math.random() * 4294967296) >>> 0,   // dodge rolls come from this and the move count, so the app can show a hit before the answer
   };
 }
 
@@ -426,9 +425,7 @@ function refreshActed(state, p) {
 
 // Throws an Error with a player-readable message if the move isn't allowed.
 export const DODGE = 0.05;   // every card dodges 5% of attacks
-// The dodge roll for the next move: seeded by the battle and its move count (the app runs the same sum).
-export const dodgeRoll = state => seeded(((state.seed ?? 0) + (state.moves || 0) * 2654435761) >>> 0)();
-export function applyMove(state, p, from, move, to, rand = () => dodgeRoll(state)) {
+export function applyMove(state, p, from, move, to, rand = Math.random) {
   if (state.winner !== null) throw new Error('The match is over.');
   if (state.turn !== p) throw new Error("It's not your turn.");
   const me = state.teams[p], foe = state.teams[1 - p];

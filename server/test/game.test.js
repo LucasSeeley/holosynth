@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { rarityOf, newBattle, SLOT_ODDS, TIER_OF, FAVOURITE_POWERS, POWERS, newCampaignBattle, applyMove as applyMove_, DODGE, dodgeRoll, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS, levelFor, levelStart, fusedHp, fusedDmg, SECOND, FUSE_GOLD, dailyShop, huntFoes, HUNT_MS, huntBattle, huntPack, HUNT_FUSION, pickQuests, QUESTS, QUEST_PAY, weekStart, seasonOf, seasonEnd, rankMove, rankTable, rankBots, rankedTeam, rankedFusions, RANKS, RANK_REWARDS, WEEK_MS } from '../src/game.js';
+import { rarityOf, newBattle, SLOT_ODDS, TIER_OF, FAVOURITE_POWERS, POWERS, newCampaignBattle, applyMove as applyMove_, DODGE, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS, levelFor, levelStart, fusedHp, fusedDmg, SECOND, FUSE_GOLD, dailyShop, huntFoes, HUNT_MS, huntBattle, huntPack, HUNT_FUSION, pickQuests, QUESTS, QUEST_PAY, weekStart, seasonOf, seasonEnd, rankMove, rankTable, rankBots, rankedTeam, rankedFusions, RANKS, RANK_REWARDS, WEEK_MS } from '../src/game.js';
 const applyMove = (s, p, from, move, to) => applyMove_(s, p, from, move, to, () => 1);   // no dodges: tests check exact numbers
 
 const fixed = v => () => v;
@@ -474,12 +474,4 @@ test('the campaign map shows every open chapter, but ones you have not reached a
   assert.ok(m.chapters[1].levels[9].boss && m.chapters[1].levels[9].pack === 'magic' && m.chapters[1].gold === 200 && m.chapters[1].levels[0].enemies.length > 0);
   assert.ok(m.chapters[2].levels.every(l => l.enemies.length === 0 && l.title === ''), 'nothing to peek at in a locked chapter');
   assert.equal(campaignMap(60).chapters[2].locked, undefined);
-});
-
-test('dodge rolls come from the battle seed and move count (the app repeats this sum)', () => {
-  assert.equal(dodgeRoll({ seed: 123456789, moves: 4 }).toFixed(10), '0.8646054124');
-  assert.equal(dodgeRoll({}), dodgeRoll({ seed: 0, moves: 0 }));
-  const s = newBattle(['volt'], ['fang'], () => 0), roll = dodgeRoll(s);
-  applyMove_(s, 0, 0, 'basic', 0);
-  assert.equal(!!s.log[0].dodge, roll < DODGE);
 });
