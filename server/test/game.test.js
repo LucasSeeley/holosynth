@@ -466,12 +466,12 @@ test('every card dodges 5% of attacks', () => {
   assert.ok(Math.abs(n / 20000 - DODGE) < 0.01, String(n));
 });
 
-test('the campaign map only shows chapters you have reached', async () => {
+test('the campaign map shows every open chapter, but ones you have not reached are locked and empty', async () => {
   const { campaignMap } = await import('../src/index.js');
-  assert.deepEqual(campaignMap(0).chapters.map(c => c.num), [1]);
-  assert.deepEqual(campaignMap(30).chapters.map(c => c.num), [1, 2]);
   const m = campaignMap(42);
-  assert.equal(m.chapters[1].levels.length, 30);
-  assert.ok(m.chapters[1].levels[9].boss && m.chapters[1].levels[9].pack === 'magic' && m.chapters[1].gold === 200);
-  assert.deepEqual(campaignMap(9999).chapters.length, CHAPTERS_OPEN);
+  assert.equal(m.chapters.length, CHAPTERS_OPEN);
+  assert.deepEqual(m.chapters.map(c => c.locked ?? null), [null, null, 'Beat Chapter 2', 'Beat Chapter 3', 'Beat Chapter 4']);
+  assert.ok(m.chapters[1].levels[9].boss && m.chapters[1].levels[9].pack === 'magic' && m.chapters[1].gold === 200 && m.chapters[1].levels[0].enemies.length > 0);
+  assert.ok(m.chapters[2].levels.every(l => l.enemies.length === 0 && l.title === ''), 'nothing to peek at in a locked chapter');
+  assert.equal(campaignMap(60).chapters[2].locked, undefined);
 });

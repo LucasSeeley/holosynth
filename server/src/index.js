@@ -1,7 +1,7 @@
 // HoloSynth game server: a Cloudflare Worker over D1. Every reply is JSON; errors are { error: "message" }.
 // It also serves the iPhone app download (IPA + SideStore source) from the KV namespace bound as FILES.
 import {
-  BY_ID, STARTER_TEAM, START_GOLD, PACK_COST, PACK_COSTS, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN_XP, CAMPAIGN, CHAPTERS, NEW_CARD_AFTER, OPEN_LEVELS,
+  BY_ID, STARTER_TEAM, START_GOLD, PACK_COST, PACK_COSTS, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN_XP, CAMPAIGN, CHAPTERS, CHAPTERS_OPEN, NEW_CARD_AFTER, OPEN_LEVELS,
   levelFor, levelStart, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, dailyShop, SHOP_PRICES, huntFoes, huntStart, HUNT_MS, huntBattle, huntPack, HUNT_GOLD, HUNT_XP, QUESTS, QUEST_PAY, questBonus, pickQuests, RANKS, RANK_REWARDS, RANKED_WIN, RANKED_LOSS, RANKED_GOLD, RANKED_XP, WEEK_MS, weekStart, seasonOf, seasonEnd, rankMove, rankTable, rankedTeam, botName, rankedFusions,
   gauntletEnemies, gauntletBattle, gauntletHeal, gauntletCooldowns, fusedHp, FUSE_COPIES, FUSE_GOLD, FUSE_MAX, SECOND, SECOND_COST, PASSIVE_COST, POWERS, POWER_SLOTS, rankedPowers, gauntletGold, GAUNTLET_PACK_EVERY, newCampaignBattle, applyMove, aiMove,
   UNLOCKS, isUnlocked, recruitsOwed, mainProgress, MAIN_QUESTS, gauntletXp,
@@ -412,13 +412,14 @@ async function openRecruit(db, user) {
   return json({ card, profile: await profile(db, await freshUser(db, user.id)) });
 }
 
-// The campaign map: every chapter you've reached (locked ones aren't sent), each level with its enemies, enemy fusion and rewards.
+// The campaign map: every open chapter. Ones you haven't reached come locked: no enemies or level names, just their shape.
 export function campaignMap(cleared) {
-  const upTo = Math.min(cleared, OPEN_LEVELS - 1);
-  return { cleared, chapters: CHAPTERS.slice(0, CAMPAIGN[upTo].chapter + 1).map((c, i) => ({
-    num: i + 1, title: c.title, gold: CAMPAIGN_GOLD[i], xp: CAMPAIGN_XP[i],
-    levels: CAMPAIGN.filter(l => l.chapter === i).map(l => ({ num: l.num, title: l.title, enemies: l.enemies, lv: l.lv ?? 0, boss: !!l.boss, ...(l.pack ? { pack: l.pack } : {}) })),
-  })) };
+  return { cleared, chapters: CHAPTERS.slice(0, CHAPTERS_OPEN).map((c, i) => {
+    const locked = cleared < i * 30;
+    return { num: i + 1, title: c.title, gold: CAMPAIGN_GOLD[i], xp: CAMPAIGN_XP[i], ...(locked ? { locked: `Beat Chapter ${i}` } : {}),
+      levels: CAMPAIGN.filter(l => l.chapter === i).map(l => ({ num: l.num, title: locked ? '' : l.title, enemies: locked ? [] : l.enemies,
+        lv: locked ? 0 : l.lv ?? 0, boss: !!l.boss, ...(l.pack ? { pack: l.pack } : {}) })) };
+  }) };
 }
 const runView = run => run && { level: CAMPAIGN[run.level].num, title: CAMPAIGN[run.level].title, boss: !!CAMPAIGN[run.level].boss, state: run.state };
 

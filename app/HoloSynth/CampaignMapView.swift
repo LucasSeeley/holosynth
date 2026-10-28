@@ -1,11 +1,11 @@
 import SwiftUI
 
 // The campaign map: each chapter is a winding path of its 30 levels, bottom to top. Cleared levels are gold,
-// your next level glows (the only one you can tap), later levels are dim. The arrows by the title step between
-// chapters you've reached; locked chapters aren't sent by the server, so there's no arrow to them.
+// your next level glows (the only one you can tap), later levels are dim. Swipe (or tap the side arrows) between
+// chapters; future chapters show as locked (the server sends no enemies for them and only starts your next level).
 struct CampaignMap: Decodable, Equatable {
     struct Level: Decodable, Equatable { let num: Int; let title: String; let enemies: [String]; let lv: Int; let boss: Bool; let pack: String? }
-    struct Chapter: Decodable, Equatable { let num: Int; let title: String; let gold: Int; let xp: Int; let levels: [Level] }
+    struct Chapter: Decodable, Equatable { let num: Int; let title: String; let gold: Int; let xp: Int; let locked: String?; let levels: [Level] }
     let cleared: Int
     let chapters: [Chapter]
 }
@@ -34,10 +34,16 @@ struct CampaignMapView: View {
                 VStack(spacing: 0) {
                     header(map, chapter)
                     ZStack(alignment: .bottom) {
-                        path(map, chapter)
-                        if let cur = current(map), cur.chapter == ch { levelPanel(chapter, chapter.levels[cur.index]) }
+                        TabView(selection: $ch) {
+                            ForEach(map.chapters.indices, id: \.self) { i in path(map, map.chapters[i], index: i).tag(i) }
+                        }
+                        .tabViewStyle(.page(indexDisplayMode: .never))
+                        if let text = chapter.locked { lockedPanel(text) }
+                        else if let cur = current(map), cur.chapter == ch { levelPanel(chapter, chapter.levels[cur.index]) }
                         else if (ch + 1) * 30 <= map.cleared { donePanel(chapter) }
                     }
+                    .overlay(alignment: .leading) { arrow(-1, show: ch > 0).padding(.leading, 6).offset(y: -120) }
+                    .overlay(alignment: .trailing) { arrow(1, show: ch < map.chapters.count - 1).padding(.trailing, 6).offset(y: -120) }
                 }
             } else if let error {
                 VStack(spacing: 16) {
@@ -78,13 +84,15 @@ struct CampaignMapView: View {
                         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.brass.opacity(0.35), lineWidth: 1))
                 }
                 .accessibilityLabel("Back to Play")
-                arrow(-1, show: ch > 0)
                 VStack(spacing: 2) {
-                    Text("Chapter \(c.num)").font(.chakra(11, semibold: true)).tracking(2.5).textCase(.uppercase).foregroundColor(Self.violet)
-                    Text(c.title).font(.chakra(21)).foregroundColor(Theme.fg).lineLimit(1).minimumScaleFactor(0.7)
+                    HStack(spacing: 5) {
+                        if c.locked != nil { Image(systemName: "lock.fill").font(.system(size: 10, weight: .bold)) }
+                        Text("Chapter \(c.num)").font(.chakra(11, semibold: true)).tracking(2.5).textCase(.uppercase)
+                    }
+                    .foregroundColor(c.locked == nil ? Self.violet : Theme.muted)
+                    Text(c.title).font(.chakra(21)).foregroundColor(c.locked == nil ? Theme.fg : Theme.muted).lineLimit(1).minimumScaleFactor(0.7)
                 }
                 .frame(maxWidth: .infinity)
-                arrow(1, show: ch < m.chapters.count - 1)
                 Color.clear.frame(width: 44, height: 44)
             }
             HStack(spacing: 10) {
@@ -134,8 +142,8 @@ struct CampaignMapView: View {
         }
     }
 
-    private func path(_ m: CampaignMap, _ c: CampaignMap.Chapter) -> some View {
-        let done = m.cleared - ch * 30     // levels of this chapter cleared (can be <0 or >30)
+    private func path(_ m: CampaignMap, _ c: CampaignMap.Chapter, index: Int) -> some View {
+        let done = m.cleared - index * 30     // levels of this chapter cleared (can be <0 or >30)
         return GeometryReader { geo in
             let w = geo.size.width
             ScrollViewReader { proxy in
@@ -161,7 +169,6 @@ struct CampaignMapView: View {
                     .frame(width: w, height: topPad + 29 * gap + bottomPad)
                 }
                 .onAppear { scroll(proxy, done) }
-                .onChange(of: ch) { _ in scroll(proxy, m.cleared - ch * 30) }
             }
         }
     }
@@ -286,6 +293,22 @@ struct CampaignMapView: View {
         .background(Color(hex: 0x0E0C18).opacity(0.96), in: RoundedRectangle(cornerRadius: 18))
         .overlay(RoundedRectangle(cornerRadius: 18).stroke(Self.violet.opacity(0.35), lineWidth: 1))
         .shadow(color: .black.opacity(0.6), radius: 20, y: -6)
+        .padding(.horizontal, 10).padding(.bottom, 8)
+    }
+
+    private func lockedPanel(_ text: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "lock.fill").font(.system(size: 17, weight: .bold)).foregroundColor(Theme.muted)
+                .frame(width: 40, height: 40).background(Theme.field, in: Circle()).overlay(Circle().stroke(Theme.muted.opacity(0.4), lineWidth: 1))
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Locked").font(.chakra(16)).foregroundColor(Theme.fg)
+                Text("\(text) to unlock").font(.barlow(13)).foregroundColor(Theme.muted)
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 16).padding(.vertical, 14)
+        .background(Color(hex: 0x0E0C18).opacity(0.96), in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.muted.opacity(0.35), lineWidth: 1))
         .padding(.horizontal, 10).padding(.bottom, 8)
     }
 
