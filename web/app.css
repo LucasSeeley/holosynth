@@ -129,6 +129,9 @@ img { display: block; -webkit-user-drag: none; user-select: none; }   /* picture
   .tab .navdot { left: calc(50% + 10px); top: 4px; }
   .page { padding: 12px 16px 24px; }
   .h1 { font-size: 26px; }
+  /* card badges where the app has them: ×N top right, NEW pink at the top centre */
+  .card .pill.count { top: -8px; bottom: auto; }
+  .card .pill.new { right: auto; left: 50%; transform: translateX(-50%); background: var(--pink); color: #fff; box-shadow: 0 0 8px rgba(255,63,164,.7); }
 }
 
 /* full-screen screens (battles, packs, map...) */
