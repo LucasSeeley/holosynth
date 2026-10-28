@@ -59,13 +59,13 @@ struct AuthView: View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
                     if let logo = Art.image("logo") {
-                        Image(uiImage: logo).resizable().scaledToFit().frame(maxWidth: 330)
+                        Image(uiImage: logo).resizable().scaledToFit().frame(maxWidth: newAccount ? 260 : 330)
                             .shadow(color: Color(hex: 0xFFAA28).opacity(0.35), radius: 18)
                     }
                     Text("RIP · BUILD · BATTLE")
                         .font(.custom("ChakraPetch-SemiBold", size: 12)).tracking(3.8)
                         .foregroundColor(gold).padding(.top, 6)
-                    PackFan(height: newAccount ? 190 : 230).padding(.top, 22).padding(.bottom, 26)
+                    PackFan(height: newAccount ? 140 : 220).padding(.top, 16).padding(.bottom, 20)   // sized so the whole form fits without scrolling
                     VStack(spacing: 12) {
                         field(.user, icon: "person") {
                             TextField("", text: $username, prompt: Text(newAccount ? "Username" : "Username or email").foregroundColor(Theme.muted))
@@ -126,9 +126,10 @@ struct AuthView: View {
                     .frame(minHeight: 44)
                     .padding(.top, 12)
                 }
-                .padding(.horizontal, 24).padding(.top, 40).padding(.bottom, 30)
+                .padding(.horizontal, 24).padding(.top, newAccount ? 12 : 40).padding(.bottom, 16)
             }
             .scrollDismissesKeyboard(.interactively)
+            .staticWhenItFits()   // it only scrolls when the keyboard is up
         }
     }
 
@@ -155,6 +156,12 @@ struct AuthView: View {
             await store.auth(username: username, email: newAccount ? email : nil, password: password, newAccount: newAccount)
             busy = false
         }
+    }
+}
+
+private extension View {
+    @ViewBuilder func staticWhenItFits() -> some View {
+        if #available(iOS 16.4, *) { scrollBounceBehavior(.basedOnSize) } else { self }
     }
 }
 
