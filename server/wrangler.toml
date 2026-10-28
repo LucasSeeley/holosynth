@@ -17,3 +17,8 @@ database_id = "__D1_ID__"
 [[kv_namespaces]]
 binding = "FILES"
 id = "__KV_ID__"
+
+# Static pages served from this same Worker (Terms, Privacy Policy). Files that exist in ../web are served
+# directly; everything else reaches the Worker.
+[assets]
+directory = "../web"

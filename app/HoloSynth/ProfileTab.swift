@@ -22,6 +22,7 @@ struct ProfileTab: View {
                         }
                         collection(p)
                         settings
+                        legal
                     }
                     .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 16)
                 }
@@ -105,6 +106,19 @@ struct ProfileTab: View {
     private func barFill(_ r: String) -> AnyShapeStyle {
         r == "Holo" ? AnyShapeStyle(LinearGradient(colors: HoloFoil.rainbow, startPoint: .leading, endPoint: .trailing))
                     : AnyShapeStyle(Theme.rarityColor(r))
+    }
+
+    // Terms, Privacy Policy and the copyright notice, at the bottom of the tab.
+    private var legal: some View {
+        VStack(spacing: 6) {
+            HStack(spacing: 14) {
+                Link("Terms and Conditions", destination: API.base.appendingPathComponent("terms"))
+                Link("Privacy Policy", destination: API.base.appendingPathComponent("privacy"))
+            }
+            .font(.barlow(13, semibold: true)).tint(Theme.brass)
+            Text("© 2026 Lucas Seeley. All rights reserved.").font(.barlow(12)).foregroundColor(Theme.muted)
+        }
+        .frame(maxWidth: .infinity).padding(.top, 6)
     }
 
     private var settings: some View {

@@ -5,3 +5,5 @@ app/HoloSynth.xcodeproj/
 app/Payload/
 *.ipa
 .DS_Store
+server/wrangler.local.toml
+web/art/

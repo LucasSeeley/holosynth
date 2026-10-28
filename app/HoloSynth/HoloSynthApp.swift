@@ -30,6 +30,8 @@ struct AuthView: View {
     @State private var password = ""
     @State private var confirm = ""
     @State private var newAccount = true
+    @State private var agreeTerms = false
+    @State private var agreePrivacy = false
     @State private var busy = false
     @FocusState private var focus: Field?
     enum Field { case user, email, pass, confirm }
@@ -49,7 +51,7 @@ struct AuthView: View {
         return nil
     }
     private var complete: Bool {
-        newAccount ? !username.isEmpty && !email.isEmpty && !password.isEmpty && !confirm.isEmpty && problem == nil
+        newAccount ? !username.isEmpty && !email.isEmpty && !password.isEmpty && !confirm.isEmpty && problem == nil && agreeTerms && agreePrivacy
                    : !username.isEmpty && !password.isEmpty
     }
 
@@ -65,7 +67,7 @@ struct AuthView: View {
                     Text("RIP · BUILD · BATTLE")
                         .font(.custom("ChakraPetch-SemiBold", size: 12)).tracking(3.8)
                         .foregroundColor(gold).padding(.top, 6)
-                    PackFan(height: newAccount ? 120 : 210).padding(.top, 16).padding(.bottom, 20)   // sized so the whole form fits without scrolling
+                    PackFan(height: newAccount ? 96 : 210).padding(.top, 16).padding(.bottom, 20)   // sized so the whole form fits without scrolling
                     VStack(spacing: 12) {
                         field(.user, icon: "person") {
                             TextField("", text: $username, prompt: Text(newAccount ? "Username" : "Username or email").foregroundColor(Theme.muted))
@@ -99,6 +101,13 @@ struct AuthView: View {
                         } else if newAccount && password.isEmpty {
                             Text("8+ characters, with a letter and a number").font(.custom("Barlow-Regular", size: 13)).foregroundColor(Theme.muted)
                         }
+                        if newAccount {
+                            VStack(alignment: .leading, spacing: 8) {
+                                agreeRow($agreeTerms, "Terms and Conditions", path: "terms")
+                                agreeRow($agreePrivacy, "Privacy Policy", path: "privacy")
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
                         Button(action: submit) {
                             Text(busy ? "…" : (newAccount ? "CREATE ACCOUNT" : "LOG IN"))
                                 .font(.custom("ChakraPetch-Bold", size: 18)).tracking(2.5)
@@ -125,6 +134,8 @@ struct AuthView: View {
                     }
                     .frame(minHeight: 44)
                     .padding(.top, 12)
+                    Text("© 2026 Lucas Seeley. All rights reserved.").font(.custom("Barlow-Regular", size: 11)).foregroundColor(Theme.muted)
+                        .padding(.top, 4)
                 }
                 .padding(.horizontal, 24).padding(.top, newAccount ? 12 : 40).padding(.bottom, 16)
             }
@@ -146,6 +157,22 @@ struct AuthView: View {
         .shadow(color: on ? gold.opacity(0.18) : .clear, radius: 6)
         .contentShape(Rectangle())
         .onTapGesture { focus = which }
+    }
+
+    // "I have read and agree to the <link>": the box toggles it, the linked name opens the page.
+    private func agreeRow(_ on: Binding<Bool>, _ name: String, path: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Button { on.wrappedValue.toggle() } label: {
+                Image(systemName: on.wrappedValue ? "checkmark.square.fill" : "square")
+                    .font(.system(size: 22)).foregroundColor(gold)
+            }
+            .accessibilityLabel("I have read and agree to the \(name)")
+            .accessibilityValue(on.wrappedValue ? "checked" : "not checked")
+            (Text("I have read and agree to the ").foregroundColor(Color(hex: 0xA9A5C2))
+             + Text(.init("[\(name)](\(API.base.appendingPathComponent(path).absoluteString))")).font(.custom("Barlow-SemiBold", size: 14)))
+                .font(.custom("Barlow-Regular", size: 14)).tint(gold)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     private func submit() {

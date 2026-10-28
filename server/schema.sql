@@ -199,3 +199,11 @@ CREATE TABLE IF NOT EXISTS emails (
   verified INTEGER NOT NULL DEFAULT 0,
   created INTEGER NOT NULL
 );
+
+-- When each player agreed to the Terms and the Privacy Policy at sign-up (and which versions: their "last updated" dates).
+CREATE TABLE IF NOT EXISTS agreements (
+  user_id INTEGER PRIMARY KEY,
+  terms TEXT NOT NULL,
+  privacy TEXT NOT NULL,
+  at INTEGER NOT NULL
+);

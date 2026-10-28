@@ -78,7 +78,7 @@ final class GameStore: ObservableObject {
     func auth(username: String, email: String?, password: String, newAccount: Bool) async {
         do {
             var body: [String: Any] = ["username": username.trimmingCharacters(in: .whitespaces), "password": password]
-            if let email { body["email"] = email.trimmingCharacters(in: .whitespaces) }
+            if let email { body["email"] = email.trimmingCharacters(in: .whitespaces); body["agree"] = true }   // sign-up only goes once both boxes are ticked
             let reply: AuthReply = try await API.call(newAccount ? "signup" : "login", token: nil, body: body)
             token = reply.token
             profile = reply.profile

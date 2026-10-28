@@ -41,7 +41,7 @@ if (!base.includes('localhost')) {
   const sql = [`DELETE FROM friends WHERE user_id IN ${old} OR friend_id IN ${old}`,
     `DELETE FROM challenges WHERE to_id IN ${old} OR match_id IN (SELECT id FROM matches WHERE p0 IN ${old} OR p1 IN ${old})`,
     `DELETE FROM matches WHERE p0 IN ${old} OR p1 IN ${old}`, `DELETE FROM trades WHERE from_id IN ${old} OR to_id IN ${old}`,
-    ...'fused collection sessions progress presence spins gauntlet shop_buys hunts daily_quests quest_events ranked ranked_queue pack_inv powers power_team main_quest emails'.split(' ').map(t => `DELETE FROM ${t} WHERE user_id IN ${old}`),
+    ...'fused collection sessions progress presence spins gauntlet shop_buys hunts daily_quests quest_events ranked ranked_queue pack_inv powers power_team main_quest emails agreements'.split(' ').map(t => `DELETE FROM ${t} WHERE user_id IN ${old}`),
     `DELETE FROM users WHERE id IN ${old}`,
     "DELETE FROM attempts WHERE key LIKE 'signup:%' OR key LIKE 'loginip:%'"].join('; ');   // network limits: runners can share an address
   try { execSync(`npx wrangler d1 execute holosynth --remote --command "${sql}"`, { cwd: new URL('..', import.meta.url), stdio: 'ignore' }); }
@@ -51,21 +51,26 @@ const tag = Date.now().toString(36).slice(-6);
 // How long the common calls take (shown as a notice on the build).
 const timed = async (label, p) => { const t0 = Date.now(); const r = await p; timings.push(`${label} ${Date.now() - t0}ms`); return r; };
 const timings = [];
-await expectError(call('/signup', null, { username: `e2e_a_${tag}`, email: 'nope', password: 'secret11' }), 400);   // email checked
-await expectError(call('/signup', null, { username: `e2e_a_${tag}`, email: `a_${tag}@example.com`, password: 'short' }), 400);   // 8+ characters
-const a = await call('/signup', null, { username: `e2e_a_${tag}`, email: `a_${tag}@example.com`, password: 'secret11' });
-const b = await call('/signup', null, { username: `e2e_b_${tag}`, email: `b_${tag}@example.com`, password: 'secret22' });
+await expectError(call('/signup', null, { username: `e2e_a_${tag}`, email: `a_${tag}@example.com`, password: 'secret11' }), 400);   // must agree to the Terms and Privacy Policy
+await expectError(call('/signup', null, { agree: true, username: `e2e_a_${tag}`, email: 'nope', password: 'secret11' }), 400);   // email checked
+await expectError(call('/signup', null, { agree: true, username: `e2e_a_${tag}`, email: `a_${tag}@example.com`, password: 'short' }), 400);   // 8+ characters
+const a = await call('/signup', null, { agree: true, username: `e2e_a_${tag}`, email: `a_${tag}@example.com`, password: 'secret11' });
+const b = await call('/signup', null, { agree: true, username: `e2e_b_${tag}`, email: `b_${tag}@example.com`, password: 'secret22' });
 for (let i = 0; i < 3; i++) await timed('me', call('/me', a.token));
 check(a.profile.recruit === 1 && a.profile.gold === 0 && a.profile.team.length === 0 && a.profile.mainQuest.step === 1, 'new account starts empty, one Recruit Pack to open');
-await expectError(call('/signup', null, { username: `E2E_A_${tag}`, email: `c_${tag}@example.com`, password: 'secret11' }), 409);   // name taken (any case)
-await expectError(call('/signup', null, { username: `e2e_c_${tag}`, email: `A_${tag}@Example.com`, password: 'secret11' }), 409);   // email taken (any case)
+await expectError(call('/signup', null, { agree: true, username: `E2E_A_${tag}`, email: `c_${tag}@example.com`, password: 'secret11' }), 409);   // name taken (any case)
+await expectError(call('/signup', null, { agree: true, username: `e2e_c_${tag}`, email: `A_${tag}@Example.com`, password: 'secret11' }), 409);   // email taken (any case)
 await expectError(call('/login', null, { username: `e2e_a_${tag}`, password: 'nope' }), 401);
-await expectError(call('/signup', null, { username: `e2e_c_${tag}`, email: `c_${tag}@example.com`, password: 'abcdefgh' }), 400);   // needs a number
+await expectError(call('/signup', null, { agree: true, username: `e2e_c_${tag}`, email: `c_${tag}@example.com`, password: 'abcdefgh' }), 400);   // needs a number
 check((await call('/login', null, { username: `A_${tag}@example.com`, password: 'secret11' })).profile.email === `a_${tag}@example.com`, 'log in with email');
 { const extra = (await call('/login', null, { username: `e2e_a_${tag}`, password: 'secret11' })).token;   // log in, then log out: that token stops working
   check((await call('/me', extra)).username === `e2e_a_${tag}`, 'second session works');
   await call('/logout', extra, {});
   await expectError(call('/me', extra), 401); }
+for (const page of ['terms', 'privacy']) {   // the pages sign-up links to
+  const r = await send(`${base}/${page}`);
+  check(r.ok && (r.headers.get('content-type') || '').includes('text/html') && (await r.text()).includes('Lucas Seeley'), `${page} page served`);
+}
 
 await expectError(call('/campaign/start', a.token, {}), 400);   // no card yet
 const r1 = await call('/recruit', a.token, {});

@@ -369,10 +369,13 @@ const addCard = (db, userId, id) => db.prepare(
   'INSERT INTO collection (user_id, card_id, count) VALUES (?, ?, 1) ON CONFLICT (user_id, card_id) DO UPDATE SET count = count + 1',
 ).bind(userId, id);
 
+// The "last updated" dates on web/terms.html and web/privacy.html: change these with them.
+const TERMS_VERSION = '2026-10-28', PRIVACY_VERSION = '2026-10-28';
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 async function signup(req, db) {
-  const { username = '', password = '', email = '' } = await body(req);
+  const { username = '', password = '', email = '', agree } = await body(req);
   const name = String(username).trim(), mail = String(email).trim().toLowerCase();
+  if (agree !== true) throw new HttpError(400, 'Agree to the Terms and Conditions and the Privacy Policy to create an account.');
   if (!/^[A-Za-z0-9_]{3,16}$/.test(name)) throw new HttpError(400, 'Username must be 3–16 letters, numbers or _.');
   if (mail.length > 254 || !EMAIL_RE.test(mail)) throw new HttpError(400, 'Enter a valid email address.');
   if (String(password).length < 8) throw new HttpError(400, 'Password must be at least 8 characters.');
@@ -390,7 +393,8 @@ async function signup(req, db) {
     'INSERT INTO users (username, pass_hash, salt, gold, team, created) VALUES (?, ?, ?, ?, ?, ?) RETURNING *',
   ).bind(name, await hashPassword(password, salt), salt, START_GOLD, '[]', now()).first();
   await db.batch([db.prepare('INSERT INTO progress (user_id) VALUES (?)').bind(user.id),
-    db.prepare('INSERT INTO emails (user_id, email, created) VALUES (?, ?, ?)').bind(user.id, mail, now())]);
+    db.prepare('INSERT INTO emails (user_id, email, created) VALUES (?, ?, ?)').bind(user.id, mail, now()),
+    db.prepare('INSERT INTO agreements (user_id, terms, privacy, at) VALUES (?, ?, ?, ?)').bind(user.id, TERMS_VERSION, PRIVACY_VERSION, now())]);
   return json({ token: await newSession(db, user.id), profile: await profile(db, user) });
 }
 
@@ -1394,7 +1398,7 @@ async function deleteAccount(req, db, user) {
     db.prepare('DELETE FROM matches WHERE p0 = ?1 OR p1 = ?1').bind(id),
     db.prepare('DELETE FROM trades WHERE from_id = ?1 OR to_id = ?1').bind(id),
     db.prepare('DELETE FROM fused WHERE user_id = ?1').bind(id),
-    ...['collection', 'sessions', 'progress', 'presence', 'spins', 'gauntlet', 'shop_buys', 'hunts', 'daily_quests', 'quest_events', 'ranked', 'ranked_queue', 'pack_inv', 'powers', 'power_team', 'main_quest', 'emails'].map(t => db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(id)),
+    ...['collection', 'sessions', 'progress', 'presence', 'spins', 'gauntlet', 'shop_buys', 'hunts', 'daily_quests', 'quest_events', 'ranked', 'ranked_queue', 'pack_inv', 'powers', 'power_team', 'main_quest', 'emails', 'agreements'].map(t => db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(id)),
     db.prepare('DELETE FROM users WHERE id = ?').bind(id),
   ]);
   return json({ ok: true });

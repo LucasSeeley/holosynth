@@ -1,0 +1,15 @@
+/* Privacy Policy and Terms pages */
+body { overflow: auto; }
+.doc { max-width: 760px; margin: 0 auto; padding: 40px 24px 64px; }
+.doc header { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+.doc header img { width: 200px; }
+.doc header a.back { margin-left: auto; }
+.doc h1 { font: 700 34px/1.1 var(--head); margin: 0 0 6px; }
+.doc h2 { font: 700 20px var(--head); margin: 30px 0 8px; color: var(--brass); }
+.doc p, .doc li { font-size: 16px; line-height: 1.6; color: #d9d6ea; }
+.doc ul { padding-left: 20px; }
+.doc .updated { color: var(--muted); font-size: 14px; }
+.doc .card-box { padding: 18px 20px; margin: 18px 0; }
+.doc .flush { margin: 0; }
+.doc .foot { margin-top: 44px; padding-top: 18px; border-top: 1px solid rgba(232,184,90,.2); text-align: center; font-size: 13px; color: var(--muted); line-height: 1.8; }
+.doc .foot a { color: var(--soft); }
