@@ -20,6 +20,8 @@ function fitZoom() {
   document.documentElement.classList.toggle('wide', w >= 760);
 }
 addEventListener('resize', fitZoom);
+// Firefox ignores -webkit-user-drag: stop picture drags everywhere (card slots drag their button, not the image)
+addEventListener('dragstart', e => { if (e.target instanceof HTMLImageElement) e.preventDefault(); });
 fitZoom();
 
 const TABS = [

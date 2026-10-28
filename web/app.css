@@ -20,7 +20,7 @@ html, body { margin: 0; height: 100%; background: var(--ink); color: var(--fg); 
 body { overflow: hidden; }
 button { font: inherit; color: inherit; }
 a { color: var(--brass); }
-img { display: block; }
+img { display: block; -webkit-user-drag: none; user-select: none; }   /* pictures never drag around (battles, cards) */
 [hidden] { display: none !important; }
 :focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 ::selection { background: rgba(232, 184, 90, .35); }

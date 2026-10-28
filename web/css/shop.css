@@ -64,8 +64,9 @@
 }
 
 /* Your packs */
-.yourpacks { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 14px; padding: 0 16px 40px; min-height: 0; }
-.carousel { position: relative; width: 100%; flex: 1; max-height: 440px; min-height: 0; overflow: hidden; touch-action: pan-y; user-select: none; }
+.yourpacks { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 0 16px 40px; min-height: 0; }
+.yourpacks > .btn { margin-top: 18px; }   /* room between the pack's name and Open */
+.carousel { position: relative; width: 100%; flex: 0 1 440px; max-height: 440px; min-height: 0; overflow: hidden; touch-action: pan-y; user-select: none; }
 .ctrack { display: flex; gap: 30px; height: 100%; align-items: center; }
 .cpack { flex: none; width: 240px; padding: 0; border: 0; background: none; cursor: pointer; position: relative; transform: scale(.62); opacity: .45; filter: saturate(.7);
   transition: transform .35s, opacity .35s; display: flex; justify-content: center; }
