@@ -268,7 +268,7 @@ struct PlayTab: View {
                         if let img = Art.image(h.legend) { Image(uiImage: img).resizable().scaledToFill() }
                     } action: { screen = .hunt }
                 }
-                ModeTile(title: "Friends", sub: "Battle a friend", accent: Color(hex: 0x3FF0FF), lockText: lock("friends"), alert: false) {
+                ModeTile(title: "Friendly Battle", sub: "Battle a friend", accent: Color(hex: 0x3FF0FF), lockText: lock("friends"), alert: false) {
                     Image(systemName: "bolt.fill").font(.system(size: 48)).foregroundColor(Theme.brass).padding(.top, 22)
                 } action: { screen = .friend }
             }
