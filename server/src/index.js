@@ -113,8 +113,9 @@ async function questsFor(db, user, prog, collection, extra, shopped) {
   let row = await db.prepare('SELECT * FROM daily_quests WHERE user_id = ?').bind(user.id).first();
   if (!row || row.day !== day) {
     const lvl = levelFor(user.xp), open = k => isUnlocked(k, prog.cleared, lvl);
-    const can = ['wins', ...(open('spin') ? ['spin'] : []), ...(open('shop') ? ['pack', 'shop'] : [])];
+    const can = ['wins', 'win1', ...(open('spin') ? ['spin'] : []), ...(open('shop') ? ['pack', 'shop'] : [])];
     if (prog.cleared + 2 <= OPEN_LEVELS) can.push('levels');
+    if (prog.cleared + 1 <= OPEN_LEVELS) can.push('level1');
     if (Object.values(collection).some(n => n > 1)) can.push('fuse');
     if (prog.cleared >= NEW_CARD_AFTER[1] && extra.friends > 0) can.push('friend');
     if (open('gauntlet')) can.push('streak');
@@ -130,7 +131,7 @@ async function questsFor(db, user, prog, collection, extra, shopped) {
   const base = JSON.parse(row.base), claimed = JSON.parse(row.claimed);
   const have = {
     spin: extra.spun >= day ? 1 : 0, pack: prog.packs - base.packs, shop: shopped,
-    wins: prog.wins - base.wins, levels: prog.cleared - base.cleared,
+    wins: prog.wins - base.wins, levels: prog.cleared - base.cleared, win1: prog.wins - base.wins, level1: prog.cleared - base.cleared,
     fuse: ev.fuse || 0, friend: ev.friend || 0, streak: ev.streak || 0, hunt: ev.hunt || 0,
   };
   const list = JSON.parse(row.quests).map((id, i) => {

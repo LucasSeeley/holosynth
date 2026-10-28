@@ -446,3 +446,7 @@ test('unlocks and the main quest line', async () => {
   assert.equal(mainProgress(26, have), null);
   assert.ok(Object.values(UNLOCKS).every(u => u.text));
 });
+
+test('a brand-new player still gets three daily quests', () => {
+  for (let u = 1; u < 40; u++) assert.equal(pickQuests(u, 0, ['wins', 'win1', 'level1', 'levels']).length, 3);
+});

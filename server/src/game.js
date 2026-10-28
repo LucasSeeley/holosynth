@@ -182,6 +182,8 @@ export const gauntletHeal = team => team.map(u => (u.hp === 0 ? 0 : Math.min(uni
 // Three a day per player (midnight UTC): one easy, one medium, one hard. Finish all three for a free Omni pack.
 export const QUESTS = {
   spin: { tier: 0, name: 'Spin the wheel', goal: 1 },
+  win1: { tier: 0, name: 'Win a battle', goal: 1, hint: 'Any mode' },
+  level1: { tier: 0, name: 'Clear a campaign level', goal: 1 },
   pack: { tier: 0, name: 'Open a pack', goal: 1, hint: 'Bought or won' },
   shop: { tier: 0, name: 'Buy a shop card', goal: 1 },
   wins: { tier: 1, name: 'Win 3 battles', goal: 3, hint: 'Any mode' },
