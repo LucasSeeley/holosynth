@@ -1238,7 +1238,7 @@ async function gauntletMove(req, db, user) {
   const writes = [db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(gold, gauntletXp(run.fight), user.id), bumpProgress(db, user.id, 'wins'),
     questEvent(db, user.id, 'streak', next.wins, true), ...(next.wins === 10 ? [questEvent(db, user.id, 'g10')] : [])];
   if (next.wins % GAUNTLET_PACK_EVERY === 0) {
-    packType = freePack();
+    packType = (await getProgress(db, user.id)).cleared < UNLOCKS.packs.cleared ? 'cyber' : freePack();   // Cyber only until chapter 1 is beaten
     const opened = openPack(user.packs_since_legend, packType);
     pack = opened.cards; holo = opened.holo;
     next.packs++;
