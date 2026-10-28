@@ -215,7 +215,9 @@ async function profile(db, user) {
   const collection = Object.fromEntries(results.map(r => [r.card_id, r.count]));
   const sold = String(extra.shopped ?? '').split(',');
   const ev0 = Object.fromEntries(ev0rows.results.map(r => [r.kind, r.n]));
-  const quests = await questsFor(db, user, prog, collection, extra, sold.filter(Boolean).length);
+  const quests = isUnlocked('quests', prog.cleared, levelFor(user.xp))
+    ? await questsFor(db, user, prog, collection, extra, sold.filter(Boolean).length)
+    : { list: [], bonus: 'locked', bonusPack: questBonus(prog.cleared, now()), next: dayStart(now()) + 86400000 };   // locked: nothing to claim, no badge
   const next = prog.cleared < OPEN_LEVELS ? CAMPAIGN[prog.cleared] : null;   // locked chapters count as done for now
   const chapter = next ? next.chapter : CAMPAIGN[OPEN_LEVELS - 1].chapter;
   return {
