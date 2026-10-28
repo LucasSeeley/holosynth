@@ -8,7 +8,7 @@ import { Icon, Card, Tile, Avatar, Coin, Screen, Modal, fmt } from '../ui.js';
 import { Sound } from '../sound.js';
 import { FriendBattle } from '../screens/friend.js';
 
-const wide = () => matchMedia('(min-width: 1280px)').matches;
+const wide = () => matchMedia('(min-width: 1400px)').matches;   // same breakpoint as cards.css .so
 function seen(p) {
   if (p.online) return html`<span style="color: var(--online);">Online</span>`;
   if (!p.seen) return 'Offline';

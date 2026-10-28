@@ -89,7 +89,7 @@
 }
 
 /* ---------- Social ---------- */
-.so { display: grid; grid-template-columns: 320px minmax(0, 1fr) 260px; gap: 24px; align-items: start; }
+.so { display: grid; grid-template-columns: 300px minmax(0, 1fr) 300px; gap: 24px; align-items: start; }
 .so-left, .so-mid, .so-right { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .so-right { padding-top: 44px; position: sticky; top: 0; }
 .so-add { display: flex; gap: 8px; }
@@ -130,7 +130,7 @@
 .so-copies { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 2; display: flex; align-items: center; gap: 2px; padding: 2px; border-radius: 16px; background: var(--ink); border: 1px solid var(--brass); }
 .so-copies button { width: 26px; height: 26px; border-radius: 50%; border: 0; background: rgba(232,184,90,.15); color: var(--brass); cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .so-team { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.so-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.so-stats { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 1fr); gap: 8px; }   /* the campaign box ("Ch 2 · 14") gets the room */
 .so-stats div { padding: 10px 4px; text-align: center; border-radius: 12px; background: rgba(7,6,12,.55); }
 .so-stats b { display: block; font: 700 17px var(--head); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .so-wrap { width: min(760px, 100%); margin: 0 auto; display: flex; flex-direction: column; gap: 14px; padding: 4px 16px 24px; }
@@ -138,7 +138,7 @@
 .so-done .got { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 .so-empty { text-align: center; padding: 30px 0 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .so-only-narrow { display: none; }
-@media (max-width: 1279px) {
+@media (max-width: 1399px) {   /* three columns need ~1400px; below that the app's single column */
   .so { display: flex; flex-direction: column; align-items: stretch; gap: 12px; max-width: 720px; margin: 0 auto; }
   .so-left, .so-mid { display: contents; }   /* app order: challenges and trades, then requests, then friends */
   .so-o2 { order: 2; } .so-o3 { order: 3; }
