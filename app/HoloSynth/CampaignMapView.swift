@@ -19,6 +19,7 @@ struct CampaignMapView: View {
     @State private var ch = 0                // chapter on screen (0-based)
     @State private var error: String?
     @State private var pulse = false
+    @State private var step = 1              // direction of the last chapter change, for the slide
 
     private static let violet = Color(hex: 0xB98CFF)
     private let gap: CGFloat = 84            // between levels
@@ -34,14 +35,19 @@ struct CampaignMapView: View {
                 VStack(spacing: 0) {
                     header(map, chapter)
                     ZStack(alignment: .bottom) {
-                        TabView(selection: $ch) {
-                            ForEach(map.chapters.indices, id: \.self) { i in path(map, map.chapters[i], index: i).tag(i) }
-                        }
-                        .tabViewStyle(.page(indexDisplayMode: .never))
+                        // one chapter at a time (a paging TabView reset the scroll position as it laid out)
+                        path(map, chapter, index: ch)
+                            .id(ch)
+                            .transition(.asymmetric(insertion: .move(edge: step > 0 ? .trailing : .leading), removal: .move(edge: step > 0 ? .leading : .trailing)))
+                            .simultaneousGesture(DragGesture(minimumDistance: 30).onEnded { v in
+                                guard abs(v.translation.width) > max(60, abs(v.translation.height) * 1.5) else { return }
+                                go(v.translation.width < 0 ? 1 : -1, count: map.chapters.count)
+                            })
                         if let text = chapter.locked { lockedPanel(text) }
                         else if let cur = current(map), cur.chapter == ch { levelPanel(chapter, chapter.levels[cur.index]) }
                         else if (ch + 1) * 30 <= map.cleared { donePanel(chapter) }
                     }
+                    .clipped()   // the chapter slide stays inside the map
                     .overlay(alignment: .leading) { arrow(-1, show: ch > 0).padding(.leading, 6).offset(y: -120) }
                     .overlay(alignment: .trailing) { arrow(1, show: ch < map.chapters.count - 1).padding(.trailing, 6).offset(y: -120) }
                 }
@@ -111,9 +117,15 @@ struct CampaignMapView: View {
         .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 10)
     }
 
+    private func go(_ d: Int, count: Int) {
+        guard (0..<count).contains(ch + d) else { return }
+        step = d
+        withAnimation(.easeInOut(duration: 0.3)) { ch += d }
+    }
+
     @ViewBuilder private func arrow(_ d: Int, show: Bool) -> some View {
         if show {
-            Button { withAnimation(.easeInOut(duration: 0.25)) { ch += d } } label: {
+            Button { go(d, count: map?.chapters.count ?? 0) } label: {
                 Image(systemName: d < 0 ? "chevron.left" : "chevron.right").font(.system(size: 16, weight: .bold)).foregroundColor(Self.violet)
                     .frame(width: 44, height: 44)
                     .background(Theme.field, in: Circle())
@@ -168,6 +180,7 @@ struct CampaignMapView: View {
                     }
                     .frame(width: w, height: topPad + 29 * gap + bottomPad)
                 }
+                .startAtBottom()
                 .onAppear { scroll(proxy, done) }
             }
         }
@@ -326,5 +339,12 @@ struct CampaignMapView: View {
         .background(Color(hex: 0x0E0C18).opacity(0.96), in: RoundedRectangle(cornerRadius: 18))
         .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.brass.opacity(0.45), lineWidth: 1))
         .padding(.horizontal, 10).padding(.bottom, 8)
+    }
+}
+
+private extension View {
+    // A chapter starts at level 1 (the bottom), then scrolls to your next level: no flash of the top on the way.
+    @ViewBuilder func startAtBottom() -> some View {
+        if #available(iOS 17, *) { defaultScrollAnchor(.bottom) } else { self }
     }
 }
