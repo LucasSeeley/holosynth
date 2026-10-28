@@ -31,11 +31,15 @@ const TABS = [
   { key: 'social', name: 'Social', icon: 'people', view: SocialTab },
   { key: 'profile', name: 'Profile', icon: 'person', view: ProfileTab },
 ];
-const tabFromHash = () => TABS.find(t => '#/' + t.key === location.hash)?.key || 'play';
+// Routes are #/play, #/shop, #/cards, #/social, #/profile on "/". Anything else (an unknown tab or path) lands on the
+// home page: Play when logged in, sign-up when not. The server hands any unknown page address this same index.html.
+const tabFromHash = () => TABS.find(t => '#/' + t.key === location.hash)?.key;
+const goHome = loggedIn => history.replaceState(null, '', loggedIn ? '/#/play' : '/');
 
 function useTab() {
-  const [tab, setTab] = useState(tabFromHash());
-  useEffect(() => { const f = () => setTab(tabFromHash()); addEventListener('hashchange', f); return () => removeEventListener('hashchange', f); }, []);
+  const read = () => { const t = tabFromHash(); if (!t) goHome(true); return t || 'play'; };
+  const [tab, setTab] = useState(read);
+  useEffect(() => { const f = () => setTab(read()); addEventListener('hashchange', f); return () => removeEventListener('hashchange', f); }, []);
   return tab;
 }
 
@@ -50,6 +54,7 @@ export function PackFan({ height = 210 }) {
 const USER_RE = /^[A-Za-z0-9_]{3,16}$/, EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 function AuthView() {
   const s = useStore();
+  useEffect(() => { if (location.pathname !== '/' || location.hash) goHome(false); }, []);
   const [f, setF] = useState({ username: '', email: '', password: '', confirm: '', terms: false, privacy: false });
   const [newAccount, setNew] = useState(true);
   const [busy, setBusy] = useState(false);

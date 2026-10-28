@@ -1561,7 +1561,15 @@ async function handle(req, env, ctx) {
   const viaCookie = !req.headers.get('Authorization') && !!cookieToken(req);
   if (origin && origin !== self) throw new HttpError(403, 'Not allowed.');
   if (viaCookie && changes && !origin) throw new HttpError(403, 'Not allowed.');
-  let res = await route(req, env, ctx);
+  let res;
+  try { res = await route(req, env, ctx); }
+  catch (e) {
+    // a browser opening an address that isn't a page (or needs a login) goes to the game page, which shows Play or sign-up
+    if (req.method === 'GET' && req.headers.get('Sec-Fetch-Mode') === 'navigate' && e instanceof HttpError && (e.status === 404 || e.status === 401)) {
+      return new Response(null, { status: 302, headers: { Location: self + '/' } });
+    }
+    throw e;
+  }
   if (!res.ok) return res;
   if (origin && (pathname === '/login' || pathname === '/signup')) {
     const { token, profile } = await res.json();
