@@ -457,7 +457,8 @@ async function campaignMove(req, db, user) {
 
   let result = null;
   if (done) result = run.state.winner === 0 ? await campaignWin(db, user, run.level) : { won: false };
-  return json({ ...runView(run), result, profile: await profile(db, await freshUser(db, user.id)) });
+  // the profile only when the fight ends: building it each move made every attack wait on a dozen reads
+  return json({ ...runView(run), result, ...(done ? { profile: await profile(db, await freshUser(db, user.id)) } : {}) });
 }
 
 // First clear of a level: gold, XP, and the level's prize (new card / boss pack).
