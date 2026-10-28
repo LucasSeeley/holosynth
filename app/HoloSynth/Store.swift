@@ -54,23 +54,17 @@ final class GameStore: ObservableObject {
     @Published var screenOpen = false   // a battle, pack or other full screen is up: popups (the daily spin) wait
     @Published var newCards: Set<String> = []   // cards you got and haven't tapped yet ("NEW" tag)
 
-    // Any card id that shows up in the collection for the first time gets a NEW tag. Kept per account across launches.
+    // NEW tags come from the server (owned but not looked at yet), so they match on every device.
     private func trackNew() {
-        guard let p = profile, !p.team.isEmpty else { return }
-        let d = UserDefaults.standard, seenKey = "seen.\(p.username)", newKey = "new.\(p.username)"
-        let owned = Set(p.collection.keys)
-        var fresh = Set(d.stringArray(forKey: newKey) ?? [])
-        if let seen = d.stringArray(forKey: seenKey) { fresh.formUnion(owned.subtracting(seen)) }   // first launch: nothing is new
-        d.set(Array(owned), forKey: seenKey)
-        d.set(Array(fresh), forKey: newKey)
+        guard let fresh = profile?.newCards.map(Set.init) else { return }
         if fresh != newCards { newCards = fresh }
     }
 
-    // Tapping a card to look at it clears its NEW tag.
+    // Tapping a card to look at it clears its NEW tag, here and on the server.
     func seen(_ id: String) {
-        guard let p = profile, newCards.contains(id) else { return }
+        guard newCards.contains(id) else { return }
         newCards.remove(id)
-        UserDefaults.standard.set(Array(newCards), forKey: "new.\(p.username)")
+        Task { let _: [String: Bool]? = try? await API.call("cards/seen", token: token, body: ["ids": [id]]) }
     }
     @Published var error: String?
     @Published var social: Social?

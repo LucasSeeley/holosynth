@@ -43,7 +43,7 @@ if (!base.includes('localhost')) {
   const sql = [`DELETE FROM friends WHERE user_id IN ${old} OR friend_id IN ${old}`,
     `DELETE FROM challenges WHERE to_id IN ${old} OR match_id IN (SELECT id FROM matches WHERE p0 IN ${old} OR p1 IN ${old})`,
     `DELETE FROM matches WHERE p0 IN ${old} OR p1 IN ${old}`, `DELETE FROM trades WHERE from_id IN ${old} OR to_id IN ${old}`,
-    ...'fused collection sessions progress presence spins gauntlet shop_buys hunts daily_quests quest_events ranked ranked_queue pack_inv powers power_team main_quest emails agreements'.split(' ').map(t => `DELETE FROM ${t} WHERE user_id IN ${old}`),
+    ...'fused collection sessions progress presence spins gauntlet shop_buys hunts daily_quests quest_events ranked ranked_queue pack_inv powers power_team main_quest emails agreements seen_cards'.split(' ').map(t => `DELETE FROM ${t} WHERE user_id IN ${old}`),
     `DELETE FROM users WHERE id IN ${old}`,
     "DELETE FROM attempts WHERE key LIKE 'signup:%' OR key LIKE 'signupchk:%' OR key LIKE 'loginip:%'"].join('; ');   // network limits: runners can share an address
   try { execSync(`npx wrangler d1 execute holosynth --remote --command "${sql}"`, { cwd: new URL('..', import.meta.url), stdio: 'ignore' }); }
@@ -101,6 +101,7 @@ check(['volt', 'fang', 'goliath'].includes(r1.card) && r1.profile.team.length ==
 await call('/recruit', b.token, {});
 await expectError(call('/recruit', a.token, {}), 400);   // only one until level 3
 check(r1.profile.mainQuest.done, 'main quest 1 done');
+check(r1.profile.newCards.length === 0, 'the first card counts as seen');
 const mq = await call('/mainquest/claim', a.token, {});
 check(mq.profile.gold === 100 && mq.profile.mainQuest.step === 2, 'main quest 1 claimed');
 await expectError(call('/mainquest/claim', a.token, {}), 400);   // quest 2 not done

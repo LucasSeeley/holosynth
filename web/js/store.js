@@ -55,24 +55,15 @@ export const local = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
 
-// NEW tags: any card that shows up in the collection for the first time. Kept per account in this browser.
+// NEW tags come from the server (owned but not looked at yet), so they match on every device.
 function trackNew() {
-  const p = state.profile;
-  if (!p || !p.team?.length) return;
-  const seenKey = 'seen.' + p.username, newKey = 'new.' + p.username;
-  const owned = Object.keys(p.collection);
-  const seen = local.get(seenKey);
-  const fresh = new Set(local.get(newKey, []));
-  if (seen) owned.filter(id => !seen.includes(id)).forEach(id => fresh.add(id));   // first visit: nothing is new
-  local.set(seenKey, owned);
-  local.set(newKey, [...fresh]);
-  state.newCards = fresh;
+  if (state.profile?.newCards) state.newCards = new Set(state.profile.newCards);
 }
 export function seenCard(id) {
   if (!state.newCards.has(id)) return;
   state.newCards.delete(id);
-  local.set('new.' + state.profile.username, [...state.newCards]);
   set({});
+  api('cards/seen', { ids: [id] }).catch(() => {});
 }
 
 // ---- actions (same as GameStore) ----

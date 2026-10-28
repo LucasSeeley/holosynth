@@ -120,6 +120,7 @@ struct Profile: Decodable, Equatable {
     let level: Int
     let team: [String]
     let collection: [String: Int]
+    let newCards: [String]?       // owned but not looked at yet (NEW tags), same on every device
     let recruit: Int?           // Recruit Packs waiting to be opened (each holds a starter)
     let locked: [String: String]?   // features not open yet → what opens them ("Clear Ch 1 · Lv 10")
     let mainQuest: MainQuest?   // the active main quest; nil once they're all done

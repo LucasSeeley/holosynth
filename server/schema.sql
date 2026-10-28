@@ -207,3 +207,9 @@ CREATE TABLE IF NOT EXISTS agreements (
   privacy TEXT NOT NULL,
   at INTEGER NOT NULL
 );
+
+-- Cards a player has looked at (JSON array of ids), so NEW tags match on every device: new = owned but not seen.
+CREATE TABLE IF NOT EXISTS seen_cards (
+  user_id INTEGER PRIMARY KEY,
+  ids TEXT NOT NULL
+);

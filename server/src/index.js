@@ -260,7 +260,8 @@ async function profile(db, user) {
       q('SELECT * FROM daily_quests WHERE user_id = ?', user.id),
       q('SELECT kind, n FROM quest_events WHERE user_id = ? AND day = ?', user.id, day),
       q(`SELECT (SELECT email FROM emails WHERE user_id = ?1) AS email,
-         (SELECT terms || '|' || privacy FROM agreements WHERE user_id = ?1) AS agreed`, user.id),
+         (SELECT terms || '|' || privacy FROM agreements WHERE user_id = ?1) AS agreed,
+         (SELECT ids FROM seen_cards WHERE user_id = ?1) AS seen`, user.id),
     ])).map(r => r.results);
   const prog = progRow ?? { user_id: user.id, cleared: 0, wins: 0, packs: 0, run: null };
   const mainRowNow = mainRowRead ?? { step: 0, base: '{}' };
@@ -276,6 +277,13 @@ async function profile(db, user) {
       weekEnds: week + WEEK_MS, alert: !!(me.moved || me.reward) };
   }
   const collection = Object.fromEntries(results.map(r => [r.card_id, r.count]));
+  // NEW tags: owned cards not looked at yet. The first time (no list yet) everything owned counts as seen.
+  let seen = emailRow?.seen ? JSON.parse(emailRow.seen) : null;
+  if (!seen && JSON.parse(user.team || '[]').length) {
+    seen = Object.keys(collection);
+    await db.prepare('INSERT OR IGNORE INTO seen_cards (user_id, ids) VALUES (?, ?)').bind(user.id, JSON.stringify(seen)).run();
+  }
+  const newCards = seen ? Object.keys(collection).filter(id => !seen.includes(id)) : [];
   const sold = String(extra.shopped ?? '').split(',');
   const ev0 = Object.fromEntries(ev0rows.map(r => [r.kind, r.n]));
   const quests = isUnlocked('quests', prog.cleared, levelFor(user.xp))
@@ -294,6 +302,7 @@ async function profile(db, user) {
     levelNeed: levelStart(levelFor(user.xp) + 1) - levelStart(levelFor(user.xp)),   // XP the current level takes
     team: JSON.parse(user.team),
     collection,
+    newCards,                     // owned but not looked at yet (NEW tag on every device)
     needsStarter: false,   // old app builds read this; starters now come from Recruit Packs
     recruit: Math.max(0, recruitsOwed(prog.cleared) - Math.max(ev0.recruit || 0, STARTER_TEAM.filter(id => collection[id]).length)),   // Recruit Packs to open
     locked: Object.fromEntries(Object.keys(UNLOCKS).filter(k => !isUnlocked(k, prog.cleared, levelFor(user.xp))).map(k => [k, UNLOCKS[k].text])),
@@ -452,6 +461,18 @@ async function agree(req, db, user) {
   await db.prepare(`INSERT INTO agreements (user_id, terms, privacy, at) VALUES (?1, ?2, ?3, ?4)
     ON CONFLICT (user_id) DO UPDATE SET terms = ?2, privacy = ?3, at = ?4`).bind(user.id, TERMS_VERSION, PRIVACY_VERSION, now()).run();
   return json(await profile(db, user));
+}
+
+// Looked at these cards: their NEW tags go away on every device.
+async function seeCards(req, db, user) {
+  const { ids } = await body(req);
+  if (!Array.isArray(ids) || ids.length > 300) throw new HttpError(400, 'Bad request.');
+  const row = await db.prepare('SELECT ids FROM seen_cards WHERE user_id = ?').bind(user.id).first();
+  const seen = new Set(row ? JSON.parse(row.ids) : []);
+  for (const id of ids) if (BY_ID[id]) seen.add(id);
+  await db.prepare('INSERT INTO seen_cards (user_id, ids) VALUES (?1, ?2) ON CONFLICT (user_id) DO UPDATE SET ids = ?2')
+    .bind(user.id, JSON.stringify([...seen])).run();
+  return json({ ok: true });
 }
 
 // Ends this session (the app forgets its token too).
@@ -1440,7 +1461,7 @@ async function deleteAccount(req, db, user) {
     db.prepare('DELETE FROM matches WHERE p0 = ?1 OR p1 = ?1').bind(id),
     db.prepare('DELETE FROM trades WHERE from_id = ?1 OR to_id = ?1').bind(id),
     db.prepare('DELETE FROM fused WHERE user_id = ?1').bind(id),
-    ...['collection', 'sessions', 'progress', 'presence', 'spins', 'gauntlet', 'shop_buys', 'hunts', 'daily_quests', 'quest_events', 'ranked', 'ranked_queue', 'pack_inv', 'powers', 'power_team', 'main_quest', 'emails', 'agreements'].map(t => db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(id)),
+    ...['collection', 'sessions', 'progress', 'presence', 'spins', 'gauntlet', 'shop_buys', 'hunts', 'daily_quests', 'quest_events', 'ranked', 'ranked_queue', 'pack_inv', 'powers', 'power_team', 'main_quest', 'emails', 'agreements', 'seen_cards'].map(t => db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(id)),
     db.prepare('DELETE FROM users WHERE id = ?').bind(id),
   ]);
   return json({ ok: true });
@@ -1483,6 +1504,7 @@ async function route(req, env, ctx) {
   if (method === 'POST' && pathname === '/logout') return logout(req, db);
   if (method === 'POST' && pathname === '/me/email') return setEmail(req, db, user);
   if (method === 'POST' && pathname === '/me/agree') return agree(req, db, user);
+  if (method === 'POST' && pathname === '/cards/seen') return seeCards(req, db, user);
   if (method === 'POST' && pathname === '/team') return setTeam(req, db, user);
   if (method === 'POST' && pathname === '/fuse') return fuseCard(req, db, user);
   if (method === 'POST' && pathname === '/shop') return buyShop(req, db, user);
