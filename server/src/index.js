@@ -6,6 +6,7 @@ import {
   gauntletEnemies, gauntletBattle, gauntletHeal, gauntletCooldowns, fusedHp, FUSE_COPIES, FUSE_GOLD, FUSE_MAX, SECOND, SECOND_COST, PASSIVE_COST, POWERS, POWER_SLOTS, rankedPowers, gauntletGold, GAUNTLET_PACK_EVERY, newCampaignBattle, applyMove, aiMove,
   UNLOCKS, isUnlocked, recruitsOwed, mainProgress, MAIN_QUESTS, gauntletXp,
 } from './game.js';
+import CARDS from '../../shared/cards.json' with { type: 'json' };
 
 class HttpError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
 const json = (data, status = 200) => Response.json(data, { status });
@@ -31,7 +32,11 @@ async function newSession(db, userId) {
   await db.prepare('INSERT INTO sessions (token, user_id, created) VALUES (?, ?, ?)').bind(await sha256(token), userId, now()).run();
   return token;
 }
-const bearer = req => (req.headers.get('Authorization') || '').replace(/^Bearer /, '');
+// The app sends its token as a Bearer header; the web client never sees one: it rides in an HttpOnly cookie.
+const COOKIE = '__Host-hs';
+const cookieToken = req => (req.headers.get('Cookie') || '').match(/(?:^|;\s*)__Host-hs=([0-9a-f]{64})/)?.[1] || '';
+const bearer = req => (req.headers.get('Authorization') || '').replace(/^Bearer /, '') || cookieToken(req);
+const sessionCookie = (token, maxAge) => `${COOKIE}=${token}; Path=/; Max-Age=${maxAge}; HttpOnly; Secure; SameSite=Strict`;
 
 // Too many tries from one name or network: refuse for the rest of the window. Counts every try, kept in D1.
 async function limit(db, key, max, windowMs) {
@@ -40,10 +45,12 @@ async function limit(db, key, max, windowMs) {
     n = CASE WHEN since < ?3 THEN 1 ELSE n + 1 END, since = CASE WHEN since < ?3 THEN ?2 ELSE since END RETURNING n`).bind(key, t, t - windowMs).first();
   if (row.n > max) throw new HttpError(429, 'Too many tries. Wait a few minutes and try again.');
 }
-const clientIp = req => req.headers.get('CF-Connecting-IP') || 'unknown';
+// IPv6 counts per /64 (one connection usually owns the whole block, so single addresses are free to rotate)
+const clientIp = req => { const ip = req.headers.get('CF-Connecting-IP') || 'unknown'; return ip.includes(':') ? ip.split(':').slice(0, 4).join(':') + '::/64' : ip; };
 
 async function currentUser(req, db, ctx) {
   const token = bearer(req);
+  if (!req.headers.get('Authorization') && req.headers.get('X-HoloSynth') !== 'web') throw new HttpError(401, 'Please log in again.');
   if (!/^[0-9a-f]{64}$/.test(token)) throw new HttpError(401, 'Please log in again.');
   const hashed = await sha256(token), t = now();
   // the progress row comes along (one trip instead of two for campaign moves, which need it straight away);
@@ -58,8 +65,12 @@ async function currentUser(req, db, ctx) {
   return row;
 }
 
+const MAX_BODY = 16384;   // every request the game makes is tiny
 async function body(req) {
-  try { return await req.json(); } catch { throw new HttpError(400, 'Bad request.'); }
+  if (Number(req.headers.get('Content-Length') || 0) > MAX_BODY) throw new HttpError(413, 'Request too large.');
+  const text = await req.text();
+  if (text.length > MAX_BODY) throw new HttpError(413, 'Request too large.');
+  try { return JSON.parse(text); } catch { throw new HttpError(400, 'Bad request.'); }
 }
 
 // ---- player profile ----
@@ -248,7 +259,8 @@ async function profile(db, user) {
          WHERE COALESCE(r.rank, 0) = COALESCE((SELECT rank FROM ranked WHERE user_id = ?), 0)`, user.id),
       q('SELECT * FROM daily_quests WHERE user_id = ?', user.id),
       q('SELECT kind, n FROM quest_events WHERE user_id = ? AND day = ?', user.id, day),
-      q('SELECT email FROM emails WHERE user_id = ?', user.id),
+      q(`SELECT (SELECT email FROM emails WHERE user_id = ?1) AS email,
+         (SELECT terms || '|' || privacy FROM agreements WHERE user_id = ?1) AS agreed`, user.id),
     ])).map(r => r.results);
   const prog = progRow ?? { user_id: user.id, cleared: 0, wins: 0, packs: 0, run: null };
   const mainRowNow = mainRowRead ?? { step: 0, base: '{}' };
@@ -274,6 +286,7 @@ async function profile(db, user) {
   return {
     username: user.username,
     email: emailRow?.email ?? null,   // null: an older account; the app asks for one
+    agreed: emailRow?.agreed === `${TERMS_VERSION}|${PRIVACY_VERSION}`,   // false: asked to agree (again, after either page changes)
     gold: user.gold,
     xp: user.xp,
     level: levelFor(user.xp),
@@ -381,6 +394,8 @@ async function signup(req, db) {
   if (String(password).length < 8) throw new HttpError(400, 'Password must be at least 8 characters.');
   if (String(password).length > 128) throw new HttpError(400, 'Password must be at most 128 characters.');
   if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) throw new HttpError(400, 'Password needs at least one letter and one number.');
+  // checking names and emails is limited too (20 an hour per network), so the form can't be used to list accounts
+  await limit(db, 'signupchk:' + clientIp(req), 20, 3600000);
   if (await db.prepare('SELECT 1 FROM users WHERE username = ?').bind(name).first()) {
     throw new HttpError(409, 'That username is taken.');
   }
@@ -401,17 +416,19 @@ async function signup(req, db) {
 async function login(req, db, ctx) {
   const { username = '', password = '' } = await body(req);
   const name = String(username).trim().slice(0, 254), pw = String(password).slice(0, 128);
-  // 5 tries per name and 10 per network every 15 minutes, right or wrong (a right one clears the name's count)
-  await limit(db, 'login:' + name.toLowerCase(), 5, 900000);
+  // 5 tries per account (its name and email share one count) and 10 per network every 15 minutes, right or wrong;
+  // a right one clears the account's count
   await limit(db, 'loginip:' + clientIp(req), 10, 900000);
   const user = name.includes('@')   // a username or the account's email
     ? await db.prepare('SELECT u.* FROM emails e JOIN users u ON u.id = e.user_id WHERE e.email = ?').bind(name.toLowerCase()).first()
     : await db.prepare('SELECT * FROM users WHERE username = ?').bind(name).first();
-  if (!user || await hashPassword(pw, user.salt) !== user.pass_hash) {
-    throw new HttpError(401, 'Wrong username or password.');
-  }
-  ctx?.waitUntil(db.batch([   // tidy up: this name's counter, and sessions and counters long gone
-    db.prepare('DELETE FROM attempts WHERE key = ?').bind('login:' + name.toLowerCase()),
+  const key = 'login:' + (user ? user.id : name.toLowerCase());
+  await limit(db, key, 5, 900000);
+  // a name that doesn't exist takes as long as a wrong password, so timing doesn't tell which names are real
+  const hash = await hashPassword(pw, user ? user.salt : 'no-such-user');
+  if (!user || hash !== user.pass_hash) throw new HttpError(401, 'Wrong username or password.');
+  ctx?.waitUntil(db.batch([   // tidy up: this account's counter, and sessions and counters long gone
+    db.prepare('DELETE FROM attempts WHERE key = ?').bind(key),
     db.prepare('DELETE FROM sessions WHERE created < ?').bind(now() - SESSION_MS),
     db.prepare('DELETE FROM attempts WHERE since < ?').bind(now() - 86400000)]));
   return json({ token: await newSession(db, user.id), profile: await profile(db, user) });
@@ -426,6 +443,14 @@ async function setEmail(req, db, user) {
   if (await db.prepare('SELECT 1 FROM emails WHERE email = ? AND user_id != ?').bind(mail, user.id).first()) throw new HttpError(409, 'That email already has an account.');
   await db.prepare(`INSERT INTO emails (user_id, email, created) VALUES (?1, ?2, ?3)
     ON CONFLICT (user_id) DO UPDATE SET email = ?2, verified = 0, created = ?3`).bind(user.id, mail, now()).run();
+  return json(await profile(db, user));
+}
+
+// Agree to the current Terms and Conditions and Privacy Policy (accounts made before sign-up asked, or after they change).
+async function agree(req, db, user) {
+  if ((await body(req)).agree !== true) throw new HttpError(400, 'Agree to the Terms and Conditions and the Privacy Policy to keep playing.');
+  await db.prepare(`INSERT INTO agreements (user_id, terms, privacy, at) VALUES (?1, ?2, ?3, ?4)
+    ON CONFLICT (user_id) DO UPDATE SET terms = ?2, privacy = ?3, at = ?4`).bind(user.id, TERMS_VERSION, PRIVACY_VERSION, now()).run();
   return json(await profile(db, user));
 }
 
@@ -1417,11 +1442,11 @@ async function route(req, env, ctx) {
   const [, a, b, c] = pathname.split('/');
   const method = req.method;
 
-  if (method === 'GET' && pathname === '/') return json({ name: 'HoloSynth', ok: true });
+  if (method === 'GET' && pathname === '/') return json({ name: 'HoloSynth', ok: true });   // the web build's index.html answers / first when deployed
+  if (method === 'GET' && pathname === '/cards.json') return withHeaders(json(CARDS), { 'Cache-Control': 'public, max-age=300' });
   if (method === 'GET' && pathname === '/HoloSynth.ipa') return file(env, 'HoloSynth.ipa', 'application/octet-stream');
   if (method === 'GET' && pathname === '/source.json') return file(env, 'source.json', 'application/json');
   if (method === 'GET' && pathname === '/icon.png') return file(env, 'icon.png', 'image/png');
-  if (method === 'GET' && pathname === '/build.txt') return file(env, 'build.txt', 'text/plain');
   // card art the app downloads (and keeps); the ?v=hash in the app's request makes a long cache safe
   if (method === 'GET' && pathname === '/art/manifest.json') return file(env, 'art/manifest.json', 'application/json');
   if (method === 'GET' && /^\/art\/[a-z0-9_]+\.webp$/.test(pathname)) {
@@ -1440,6 +1465,7 @@ async function route(req, env, ctx) {
   if (method === 'POST' && pathname === '/me/delete') return deleteAccount(req, db, user);
   if (method === 'POST' && pathname === '/logout') return logout(req, db);
   if (method === 'POST' && pathname === '/me/email') return setEmail(req, db, user);
+  if (method === 'POST' && pathname === '/me/agree') return agree(req, db, user);
   if (method === 'POST' && pathname === '/team') return setTeam(req, db, user);
   if (method === 'POST' && pathname === '/fuse') return fuseCard(req, db, user);
   if (method === 'POST' && pathname === '/shop') return buyShop(req, db, user);
@@ -1504,13 +1530,43 @@ async function route(req, env, ctx) {
   throw new HttpError(404, 'Not found.');
 }
 
+const withHeaders = (res, h) => { for (const [k, v] of Object.entries(h)) res.headers.set(k, v); return res; };
+const SECURITY = { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'X-Frame-Options': 'DENY',
+  'Content-Security-Policy': "default-src 'none'; frame-ancestors 'none'" };
+
+// Browsers (the web client) are told apart by their Origin header. A request from another site is refused outright, and a
+// cookie-signed change must come from this site (no cross-site request forgery). Logging in from the web sets the cookie
+// instead of handing the page a token.
+async function handle(req, env, ctx) {
+  const self = new URL(req.url).origin, origin = req.headers.get('Origin');
+  const { pathname } = new URL(req.url);
+  const changes = req.method !== 'GET' && req.method !== 'HEAD';
+  const viaCookie = !req.headers.get('Authorization') && !!cookieToken(req);
+  if (origin && origin !== self) throw new HttpError(403, 'Not allowed.');
+  if (viaCookie && changes && !origin) throw new HttpError(403, 'Not allowed.');
+  let res = await route(req, env, ctx);
+  if (!res.ok) return res;
+  if (origin && (pathname === '/login' || pathname === '/signup')) {
+    const { token, profile } = await res.json();
+    res = json({ profile });
+    res.headers.append('Set-Cookie', sessionCookie(token, SESSION_MS / 1000));
+  } else if (viaCookie && (pathname === '/logout' || pathname === '/me/delete')) {
+    res.headers.append('Set-Cookie', sessionCookie('', 0));
+  } else if (viaCookie && pathname === '/me') {
+    res.headers.append('Set-Cookie', sessionCookie(cookieToken(req), SESSION_MS / 1000));   // the session slides; so does the cookie
+  }
+  return res;
+}
+
 export default {
   async fetch(req, env, ctx) {
-    try { return await route(req, env, ctx); }
+    let res;
+    try { res = await handle(req, env, ctx); }
     catch (e) {
-      if (e instanceof HttpError) return json({ error: e.message }, e.status);
-      console.error(e);
-      return json({ error: 'Server error. Try again.' }, 500);
+      if (!(e instanceof HttpError)) console.error(e);
+      res = e instanceof HttpError ? json({ error: e.message }, e.status) : json({ error: 'Server error. Try again.' }, 500);
     }
+    if (!res.headers.has('Cache-Control')) res.headers.set('Cache-Control', 'no-store');
+    return withHeaders(res, SECURITY);
   },
 };

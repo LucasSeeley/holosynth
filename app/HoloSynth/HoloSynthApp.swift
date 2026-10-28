@@ -10,7 +10,8 @@ struct HoloSynthApp: App {
         WindowGroup {
             Group {
                 if store.token == nil { AuthView() } else if !art.ready { ArtLoadingView() }
-                else if let p = store.profile, p.email == nil { AddEmailView() } else { HomeView() }
+                else if let p = store.profile, p.email == nil { AddEmailView() }
+                else if let p = store.profile, p.agreed == false { AgreeView() } else { HomeView() }
             }
             .task { await art.run() }
             .environmentObject(store)
@@ -103,8 +104,8 @@ struct AuthView: View {
                         }
                         if newAccount {
                             VStack(alignment: .leading, spacing: 8) {
-                                agreeRow($agreeTerms, "Terms and Conditions", path: "terms")
-                                agreeRow($agreePrivacy, "Privacy Policy", path: "privacy")
+                                AgreeRow(on: $agreeTerms, name: "Terms and Conditions", path: "terms")
+                                AgreeRow(on: $agreePrivacy, name: "Privacy Policy", path: "privacy")
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                         }
@@ -159,22 +160,6 @@ struct AuthView: View {
         .onTapGesture { focus = which }
     }
 
-    // "I have read and agree to the <link>": the box toggles it, the linked name opens the page.
-    private func agreeRow(_ on: Binding<Bool>, _ name: String, path: String) -> some View {
-        HStack(alignment: .top, spacing: 10) {
-            Button { on.wrappedValue.toggle() } label: {
-                Image(systemName: on.wrappedValue ? "checkmark.square.fill" : "square")
-                    .font(.system(size: 22)).foregroundColor(gold)
-            }
-            .accessibilityLabel("I have read and agree to the \(name)")
-            .accessibilityValue(on.wrappedValue ? "checked" : "not checked")
-            (Text("I have read and agree to the ").foregroundColor(Color(hex: 0xA9A5C2))
-             + Text(.init("[\(name)](\(API.base.appendingPathComponent(path).absoluteString))")).font(.custom("Barlow-SemiBold", size: 14)))
-                .font(.custom("Barlow-Regular", size: 14)).tint(gold)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-    }
-
     private func submit() {
         guard !busy, complete else { return }
         focus = nil
@@ -211,6 +196,62 @@ struct PackFan: View {
                 .rotationEffect(.degrees(angle), anchor: .bottom)
                 .offset(x: x * height * 0.62)
                 .brightness(type == "omni" ? 0 : -0.08)
+        }
+    }
+}
+
+// "I have read and agree to the <link>": the box toggles it, the linked name opens the page.
+struct AgreeRow: View {
+    @Binding var on: Bool
+    let name: String
+    let path: String
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Button { on.toggle() } label: {
+                Image(systemName: on ? "checkmark.square.fill" : "square").font(.system(size: 22)).foregroundColor(Theme.brass)
+            }
+            .accessibilityLabel("I have read and agree to the \(name)")
+            .accessibilityValue(on ? "checked" : "not checked")
+            (Text("I have read and agree to the ").foregroundColor(Color(hex: 0xA9A5C2))
+             + Text(.init("[\(name)](\(API.base.appendingPathComponent(path).absoluteString))")).font(.custom("Barlow-SemiBold", size: 14)))
+                .font(.custom("Barlow-Regular", size: 14)).tint(Theme.brass)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+// Accounts made before sign-up asked (or after either page changes) agree once before playing.
+struct AgreeView: View {
+    @EnvironmentObject var store: GameStore
+    @State private var terms = false
+    @State private var privacy = false
+    @State private var busy = false
+    @State private var error: String?
+
+    var body: some View {
+        ZStack {
+            ScreenBackground()
+            VStack(spacing: 14) {
+                Image(systemName: "checkmark.shield").font(.system(size: 40, weight: .semibold)).foregroundColor(Theme.brass)
+                Text("Before you play").font(.chakra(26)).foregroundColor(Theme.fg)
+                Text("Please read and agree to our Terms and Conditions and Privacy Policy.")
+                    .font(.barlow(15)).foregroundColor(Theme.muted).multilineTextAlignment(.center)
+                VStack(alignment: .leading, spacing: 10) {
+                    AgreeRow(on: $terms, name: "Terms and Conditions", path: "terms")
+                    AgreeRow(on: $privacy, name: "Privacy Policy", path: "privacy")
+                }
+                .padding(.vertical, 6)
+                if let error { Text(error).font(.barlow(14, semibold: true)).foregroundColor(Theme.pink).multilineTextAlignment(.center) }
+                Button(busy ? "…" : "Continue") {
+                    busy = true
+                    Task { error = await store.agree(); busy = false }
+                }
+                .buttonStyle(GoldButton())
+                .disabled(busy || !terms || !privacy)
+                Button("Log out") { store.logout() }.buttonStyle(OutlineButton())
+            }
+            .padding(24)
         }
     }
 }

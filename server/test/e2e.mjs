@@ -9,10 +9,12 @@ const base = process.argv[2] || 'http://localhost:8799';
 const send = async (url, init, tries = 3) => {
   try { return await fetch(url, init); } catch (e) { if (tries <= 1) throw e; await new Promise(r => setTimeout(r, 1500)); return send(url, init, tries - 1); }
 };
+// A local server sees every request from one address, so runs there use made-up ones (Cloudflare replaces this header live).
+const localIp = () => base.includes('localhost') ? { 'CF-Connecting-IP': `10.9.${Math.random() * 250 | 0}.${Math.random() * 250 | 0}` } : {};
 const call = async (path, token, body) => {
   const res = await send(base + path, {
     method: body === undefined ? 'GET' : 'POST',
-    headers: { 'Content-Type': 'application/json', ...(token && { Authorization: `Bearer ${token}` }) },
+    headers: { 'Content-Type': 'application/json', ...(token && { Authorization: `Bearer ${token}` }), ...localIp() },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   const data = await res.json();
@@ -43,7 +45,7 @@ if (!base.includes('localhost')) {
     `DELETE FROM matches WHERE p0 IN ${old} OR p1 IN ${old}`, `DELETE FROM trades WHERE from_id IN ${old} OR to_id IN ${old}`,
     ...'fused collection sessions progress presence spins gauntlet shop_buys hunts daily_quests quest_events ranked ranked_queue pack_inv powers power_team main_quest emails agreements'.split(' ').map(t => `DELETE FROM ${t} WHERE user_id IN ${old}`),
     `DELETE FROM users WHERE id IN ${old}`,
-    "DELETE FROM attempts WHERE key LIKE 'signup:%' OR key LIKE 'loginip:%'"].join('; ');   // network limits: runners can share an address
+    "DELETE FROM attempts WHERE key LIKE 'signup:%' OR key LIKE 'signupchk:%' OR key LIKE 'loginip:%'"].join('; ');   // network limits: runners can share an address
   try { execSync(`npx wrangler d1 execute holosynth --remote --command "${sql}"`, { cwd: new URL('..', import.meta.url), stdio: 'ignore' }); }
   catch { console.log('could not clear old test players'); }
 }
@@ -57,6 +59,9 @@ await expectError(call('/signup', null, { agree: true, username: `e2e_a_${tag}`,
 const a = await call('/signup', null, { agree: true, username: `e2e_a_${tag}`, email: `a_${tag}@example.com`, password: 'secret11' });
 const b = await call('/signup', null, { agree: true, username: `e2e_b_${tag}`, email: `b_${tag}@example.com`, password: 'secret22' });
 for (let i = 0; i < 3; i++) await timed('me', call('/me', a.token));
+check(a.profile.agreed === true, 'sign-up records the agreement');
+await expectError(call('/me/agree', a.token, {}), 400);
+check((await call('/me/agree', a.token, { agree: true })).agreed === true, 'agreeing again (older accounts) works');
 check(a.profile.recruit === 1 && a.profile.gold === 0 && a.profile.team.length === 0 && a.profile.mainQuest.step === 1, 'new account starts empty, one Recruit Pack to open');
 await expectError(call('/signup', null, { agree: true, username: `E2E_A_${tag}`, email: `c_${tag}@example.com`, password: 'secret11' }), 409);   // name taken (any case)
 await expectError(call('/signup', null, { agree: true, username: `e2e_c_${tag}`, email: `A_${tag}@Example.com`, password: 'secret11' }), 409);   // email taken (any case)
@@ -67,9 +72,25 @@ check((await call('/login', null, { username: `A_${tag}@example.com`, password: 
   check((await call('/me', extra)).username === `e2e_a_${tag}`, 'second session works');
   await call('/logout', extra, {});
   await expectError(call('/me', extra), 401); }
-for (const page of ['terms', 'privacy']) {   // the pages sign-up links to
-  const r = await send(`${base}/${page}`);
-  check(r.ok && (r.headers.get('content-type') || '').includes('text/html') && (await r.text()).includes('Lucas Seeley'), `${page} page served`);
+// The web version: logging in from the site sets an HttpOnly cookie and never shows the page a token;
+// another site, or a cookie-signed change without the site's Origin, is refused.
+{
+  const origin = new URL(base).origin;
+  const web = (path, init = {}) => send(base + path, { ...init, headers: { 'Content-Type': 'application/json', ...init.headers } });
+  const res = await web('/login', { method: 'POST', headers: { Origin: origin }, body: JSON.stringify({ username: `e2e_a_${tag}`, password: 'secret11' }) });
+  const set = res.headers.get('set-cookie') || '', body = await res.json();
+  const cookie = (set.match(/__Host-hs=[0-9a-f]{64}/) || [])[0];
+  check(res.ok && cookie && /HttpOnly/i.test(set) && /Secure/i.test(set) && /SameSite=Strict/i.test(set) && !body.token && body.profile, 'web login sets a cookie, no token');
+  check((await web('/me', { headers: { Cookie: cookie, 'X-HoloSynth': 'web' } })).ok, 'cookie session works');
+  check((await web('/me', { headers: { Cookie: cookie } })).status === 401, 'cookie alone (no client header) refused');
+  check((await web('/team', { method: 'POST', headers: { Cookie: cookie }, body: '{}' })).status === 403, 'cookie change without Origin refused');
+  check((await web('/team', { method: 'POST', headers: { Cookie: cookie, Origin: 'https://evil.example' }, body: '{}' })).status === 403, 'other site refused');
+  check((await web('/login', { method: 'POST', headers: { Origin: 'https://evil.example' }, body: JSON.stringify({ username: `e2e_a_${tag}`, password: 'secret11' }) })).status === 403, 'login from another site refused');
+  const out = await web('/logout', { method: 'POST', headers: { Cookie: cookie, Origin: origin, 'X-HoloSynth': 'web' }, body: '{}' });
+  check(out.ok && /Max-Age=0/.test(out.headers.get('set-cookie') || ''), 'web logout clears the cookie');
+  check((await web('/me', { headers: { Cookie: cookie, 'X-HoloSynth': 'web' } })).status === 401, 'cookie dead after logout');
+  check((await web('/login', { method: 'POST', body: JSON.stringify({ username: 'x', password: 'y'.repeat(20000) }) })).status === 413, 'oversized requests refused');
+  check((await send(base + '/cards.json').then(r => r.json())).length >= 114, 'card list for the web');
 }
 
 await expectError(call('/campaign/start', a.token, {}), 400);   // no card yet

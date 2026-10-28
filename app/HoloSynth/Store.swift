@@ -99,6 +99,12 @@ final class GameStore: ObservableObject {
         catch { return error.localizedDescription }
     }
 
+    // Agree to the current Terms and Privacy Policy; returns the error to show, or nil once saved.
+    func agree() async -> String? {
+        do { profile = try await API.call("me/agree", token: token, body: ["agree": true]); return nil }
+        catch { return error.localizedDescription }
+    }
+
     func logout() {
         if let t = token { Task { _ = try? await API.call("logout", token: t, body: [:]) as [String: Bool] } }   // end the session on the server too
         token = nil
