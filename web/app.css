@@ -132,6 +132,8 @@ img { display: block; }
 }
 
 /* full-screen screens (battles, packs, map...) */
+.layer { display: contents; }
+.screen:focus { outline: none; }
 .screen { position: fixed; inset: 0; height: calc(100dvh / var(--z, 1)); z-index: 20; display: flex; flex-direction: column; overflow: hidden; }
 .screen > .scroll { flex: 1; overflow-y: auto; overflow-x: hidden; }
 .screenhead { display: flex; align-items: center; gap: 14px; padding: 16px 24px; flex: none; }
@@ -224,7 +226,9 @@ img { display: block; }
   background: radial-gradient(80% 140% at 15% 50%, rgba(232,184,90,.26), var(--field)); border: 1px solid rgba(232,184,90,.7); box-shadow: 0 0 18px rgba(232,184,90,.22); }
 .fan3 { position: relative; height: 70px; width: 96px; flex: none; }
 .fan3 img { position: absolute; bottom: 0; height: 64px; filter: drop-shadow(0 3px 6px rgba(0,0,0,.6)); }
-@media (max-width: 1279px) { .play { grid-template-columns: minmax(0, 1fr); } .play aside { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); align-items: start; } }
+/* the packs row sits right under the campaign once the side column drops below (the app's order) */
+.play .narrow-only { display: none; }
+@media (max-width: 1279px) { .play .narrow-only { display: block; } .play .wide-only { display: none; } .play { grid-template-columns: minmax(0, 1fr); } .play aside { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); align-items: start; } }
 @media (max-width: 759px) {
   .hero { height: 190px; } .hero > img { width: 100%; } .hero .fade { background: linear-gradient(180deg, rgba(7,6,12,.1) 30%, rgba(7,6,12,.92)); }
   .hero .txt { left: 14px; right: 14px; top: 12px; bottom: 14px; width: auto; gap: 4px; } .hero h2 { font-size: 26px; } .hero .eyebrow { margin-top: auto; font-size: 13px; }

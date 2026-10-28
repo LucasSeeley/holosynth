@@ -90,6 +90,8 @@ check((await call('/login', null, { username: `A_${tag}@example.com`, password: 
   check(out.ok && /Max-Age=0/.test(out.headers.get('set-cookie') || ''), 'web logout clears the cookie');
   check((await web('/me', { headers: { Cookie: cookie, 'X-HoloSynth': 'web' } })).status === 401, 'cookie dead after logout');
   check((await web('/login', { method: 'POST', body: JSON.stringify({ username: 'x', password: 'y'.repeat(20000) }) })).status === 413, 'oversized requests refused');
+  const page = await send(base + '/');
+  check(page.ok && (page.headers.get('content-type') || '').includes('text/html') && /script-src 'self'/.test(page.headers.get('content-security-policy') || ''), 'web page served with its security headers');
   check((await send(base + '/cards.json').then(r => r.json())).length >= 114, 'card list for the web');
 }
 
