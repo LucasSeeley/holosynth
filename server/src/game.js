@@ -7,7 +7,7 @@ export const START_GOLD = 0;           // gold comes from the campaign
 export const PACK_COST = 5000;
 export const PACK_SIZE = 3;
 export const WIN_GOLD = 50;            // friend battle win
-export const CAMPAIGN_GOLD = [50, 100, 150, 200, 250];   // first clear of a campaign level, by chapter
+export const CAMPAIGN_GOLD = [150, 200, 300, 400, 500];   // first clear of a campaign level, by chapter
 export const CAMPAIGN_XP = [50, 100, 150, 200, 250];
 export const CHAPTERS_OPEN = 5;   // chapters past this show "More chapters are on the way"
 export const WIN_XP = 25;
@@ -776,8 +776,9 @@ export const CHAPTERS = [
   ] },
 ];
 // One flat list for progress (`cleared` counts across chapters); `chapter` is 0-based, `num` is the level within its chapter.
-// Boss packs: chapters 1-3 give Cyber packs; chapters 4-5 say their own on each boss level.
-export const CAMPAIGN = CHAPTERS.flatMap((c, chapter) => c.levels.map((l, i) => ({ ...l, chapter, num: i + 1, ...(l.boss && !l.pack ? { pack: 'cyber' } : {}) })));
+// Boss packs by chapter, for levels 10 / 20 / 30.
+export const BOSS_PACKS = [['cyber', 'cyber', 'omni'], ['magic', 'magic', 'omni'], ['cyber', 'magic', 'overload'], ['cyber', 'magic', 'overload'], ['cyber', 'magic', 'overload']];
+export const CAMPAIGN = CHAPTERS.flatMap((c, chapter) => c.levels.map((l, i) => ({ ...l, chapter, num: i + 1, ...(l.boss ? { pack: BOSS_PACKS[chapter][Math.floor(i / 10)] } : {}) })));
 export const NEW_CARD_AFTER = [3, 6];   // levels that unlock your 2nd and 3rd card
 export const OPEN_LEVELS = CAMPAIGN.filter(l => l.chapter < CHAPTERS_OPEN).length;
 
