@@ -185,3 +185,9 @@ CREATE TABLE IF NOT EXISTS main_quest (
   step INTEGER NOT NULL DEFAULT 0,
   base TEXT NOT NULL DEFAULT '{}'
 );
+-- Login / sign-up tries per name or network, for rate limits (key like 'login:name', n tries since `since`).
+CREATE TABLE IF NOT EXISTS attempts (
+  key TEXT PRIMARY KEY,
+  n INTEGER NOT NULL,
+  since INTEGER NOT NULL
+);

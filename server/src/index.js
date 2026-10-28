@@ -22,17 +22,39 @@ async function hashPassword(password, salt) {
   return hex(bits);
 }
 
+// Sessions: the app holds the token, the database only its SHA-256 (a leaked table can't log anyone in).
+// `created` is when it was last used; a session unused for SESSION_MS is gone.
+const SESSION_MS = 30 * 86400000;
+const sha256 = async s => hex(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)));
 async function newSession(db, userId) {
   const token = randomHex(32);
-  await db.prepare('INSERT INTO sessions (token, user_id, created) VALUES (?, ?, ?)').bind(token, userId, now()).run();
+  await db.prepare('INSERT INTO sessions (token, user_id, created) VALUES (?, ?, ?)').bind(await sha256(token), userId, now()).run();
   return token;
 }
+const bearer = req => (req.headers.get('Authorization') || '').replace(/^Bearer /, '');
 
-async function currentUser(req, db) {
-  const token = (req.headers.get('Authorization') || '').replace(/^Bearer /, '');
-  const row = token && await db.prepare(
-    'SELECT u.* FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token = ?').bind(token).first();
+// Too many tries from one name or network: refuse for the rest of the window. Counts every try, kept in D1.
+async function limit(db, key, max, windowMs) {
+  const t = now();
+  const row = await db.prepare(`INSERT INTO attempts (key, n, since) VALUES (?1, 1, ?2) ON CONFLICT (key) DO UPDATE SET
+    n = CASE WHEN since < ?3 THEN 1 ELSE n + 1 END, since = CASE WHEN since < ?3 THEN ?2 ELSE since END RETURNING n`).bind(key, t, t - windowMs).first();
+  if (row.n > max) throw new HttpError(429, 'Too many tries. Wait a few minutes and try again.');
+}
+const clientIp = req => req.headers.get('CF-Connecting-IP') || 'unknown';
+
+async function currentUser(req, db, ctx) {
+  const token = bearer(req);
+  if (!/^[0-9a-f]{64}$/.test(token)) throw new HttpError(401, 'Please log in again.');
+  const hashed = await sha256(token), t = now();
+  // the progress row comes along (one trip instead of two for campaign moves, which need it straight away);
+  // sessions made before tokens were hashed are matched as they were, then swapped to the hash below
+  const row = await db.prepare(`SELECT u.*, s.token AS _stok, s.created AS _sused,
+    (SELECT json_object('user_id', p.user_id, 'cleared', p.cleared, 'wins', p.wins, 'packs', p.packs, 'run', p.run) FROM progress p WHERE p.user_id = u.id) AS _prog
+    FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token IN (?1, ?2) AND s.created > ?3`).bind(hashed, token, t - SESSION_MS).first();
   if (!row) throw new HttpError(401, 'Please log in again.');
+  if (row._stok !== hashed || row._sused < t - 86400000) {   // in the background: hash an old token, keep the session alive (once a day)
+    ctx?.waitUntil(db.prepare('UPDATE sessions SET token = ?1, created = ?2 WHERE token = ?3').bind(hashed, t, row._stok).run());
+  }
   return row;
 }
 
@@ -333,7 +355,7 @@ async function setPowerTeam(req, db, user) {
   return json(await profile(db, user));
 }
 // After a player's move: power cards they played are used up.
-// shortcut: spent before the battle is saved, so a rare double-submit can cost a card; move into the save batch if it matters.
+// Called only after the move is saved (claimed), so a double-submitted move can't use a card up twice.
 async function spendPowers(db, userId, before, after = []) {
   const left = [...after];
   let spent = false;
@@ -348,8 +370,10 @@ const addCard = (db, userId, id) => db.prepare(
 async function signup(req, db) {
   const { username = '', password = '' } = await body(req);
   const name = String(username).trim();
+  await limit(db, 'signup:' + clientIp(req), 10, 3600000);   // 10 new accounts an hour per network
   if (!/^[A-Za-z0-9_]{3,16}$/.test(name)) throw new HttpError(400, 'Username must be 3–16 letters, numbers or _.');
   if (String(password).length < 6) throw new HttpError(400, 'Password must be at least 6 characters.');
+  if (String(password).length > 128) throw new HttpError(400, 'Password must be at most 128 characters.');
   if (await db.prepare('SELECT 1 FROM users WHERE username = ?').bind(name).first()) {
     throw new HttpError(409, 'That username is taken.');
   }
@@ -361,13 +385,28 @@ async function signup(req, db) {
   return json({ token: await newSession(db, user.id), profile: await profile(db, user) });
 }
 
-async function login(req, db) {
+async function login(req, db, ctx) {
   const { username = '', password = '' } = await body(req);
-  const user = await db.prepare('SELECT * FROM users WHERE username = ?').bind(String(username).trim()).first();
-  if (!user || await hashPassword(String(password), user.salt) !== user.pass_hash) {
+  const name = String(username).trim().slice(0, 32), pw = String(password).slice(0, 128);
+  // 10 tries per name and 30 per network every 15 minutes, right or wrong
+  await limit(db, 'login:' + name.toLowerCase(), 10, 900000);
+  await limit(db, 'loginip:' + clientIp(req), 30, 900000);
+  const user = await db.prepare('SELECT * FROM users WHERE username = ?').bind(name).first();
+  if (!user || await hashPassword(pw, user.salt) !== user.pass_hash) {
     throw new HttpError(401, 'Wrong username or password.');
   }
+  ctx?.waitUntil(db.batch([   // tidy up: this name's counter, and sessions and counters long gone
+    db.prepare('DELETE FROM attempts WHERE key = ?').bind('login:' + name.toLowerCase()),
+    db.prepare('DELETE FROM sessions WHERE created < ?').bind(now() - SESSION_MS),
+    db.prepare('DELETE FROM attempts WHERE since < ?').bind(now() - 86400000)]));
   return json({ token: await newSession(db, user.id), profile: await profile(db, user) });
+}
+
+// Ends this session (the app forgets its token too).
+async function logout(req, db) {
+  const token = bearer(req);
+  await db.prepare('DELETE FROM sessions WHERE token IN (?, ?)').bind(await sha256(token), token).run();
+  return json({ ok: true });
 }
 
 async function setTeam(req, db, user) {
@@ -460,7 +499,7 @@ async function startCampaign(db, user) {
 }
 
 async function campaignMove(req, db, user) {
-  const prog = await getProgress(db, user.id);
+  const prog = user._prog ? JSON.parse(user._prog) : await getProgress(db, user.id);   // read with the login check
   if (!prog.run) throw new HttpError(400, 'No campaign battle in progress.');
   const run = JSON.parse(prog.run);
   const { from, move: kind, to } = await body(req);
@@ -472,13 +511,13 @@ async function campaignMove(req, db, user) {
       applyMove(run.state, 1, m.from, m.move, m.to);
     }
   } catch (e) { throw new HttpError(400, e.message); }
-  await spendPowers(db, user.id, had, run.state.pw?.[0]);
 
   const done = run.state.winner !== null;
   // Save only if the run hasn't changed since we read it (stops double-submitted moves).
   const res = await db.prepare('UPDATE progress SET run = ? WHERE user_id = ? AND run = ?')
     .bind(done ? null : JSON.stringify(run), user.id, prog.run).run();
   if (!res.meta.changes) throw new HttpError(409, 'The battle changed. Refreshing.');
+  await spendPowers(db, user.id, had, run.state.pw?.[0]);   // only once the move is saved: a double-submit can't use a card up
 
   let result = null;
   if (done) result = run.state.winner === 0 ? await campaignWin(db, user, run.level) : { won: false };
@@ -591,13 +630,13 @@ async function move(req, db, user, id) {
   const side = m.p0 === user.id ? 0 : 1, had = [...(state.pw?.[side] ?? [])];
   try { applyMove(state, side, from, kind, to); }
   catch (e) { throw new HttpError(400, e.message); }
-  await spendPowers(db, user.id, had, state.pw?.[side]);
 
   const done = state.winner !== null;
   // Only save if nobody else changed the match since we read it (stops double-submitted moves).
   const res = await db.prepare('UPDATE matches SET state = ?, status = ?, updated = ? WHERE id = ? AND updated = ?')
     .bind(JSON.stringify(state), done ? 'done' : 'active', now(), m.id, m.updated).run();
   if (!res.meta.changes) throw new HttpError(409, 'The match changed. Refreshing.');
+  await spendPowers(db, user.id, had, state.pw?.[side]);   // only once the move is saved
   if (done) {
     const winnerId = state.winner === 0 ? m.p0 : m.p1;
     if (m.code.startsWith('#')) await finishRankedMatch(db, m, winnerId);
@@ -1062,18 +1101,20 @@ async function rankedMove(req, db, user) {
     applyMove(run.state, 0, from, kind, to);
     while (run.state.winner === null && run.state.turn === 1) { const m = aiMove(run.state, 1); applyMove(run.state, 1, m.from, m.move, m.to); }
   } catch (e) { throw new HttpError(400, e.message); }
-  await spendPowers(db, user.id, had, run.state.pw?.[0]);
+  const spend = () => spendPowers(db, user.id, had, run.state.pw?.[0]);   // only once the move is saved
   if (run.state.winner === null) {
     const res = await db.prepare('UPDATE ranked SET run = ? WHERE user_id = ? AND run = ?').bind(JSON.stringify(run), user.id, me.run).run();
     if (!res.meta.changes) throw new HttpError(409, 'The fight changed. Refreshing.');
+    await spend();
     return json({ state: run.state, result: null, profile: null });
   }
-  return json({ state: run.state, ...(await endRankedRun(db, user, me, run.state.winner === 0)) });
+  return json({ state: run.state, ...(await endRankedRun(db, user, me, run.state.winner === 0, spend)) });
 }
 
-async function endRankedRun(db, user, me, won) {
+async function endRankedRun(db, user, me, won, spend = null) {
   const claim = await db.prepare('UPDATE ranked SET run = NULL WHERE user_id = ? AND run = ?').bind(user.id, me.run).run();   // claim first: no double pay
   if (!claim.meta.changes) throw new HttpError(409, 'The fight changed. Refreshing.');
+  if (spend) await spend();
   const before = (await rankedView(db, user)).place;
   const r = rankedResult(db, me, won, weekStart(now()));
   await db.batch(r.writes);
@@ -1164,16 +1205,19 @@ async function huntMove(req, db, user) {
       applyMove(state, 1, m.from, m.move, m.to);
     }
   } catch (e) { throw new HttpError(400, e.message); }
-  await spendPowers(db, user.id, had, state.pw?.[0]);
+  const spend = () => spendPowers(db, user.id, had, state.pw?.[0]);   // after each save below: a double-submit can't use a card up
   if (state.winner === null) {
     await saveHunt(db, user.id, h, state, null);
+    await spend();
     return json({ legend: h.legend, state, result: null, profile: null });
   }
   if (state.winner === 1) {
     await saveHunt(db, user.id, h, null, 'lost');
+    await spend();
     return json({ legend: h.legend, state, result: { won: false }, profile: await profile(db, await freshUser(db, user.id)) });
   }
   await saveHunt(db, user.id, h, null, 'won');   // claim the win first
+  await spend();
   const pack = huntPack(user.packs_since_legend, h.legend);
   await db.batch([...packWrites(db, user.id, pack, 'overload'),
     db.prepare('UPDATE users SET packs_since_legend = ?, gold = gold + ?, xp = xp + ? WHERE id = ?')
@@ -1253,15 +1297,17 @@ async function gauntletMove(req, db, user) {
       applyMove(run.state, 1, m.from, m.move, m.to);
     }
   } catch (e) { throw new HttpError(400, e.message); }
-  await spendPowers(db, user.id, had, run.state.pw?.[0]);
+  const spend = () => spendPowers(db, user.id, had, run.state.pw?.[0]);   // after each save below: a double-submit can't use a card up
 
   const view = gauntletView(run);
   if (run.state.winner === 1) {
     const over = await endGauntlet(db, user, g, run);
+    await spend();
     return json({ run: view, result: { won: false, ...over }, profile: await profile(db, await freshUser(db, user.id)) });
   }
   if (run.state.winner === null) {
     await saveGauntlet(db, user.id, g.run, run, g.best);
+    await spend();
     return json({ run: view, result: null, profile: null });
   }
   // won: pay out, heal, line up the next fight
@@ -1281,6 +1327,7 @@ async function gauntletMove(req, db, user) {
       db.prepare('UPDATE users SET packs_since_legend = ? WHERE id = ?').bind(opened.packsSinceLegend, user.id));
   }
   await saveGauntlet(db, user.id, g.run, next, next.wins);   // claim the win first so a double-submit can't pay twice
+  await spend();
   await db.batch(writes);
   return json({ run: { ...view, ...gauntletView(next), state: run.state }, result: { won: true, gold, pack, packType, holo },
     profile: await profile(db, await freshUser(db, user.id)) });
@@ -1314,7 +1361,9 @@ async function leaderboard(db, user, scope) {
 }
 
 // Deletes your account and everything tied to it (the build's live test uses this to clean up after itself).
-async function deleteAccount(db, user) {
+async function deleteAccount(req, db, user) {
+  const { password = '' } = await body(req);   // asked again: a stolen session alone can't delete an account
+  if (await hashPassword(String(password).slice(0, 128), user.salt) !== user.pass_hash) throw new HttpError(401, 'Wrong password.');
   const id = user.id;
   await db.batch([
     db.prepare('DELETE FROM friends WHERE user_id = ?1 OR friend_id = ?1').bind(id),
@@ -1335,7 +1384,7 @@ async function file(env, key, type) {
   return new Response(body, { headers: { 'Content-Type': type, 'Cache-Control': 'no-store' } });
 }
 
-async function route(req, env) {
+async function route(req, env, ctx) {
   const db = env.DB;
   const { pathname } = new URL(req.url);
   const [, a, b, c] = pathname.split('/');
@@ -1354,14 +1403,15 @@ async function route(req, env) {
     return res;
   }
   if (method === 'POST' && pathname === '/signup') return signup(req, db);
-  if (method === 'POST' && pathname === '/login') return login(req, db);
+  if (method === 'POST' && pathname === '/login') return login(req, db, ctx);
 
-  const user = await currentUser(req, db);
-  // last seen, for "online" on friends lists (written at most every 30 s)
-  await db.prepare(`INSERT INTO presence (user_id, seen) VALUES (?1, ?2)
-    ON CONFLICT (user_id) DO UPDATE SET seen = ?2 WHERE presence.seen < ?2 - 30000`).bind(user.id, now()).run();
+  const user = await currentUser(req, db, ctx);
+  // last seen, for "online" on friends lists (written at most every 30 s), in the background: no request waits on it
+  ctx.waitUntil(db.prepare(`INSERT INTO presence (user_id, seen) VALUES (?1, ?2)
+    ON CONFLICT (user_id) DO UPDATE SET seen = ?2 WHERE presence.seen < ?2 - 30000`).bind(user.id, now()).run());
   if (method === 'GET' && pathname === '/me') return json(await profile(db, user));
-  if (method === 'POST' && pathname === '/me/delete') return deleteAccount(db, user);
+  if (method === 'POST' && pathname === '/me/delete') return deleteAccount(req, db, user);
+  if (method === 'POST' && pathname === '/logout') return logout(req, db);
   if (method === 'POST' && pathname === '/team') return setTeam(req, db, user);
   if (method === 'POST' && pathname === '/fuse') return fuseCard(req, db, user);
   if (method === 'POST' && pathname === '/shop') return buyShop(req, db, user);
@@ -1427,8 +1477,8 @@ async function route(req, env) {
 }
 
 export default {
-  async fetch(req, env) {
-    try { return await route(req, env); }
+  async fetch(req, env, ctx) {
+    try { return await route(req, env, ctx); }
     catch (e) {
       if (e instanceof HttpError) return json({ error: e.message }, e.status);
       console.error(e);

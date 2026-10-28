@@ -56,7 +56,10 @@ for (let i = 0; i < 3; i++) await timed('me', call('/me', a.token));
 check(a.profile.recruit === 1 && a.profile.gold === 0 && a.profile.team.length === 0 && a.profile.mainQuest.step === 1, 'new account starts empty, one Recruit Pack to open');
 await expectError(call('/signup', null, { username: `E2E_A_${tag}`, password: 'secret1' }), 409);
 await expectError(call('/login', null, { username: `e2e_a_${tag}`, password: 'nope' }), 401);
-await call('/login', null, { username: `e2e_a_${tag}`, password: 'secret1' });
+{ const extra = (await call('/login', null, { username: `e2e_a_${tag}`, password: 'secret1' })).token;   // log in, then log out: that token stops working
+  check((await call('/me', extra)).username === `e2e_a_${tag}`, 'second session works');
+  await call('/logout', extra, {});
+  await expectError(call('/me', extra), 401); }
 
 await expectError(call('/campaign/start', a.token, {}), 400);   // no card yet
 const r1 = await call('/recruit', a.token, {});
@@ -284,7 +287,10 @@ check(gres && typeof gres.place === 'number', `ranked fight over: ${gres.won ? '
 await expectError(call('/ranked/move', a.token, { from: 0, move: 'basic', to: 0 }), 400);
 await expectError(call('/ranked/claim', a.token, {}), 400);   // no season reward yet
 // leave no test players behind (they'd show up on the live leaderboard)
-for (const t of [a.token, b.token]) await call('/me/delete', t, {});
+await expectError(call('/me/delete', a.token, { password: 'nope' }), 401);   // deleting needs the password again
+await call('/me/delete', a.token, { password: 'secret1' });
+await call('/me/delete', b.token, { password: 'secret2' });
+await expectError(call('/me', a.token), 401);
 await expectError(call('/me', a.token), 401);
 console.log('E2E OK');
 console.log(`::notice title=timing::${timings.slice(0, 15).join(', ')}`);

@@ -84,6 +84,7 @@ final class GameStore: ObservableObject {
     }
 
     func logout() {
+        if let t = token { Task { _ = try? await API.call("logout", token: t, body: [:]) as [String: Bool] } }   // end the session on the server too
         token = nil
         profile = nil
         social = nil

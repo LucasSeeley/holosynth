@@ -27,6 +27,7 @@ struct BattleBoard: View {
     @State var sending = false
     @State var preHit: (from: Int, to: Int, move: String)?   // your attack, already winding up while the server answers
     @State var playing = false
+    @State var strike: String?              // your attack's word under the board, shown as it lands (Hit! / Dodged!)
     @State var error: String?
     @State var confirmLeave = false
     @State var pulse = false
@@ -414,7 +415,8 @@ struct BattleBoard: View {
     // MARK: rules shown on screen
 
     private func prompt(_ card: Card?) -> String {
-        if playing || preHit != nil { return acting == you ? "Hit!" : "\(foeName) attacks…" }
+        if preHit != nil { return "Charging…" }   // drawn back, waiting on the server
+        if playing { return acting == you ? (strike ?? "") : "\(foeName) attacks…" }
         if s.winner != nil { return "" }
         if s.turn != you { return "Waiting for \(foeName)…" }
         if let p = powerMove {
@@ -586,6 +588,7 @@ struct BattleBoard: View {
         var cur = start
         let a = key(p, from), t = key(1 - p, to)
         if !lunged, acting != p { withAnimation { acting = p }; await pause(0.35) }
+        if p == you { strike = dodge ? "Dodged!" : "Hit!" }
         withAnimation(.easeIn(duration: 0.14)) { fx[a, default: HitFX()].lunge = 1 }   // the strike
         await pause(0.14)
         if dodge {   // the target slips aside: no damage
@@ -676,6 +679,7 @@ struct BattleBoard: View {
         }
         playing = false
         sending = false
+        strike = nil
         if latest?.winner != nil { Music.stop() }
         onSettled()
     }
