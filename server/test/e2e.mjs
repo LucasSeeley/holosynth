@@ -2,6 +2,7 @@
 // Two players sign up, pick a starter, play the campaign (computer opponent) to unlock friend battles,
 // play each other by invite code, then one beats the level 10 boss for its pack and buys a pack.
 import { aiMove } from '../src/game.js';
+import { execSync } from 'node:child_process';
 
 const base = process.argv[2] || 'http://localhost:8799';
 // The live server sometimes drops a connection (ECONNRESET) mid-run; retry those a couple of times.
@@ -37,15 +38,22 @@ if (!base.includes('localhost')) {
 const tag = Date.now().toString(36).slice(-6);
 const a = await call('/signup', null, { username: `ana_${tag}`, password: 'secret1' });
 const b = await call('/signup', null, { username: `ben_${tag}`, password: 'secret2' });
-check(a.profile.needsStarter && a.profile.gold === 0 && a.profile.team.length === 0, 'new account starts empty');
+check(a.profile.recruit === 1 && a.profile.gold === 0 && a.profile.team.length === 0 && a.profile.mainQuest.step === 1, 'new account starts empty, one Recruit Pack to open');
 await expectError(call('/signup', null, { username: `ANA_${tag}`, password: 'secret1' }), 409);
 await expectError(call('/login', null, { username: `ana_${tag}`, password: 'nope' }), 401);
 await call('/login', null, { username: `ana_${tag}`, password: 'secret1' });
 
 await expectError(call('/campaign/start', a.token, {}), 400);   // no card yet
-await call('/starter', a.token, { card: 'volt' });
-await call('/starter', b.token, { card: 'fang' });
-await expectError(call('/starter', a.token, { card: 'goliath' }), 400);   // only one free pick
+const r1 = await call('/recruit', a.token, {});
+check(['volt', 'fang', 'goliath'].includes(r1.card) && r1.profile.team.length === 1 && r1.profile.recruit === 0, 'recruit pack gives a starter');
+await call('/recruit', b.token, {});
+await expectError(call('/recruit', a.token, {}), 400);   // only one until level 3
+check(r1.profile.mainQuest.done, 'main quest 1 done');
+const mq = await call('/mainquest/claim', a.token, {});
+check(mq.profile.gold === 100 && mq.profile.mainQuest.step === 2, 'main quest 1 claimed');
+await expectError(call('/mainquest/claim', a.token, {}), 400);   // quest 2 not done
+check(a.profile.locked.spin && a.profile.locked.shop && a.profile.locked.trades, 'spin, shop and trades start locked');
+await expectError(call('/spin', a.token, {}), 400);   // locked until Ch 1 · Lv 10
 await expectError(call('/packs', a.token, {}), 400);   // no gold
 await expectError(call('/packs', a.token, { type: 'magic' }), 400);   // magic pack: coming soon
 await expectError(call('/matches', a.token, {}), 400);  // friend battles locked
@@ -54,21 +62,21 @@ await expectError(call('/matches', a.token, {}), 400);  // friend battles locked
 async function campaign(token, upTo) {
   let prof = await call('/me', token), losses = 0;
   while (prof.campaign.cleared < upTo) {
-    if (prof.campaign.choose) { prof = await call('/campaign/reward', token, { card: prof.campaign.choose[0] }); continue; }
+    if (prof.recruit) { prof = (await call('/recruit', token, {})).profile; continue; }
     let run = await call('/campaign/start', token, {});
     while (!run.result) run = await call('/campaign/move', token, aiMove(run.state, 0));
     if (!run.result.won) losses++;
     check(losses < 20, 'lost too many campaign battles');
     if (run.result.pack) console.log('boss pack:', run.result.pack);
-    if (run.result.newCard) console.log('new card joined:', run.result.newCard);
     prof = run.profile;
   }
+  while (prof.recruit) prof = (await call('/recruit', token, {})).profile;
   console.log(`cleared ${prof.campaign.cleared} (losses ${losses}); team ${prof.team}; gold ${prof.gold}`);
   return prof;
 }
 for (const t of [a.token, b.token]) {
   const prof = await campaign(t, 6);
-  check(prof.team.length === 3 && prof.campaign.friendsUnlocked && prof.gold === 900, 'level 6 gives a full team and 900 gold');
+  check(prof.team.length === 3 && prof.campaign.friendsUnlocked && prof.gold >= 900, 'level 6 gives a full team and 900 gold');
 }
 
 const inv = await call('/matches', a.token, {});
@@ -109,6 +117,12 @@ check((await call('/avatar', a.token, { card: 'goliath' })).avatar === 'goliath'
 check((await call('/me', b.token)).friends === 1 && (await call('/social', b.token)).friends[0].avatar === 'goliath', 'avatar shows to friends');
 await expectError(call('/fuse', a.token, { card: 'volt', stat: 'h' }), 400);   // one copy: nothing to fuse
 check(Array.isArray((await call('/me', a.token)).fused), 'profile lists fused copies');
+await expectError(call('/trades', a.token, { to: bn, giveGold: 10 }), 400);   // trades locked until player level 7
+// Skip the test players ahead (player level 10, Ch 2 · Lv 10) so the unlock-gated modes below can be tested.
+const ids = `(SELECT id FROM users WHERE username IN ('${an}', '${bn}'))`;
+execSync(`npx wrangler d1 execute holosynth --remote --command "UPDATE users SET xp = 60000 WHERE id IN ${ids}; UPDATE progress SET cleared = 40 WHERE user_id IN ${ids}"`,
+  { cwd: new URL('..', import.meta.url), stdio: 'ignore' });
+check(Object.keys((await call('/me', a.token)).locked).length === 0, 'everything unlocked');
 // trades: team cards are locked, gold-only offers, counter, cancel, accept
 await expectError(call('/trades', a.token, { to: bn, give: ['volt'] }), 400);           // on a's team, no spare copy
 await expectError(call('/trades', a.token, { to: bn, giveGold: 1e9 }), 400);             // not that much gold

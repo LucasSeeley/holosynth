@@ -4,6 +4,7 @@ import {
   BY_ID, STARTER_TEAM, START_GOLD, PACK_COST, PACK_COSTS, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN_XP, CAMPAIGN, CHAPTERS, NEW_CARD_AFTER, OPEN_LEVELS,
   levelFor, levelStart, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, dailyShop, SHOP_PRICES, huntFoes, huntStart, HUNT_MS, huntBattle, huntPack, HUNT_GOLD, HUNT_XP, QUESTS, QUEST_PAY, QUEST_BONUS, pickQuests, RANKS, RANK_REWARDS, RANKED_WIN, RANKED_LOSS, RANKED_GOLD, RANKED_XP, WEEK_MS, weekStart, seasonOf, seasonEnd, rankMove, rankTable, rankedTeam, botName, rankedFusions,
   gauntletEnemies, gauntletBattle, gauntletHeal, gauntletCooldowns, fusedHp, FUSE_COPIES, FUSE_GOLD, FUSE_MAX, SECOND, SECOND_COST, PASSIVE_COST, POWERS, POWER_SLOTS, rankedPowers, gauntletGold, GAUNTLET_PACK_EVERY, newCampaignBattle, applyMove, aiMove,
+  UNLOCKS, isUnlocked, recruitsOwed, mainProgress, MAIN_QUESTS, gauntletXp,
 } from './game.js';
 
 class HttpError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
@@ -46,12 +47,6 @@ const avatarOf = (chosen, team) => chosen || JSON.parse(team || '[]')[0] || 'vol
 const getProgress = async (db, userId) =>
   await db.prepare('SELECT * FROM progress WHERE user_id = ?').bind(userId).first()
   ?? { user_id: userId, cleared: 0, wins: 0, packs: 0, run: null };
-
-// Starters you can pick after level 3 (null when there's no pick waiting).
-const pendingChoice = (prog, owned) => {
-  const have = STARTER_TEAM.filter(id => owned[id]);
-  return prog.cleared >= NEW_CARD_AFTER[0] && have.length === 1 ? STARTER_TEAM.filter(id => !owned[id]) : null;
-};
 
 // ---- fusion ----
 const fusedRows = async (db, userId, cardId) => (await (cardId
@@ -97,26 +92,33 @@ async function fuseCard(req, db, user) {
   const writes = [];
   if (target) writes.push(db.prepare(`UPDATE fused SET ${stat} = ${stat === 'x' || stat === 'p' ? 1 : `${stat} + 1`} WHERE id = ?`).bind(target.id));
   else writes.push(db.prepare(`INSERT INTO fused (user_id, card_id, ${stat}) VALUES (?, ?, 1)`).bind(user.id, card));
-  writes.push(questEvent(db, user.id, 'fuse'));
+  writes.push(questEvent(db, user.id, stat === 'p' ? 'passive' : 'fuse'));
   await db.batch(writes);
   return json(await profile(db, await freshUser(db, user.id)));
 }
 
 // ---- daily quests ----
+// Also counts into day 0: lifetime totals, which the main quest line reads.
 const questEvent = (db, userId, kind, n = 1, best = false) => db.prepare(
-  `INSERT INTO quest_events (user_id, day, kind, n) VALUES (?1, ?2, ?3, ?4)
-   ON CONFLICT (user_id, day, kind) DO UPDATE SET n = ${best ? 'MAX(n, ?4)' : 'n + ?4'}`).bind(userId, dayStart(now()), kind, n);
+  `INSERT INTO quest_events (user_id, day, kind, n) VALUES (?1, ?2, ?3, ?4), (?1, 0, ?3, ?4)
+   ON CONFLICT (user_id, day, kind) DO UPDATE SET n = ${best ? 'MAX(n, excluded.n)' : 'n + excluded.n'}`).bind(userId, dayStart(now()), kind, n);
+// Throws unless the player has unlocked `key` (see UNLOCKS).
+async function needUnlock(db, user, key) {
+  if (!isUnlocked(key, (await getProgress(db, user.id)).cleared, levelFor(user.xp))) throw new HttpError(400, `${UNLOCKS[key].text} to unlock this.`);
+}
 
 // Today's quests and progress. Picked the first time they're asked for each day, along with the counters they count from.
 async function questsFor(db, user, prog, collection, extra, shopped) {
   const day = dayStart(now());
   let row = await db.prepare('SELECT * FROM daily_quests WHERE user_id = ?').bind(user.id).first();
   if (!row || row.day !== day) {
-    const can = ['spin', 'pack', 'shop', 'wins'];
+    const lvl = levelFor(user.xp), open = k => isUnlocked(k, prog.cleared, lvl);
+    const can = ['wins', ...(open('spin') ? ['spin'] : []), ...(open('shop') ? ['pack', 'shop'] : [])];
     if (prog.cleared + 2 <= OPEN_LEVELS) can.push('levels');
     if (Object.values(collection).some(n => n > 1)) can.push('fuse');
     if (prog.cleared >= NEW_CARD_AFTER[1] && extra.friends > 0) can.push('friend');
-    if (JSON.parse(user.team).length >= 3) can.push('streak', 'hunt');
+    if (open('gauntlet')) can.push('streak');
+    if (open('hunt')) can.push('hunt');
     const base = { wins: prog.wins, packs: prog.packs, cleared: prog.cleared };
     await db.prepare(`INSERT INTO daily_quests (user_id, day, quests, base, claimed, bonus) VALUES (?1, ?2, ?3, ?4, '[]', 0)
       ON CONFLICT (user_id) DO UPDATE SET day = ?2, quests = ?3, base = ?4, claimed = '[]', bonus = 0 WHERE daily_quests.day < ?2`)
@@ -166,6 +168,31 @@ async function claimQuest(req, db, user) {
   return json({ cards: null, type: null, profile: await profile(db, await freshUser(db, user.id)) });
 }
 
+// ---- main quest line ----
+const mainHave = (user, prog, collection, extra, ev0) => ({ cleared: prog.cleared, level: levelFor(user.xp), team: JSON.parse(user.team).length,
+  friends: extra.friends, ev: { ...ev0, packs: prog.packs, g10: ev0.g10 || 0 } });
+async function mainRow(db, userId) {
+  return await db.prepare('SELECT * FROM main_quest WHERE user_id = ?').bind(userId).first() ?? { step: 0, base: '{}' };
+}
+async function mainQuestFor(db, user, prog, collection, extra, ev0) {
+  const row = await mainRow(db, user.id);
+  return mainProgress(row.step, mainHave(user, prog, collection, extra, ev0), JSON.parse(row.base));
+}
+// Claim the active main quest; the next one starts counting its events from now.
+async function claimMain(db, user) {
+  const prof = await profile(db, user), q = prof.mainQuest;
+  if (!q) throw new HttpError(400, 'Every main quest is done.');
+  if (!q.done) throw new HttpError(400, "That quest isn't done yet.");
+  const row = await mainRow(db, user.id), prog = await getProgress(db, user.id);
+  const ev0 = Object.fromEntries((await db.prepare('SELECT kind, n FROM quest_events WHERE user_id = ? AND day = 0').bind(user.id).all()).results.map(r => [r.kind, r.n]));
+  const base = JSON.stringify({ ...ev0, packs: prog.packs });
+  const res = await db.prepare(`INSERT INTO main_quest (user_id, step, base) VALUES (?1, ?2, ?3)
+    ON CONFLICT (user_id) DO UPDATE SET step = ?2, base = ?3 WHERE main_quest.step = ?4`).bind(user.id, row.step + 1, base, row.step).run();
+  if (!res.meta.changes) throw new HttpError(409, 'Already claimed.');
+  await db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(q.gold, q.xp, user.id).run();
+  return json({ profile: await profile(db, await freshUser(db, user.id)) });
+}
+
 async function profile(db, user) {
   const { results } = await db.prepare('SELECT card_id, count FROM collection WHERE user_id = ?').bind(user.id).all();
   const collection = Object.fromEntries(results.map(r => [r.card_id, r.count]));
@@ -183,6 +210,7 @@ async function profile(db, user) {
     (SELECT COUNT(*) FROM friends f JOIN friends g ON g.user_id = f.friend_id AND g.friend_id = f.user_id WHERE f.user_id = ?1) AS friends`)
     .bind(user.id, dayStart(now()), huntStart(now())).first();
   const sold = String(extra.shopped ?? '').split(',');
+  const ev0 = Object.fromEntries((await db.prepare('SELECT kind, n FROM quest_events WHERE user_id = ? AND day = 0').bind(user.id).all()).results.map(r => [r.kind, r.n]));
   const quests = await questsFor(db, user, prog, collection, extra, sold.filter(Boolean).length);
   const next = prog.cleared < OPEN_LEVELS ? CAMPAIGN[prog.cleared] : null;   // locked chapters count as done for now
   const chapter = next ? next.chapter : CAMPAIGN[OPEN_LEVELS - 1].chapter;
@@ -195,7 +223,10 @@ async function profile(db, user) {
     levelNeed: levelStart(levelFor(user.xp) + 1) - levelStart(levelFor(user.xp)),   // XP the current level takes
     team: JSON.parse(user.team),
     collection,
-    needsStarter: results.length === 0,
+    needsStarter: false,   // old app builds read this; starters now come from Recruit Packs
+    recruit: Math.max(0, recruitsOwed(prog.cleared) - Math.max(ev0.recruit || 0, STARTER_TEAM.filter(id => collection[id]).length)),   // Recruit Packs to open
+    locked: Object.fromEntries(Object.keys(UNLOCKS).filter(k => !isUnlocked(k, prog.cleared, levelFor(user.xp))).map(k => [k, UNLOCKS[k].text])),
+    mainQuest: await mainQuestFor(db, user, prog, collection, extra, ev0),
     avatar: avatarOf(extra.avatar, user.team),
     since: user.created,
     friends: extra.friends,
@@ -222,7 +253,6 @@ async function profile(db, user) {
       cleared: prog.cleared,
       total: OPEN_LEVELS,
       next: next ? { num: next.num, title: next.title, enemies: next.enemies, boss: !!next.boss } : null,
-      choose: pendingChoice(prog, collection),
       friendsUnlocked: prog.cleared >= NEW_CARD_AFTER[1],
     },
   };
@@ -319,6 +349,7 @@ async function setTeam(req, db, user) {
 }
 
 async function buyPack(db, user, type = 'cyber') {
+  await needUnlock(db, user, 'shop');
   if (!(type in PACK_TYPES)) throw new HttpError(400, 'Unknown pack.');
   if (!PACKS_OPEN.includes(type)) throw new HttpError(400, 'That pack is coming soon.');
   const cost = PACK_COSTS[type] ?? PACK_COST;
@@ -335,6 +366,7 @@ async function buyPack(db, user, type = 'cyber') {
 
 // Buys one of today's shop cards. The app sends the card too, so a tap just after midnight can't buy a different one.
 async function buyShop(req, db, user) {
+  await needUnlock(db, user, 'shop');
   const { slot, card } = await body(req);
   const day = dayStart(now());
   const id = dailyShop(day)[slot];
@@ -348,7 +380,7 @@ async function buyShop(req, db, user) {
     await db.prepare('DELETE FROM shop_buys WHERE user_id = ? AND day = ? AND slot = ?').bind(user.id, day, slot).run();
     throw new HttpError(400, `You need ${price} gold.`);
   }
-  await addCard(db, user.id, id).run();
+  await db.batch([addCard(db, user.id, id), questEvent(db, user.id, 'shopbuy')]);
   return json({ card: id, profile: await profile(db, await freshUser(db, user.id)) });
 }
 
@@ -357,34 +389,23 @@ const bumpProgress = (db, userId, field) => db.prepare(
 ).bind(userId);
 
 // ---- starter card & campaign ----
-async function pickStarter(req, db, user) {
-  const { card } = await body(req);
-  if (!STARTER_TEAM.includes(card)) throw new HttpError(400, 'Pick Sparkplug, Mutt or Stubby.');
-  // Only works while the collection is empty, so it can't be used to grab extra cards.
-  const res = await db.prepare(
-    'UPDATE users SET team = ? WHERE id = ? AND NOT EXISTS (SELECT 1 FROM collection WHERE user_id = ?)',
-  ).bind(JSON.stringify([card]), user.id, user.id).run();
-  if (!res.meta.changes) throw new HttpError(400, 'You already have your first card.');
-  await addCard(db, user.id, card).run();
-  return json(await profile(db, await freshUser(db, user.id)));
-}
-
-async function pickReward(req, db, user) {
-  const { card } = await body(req);
+// Opens the player's next Recruit Pack: a random starter they don't have yet, straight onto their team.
+async function openRecruit(db, user) {
   const prof = await profile(db, user);
-  if (!prof.campaign.choose?.includes(card)) throw new HttpError(400, "That card isn't on offer.");
-  const team = [...prof.team, card];
-  await db.batch([addCard(db, user.id, card),
+  if (!prof.recruit) throw new HttpError(400, 'No Recruit Pack to open.');
+  const missing = STARTER_TEAM.filter(id => !prof.collection[id]);
+  const card = (missing.length ? missing : STARTER_TEAM)[Math.floor(Math.random() * (missing.length || STARTER_TEAM.length))];
+  const team = prof.team.includes(card) || prof.team.length >= 3 ? prof.team : [...prof.team, card];
+  await db.batch([addCard(db, user.id, card), questEvent(db, user.id, 'recruit'),
     db.prepare('UPDATE users SET team = ? WHERE id = ?').bind(JSON.stringify(team), user.id)]);
-  return json(await profile(db, await freshUser(db, user.id)));
+  return json({ card, profile: await profile(db, await freshUser(db, user.id)) });
 }
 
 const runView = run => run && { level: CAMPAIGN[run.level].num, title: CAMPAIGN[run.level].title, boss: !!CAMPAIGN[run.level].boss, state: run.state };
 
 async function startCampaign(db, user) {
   const prof = await profile(db, user);
-  if (prof.needsStarter) throw new HttpError(400, 'Pick your first card.');
-  if (prof.campaign.choose) throw new HttpError(400, 'Pick your new card first.');
+  if (prof.recruit) throw new HttpError(400, 'Open your Recruit Pack first.');
   const prog = await getProgress(db, user.id);
   if (prog.cleared >= OPEN_LEVELS) throw new HttpError(400, OPEN_LEVELS < CAMPAIGN.length ? 'The next chapter is coming soon!' : 'You beat the whole campaign!');
   const run = { level: prog.cleared, state: newCampaignBattle(prof.team, prog.cleared, await fusionsFor(db, user.id), await loadout(db, user.id)) };
@@ -428,17 +449,7 @@ async function campaignWin(db, user, level) {
   await db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(gold, xp, user.id).run();
   const result = { won: true, gold, xp };
   const num = level + 1;
-  const owned = (await profile(db, await freshUser(db, user.id))).collection;
-  if (num === NEW_CARD_AFTER[0]) result.chooseCard = true;
-  if (num === NEW_CARD_AFTER[1]) {
-    const missing = STARTER_TEAM.filter(id => !owned[id]);
-    if (missing.length === 1) {   // the one you didn't pick at level 3 joins
-      const fresh = await freshUser(db, user.id);
-      await db.batch([addCard(db, user.id, missing[0]),
-        db.prepare('UPDATE users SET team = ? WHERE id = ?').bind(JSON.stringify([...JSON.parse(fresh.team), missing[0]]), user.id)]);
-      result.newCard = missing[0];
-    }
-  }
+  if (NEW_CARD_AFTER.includes(num)) result.recruit = true;   // a Recruit Pack with the next starter
   if (CAMPAIGN[level].boss) {
     const fresh = await freshUser(db, user.id);
     const packType = CAMPAIGN[level].pack ?? freePack();
@@ -688,6 +699,7 @@ const giveBack = (db, t) => handTo(db, t.from_id, JSON.parse(t.give), t.give_gol
 const batch = (db, writes) => (writes.length ? db.batch(writes) : null);   // D1 refuses an empty batch
 
 async function offerTrade(req, db, user) {
+  await needUnlock(db, user, 'trades');
   const b = await body(req);
   const other = await friendByName(db, user, b.to ?? '');
   const [give, giveGold] = tradeSide(b.give ?? [], b.giveGold);
@@ -725,6 +737,7 @@ async function answerTrade(req, db, user, action) {
   const { id } = await body(req);
   const t = await db.prepare("SELECT * FROM trades WHERE id = ? AND status = 'open'").bind(Number(id)).first();
   if (!t || (action === 'cancel' ? t.from_id : t.to_id) !== user.id) throw new HttpError(404, 'That trade is no longer open.');
+  if (action === 'accept') await needUnlock(db, user, 'trades');
   const status = { cancel: 'cancelled', decline: 'declined', accept: 'accepted' }[action];
   // close it first so it can only be answered once
   const closed = await db.prepare('UPDATE trades SET status = ? WHERE id = ? AND status = ?').bind(status, t.id, 'open').run();
@@ -743,7 +756,8 @@ async function answerTrade(req, db, user, action) {
   if (user.gold < t.get_gold) await fail("You don't have the gold this offer asks for.");
   // I get their held side now; mine is held for them until they claim it from the Social tab
   await db.batch([...handTo(db, user.id, give, t.give_gold), ...holdOut(db, user.id, get),
-    db.prepare('UPDATE users SET gold = gold - ? WHERE id = ?').bind(t.get_gold, user.id)]);
+    db.prepare('UPDATE users SET gold = gold - ? WHERE id = ?').bind(t.get_gold, user.id),
+    questEvent(db, user.id, 'trade'), questEvent(db, t.from_id, 'trade')]);
   return json({ message: null, received: give.map(cardOf), gold: t.give_gold, from: from.username,
     social: await socialView(db, user), profile: await profile(db, await freshUser(db, user.id)) });
 }
@@ -799,6 +813,7 @@ async function declineChallenge(req, db, user) {
 
 // Daily spin: the server picks the slot; the app spins the wheel to land on it.
 async function spin(db, user) {
+  await needUnlock(db, user, 'spin');
   const t = now();
   // claim today's spin first so two quick taps can't both win
   const res = await db.prepare(`INSERT INTO spins (user_id, last) VALUES (?1, ?2)
@@ -807,6 +822,7 @@ async function spin(db, user) {
   const slot = spinWheel();
   const prize = SPIN_SLOTS[slot];
   let cards = null;
+  await questEvent(db, user.id, 'spin').run();
   if (prize.kind === 'gold') await db.prepare('UPDATE users SET gold = gold + ? WHERE id = ?').bind(prize.amount, user.id).run();
   if (prize.kind === 'xp') await db.prepare('UPDATE users SET xp = xp + ? WHERE id = ?').bind(prize.amount, user.id).run();
   let packType = null, holo = null;
@@ -921,7 +937,7 @@ function rankedResult(db, me, won, week) {
   const writes = [db.prepare(`INSERT INTO ranked (user_id, rank, week, points, best) VALUES (?1, ?2, ?3, ?4, ?2)
     ON CONFLICT (user_id) DO UPDATE SET week = ?3, points = ?4, run = NULL`).bind(me.user_id, me.rank, week, points)];
   if (won) writes.push(db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(RANKED_GOLD, RANKED_XP, me.user_id),
-    bumpProgress(db, me.user_id, 'wins'));
+    bumpProgress(db, me.user_id, 'wins'), questEvent(db, me.user_id, 'rwin'));
   return { writes, delta: won ? RANKED_WIN : -Math.min(RANKED_LOSS, weekPoints(me, week)), points };
 }
 
@@ -936,6 +952,7 @@ async function finishRankedMatch(db, m, winnerId) {
 // Find a match: pair with someone else searching right now, otherwise keep waiting (the app asks again every few seconds).
 async function rankedSearch(db, user) {
   needFullTeam(user);
+  await needUnlock(db, user, 'ranked');
   await rankedRollover(db);
   const view = await rankedView(db, user);
   if (view.liveMatch || view.run) return json({ view });
@@ -964,6 +981,7 @@ async function rankedCancel(db, user) {
 // Nobody to play live: face a computer player, or a real player's team (nearest rank first) played by the computer.
 async function rankedGhost(db, user) {
   needFullTeam(user);
+  await needUnlock(db, user, 'ranked');
   await db.prepare('DELETE FROM ranked_queue WHERE user_id = ?').bind(user.id).run();
   const view = await rankedView(db, user);
   if (view.liveMatch || view.run) return json({ view });
@@ -1069,6 +1087,7 @@ async function startHunt(db, user) {
   }
   const team = JSON.parse(user.team);
   if (team.length < 3) throw new HttpError(400, 'Clear campaign level 6 to hunt legends.');
+  await needUnlock(db, user, 'hunt');
   const foes = huntFoes(period);
   const state = JSON.stringify(huntBattle(team, foes, await fusionsFor(db, user.id), await loadout(db, user.id), period));
   const res = await db.prepare(`INSERT INTO hunts (user_id, day, legend, state, result) VALUES (?1, ?2, ?3, ?4, NULL)
@@ -1148,6 +1167,7 @@ async function startGauntlet(db, user) {
   const g = await getGauntlet(db, user.id);
   if (g.run) return json(gauntletView(JSON.parse(g.run)));   // already running: pick it up
   if (JSON.parse(user.team).length < 3) throw new HttpError(400, 'Clear campaign level 6 to play the Gauntlet.');
+  await needUnlock(db, user, 'gauntlet');
   const team = JSON.parse(user.team), fus = await fusionsFor(db, user.id);
   const hp = team.map(id => fusedHp(id, fus[id]));
   const enemies = gauntletEnemies(1);
@@ -1203,8 +1223,9 @@ async function gauntletMove(req, db, user) {
   const next = { ...run, wins: run.wins + 1, gold: run.gold + gold, fight: run.fight + 1,
     hp: gauntletHeal(run.state.teams[0]), cds: gauntletCooldowns(run.state.teams[0]), enemies: gauntletEnemies(run.fight + 1), state: null };
   let pack = null, packType = null, holo = null;
-  const writes = [db.prepare('UPDATE users SET gold = gold + ? WHERE id = ?').bind(gold, user.id), bumpProgress(db, user.id, 'wins'),
-    questEvent(db, user.id, 'streak', next.wins, true)];
+  next.xp = (run.xp || 0) + gauntletXp(run.fight);
+  const writes = [db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(gold, gauntletXp(run.fight), user.id), bumpProgress(db, user.id, 'wins'),
+    questEvent(db, user.id, 'streak', next.wins, true), ...(next.wins === 10 ? [questEvent(db, user.id, 'g10')] : [])];
   if (next.wins % GAUNTLET_PACK_EVERY === 0) {
     packType = freePack();
     const opened = openPack(user.packs_since_legend, packType);
@@ -1255,7 +1276,7 @@ async function deleteAccount(db, user) {
     db.prepare('DELETE FROM matches WHERE p0 = ?1 OR p1 = ?1').bind(id),
     db.prepare('DELETE FROM trades WHERE from_id = ?1 OR to_id = ?1').bind(id),
     db.prepare('DELETE FROM fused WHERE user_id = ?1').bind(id),
-    ...['collection', 'sessions', 'progress', 'presence', 'spins', 'gauntlet', 'shop_buys', 'hunts', 'daily_quests', 'quest_events', 'ranked', 'ranked_queue'].map(t => db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(id)),
+    ...['collection', 'sessions', 'progress', 'presence', 'spins', 'gauntlet', 'shop_buys', 'hunts', 'daily_quests', 'quest_events', 'ranked', 'ranked_queue', 'pack_inv', 'powers', 'power_team', 'main_quest'].map(t => db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(id)),
     db.prepare('DELETE FROM users WHERE id = ?').bind(id),
   ]);
   return json({ ok: true });
@@ -1301,7 +1322,8 @@ async function route(req, env) {
   if (method === 'POST' && pathname === '/packs/open') return openInv(req, db, user);
   if (method === 'POST' && pathname === '/powers/team') return setPowerTeam(req, db, user);
   if (method === 'POST' && pathname === '/packs') return buyPack(db, user, String((await body(req)).type ?? 'cyber'));
-  if (method === 'POST' && pathname === '/starter') return pickStarter(req, db, user);
+  if (method === 'POST' && pathname === '/recruit') return openRecruit(db, user);
+  if (method === 'POST' && pathname === '/mainquest/claim') return claimMain(db, user);
   if (method === 'POST' && pathname === '/avatar') return setAvatar(req, db, user);
   if (method === 'POST' && pathname === '/spin') return spin(db, user);
   if (method === 'GET' && pathname === '/social') return json(await socialView(db, user));
@@ -1319,7 +1341,6 @@ async function route(req, env) {
     if (method === 'POST' && b === 'start') return startCampaign(db, user);
     if (method === 'POST' && b === 'move') return campaignMove(req, db, user);
     if (method === 'POST' && b === 'leave') return leaveCampaign(db, user);
-    if (method === 'POST' && b === 'reward') return pickReward(req, db, user);
   }
   if (method === 'POST' && pathname === '/quests/claim') return claimQuest(req, db, user);
   if (a === 'ranked') {

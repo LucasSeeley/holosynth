@@ -154,6 +154,7 @@ export function spinWheel(rand = Math.random) {
 export const GAUNTLET_HEAL = 0.2;
 export const GAUNTLET_PACK_EVERY = 10;
 export const gauntletGold = fight => 50 + 25 * fight;   // fight 1 pays 75, fight 2 pays 100…
+export const gauntletXp = fight => 50 + 10 * fight;     // fight 1 pays 60 XP, fight 10 pays 150…
 const TIERS = ['Common', 'Rare', 'Epic', 'Legendary'];
 const POOLS = TIERS.map(r => CARDS.filter(c => c.rarity === r).map(c => c.id));
 // One enemy for fights 1–10, two for 11–20, then three; rarer cards creep in as the streak grows.
@@ -785,3 +786,58 @@ export const OPEN_LEVELS = CAMPAIGN.filter(l => l.chapter < CHAPTERS_OPEN).lengt
 // A campaign battle: your team against the level's enemies, and you go first.
 export const newCampaignBattle = (team, level, fus = {}, powers = []) =>
   ({ ...newBattle(team, CAMPAIGN[level].enemies, () => 0, fus), pw: [[...powers], campaignPowers(level)] });
+
+// ---- unlocks ----
+// What opens each feature: campaign levels cleared, or player level. `text` is what a locked tile/tab shows.
+export const UNLOCKS = {
+  friends: { cleared: 6, text: 'Clear Ch 1 · Lv 6' },
+  spin: { cleared: 10, text: 'Clear Ch 1 · Lv 10' },
+  gauntlet: { cleared: 20, text: 'Clear Ch 1 · Lv 20' },
+  ranked: { cleared: 40, text: 'Clear Ch 2 · Lv 10' },
+  shop: { level: 5, text: 'Reach player level 5' },
+  trades: { level: 7, text: 'Reach player level 7' },
+  hunt: { level: 10, text: 'Reach player level 10' },
+};
+export const isUnlocked = (key, cleared, level) => { const u = UNLOCKS[key]; return u.cleared ? cleared >= u.cleared : level >= u.level; };
+// Starters come out of 1-card Recruit Packs: one at sign-up, one after level 3, one after level 6.
+export const recruitsOwed = cleared => 1 + (cleared >= NEW_CARD_AFTER[0]) + (cleared >= NEW_CARD_AFTER[1]);
+
+// ---- main quest line ----
+// One at a time, in order. need: cleared / level / team / friends count what you already have;
+// ev counts a lifetime event (quest_events day 0) only from when the quest became the active one.
+export const MAIN_QUESTS = [
+  ['Open your Recruit Pack', { team: 1 }, { gold: 100 }],
+  ['Clear Ch 1 · Lv 3', { cleared: 3 }, { xp: 100 }],
+  ['Win a 2-card battle', { cleared: 4 }, { gold: 200 }],
+  ['Clear Ch 1 · Lv 6', { cleared: 6 }, { xp: 100 }],
+  ['Clear Ch 1 · Lv 10', { cleared: 10 }, { gold: 250 }],
+  ['Spin the wheel', { ev: 'spin' }, { xp: 100 }],
+  ['Open a pack', { ev: 'packs' }, { gold: 250 }],
+  ['Clear Ch 1 · Lv 20', { cleared: 20 }, { gold: 500 }],
+  ['Win 10 Gauntlet fights in one run', { ev: 'g10' }, { xp: 500 }],
+  ['Clear Ch 1 · Lv 30', { cleared: 30 }, { gold: 500 }],
+  ['Reach player level 5', { level: 5 }, { gold: 500 }],
+  ['Buy a card from the Shop', { ev: 'shopbuy' }, { xp: 500 }],
+  ['Fuse a card', { ev: 'fuse' }, { gold: 1000 }],
+  ['Add a friend', { friends: 1 }, { gold: 250 }],
+  ['Win a friend battle', { ev: 'friend' }, { xp: 500 }],
+  ['Clear Ch 2 · Lv 10', { cleared: 40 }, { gold: 750 }],
+  ['Win a Ranked match', { ev: 'rwin' }, { gold: 1000 }],
+  ['Clear Ch 2 · Lv 30', { cleared: 60 }, { gold: 1000 }],
+  ['Reach player level 7', { level: 7 }, { gold: 1000 }],
+  ['Complete a trade', { ev: 'trade' }, { xp: 1000 }],
+  ['Clear Ch 3 · Lv 30', { cleared: 90 }, { gold: 1000 }],
+  ['Unlock a card passive', { ev: 'passive' }, { gold: 1500 }],
+  ['Clear Ch 4 · Lv 30', { cleared: 120 }, { gold: 2500 }],
+  ['Clear Ch 5 · Lv 30', { cleared: 150 }, { gold: 5000 }],
+  ['Reach player level 10', { level: 10 }, { gold: 2000 }],
+  ['Beat the Legend Hunt', { ev: 'hunt' }, { gold: 2500 }],
+].map(([name, need, pay]) => ({ name, need, gold: pay.gold ?? 0, xp: pay.xp ?? 0 }));
+// Progress on main quest `step`: have = { cleared, level, team, friends, ev: lifetime counts }, base = ev counts when it started.
+export function mainProgress(step, have, base = {}) {
+  const q = MAIN_QUESTS[step];
+  if (!q) return null;
+  const [k, v] = Object.entries(q.need)[0];
+  const goal = k === 'ev' ? 1 : v, n = k === 'ev' ? (have.ev[v] || 0) - (base[v] || 0) : have[k];
+  return { step: step + 1, total: MAIN_QUESTS.length, name: q.name, n: Math.max(0, Math.min(goal, n)), goal, gold: q.gold, xp: q.xp, done: n >= goal };
+}

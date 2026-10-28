@@ -178,3 +178,10 @@ CREATE TABLE IF NOT EXISTS power_team (
   user_id INTEGER PRIMARY KEY,
   team TEXT NOT NULL DEFAULT '[]'
 );
+
+-- Main quest line: which step you're on, and the lifetime event counts when it started (action quests count from there).
+CREATE TABLE IF NOT EXISTS main_quest (
+  user_id INTEGER PRIMARY KEY,
+  step INTEGER NOT NULL DEFAULT 0,
+  base TEXT NOT NULL DEFAULT '{}'
+);
