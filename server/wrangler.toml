@@ -3,6 +3,10 @@ main = "src/index.js"
 compatibility_date = "2025-06-01"
 workers_dev = true
 
+# Run the Worker near the database: every request makes several D1 reads, so distance to D1 is most of the wait.
+[placement]
+mode = "smart"
+
 # database_id is filled in by the deploy workflow (it creates the database the first time).
 [[d1_databases]]
 binding = "DB"

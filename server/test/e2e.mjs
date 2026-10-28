@@ -36,8 +36,12 @@ if (!base.includes('localhost')) {
 }
 
 const tag = Date.now().toString(36).slice(-6);
+// How long the common calls take (shown as a notice on the build).
+const timed = async (label, p) => { const t0 = Date.now(); const r = await p; timings.push(`${label} ${Date.now() - t0}ms`); return r; };
+const timings = [];
 const a = await call('/signup', null, { username: `ana_${tag}`, password: 'secret1' });
 const b = await call('/signup', null, { username: `ben_${tag}`, password: 'secret2' });
+for (let i = 0; i < 3; i++) await timed('me', call('/me', a.token));
 check(a.profile.recruit === 1 && a.profile.gold === 0 && a.profile.team.length === 0 && a.profile.mainQuest.step === 1, 'new account starts empty, one Recruit Pack to open');
 await expectError(call('/signup', null, { username: `ANA_${tag}`, password: 'secret1' }), 409);
 await expectError(call('/login', null, { username: `ana_${tag}`, password: 'nope' }), 401);
@@ -64,7 +68,7 @@ async function campaign(token, upTo) {
   while (prof.campaign.cleared < upTo) {
     if (prof.recruit) { prof = (await call('/recruit', token, {})).profile; continue; }
     let run = await call('/campaign/start', token, {});
-    while (!run.result) run = await call('/campaign/move', token, aiMove(run.state, 0));
+    while (!run.result) run = await timed('move', call('/campaign/move', token, aiMove(run.state, 0)));
     if (!run.result.won) losses++;
     check(losses < 20, 'lost too many campaign battles');
     if (run.result.pack) console.log('boss pack:', run.result.pack);
@@ -271,3 +275,4 @@ await expectError(call('/ranked/claim', a.token, {}), 400);   // no season rewar
 for (const t of [a.token, b.token]) await call('/me/delete', t, {});
 await expectError(call('/me', a.token), 401);
 console.log('E2E OK');
+console.log(`::notice title=timing::${timings.slice(0, 15).join(', ')}`);

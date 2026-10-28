@@ -177,10 +177,6 @@ const mainHave = (user, prog, collection, extra, ev0) => ({ cleared: prog.cleare
 async function mainRow(db, userId) {
   return await db.prepare('SELECT * FROM main_quest WHERE user_id = ?').bind(userId).first() ?? { step: 0, base: '{}' };
 }
-async function mainQuestFor(db, user, prog, collection, extra, ev0) {
-  const row = await mainRow(db, user.id);
-  return mainProgress(row.step, mainHave(user, prog, collection, extra, ev0), JSON.parse(row.base));
-}
 // Claim the active main quest; the next one starts counting its events from now.
 async function claimMain(db, user) {
   const prof = await profile(db, user), q = prof.mainQuest;
@@ -197,10 +193,11 @@ async function claimMain(db, user) {
 }
 
 async function profile(db, user) {
-  const { results } = await db.prepare('SELECT card_id, count FROM collection WHERE user_id = ?').bind(user.id).all();
-  const collection = Object.fromEntries(results.map(r => [r.card_id, r.count]));
-  const prog = await getProgress(db, user.id);
-  const extra = await db.prepare(`SELECT (SELECT avatar FROM presence WHERE user_id = ?1) AS avatar,
+  // Independent reads go out together: each one is a round trip to the database.
+  const [{ results }, prog, extra, ev0rows, fused, ranked, powers, powerTeam, mainRowNow] = await Promise.all([
+    db.prepare('SELECT card_id, count FROM collection WHERE user_id = ?').bind(user.id).all(),
+    getProgress(db, user.id),
+    db.prepare(`SELECT (SELECT avatar FROM presence WHERE user_id = ?1) AS avatar,
     (SELECT last FROM spins WHERE user_id = ?1) AS spun,
     (SELECT GROUP_CONCAT(slot) FROM shop_buys WHERE user_id = ?1 AND day = ?2) AS shopped,
     (SELECT CASE WHEN state IS NOT NULL THEN 'playing' ELSE result END FROM hunts WHERE user_id = ?1 AND day = ?3) AS hunted,
@@ -211,9 +208,13 @@ async function profile(db, user) {
        JOIN gauntlet x ON x.user_id = f.friend_id
        WHERE f.user_id = ?1 AND x.best > COALESCE((SELECT best FROM gauntlet WHERE user_id = ?1), 0)) AS gahead,
     (SELECT COUNT(*) FROM friends f JOIN friends g ON g.user_id = f.friend_id AND g.friend_id = f.user_id WHERE f.user_id = ?1) AS friends`)
-    .bind(user.id, dayStart(now()), huntStart(now())).first();
+    .bind(user.id, dayStart(now()), huntStart(now())).first(),
+    db.prepare('SELECT kind, n FROM quest_events WHERE user_id = ? AND day = 0').bind(user.id).all(),
+    fusedRows(db, user.id), rankedTile(db, user), powerCounts(db, user.id), loadout(db, user.id), mainRow(db, user.id),
+  ]);
+  const collection = Object.fromEntries(results.map(r => [r.card_id, r.count]));
   const sold = String(extra.shopped ?? '').split(',');
-  const ev0 = Object.fromEntries((await db.prepare('SELECT kind, n FROM quest_events WHERE user_id = ? AND day = 0').bind(user.id).all()).results.map(r => [r.kind, r.n]));
+  const ev0 = Object.fromEntries(ev0rows.results.map(r => [r.kind, r.n]));
   const quests = await questsFor(db, user, prog, collection, extra, sold.filter(Boolean).length);
   const next = prog.cleared < OPEN_LEVELS ? CAMPAIGN[prog.cleared] : null;   // locked chapters count as done for now
   const chapter = next ? next.chapter : CAMPAIGN[OPEN_LEVELS - 1].chapter;
@@ -229,7 +230,7 @@ async function profile(db, user) {
     needsStarter: false,   // old app builds read this; starters now come from Recruit Packs
     recruit: Math.max(0, recruitsOwed(prog.cleared) - Math.max(ev0.recruit || 0, STARTER_TEAM.filter(id => collection[id]).length)),   // Recruit Packs to open
     locked: Object.fromEntries(Object.keys(UNLOCKS).filter(k => !isUnlocked(k, prog.cleared, levelFor(user.xp))).map(k => [k, UNLOCKS[k].text])),
-    mainQuest: await mainQuestFor(db, user, prog, collection, extra, ev0),
+    mainQuest: mainProgress(mainRowNow.step, mainHave(user, prog, collection, extra, ev0), JSON.parse(mainRowNow.base)),
     avatar: avatarOf(extra.avatar, user.team),
     since: user.created,
     friends: extra.friends,
@@ -240,16 +241,16 @@ async function profile(db, user) {
       cards: dailyShop(now()).map((id, i) => ({ id, price: SHOP_PRICES[BY_ID[id].rarity], sold: sold.includes(String(i)) })),
       next: dayStart(now()) + 86400000,
     },
-    fused: (await fusedRows(db, user.id)).map(fusedView),
+    fused: fused.map(fusedView),
     quests,
-    ranked: await rankedTile(db, user),
+    ranked,
     hunt: { ...huntFoes(now()), status: extra.hunted ?? 'ready', next: huntStart(now()) + HUNT_MS },   // ready | playing | won | lost
     gauntlet: { best: extra.gbest || 0, rank: extra.gahead + 1 },   // rank among you and your friends
     wins: prog.wins,
     packs: prog.packs,
     unopened: JSON.parse(extra.unopened ?? '[]'),
-    powers: await powerCounts(db, user.id),        // power cards you own: { id: count }
-    powerTeam: await loadout(db, user.id),       // the (up to) 2 you take into battle   // packs waiting to be opened, oldest first: [{ type, n }]
+    powers,        // power cards you own: { id: count }
+    powerTeam,     // the (up to) 2 you take into battle   // packs waiting to be opened, oldest first: [{ type, n }]
     campaign: {
       chapter: CHAPTERS[chapter].title,
       chapterNum: chapter + 1,

@@ -507,7 +507,8 @@ enum Art {
         if let hit = cache.object(forKey: name as NSString) { return hit }
         let bundled = ["webp", "png"].lazy.compactMap { Bundle.main.path(forResource: name, ofType: $0, inDirectory: "Art") }.first
         let path = bundled ?? folder.appendingPathComponent(name + ".webp").path
-        guard let img = UIImage(contentsOfFile: path) else { return nil }
+        guard let raw = UIImage(contentsOfFile: path) else { return nil }
+        let img = raw.preparingForDisplay() ?? raw   // decode once now, not on every redraw
         cache.setObject(img, forKey: name as NSString)
         return img
     }
