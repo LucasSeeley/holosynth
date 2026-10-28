@@ -75,17 +75,20 @@ struct CampaignBattleView: View {
                         }
                         Text("Your next starter is inside.").font(.barlow(15)).foregroundColor(Theme.muted)
                         Button("Open") { onClose(.recruit) }.buttonStyle(GoldButton())
-                    } else if let pack = r.pack {
-                        Text("Boss reward: a free pack! Open it from the Play tab.").font(.barlow(15)).foregroundColor(Theme.fg)
-                        Button("Collect") { onClose(.pack(pack)) }.buttonStyle(GoldButton())
                     } else {
-                        Button("Continue") { onClose(.none) }.buttonStyle(GoldButton())
+                        if r.pack != nil {
+                            Text("Boss reward: a free pack! Open it from the Play tab.").font(.barlow(15)).foregroundColor(Theme.fg).multilineTextAlignment(.center)
+                        }
+                        if store.profile?.campaign.next != nil {
+                            Button("Next battle") { Task { await start() } }.buttonStyle(GoldButton())
+                        }
+                        Button("Exit") { onClose(r.pack.map { .pack($0) } ?? .none) }.buttonStyle(OutlineButton())
                     }
                 } else {
                     Text("You go first every time. Try a different target order.")
                         .font(.barlow(15)).foregroundColor(Theme.muted).multilineTextAlignment(.center)
                     Button("Try again") { Task { await start() } }.buttonStyle(GoldButton())
-                    Button("Back") { onClose(.none) }.buttonStyle(OutlineButton())
+                    Button("Exit") { onClose(.none) }.buttonStyle(OutlineButton())
                 }
             }
             .padding(24)

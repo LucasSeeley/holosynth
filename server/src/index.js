@@ -412,6 +412,14 @@ async function openRecruit(db, user) {
   return json({ card, profile: await profile(db, await freshUser(db, user.id)) });
 }
 
+// The campaign map: every chapter you've reached (locked ones aren't sent), each level with its enemies, enemy fusion and rewards.
+export function campaignMap(cleared) {
+  const upTo = Math.min(cleared, OPEN_LEVELS - 1);
+  return { cleared, chapters: CHAPTERS.slice(0, CAMPAIGN[upTo].chapter + 1).map((c, i) => ({
+    num: i + 1, title: c.title, gold: CAMPAIGN_GOLD[i], xp: CAMPAIGN_XP[i],
+    levels: CAMPAIGN.filter(l => l.chapter === i).map(l => ({ num: l.num, title: l.title, enemies: l.enemies, lv: l.lv ?? 0, boss: !!l.boss, ...(l.pack ? { pack: l.pack } : {}) })),
+  })) };
+}
 const runView = run => run && { level: CAMPAIGN[run.level].num, title: CAMPAIGN[run.level].title, boss: !!CAMPAIGN[run.level].boss, state: run.state };
 
 async function startCampaign(db, user) {
@@ -1349,6 +1357,7 @@ async function route(req, env) {
   if (method === 'POST' && a === 'trades' && ['accept', 'decline', 'cancel'].includes(b)) return answerTrade(req, db, user, b);
   if (a === 'campaign') {
     if (method === 'GET' && b === 'current') return json(runView(JSON.parse((await getProgress(db, user.id)).run)));
+    if (method === 'GET' && b === 'map') return json(campaignMap((await getProgress(db, user.id)).cleared));
     if (method === 'POST' && b === 'start') return startCampaign(db, user);
     if (method === 'POST' && b === 'move') return campaignMove(req, db, user);
     if (method === 'POST' && b === 'leave') return leaveCampaign(db, user);

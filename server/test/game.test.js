@@ -463,3 +463,13 @@ test('every card dodges 5% of attacks', () => {
   let n = 0; for (let i = 0; i < 20000; i++) { const t = newBattle(['volt'], ['fang'], () => 0); applyMove_(t, 0, 0, 'basic', 0); n += !!t.log[0].dodge; }
   assert.ok(Math.abs(n / 20000 - DODGE) < 0.01, String(n));
 });
+
+test('the campaign map only shows chapters you have reached', async () => {
+  const { campaignMap } = await import('../src/index.js');
+  assert.deepEqual(campaignMap(0).chapters.map(c => c.num), [1]);
+  assert.deepEqual(campaignMap(30).chapters.map(c => c.num), [1, 2]);
+  const m = campaignMap(42);
+  assert.equal(m.chapters[1].levels.length, 30);
+  assert.ok(m.chapters[1].levels[9].boss && m.chapters[1].levels[9].pack === 'magic' && m.chapters[1].gold === 200);
+  assert.deepEqual(campaignMap(9999).chapters.length, CHAPTERS_OPEN);
+});

@@ -5,7 +5,7 @@ struct PlayTab: View {
     @EnvironmentObject var store: GameStore
     @Binding var tab: Int
 
-    enum Screen: Identifiable { case campaign, friend, recruit, spin, gauntlet, hunt, quests, ranked, packs; var id: Self { self } }
+    enum Screen: Identifiable { case map, campaign, friend, recruit, spin, gauntlet, hunt, quests, ranked, packs; var id: Self { self } }
     @State var screen: Screen?
     @State private var claiming = false
 
@@ -32,12 +32,13 @@ struct PlayTab: View {
         }
         .fullScreenCover(item: $screen) { s in
             switch s {
+            case .map:
+                CampaignMapView(onClose: { screen = nil }, onBattle: { screen = .campaign })
             case .campaign:
                 CampaignBattleView { next in
                     switch next {
-                    case .none: screen = nil
+                    case .none, .pack: screen = .map   // back to the map; a won pack waits in the Packs row
                     case .recruit: screen = .recruit
-                    case .pack: screen = nil   // the pack waits in the Packs row
                     }
                 }
             case .friend:
@@ -178,7 +179,9 @@ struct PlayTab: View {
                 if (p.recruit ?? 0) > 0 {
                     Button("Open") { screen = .recruit }.buttonStyle(GoldButton(height: 46)).frame(width: 110)
                 } else if c.next != nil {
-                    Button(c.cleared == 0 ? "Start" : "Continue") { screen = .campaign }.buttonStyle(GoldButton(height: 46)).frame(width: 140)
+                    Button(c.cleared == 0 ? "Start" : "Continue") { screen = .map }.buttonStyle(GoldButton(height: 46)).frame(width: 140)
+                } else {
+                    Button("Map") { screen = .map }.buttonStyle(OutlineButton())
                 }
             }
             .padding(14)
