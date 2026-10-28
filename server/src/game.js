@@ -424,7 +424,8 @@ function refreshActed(state, p) {
 }
 
 // Throws an Error with a player-readable message if the move isn't allowed.
-export function applyMove(state, p, from, move, to) {
+export const DODGE = 0.05;   // every card dodges 5% of attacks
+export function applyMove(state, p, from, move, to, rand = Math.random) {
   if (state.winner !== null) throw new Error('The match is over.');
   if (state.turn !== p) throw new Error("It's not your turn.");
   const me = state.teams[p], foe = state.teams[1 - p];
@@ -440,7 +441,7 @@ export function applyMove(state, p, from, move, to) {
   const target = heal ? me[to] : foe[to];
   if (!target || !alive(target)) throw new Error(heal ? 'Pick one of your cards that is still standing.' : 'Pick a target that is still standing.');
 
-  let dmg = 0, healed = 0, adv = false;
+  let dmg = 0, healed = 0, adv = false, dodge = false;
   const pas = [];   // passives that kicked in: { p: side, i: card, n: name, v: amount }
   const mine = (u, side, i, v) => pas.push({ p: side, i, n: PASSIVES[u.ps][0], v });
   const heal_ = (u, amount) => { const h = Math.min(amount, unitMax(u) - u.hp); u.hp += h; return h; };   // never above full HP
@@ -448,6 +449,11 @@ export function applyMove(state, p, from, move, to) {
     let amount = fusedDmg(attacker.id, attacker.f, 'special');
     if (attacker.ps === 'blessing') { amount = Math.round(amount * (1 + pv(attacker) / 100)); mine(attacker, p, from, 0); }
     healed = heal_(target, amount);
+  } else if (rand() < DODGE) {   // dodged: no damage and nothing on the target triggers; the attack still counts as made
+    dodge = true;
+    attacker.oc = false; attacker.od = false;
+    if (attacker.ps === 'momentum') attacker.mom = move === 'basic' ? Math.min(3, (attacker.mom || 0) + 1) : attacker.mom;
+    attacker.hit = true;
   } else {
     adv = beats(card.cls, BY_ID[target.id].cls);
     // checked before the hit lands, the same way hitFor does
@@ -493,7 +499,7 @@ export function applyMove(state, p, from, move, to) {
   refreshActed(state, 1 - p);
   state.moves = (state.moves || 0) + 1;   // total so far; the log is capped, so the app uses this to spot new moves
   state.log.push(heal ? { p, from, to, move, dmg: 0, heal: healed, adv: false, ko: false, ...(pas.length ? { pas } : {}) }
-                      : { p, from, to, move, dmg, adv, ko: target.hp === 0, ...(pas.length ? { pas } : {}) });
+                      : { p, from, to, move, dmg, adv, ko: target.hp === 0, ...(dodge ? { dodge } : {}), ...(pas.length ? { pas } : {}) });
   if (state.log.length > 30) state.log.shift();
 
   if (!foe.some(alive)) state.winner = p;
@@ -614,7 +620,7 @@ export function aiMove(state, p) {
 }
 
 // ---- campaign ----
-// Three chapters of 30 levels; every 10th is a boss. Levels 1–3: one enemy (you have one card); 4–6: two; then up to three.
+// Five chapters of 30 levels; every 10th is a boss. Levels 1–3: one enemy (you have one card); 4–6: two; then up to three.
 // You always move first; test/game.test.js checks the three starter cards alone can win every level.
 export const CHAPTERS = [
   { title: 'Scrapyard Rumble', levels: [
@@ -649,134 +655,135 @@ export const CHAPTERS = [
     { title: 'Last shift', enemies: ['quake', 'forge', 'gyro'] },
     { title: 'Brask of the heap', enemies: ['warlord', 'magnus'], boss: true },
   ] },
+  // Chapter 2: all magic. Chapters 2–5 are a grind: each one starts winnable with what you had and ends needing fused, stronger cards.
+  { title: 'The Arcane Rift', levels: [
+    { title: 'Through the rift', enemies: ['choir', 'bloom', 'wisp'] },
+    { title: 'Glowing welcome', enemies: ['halo', 'flask', 'drift'], lv: 1 },
+    { title: 'Northern lights', enemies: ['aurora', 'flutter', 'tide'], lv: 1 },
+    { title: 'Crystal storm', enemies: ['hexblade', 'glimmerstag', 'lantern'] },
+    { title: 'Stone circle', enemies: ['sanctum', 'glyph', 'rune'] },
+    { title: 'Lantern watch', enemies: ['archon', 'wisp'], lv: 2 },
+    { title: 'Thunder over the temple', enemies: ['thunderbird', 'hexcoil', 'mirage'], lv: 1 },
+    { title: 'The healers\' guard', enemies: ['lifeline', 'geode', 'rime'] },
+    { title: 'Haunted chorus', enemies: ['vital', 'lumina'] },
+    { title: 'Cosmo', enemies: ['starwyrm', 'tempest', 'tome'], boss: true },
+    { title: 'The quiet library', enemies: ['sanctum', 'mender', 'nocturne'], lv: 1 },
+    { title: 'Burning glyphs', enemies: ['totem', 'mistwyrm', 'moonhare'], lv: 1 },
+    { title: 'Borrowed time', enemies: ['chronos', 'dreamjelly'], lv: 1 },
+    { title: 'Paper tigers', enemies: ['solmane', 'sigil', 'moonhare'], lv: 1 },
+    { title: 'Lost pages', enemies: ['chronos', 'nightowl'], lv: 1 },
+    { title: 'Wisps in the wind', enemies: ['thunderbird', 'orrery'], lv: 1 },
+    { title: 'Spring eternal', enemies: ['chronos', 'voidweaver'], lv: 1 },
+    { title: 'Second wind', enemies: ['lifeline', 'moss', 'wick'] },
+    { title: 'Alchemy lab', enemies: ['archon', 'alchemist', 'plume'] },
+    { title: 'Rosalind', enemies: ['petalcore', 'wraithhound', 'stormcaller'], boss: true },
+    { title: 'Cursed edge', enemies: ['hexblade', 'prismheart'], lv: 1 },
+    { title: 'Storm hounds', enemies: ['runesmith', 'ashwolf'] },
+    { title: 'Moonlit study', enemies: ['archon', 'eternity'] },
+    { title: 'Rune lightning', enemies: ['coralheart', 'chime', 'petalcore'] },
+    { title: 'Sun and moon', enemies: ['solmane', 'hexqueen'] },
+    { title: 'Wild garden', enemies: ['aurora', 'dawnbringer'] },
+    { title: 'Hex marks the spot', enemies: ['shade', 'wraithhound'], lv: 2 },
+    { title: 'Seeing double', enemies: ['lifeline', 'grimoire'], lv: 1 },
+    { title: 'Edge of the rift', enemies: ['solmane', 'mendforge'], lv: 1 },
+    { title: 'Vesnara', enemies: ['voidweaver', 'bloom', 'seraph'], boss: true },
+  ] },
+  // Chapters 3–5 mix cyber and magic.
   { title: 'Chrome Harbor', levels: [
-    { title: 'Fresh off the boat', enemies: ['piranha', 'eel', 'hare'] },
-    { title: 'Something in the water', enemies: ['shark', 'piranha', 'eel'] },
-    { title: 'Dock rats', enemies: ['shiv', 'rogue', 'hare'] },
-    { title: 'Cargo cranes', enemies: ['hoist', 'crawler', 'bastion'] },
-    { title: 'Ink everywhere', enemies: ['kraken', 'eel', 'siren'] },
-    { title: 'Customs check', enemies: ['skyburst', 'warden', 'scout'] },
-    { title: 'The fish market', enemies: ['narwhal', 'shark', 'piranha'] },
-    { title: 'Smugglers', enemies: ['bounty', 'jackal', 'vesper'] },
-    { title: 'Lighthouse keeper', enemies: ['siphon', 'cyclone', 'siren'] },
-    { title: 'Jaws of the bay', enemies: ['basilisk', 'rhino', 'kraken'], boss: true },
-    { title: 'Container maze', enemies: ['railer', 'gunner', 'mortar'] },
-    { title: 'Bilge pumps', enemies: ['siphon', 'pylon', 'juggernaut'] },
-    { title: 'Siren song', enemies: ['siren', 'lotus', 'vesper'] },
-    { title: 'Gator alley', enemies: ['croc', 'komodo', 'viper'] },
-    { title: 'The night ferry', enemies: ['overdrive', 'phantom', 'nyx'] },
-    { title: 'Harbor patrol', enemies: ['rook', 'sentry', 'lancer'] },
-    { title: 'Rogue wave', enemies: ['narwhal', 'mantis', 'cyclone'] },
-    { title: 'Pirate radio', enemies: ['echo', 'glitch', 'cipher'] },
-    { title: 'Shipwreck', enemies: ['shark', 'arachne', 'crawler'] },
-    { title: 'The dreadnought', enemies: ['dreadnought', 'gunner'], boss: true },
-    { title: 'Fog bank', enemies: ['phantom', 'nyx', 'vesper'] },
-    { title: 'Dry dock', enemies: ['reactor', 'crusher'] },
-    { title: 'Sharks circling', enemies: ['shark', 'sabre', 'piranha'] },
-    { title: 'Stowaways', enemies: ['chimera', 'manticore'] },
-    { title: "The captain's table", enemies: ['shogun', 'brick', 'monk'] },
-    { title: 'Depth charge', enemies: ['skyburst', 'mortar', 'railer'] },
-    { title: "The admiral's guard", enemies: ['vanta', 'brick', 'bastion'] },
-    { title: 'Black tide', enemies: ['wyvern', 'thunderhide'] },
-    { title: 'Storm warning', enemies: ['hellfire', 'rook'] },
-    { title: 'Tidebreaker rising', enemies: ['leviathan', 'cyclone'], boss: true },
+    { title: 'Fresh off the boat', enemies: ['piranha', 'wick', 'dreamjelly'], lv: 2 },
+    { title: 'Something in the water', enemies: ['shark', 'hare', 'orrery'], lv: 2 },
+    { title: 'Dock rats', enemies: ['shiv', 'grimoire'], lv: 2 },
+    { title: 'Cargo cranes', enemies: ['hoist', 'nocturne', 'rivet'], lv: 3 },
+    { title: 'Ink everywhere', enemies: ['kraken', 'hydra', 'mirage'], lv: 1 },
+    { title: 'Customs check', enemies: ['skyburst', 'sandscorch', 'tempest'], lv: 1 },
+    { title: 'The fish market', enemies: ['narwhal', 'archon', 'buzzsaw'], lv: 3 },
+    { title: 'Smugglers', enemies: ['bounty', 'mendforge', 'lumina'], lv: 1 },
+    { title: 'Lighthouse keeper', enemies: ['siphon', 'flask', 'genesis'], lv: 1 },
+    { title: 'Jaws of the bay', enemies: ['basilisk', 'raiju', 'shade'], lv: 1, boss: true },
+    { title: 'Container maze', enemies: ['railer', 'voidweaver'], lv: 3 },
+    { title: 'Bilge pumps', enemies: ['glimmerstag', 'seraph', 'gunship'], lv: 1 },
+    { title: 'Siren song', enemies: ['siren', 'ifrit', 'shogun'], lv: 1 },
+    { title: 'Gator alley', enemies: ['croc', 'thunderbird', 'nightblade'], lv: 2 },
+    { title: 'The night ferry', enemies: ['overdrive', 'vital', 'smilodon'], lv: 2 },
+    { title: 'Harbor patrol', enemies: ['rook', 'bruiser', 'kitsune'], lv: 1 },
+    { title: 'Rogue wave', enemies: ['narwhal', 'lantern', 'coralheart'], lv: 2 },
+    { title: 'Pirate radio', enemies: ['echo', 'dawnbringer', 'starwyrm'], lv: 1 },
+    { title: 'Shipwreck', enemies: ['shark', 'solmane', 'stormcaller'], lv: 2 },
+    { title: 'The dreadnought', enemies: ['dreadnought', 'tankette', 'rune'], lv: 2, boss: true },
+    { title: 'Fog bank', enemies: ['phantom', 'deadeye', 'alchemist'], lv: 2 },
+    { title: 'Dry dock', enemies: ['reactor', 'ironclad', 'wavesprite'], lv: 1 },
+    { title: 'Sharks circling', enemies: ['omega', 'sanctum'], lv: 3 },
+    { title: 'Stowaways', enemies: ['chimera', 'hellfire', 'gaia'], lv: 1 },
+    { title: 'The captain\'s table', enemies: ['shogun', 'drift', 'petalcore'], lv: 3 },
+    { title: 'Depth charge', enemies: ['skyburst', 'moss', 'tyrannos'], lv: 1 },
+    { title: 'The admiral\'s guard', enemies: ['vanta', 'leviathan', 'bloom'], lv: 3 },
+    { title: 'Black tide', enemies: ['wyvern', 'sovereign', 'emberkoi'], lv: 2 },
+    { title: 'Storm warning', enemies: ['hellfire', 'phoenix', 'plume'], lv: 3 },
+    { title: 'Tidebreaker rising', enemies: ['leviathan', 'atlas', 'choir'], lv: 1, boss: true },
   ] },
   { title: 'Storm Grid', levels: [
-    { title: 'Live wires', enemies: ['static', 'wirelash', 'neon'] },
-    { title: 'Power surge', enemies: ['dynamo', 'overclock', 'siphon'] },
-    { title: 'Static cling', enemies: ['static', 'glitch', 'echo'] },
-    { title: 'Transformer box', enemies: ['pylon', 'reactor'] },
-    { title: 'Lightning bugs', enemies: ['hornet', 'moth', 'stinger'] },
-    { title: 'Sky patrol', enemies: ['siphon', 'valkyrie', 'crow'] },
-    { title: 'Short circuit', enemies: ['glitch', 'cipher', 'overclock'] },
-    { title: 'Thunderheads', enemies: ['mantis', 'cyclone', 'quake'] },
-    { title: 'Gridlock', enemies: ['railer', 'lancer', 'bastion'] },
-    { title: 'Overload', enemies: ['omega', 'razor'], boss: true },
-    { title: 'Neon nights', enemies: ['neon', 'vandal', 'vixen'] },
-    { title: 'Arc welders', enemies: ['hellfire', 'welder'] },
-    { title: 'Feathers and sparks', enemies: ['chimera', 'crow', 'moth'] },
-    { title: 'Wind farm', enemies: ['cyclone', 'gyro', 'chopper'] },
-    { title: 'Signal jammers', enemies: ['prism', 'cipher', 'phantom'] },
-    { title: 'The blackout', enemies: ['vanta', 'nyx', 'cipher'] },
-    { title: 'Storm chasers', enemies: ['wyvern', 'manticore'] },
-    { title: 'Firewall', enemies: ['blaze', 'ember', 'hellfire'] },
-    { title: 'Copper thieves', enemies: ['hex', 'shiv', 'scarab'] },
-    { title: 'Hush', enemies: ['nightblade', 'specter', 'brick'], boss: true },
-    { title: 'Tesla coils', enemies: ['reactor', 'razor', 'dynamo'] },
-    { title: 'Hailstorm', enemies: ['quake', 'mammoth', 'shark'] },
-    { title: 'Chrome giants', enemies: ['warlord', 'colossus'] },
-    { title: 'Burning sky', enemies: ['phoenix', 'quake'] },
-    { title: 'Eye of the storm', enemies: ['omega', 'skyburst'] },
-    { title: 'Perfect form', enemies: ['shogun', 'vanta'] },
-    { title: 'The old guard', enemies: ['rook', 'bastion', 'warden'] },
-    { title: 'Beast mode', enemies: ['leviathan', 'specter'] },
-    { title: 'Last light', enemies: ['nightblade', 'rook'] },
-    { title: 'The champion', enemies: ['paragon', 'hex', 'shogun'], boss: true },   // chapter 3's last boss: needs pack cards, the starter team can't win it
-  ] },
-  // Chapters 4 and 5 are tuned for pack cards: a typical collection wins ~70% of chapter 4's first level, ~25% of chapter 5's last.
-  { title: 'The Arcane Rift', levels: [
-    { title: 'Through the rift', enemies: ['choir', 'mistwyrm', 'moonhare'] },
-    { title: 'Glowing welcome', enemies: ['halo', 'rune', 'bloom'] },
-    { title: 'Northern lights', enemies: ['aurora', 'lantern', 'tide'] },
-    { title: 'Crystal storm', enemies: ['hexblade', 'geode', 'tempest'] },
-    { title: 'Stone circle', enemies: ['sanctum', 'geode', 'totem'] },
-    { title: 'Lantern watch', enemies: ['archon', 'lantern', 'vital'] },
-    { title: 'Thunder over the temple', enemies: ['thunderbird', 'lantern', 'halo'] },
-    { title: 'The healers\' guard', enemies: ['lifeline', 'archon', 'geode'] },
-    { title: 'Haunted chorus', enemies: ['choir', 'wraithhound', 'emberkoi'] },
-    { title: 'Cosmo', enemies: ['starwyrm', 'choir', 'geode'], boss: true, pack: 'magic' },
-    { title: 'The quiet library', enemies: ['sanctum', 'wisp', 'tome'] },
-    { title: 'Burning glyphs', enemies: ['sanctum', 'glyph', 'lantern'] },
-    { title: 'Borrowed time', enemies: ['chronos', 'mender', 'mistwyrm'] },
-    { title: 'Paper tigers', enemies: ['solmane', 'origami', 'tempest'] },
-    { title: 'Lost pages', enemies: ['chronos', 'tome', 'glyph'] },
-    { title: 'Wisps in the wind', enemies: ['thunderbird', 'wisp', 'rune'] },
-    { title: 'Spring eternal', enemies: ['chronos', 'bloom', 'halo'] },
-    { title: 'Second wind', enemies: ['lifeline', 'emberkoi', 'vital'] },
-    { title: 'Alchemy lab', enemies: ['archon', 'flask', 'plume'] },
-    { title: 'Rosalind', enemies: ['petalcore', 'glyph', 'wisp'], boss: true, pack: 'magic' },
-    { title: 'Cursed edge', enemies: ['hexblade', 'glyph', 'mender'] },
-    { title: 'Storm hounds', enemies: ['chronos', 'tempest', 'wraithhound'] },
-    { title: 'Moonlit study', enemies: ['archon', 'moonhare', 'tome'] },
-    { title: 'Rune lightning', enemies: ['thunderbird', 'glyph', 'rune'] },
-    { title: 'Sun and moon', enemies: ['solmane', 'nocturne', 'mender'] },
-    { title: 'Wild garden', enemies: ['aurora', 'bloom', 'flask'] },
-    { title: 'Hex marks the spot', enemies: ['hexblade', 'flask', 'hexcoil'] },
-    { title: 'Seeing double', enemies: ['lifeline', 'mirage', 'vital'] },
-    { title: 'Edge of the rift', enemies: ['solmane', 'flask', 'wisp'] },
-    { title: 'Vesnara', enemies: ['voidweaver', 'thunderbird', 'tide'], boss: true, pack: 'magic' },
+    { title: 'Live wires', enemies: ['static', 'ifrit', 'seraph'], lv: 2 },
+    { title: 'Power surge', enemies: ['dynamo', 'raiju', 'choir'], lv: 3 },
+    { title: 'Static cling', enemies: ['static', 'flask', 'voidweaver'], lv: 4 },
+    { title: 'Transformer box', enemies: ['pylon', 'valor', 'mendforge'], lv: 2 },
+    { title: 'Lightning bugs', enemies: ['hornet', 'genesis', 'solmane'], lv: 3 },
+    { title: 'Sky patrol', enemies: ['siphon', 'aegis', 'tempest'], lv: 3 },
+    { title: 'Short circuit', enemies: ['glitch', 'bison', 'coralheart'], lv: 3 },
+    { title: 'Thunderheads', enemies: ['mantis', 'stormclaw', 'wick'], lv: 4 },
+    { title: 'Gridlock', enemies: ['railer', 'dawnbringer', 'rime'], lv: 3 },
+    { title: 'Overload', enemies: ['omega', 'fenrir', 'thunderbird'], lv: 3, boss: true },
+    { title: 'Neon nights', enemies: ['neon', 'ember', 'hexqueen'], lv: 4 },
+    { title: 'Arc welders', enemies: ['hellfire', 'apex', 'gaia'], lv: 2 },
+    { title: 'Feathers and sparks', enemies: ['chimera', 'omnis', 'tyrannos'], lv: 2 },
+    { title: 'Wind farm', enemies: ['cyclone', 'leviathan', 'runesmith'], lv: 4 },
+    { title: 'Signal jammers', enemies: ['prism', 'eternity'], lv: 3 },
+    { title: 'The blackout', enemies: ['vanta', 'orrery', 'nightowl'], lv: 4 },
+    { title: 'Storm chasers', enemies: ['wyvern', 'ashwolf', 'drillbot'], lv: 4 },
+    { title: 'Firewall', enemies: ['blaze', 'moss', 'wavesprite'], lv: 4 },
+    { title: 'Copper thieves', enemies: ['hex', 'lumina', 'glimmerstag'], lv: 4 },
+    { title: 'Hush', enemies: ['nightblade', 'spellforge', 'phoenix'], lv: 3, boss: true },
+    { title: 'Tesla coils', enemies: ['reactor', 'totem', 'ironclad'], lv: 3 },
+    { title: 'Hailstorm', enemies: ['quake', 'paragon', 'kitsune'], lv: 3 },
+    { title: 'Chrome giants', enemies: ['warlord', 'grimoire', 'plume'], lv: 4 },
+    { title: 'Burning sky', enemies: ['phoenix', 'celestia', 'specter'], lv: 2 },
+    { title: 'Eye of the storm', enemies: ['omega', 'monk', 'cauldron'], lv: 4 },
+    { title: 'Perfect form', enemies: ['shogun', 'ghostwire', 'glacia'], lv: 3 },
+    { title: 'The old guard', enemies: ['rook', 'overlord', 'prismheart'], lv: 3 },
+    { title: 'Beast mode', enemies: ['leviathan', 'petalcore', 'stormcaller'], lv: 4 },
+    { title: 'Last light', enemies: ['nightblade', 'sovereign', 'chronos'], lv: 4 },
+    { title: 'The champion', enemies: ['paragon', 'nebulon', 'zenith'], lv: 3, boss: true },
   ] },
   { title: 'Convergence', levels: [
-    { title: 'Worlds collide', enemies: ['colossus', 'bounty', 'mistwyrm'] },
-    { title: 'Sun and steel', enemies: ['solmane', 'shredder', 'hexcoil'] },
-    { title: 'Black feathers', enemies: ['thunderbird', 'specter', 'crow'] },
-    { title: 'Static and storm', enemies: ['vanta', 'tempest', 'dynamo'] },
-    { title: 'Hellhounds', enemies: ['hellfire', 'wraithhound', 'tome'] },
-    { title: 'Dragon song', enemies: ['wyvern', 'choir', 'mistwyrm'] },
-    { title: 'Drifting blades', enemies: ['shogun', 'overclock', 'drift'] },
-    { title: 'Deep water', enemies: ['lifeline', 'narwhal', 'hexcoil'] },
-    { title: 'Thunder sharks', enemies: ['thunderbird', 'shark', 'overclock'] },
-    { title: 'Twin blades', enemies: ['nightblade', 'hexblade', 'brick'], boss: true, pack: 'cyber' },
-    { title: 'Watchtower lights', enemies: ['aurora', 'hex', 'watchtower'] },
-    { title: 'Live current', enemies: ['aurora', 'volt', 'wirelash'] },
-    { title: 'Fireworks', enemies: ['aurora', 'mortar', 'vandal'] },
-    { title: 'Time beasts', enemies: ['chronos', 'wyvern', 'silverback'] },
-    { title: 'Ghost fleet', enemies: ['shogun', 'kraken', 'wraithhound'] },
-    { title: 'Siege of the sanctum', enemies: ['sanctum', 'thunderhide', 'mortar'] },
-    { title: 'Riot hour', enemies: ['chronos', 'wyvern', 'riot'] },
-    { title: 'Monster hymn', enemies: ['choir', 'chimera', 'sanctum'] },
-    { title: 'Hex waters', enemies: ['hexblade', 'hexcoil', 'shark'] },
-    { title: 'The void hunt', enemies: ['voidweaver', 'sanctum', 'bounty'], boss: true, pack: 'magic' },
-    { title: 'Shadow flight', enemies: ['thunderbird', 'vanta', 'flutter'] },
-    { title: 'Meltdown', enemies: ['reactor', 'lifeline', 'mistwyrm'] },
-    { title: 'Night stampede', enemies: ['vanta', 'boar', 'glimmerstag'] },
-    { title: 'Cursed beasts', enemies: ['hexblade', 'manticore', 'wick'] },
-    { title: 'Web of time', enemies: ['thunderhide', 'chronos', 'arachne'] },
-    { title: 'Sabre dance', enemies: ['choir', 'solmane', 'sabre'] },
-    { title: 'High noon', enemies: ['solmane', 'archon', 'sentry'] },
-    { title: 'Masters', enemies: ['shogun', 'archon', 'mongoose'] },
-    { title: 'The last stand', enemies: ['thunderhide', 'lifeline', 'fang'] },
-    { title: 'Regalis', enemies: ['sovereign', 'colossus', 'archon'], boss: true, pack: 'omni' },
+    { title: 'Worlds collide', enemies: ['colossus', 'overlord', 'starwyrm'], lv: 3 },
+    { title: 'Sun and steel', enemies: ['solmane', 'grimoire', 'sovereign'], lv: 4 },
+    { title: 'Black feathers', enemies: ['thunderbird', 'gaia', 'falcon'], lv: 4 },
+    { title: 'Static and storm', enemies: ['vanta', 'omnis', 'fenrir'], lv: 4 },
+    { title: 'Hellhounds', enemies: ['hellfire', 'genesis', 'lumina'], lv: 4 },
+    { title: 'Dragon song', enemies: ['wyvern', 'aegis', 'kitsune'], lv: 4 },
+    { title: 'Drifting blades', enemies: ['shogun', 'valor', 'spellforge'], lv: 4 },
+    { title: 'Deep water', enemies: ['lifeline', 'glacia', 'zenith'], lv: 4 },
+    { title: 'Thunder sharks', enemies: ['thunderbird', 'coralheart', 'tyrannos'], lv: 4 },
+    { title: 'Twin blades', enemies: ['nightblade', 'stormclaw', 'paradox'], lv: 4, boss: true },
+    { title: 'Watchtower lights', enemies: ['aurora', 'apex', 'dawnbringer'], lv: 4 },
+    { title: 'Live current', enemies: ['aurora', 'hexqueen', 'genesis'], lv: 4 },
+    { title: 'Fireworks', enemies: ['ironclad', 'warlord', 'ifrit'], lv: 4 },
+    { title: 'Time beasts', enemies: ['chronos', 'celestia', 'valkyrie'], lv: 4 },
+    { title: 'Ghost fleet', enemies: ['atlas', 'prismheart', 'thunderhide'], lv: 4 },
+    { title: 'Siege of the sanctum', enemies: ['sanctum', 'paradox', 'bladestorm'], lv: 4 },
+    { title: 'Riot hour', enemies: ['chronos', 'gaia', 'sandscorch'], lv: 4 },
+    { title: 'Monster hymn', enemies: ['choir', 'bison', 'atlas'], lv: 4 },
+    { title: 'Hex waters', enemies: ['hexblade', 'eternity', 'tyrannos'], lv: 4 },
+    { title: 'The void hunt', enemies: ['voidweaver', 'overlord', 'sovereign'], lv: 4, boss: true },
+    { title: 'Shadow flight', enemies: ['nebulon', 'seraph', 'zenith'], lv: 4 },
+    { title: 'Meltdown', enemies: ['reactor', 'celestia', 'valor'], lv: 4 },
+    { title: 'Night stampede', enemies: ['vanta', 'paragon', 'gaia'], lv: 4 },
+    { title: 'Cursed beasts', enemies: ['hexblade', 'cauldron', 'atlas'], lv: 4 },
+    { title: 'Web of time', enemies: ['thunderhide', 'petalcore', 'celestia'], lv: 4 },
+    { title: 'Sabre dance', enemies: ['glacia', 'ravager', 'mendforge'], lv: 4 },
+    { title: 'High noon', enemies: ['ifrit', 'prismheart', 'tyrannos'], lv: 4 },
+    { title: 'Masters', enemies: ['shogun', 'celestia', 'phoenix'], lv: 4 },
+    { title: 'The last stand', enemies: ['kitsune', 'sandscorch', 'ironclad'], lv: 4 },
+    { title: 'Regalis', enemies: ['sovereign', 'overlord', 'seraph'], lv: 4, boss: true },
   ] },
 ];
 // One flat list for progress (`cleared` counts across chapters); `chapter` is 0-based, `num` is the level within its chapter.
@@ -787,8 +794,13 @@ export const NEW_CARD_AFTER = [3, 6];   // levels that unlock your 2nd and 3rd c
 export const OPEN_LEVELS = CAMPAIGN.filter(l => l.chapter < CHAPTERS_OPEN).length;
 
 // A campaign battle: your team against the level's enemies, and you go first.
-export const newCampaignBattle = (team, level, fus = {}, powers = []) =>
-  ({ ...newBattle(team, CAMPAIGN[level].enemies, () => 0, fus), pw: [[...powers], campaignPowers(level)] });
+// From chapter 2, enemies come fused: `lv` 1–3 = fusion levels (2+ passive, 3 second special), 4 = also holo.
+export const enemyFusion = lv => lv ? { h: Math.min(lv, 3), b: Math.min(lv, 3), s: Math.min(lv, 3), x: lv >= 3, p: lv >= 2, ...(lv >= 4 ? { o: true } : {}) } : null;
+export function newCampaignBattle(team, level, fus = {}, powers = []) {
+  const { enemies, lv } = CAMPAIGN[level], f = enemyFusion(lv);
+  const foes = f ? Object.fromEntries(enemies.map(id => [id, { ...f, x: f.x && !!SECOND[id] }])) : {};
+  return { ...newBattle(team, enemies, () => 0, fus, foes), pw: [[...powers], campaignPowers(level)] };
+}
 
 // ---- unlocks ----
 // What opens each feature: campaign levels cleared, or player level. `text` is what a locked tile/tab shows.

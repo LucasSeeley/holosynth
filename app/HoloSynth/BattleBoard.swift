@@ -25,6 +25,7 @@ struct BattleBoard: View {
     @State var selected: Int?
     @State var move: String?
     @State var sending = false
+    @State var preHit: (from: Int, to: Int, move: String, hp: Int)?   // hp: the target's before the hit   // your attack, played before the server answers
     @State var playing = false
     @State var error: String?
     @State var confirmLeave = false
@@ -528,13 +529,32 @@ struct BattleBoard: View {
     }
 
     private func send(from: Int, move mv: String, to: Int) {
+        // an attack on the enemy plays right away with the predicted damage (same sum as the server); the answer corrects it
+        let foe = 1 - you
+        let predicted = (mv == "basic" || mv == "special") && !healing && s.teams[foe].indices.contains(to) ? previewDamage(to: s.teams[foe][to]) : nil
         sending = true
         error = nil
+        if let dmg = predicted, !playing { Task { await prePlay(from: from, move: mv, to: to, dmg: dmg) } }
         Task {
             // stays locked until the move has played out (playBack unlocks), so nothing can be tapped mid-attack
             do { try await onMove(from, mv, to) }
-            catch { self.error = error.localizedDescription; move = nil; sending = false }
+            catch {
+                self.error = error.localizedDescription; move = nil; sending = false
+                if preHit != nil { preHit = nil; withAnimation { shown = latest; acting = nil } }
+            }
         }
+    }
+
+    private func prePlay(from: Int, move mv: String, to: Int, dmg: Int) async {
+        guard let start = shown else { return }
+        playing = true
+        preHit = (from, to, mv, start.teams[1 - you][to].hp)
+        selected = nil; move = nil
+        _ = await hit(start, p: you, from: from, to: to, dmg: dmg, ko: dmg >= start.teams[1 - you][to].hp, special: mv != "basic")
+        playing = false
+        if preHit == nil && !sending { withAnimation { shown = latest; acting = nil } }   // the server refused the move
+        // the server answered while the hit played: carry on with the rest
+        if let l = latest, let sh = shown, (l.moves ?? l.log.count) > (sh.moves ?? sh.log.count) { await playBack() }
     }
 
     // MARK: playback
@@ -554,6 +574,46 @@ struct BattleBoard: View {
             await pause(0.75)
             withAnimation(.easeOut(duration: 0.3)) { fx[k]?.callout = nil }
         }
+        return cur
+    }
+
+    private func showDodge(_ t: Int) async {
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { fx[t, default: HitFX()].callout = "◆ DODGE" }
+        await pause(0.8)
+        withAnimation(.easeOut(duration: 0.3)) { fx[t]?.callout = nil }
+        await pause(0.2)
+    }
+
+    // One attack: the attacker lunges, the target shakes and flashes, the number pops and the HP bar drains.
+    private func hit(_ start: BattleState, p: Int, from: Int, to: Int, dmg: Int, ko: Bool, special: Bool, dodge: Bool = false) async -> BattleState {
+        var cur = start
+        let a = key(p, from), t = key(1 - p, to)
+        if acting != p { withAnimation { acting = p }; await pause(0.35) }
+        withAnimation(.easeIn(duration: 0.16)) { fx[a, default: HitFX()].lunge = 1 }
+        await pause(0.16)
+        if dodge {   // the target slips aside: no damage
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.55)) { fx[a]?.lunge = 0 }
+            Sound.move.play()
+            withAnimation(.linear(duration: 0.45)) { fx[t, default: HitFX()].shakes += 1 }
+            await showDodge(t)
+            return cur
+        }
+        // impact
+        UIImpactFeedbackGenerator(style: ko ? .heavy : .medium).impactOccurred()
+        let sound = ko ? Sound.ko : special ? Sound.crit : Sound.hit
+        sound.play()
+        fx[t, default: HitFX()].ghostHP = cur.teams[1 - p][to].hp
+        cur.teams[1 - p][to].hp = max(0, cur.teams[1 - p][to].hp - dmg)
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.55)) { fx[a]?.lunge = 0 }
+        withAnimation(.linear(duration: 0.45)) { fx[t]?.shakes += 1 }
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { fx[t]?.flash = true; fx[t]?.pop = dmg }
+        withAnimation(.easeOut(duration: 0.45)) { shown = cur }
+        await pause(0.3)
+        withAnimation(.easeOut(duration: 0.3)) { fx[t]?.flash = false }
+        await pause(0.35)
+        withAnimation(.easeOut(duration: 0.5)) { fx[t]?.ghostHP = nil; fx[t]?.pop = nil }
+        // wait for the hit sound to finish before anything else plays
+        await pause(max(0.45, sound.duration - 0.65 + 0.1))
         return cur
     }
 
@@ -601,26 +661,15 @@ struct BattleBoard: View {
                     continue
                 }
                 guard cur.teams.indices.contains(1 - e.p), cur.teams[1 - e.p].indices.contains(e.to) else { continue }
-                let a = key(e.p, e.from), t = key(1 - e.p, e.to)
-                if acting != e.p { withAnimation { acting = e.p }; await pause(0.35) }
-                withAnimation(.easeIn(duration: 0.16)) { fx[a, default: HitFX()].lunge = 1 }
-                await pause(0.16)
-                // impact
-                UIImpactFeedbackGenerator(style: e.ko ? .heavy : .medium).impactOccurred()
-                let sound = e.ko ? Sound.ko : e.move != "basic" ? Sound.crit : Sound.hit
-                sound.play()
-                fx[t, default: HitFX()].ghostHP = cur.teams[1 - e.p][e.to].hp
-                cur.teams[1 - e.p][e.to].hp = max(0, cur.teams[1 - e.p][e.to].hp - e.dmg)
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.55)) { fx[a]?.lunge = 0 }
-                withAnimation(.linear(duration: 0.45)) { fx[t]?.shakes += 1 }
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { fx[t]?.flash = true; fx[t]?.pop = e.dmg }
-                withAnimation(.easeOut(duration: 0.45)) { shown = cur }
-                await pause(0.3)
-                withAnimation(.easeOut(duration: 0.3)) { fx[t]?.flash = false }
-                await pause(0.35)
-                withAnimation(.easeOut(duration: 0.5)) { fx[t]?.ghostHP = nil; fx[t]?.pop = nil }
-                // wait for the hit sound to finish before anything else plays
-                await pause(max(0.45, sound.duration - 0.65 + 0.1))
+                if let pre = preHit, e.p == you, pre.from == e.from, pre.to == e.to, pre.move == e.move {
+                    // already played: just put right any difference from the prediction
+                    preHit = nil
+                    let real = max(0, pre.hp - e.dmg)
+                    if real != cur.teams[1 - e.p][e.to].hp { cur.teams[1 - e.p][e.to].hp = real; withAnimation(.easeOut(duration: 0.3)) { shown = cur } }
+                    if e.dodge == true { await showDodge(key(1 - e.p, e.to)) }
+                } else {
+                    cur = await hit(cur, p: e.p, from: e.from, to: e.to, dmg: e.dmg, ko: e.ko, special: e.move != "basic", dodge: e.dodge == true)
+                }
                 cur = await playPassives(e, cur)
             }
             withAnimation(.easeOut(duration: 0.25)) { shown = target; acting = nil }

@@ -433,6 +433,7 @@ struct LogEntry: Decodable, Equatable {
     let heal: Int?              // a Mystic's heal: `to` is on the mover's own side
     let adv: Bool
     let ko: Bool
+    let dodge: Bool?            // the target dodged: no damage
     let pas: [PassiveHit]?      // passives that kicked in on this move
     let pw: String?             // a power card played (move is "pw:<id>")
     let fx: [PowerFX]?          // cards it touched, with their HP afterwards

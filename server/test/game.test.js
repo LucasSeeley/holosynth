@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { rarityOf, newBattle, SLOT_ODDS, TIER_OF, FAVOURITE_POWERS, POWERS, newCampaignBattle, applyMove, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS, levelFor, levelStart, fusedHp, fusedDmg, SECOND, FUSE_GOLD, dailyShop, huntFoes, HUNT_MS, huntBattle, huntPack, HUNT_FUSION, pickQuests, QUESTS, QUEST_PAY, weekStart, seasonOf, seasonEnd, rankMove, rankTable, rankBots, rankedTeam, rankedFusions, RANKS, RANK_REWARDS, WEEK_MS } from '../src/game.js';
+import { rarityOf, newBattle, SLOT_ODDS, TIER_OF, FAVOURITE_POWERS, POWERS, newCampaignBattle, applyMove as applyMove_, DODGE, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS, levelFor, levelStart, fusedHp, fusedDmg, SECOND, FUSE_GOLD, dailyShop, huntFoes, HUNT_MS, huntBattle, huntPack, HUNT_FUSION, pickQuests, QUESTS, QUEST_PAY, weekStart, seasonOf, seasonEnd, rankMove, rankTable, rankBots, rankedTeam, rankedFusions, RANKS, RANK_REWARDS, WEEK_MS } from '../src/game.js';
+const applyMove = (s, p, from, move, to) => applyMove_(s, p, from, move, to, () => 1);   // no dodges: tests check exact numbers
 
 const fixed = v => () => v;
 
@@ -86,14 +87,6 @@ test('every starter path can win every chapter 1 level (no enemy power cards the
   }));
 });
 
-test('the final boss beats the starter team but a strong team can win it', () => {
-  const run = team => { const s = newCampaignBattle(team, 89);
-    while (s.winner === null) { const m = aiMove(s, s.turn); applyMove(s, s.turn, m.from, m.move, m.to); } return s.winner; };
-  assert.equal(CAMPAIGN[89].enemies.length, 3);
-  assert.equal(run(STARTER_TEAM), 1);
-  assert.equal(run(['phoenix', 'dreadnought', 'nightblade']), 0);
-});
-
 test('packs only hold cards of their type, and only open types are free', () => {
   for (const [type, classes] of Object.entries(PACK_TYPES)) {
     for (let i = 0; i < 500; i++) for (const id of openPack(0, type).cards) if (classes && !id.startsWith('pw:')) assert.ok(classes.includes(BY_ID[id].cls), `${id} in ${type}`);
@@ -105,9 +98,9 @@ test('packs only hold cards of their type, and only open types are free', () => 
   assert.ok(Math.abs(best.Rare / 200 - 80) < 2 && Math.abs(best.Epic / 200 - 18) < 1.5 && Math.abs(best.Legendary / 200 - 2) < 0.6, JSON.stringify(best));
   for (let d = 0; d < 30; d++) assert.ok(PACKS_OPEN.includes(dailyPack(d * 86400000)));
   const magic = new Set(Object.values(BY_ID).filter(c => PACK_TYPES.magic.includes(c.cls)).map(c => c.id));
-  assert.ok(CAMPAIGN.slice(0, 90).every(l => l.enemies.every(id => !magic.has(id))), 'no magic cards in chapters 1-3');
-  assert.ok(CHAPTERS[3].levels.every(l => l.enemies.every(id => magic.has(id))), 'chapter 4 is all magic');
-  assert.ok(CHAPTERS[4].levels.every(l => l.enemies.some(id => magic.has(id)) && l.enemies.some(id => !magic.has(id))), 'chapter 5 mixes');
+  assert.ok(CHAPTERS[0].levels.every(l => l.enemies.every(id => !magic.has(id))), 'no magic cards in chapter 1');
+  assert.ok(CHAPTERS[1].levels.every(l => l.enemies.every(id => magic.has(id))), 'chapter 2 is all magic');
+  for (const c of [2, 3, 4]) assert.ok(CHAPTERS[c].levels.every(l => l.enemies.some(id => magic.has(id)) && l.enemies.some(id => !magic.has(id))), `chapter ${c + 1} mixes`);
 });
 
 test('five chapters of 30 with a boss every 10th level, all real cards', () => {
@@ -121,12 +114,23 @@ test('five chapters of 30 with a boss every 10th level, all real cards', () => {
   });
 });
 
-test('from chapter 2 enemies play power cards (a grind): fused teams can still win every level', () => {
-  const fus = team => Object.fromEntries(team.map(id => [id, { h: 3, b: 3, s: 3, x: !!SECOND[id], p: true }]));
-  const run = (team, level) => { const s = newCampaignBattle(team, level, fus(team));
-    while (s.winner === null) { const m = aiMove(s, s.turn); applyMove(s, s.turn, m.from, m.move, m.to); } return s.winner; };
-  for (let level = 30; level < 90; level++) assert.equal(run(['phoenix', 'dreadnought', 'nightblade'], level), 0, `level ${level + 1}`);
-  for (let level = 90; level < 150; level++) assert.equal(run(['paragon', 'phoenix', 'eternity'], level), 0, `level ${level + 1}`);
+test('chapters 2-5 are a grind: what got you in wins the first level but not the last; fused, stronger cards win them all', () => {
+  const fus = (team, f) => f ? Object.fromEntries(team.map(id => [id, { ...f, x: !!f.x && !!SECOND[id] }])) : {};
+  const won = (team, f, level) => { const s = newCampaignBattle(team, level, fus(team, f));
+    while (s.winner === null) { const m = aiMove(s, s.turn); applyMove(s, s.turn, m.from, m.move, m.to); } return s.winner === 0; };
+  const f1 = { h: 1, b: 1, s: 1 }, f2 = { h: 2, b: 2, s: 2, p: true }, f3 = { h: 3, b: 3, s: 3, x: true, p: true }, holo = { ...f3, o: true };
+  const ladder = [   // [entry team, its fusion], [exit team, its fusion]
+    [[['volt', 'fang', 'narwhal'], null], [['overdrive', 'chronos', 'specter'], f1]],
+    [[['solmane', 'falcon', 'tankette'], f1], [['leviathan', 'glacia', 'thunderhide'], f2]],
+    [[['starwyrm', 'phoenix', 'aegis'], f2], [['celestia', 'zenith', 'stormclaw'], f3]],
+    [[['sandscorch', 'glacia', 'tyrannos'], f3], [['omnis', 'dawnbringer', 'ifrit'], holo]],
+  ];
+  ladder.forEach(([[inT, inF], [outT, outF]], k) => {
+    const first = (k + 1) * 30;
+    assert.ok(won(inT, inF, first) && !won(inT, inF, first + 29), `chapter ${k + 2}: entry team`);
+    for (let i = 0; i < 30; i++) assert.ok(won(outT, outF, first + i), `chapter ${k + 2} level ${i + 1}: exit team`);
+  });
+  assert.ok(CAMPAIGN.slice(30).every(l => (l.lv ?? 0) <= 4) && CAMPAIGN[149].lv === 4, 'enemies fuse up to holo by the end');
 });
 
 test('each level needs double the XP of the last', () => {
@@ -335,7 +339,7 @@ test('ranked: Monday weeks, monthly seasons, 30-player tables, moves by place', 
 });
 
 test('passives: only with f.p, and each one does its job', async () => {
-  const { PASSIVES, passiveOf, newBattle: nb, applyMove: am } = await import('../src/game.js');
+  const { PASSIVES, passiveOf, newBattle: nb } = await import('../src/game.js'), am = applyMove;
   const P = { h: 0, b: 0, s: 0, x: false, o: false, p: true };
   const hit = (st, p, move = 'basic') => { st.turn = p; st.acted = [[false], [false]]; return am(st, p, 0, move, 0); };
   // thorns: sentry reflects 10% back, but never knocks the attacker out
@@ -449,4 +453,13 @@ test('unlocks and the main quest line', async () => {
 
 test('a brand-new player still gets three daily quests', () => {
   for (let u = 1; u < 40; u++) assert.equal(pickQuests(u, 0, ['wins', 'win1', 'level1', 'levels']).length, 3);
+});
+
+test('every card dodges 5% of attacks', () => {
+  const s = newBattle(['volt'], ['fang'], () => 0);
+  applyMove_(s, 0, 0, 'basic', 0, () => 0);
+  assert.equal(s.teams[1][0].hp, BY_ID.fang.hp);
+  assert.ok(s.log[0].dodge && s.log[0].dmg === 0 && s.acted[0][0] === false && s.turn === 1);
+  let n = 0; for (let i = 0; i < 20000; i++) { const t = newBattle(['volt'], ['fang'], () => 0); applyMove_(t, 0, 0, 'basic', 0); n += !!t.log[0].dodge; }
+  assert.ok(Math.abs(n / 20000 - DODGE) < 0.01, String(n));
 });
