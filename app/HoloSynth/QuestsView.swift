@@ -98,7 +98,7 @@ struct QuestsView: View {
             }
             VStack(alignment: .leading, spacing: 5) {
                 Text(taken ? "Claimed today" : "Finish all 3").font(.chakra(11, semibold: true)).tracking(2).textCase(.uppercase).foregroundColor(Theme.brass)
-                Text("Free Omni Pack").font(.chakra(17)).foregroundColor(Theme.fg)
+                Text("Free \(q.bonusPack.capitalized) Pack").font(.chakra(17)).foregroundColor(Theme.fg)
                 if ready {
                     Button("Claim") { claim(nil) }.buttonStyle(GoldButton(height: 38))
                 } else {
