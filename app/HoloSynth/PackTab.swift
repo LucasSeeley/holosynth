@@ -341,10 +341,32 @@ struct PackTab: View {
     }
 
     private func packTile(_ pack: PackInfo, open: Bool, gold: Int) -> some View {
-        VStack(spacing: 6) {
-            packImage(pack.type).frame(height: 150).shadow(color: Color(hex: pack.glow).opacity(0.35), radius: 10)
+        // Magic, Omni, Overload and Legends wait until chapter 1 is beaten: dimmed, a band across the pack saying so
+        let lockText = ["cyber", "power"].contains(pack.type) ? nil : store.profile?.locked?["packs"]
+        return VStack(spacing: 6) {
+            packImage(pack.type).frame(height: 150).brightness(lockText == nil ? 0 : -0.3)
+                .shadow(color: Color(hex: pack.glow).opacity(lockText == nil ? 0.35 : 0), radius: 10)
+                .overlay {
+                    if let lockText {
+                        VStack(spacing: 2) {
+                            Image(systemName: "lock.fill").font(.system(size: 12)).foregroundColor(Theme.brass)
+                            Text(lockText).font(.chakra(10)).tracking(1.6).textCase(.uppercase).foregroundColor(Theme.brass).lineLimit(1).minimumScaleFactor(0.7)
+                        }
+                        .frame(width: 120).padding(.vertical, 6)
+                        .background(Theme.ink.opacity(0.88))
+                        .overlay(alignment: .top) { Rectangle().fill(Theme.brass.opacity(0.6)).frame(height: 1) }
+                        .overlay(alignment: .bottom) { Rectangle().fill(Theme.brass.opacity(0.6)).frame(height: 1) }
+                    }
+                }
             Text(pack.name).font(.chakra(13)).foregroundColor(Color(hex: pack.glow)).lineLimit(1).minimumScaleFactor(0.7)
             Text("\(pack.cards) cards").font(.barlow(12)).foregroundColor(Theme.muted)
+            if lockText != nil {
+                Label("Locked", systemImage: "lock.fill").font(.chakra(12)).tracking(1.4).textCase(.uppercase).foregroundColor(Theme.brass)
+                    .frame(maxWidth: .infinity).frame(height: 32)
+                    .background(Theme.field, in: RoundedRectangle(cornerRadius: 10))
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.brass.opacity(0.5), lineWidth: 1))
+                    .opacity(0.55)
+            } else {
             Button {
                 buying = true
                 Task {
@@ -362,6 +384,7 @@ struct PackTab: View {
             }
             .buttonStyle(GoldButton(height: 32))
             .disabled(!open || buying || gold < pack.price)
+            }
         }
         .frame(width: 108)
         .accessibilityElement(children: .contain)
