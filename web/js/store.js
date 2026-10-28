@@ -27,8 +27,9 @@ export class ApiError extends Error {}
 export async function api(path, body) {
   let res;
   try {
-    res = await fetch('/' + path, body === undefined ? { credentials: 'same-origin' }
-      : { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    // X-HoloSynth: the server only honours the cookie with this header, which other sites can't add
+    res = await fetch('/' + path, body === undefined ? { credentials: 'same-origin', headers: { 'X-HoloSynth': 'web' } }
+      : { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-HoloSynth': 'web' }, body: JSON.stringify(body) });
   } catch { throw new ApiError("Can't reach the server. Check your connection."); }
   let data, parsed = true;
   try { data = await res.json(); } catch { parsed = false; }
@@ -92,6 +93,11 @@ export async function refresh() {
 }
 export async function setEmail(email, password) {
   try { set({ profile: await api('me/email', { email: email.trim(), password }) }); return null; }
+  catch (e) { return e.message; }
+}
+// Agree to the current Terms and Privacy Policy; returns the error to show, or null once saved.
+export async function agree() {
+  try { set({ profile: await api('me/agree', { agree: true }) }); return null; }
   catch (e) { return e.message; }
 }
 export async function logout() {

@@ -1,7 +1,7 @@
 // HoloSynth web: boot, sign-in, and the app shell (sidebar on wide screens, the app's tab bar on phones).
 import { html, render, useState, useEffect } from './vendor/preact-htm.js';
 import { loadCards, card, xpInto, xpNeed } from './cards.js';
-import { state, useStore, set, boot, auth, setEmail, logout, loadSocial, refresh, openScreen, closeScreen, screenOpen, local } from './store.js';
+import { state, useStore, set, boot, auth, setEmail, agree, logout, loadSocial, refresh, openScreen, closeScreen, screenOpen, local } from './store.js';
 import { Icon, Coin, Avatar, Bar, fmt, PackImg } from './ui.js';
 import { Music } from './sound.js';
 import { PlayTab } from './pages/play.js';
@@ -114,6 +114,26 @@ function AddEmailView() {
   </form></div>`;
 }
 
+// Accounts made before sign-up asked (or after either page changes) agree once before playing.
+function AgreeView() {
+  const [terms, setT] = useState(false), [privacy, setP] = useState(false), [busy, setBusy] = useState(false), [err, setErr] = useState(null);
+  const go = async e => { e.preventDefault(); setBusy(true); setErr(await agree()); setBusy(false); };
+  return html`<div class="auth city"><form class="authbox" onSubmit=${go} style="text-align: center; align-items: center;">
+    <${Icon} name="shield" size="40" style="color: var(--brass);" />
+    <h1 class="h1" style="font-size: 26px;">Before you play</h1>
+    <p class="muted" style="margin: 0;">Please read and agree to our Terms and Conditions and Privacy Policy.</p>
+    <div class="agree" style="text-align: left; align-self: stretch;">
+      <label><input type="checkbox" checked=${terms} onChange=${e => setT(e.target.checked)} />
+        <span>I have read and agree to the <a href="/terms" target="_blank" rel="noopener">Terms and Conditions</a></span></label>
+      <label><input type="checkbox" checked=${privacy} onChange=${e => setP(e.target.checked)} />
+        <span>I have read and agree to the <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a></span></label>
+    </div>
+    ${err && html`<p class="err" role="alert" style="margin: 0;">${err}</p>`}
+    <button class="btn gold big wide" disabled=${busy || !terms || !privacy}>${busy ? '…' : 'Continue'}</button>
+    <button type="button" class="btn out" onClick=${logout}>Log out</button>
+  </form></div>`;
+}
+
 function Loading() {
   return html`<div class="auth city"><div class="authbox" style="align-items: center;">
     <img src="/img/logo.png" alt="HoloSynth" style="width: min(330px, 80vw);" />
@@ -191,6 +211,7 @@ function App() {
   if (s.authed === null) return html`<${Loading} />`;
   if (!s.authed) return html`<${AuthView} />`;
   if (s.profile && s.profile.email == null) return html`<${AddEmailView} />`;
+  if (s.profile && s.profile.agreed === false) return html`<${AgreeView} />`;
   return html`<${Home} />`;
 }
 
