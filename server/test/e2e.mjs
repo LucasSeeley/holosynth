@@ -120,8 +120,9 @@ check(Array.isArray((await call('/me', a.token)).fused), 'profile lists fused co
 await expectError(call('/trades', a.token, { to: bn, giveGold: 10 }), 400);   // trades locked until player level 7
 // Skip the test players ahead (player level 10, Ch 2 · Lv 10) so the unlock-gated modes below can be tested.
 const ids = `(SELECT id FROM users WHERE username IN ('${an}', '${bn}'))`;
-execSync(`npx wrangler d1 execute holosynth --remote --command "UPDATE users SET xp = 60000 WHERE id IN ${ids}; UPDATE progress SET cleared = 40 WHERE user_id IN ${ids}"`,
+const skipTo = cleared => execSync(`npx wrangler d1 execute holosynth --remote --command "UPDATE users SET xp = 60000 WHERE id IN ${ids}; UPDATE progress SET cleared = ${cleared} WHERE user_id IN ${ids}"`,
   { cwd: new URL('..', import.meta.url), stdio: 'ignore' });
+skipTo(40);
 check(Object.keys((await call('/me', a.token)).locked).length === 0, 'everything unlocked');
 // trades: team cards are locked, gold-only offers, counter, cancel, accept
 await expectError(call('/trades', a.token, { to: bn, give: ['volt'] }), 400);           // on a's team, no spare copy
@@ -178,7 +179,9 @@ check(everyone.some(r => r.me && r.best === fights), 'everyone leaderboard');
 check((await call('/me', a.token)).gauntlet.best === fights, 'profile best');
 console.log('gauntlet streak', fights);
 
+skipTo(9);   // back to just before the Ch 1 boss, to check its pack
 const done = await campaign(a.token, 10);
+skipTo(40);
 check(done.campaign.next?.num === 11 && done.campaign.chapterNum === 1, 'boss beaten, on to level 11');
 // won packs wait unopened until you open them
 check(done.unopened.length > 0, 'boss pack waits in your packs');
