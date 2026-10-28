@@ -3,7 +3,7 @@ import UIKit
 
 // A campaign level against the computer, full screen. You always move first; the computer answers each move.
 struct CampaignBattleView: View {
-    enum Next { case none, chooseCard, pack([String]) }
+    enum Next { case none, recruit, pack([String]) }
 
     @EnvironmentObject var store: GameStore
     let onClose: (Next) -> Void
@@ -68,17 +68,16 @@ struct CampaignBattleView: View {
                         }
                         .padding(.horizontal, 14).frame(height: 36).goldPanel(18)
                     }
-                    if let id = r.newCard, let card = CardBook.card(id) {
-                        CardView(card: card).frame(width: 150)
-                        Text("\(card.name) joined your team! Battle a friend is unlocked.")
-                            .font(.barlow(15)).foregroundColor(Theme.fg).multilineTextAlignment(.center)
-                    }
-                    if let pack = r.pack {
+                    if r.recruit == true {
+                        Text("Recruit Pack earned").font(.chakra(22)).foregroundColor(Theme.fg)
+                        if let img = Art.pack("recruit") {
+                            Image(uiImage: img).resizable().scaledToFit().frame(width: 150).shadow(color: Theme.cyan.opacity(0.45), radius: 18)
+                        }
+                        Text("Your next starter is inside.").font(.barlow(15)).foregroundColor(Theme.muted)
+                        Button("Open") { onClose(.recruit) }.buttonStyle(GoldButton())
+                    } else if let pack = r.pack {
                         Text("Boss reward: a free pack! Open it from the Play tab.").font(.barlow(15)).foregroundColor(Theme.fg)
                         Button("Collect") { onClose(.pack(pack)) }.buttonStyle(GoldButton())
-                    } else if r.chooseCard == true {
-                        Text("A new card wants to join you.").font(.barlow(15)).foregroundColor(Theme.fg)
-                        Button("Pick your new card") { onClose(.chooseCard) }.buttonStyle(GoldButton())
                     } else {
                         Button("Continue") { onClose(.none) }.buttonStyle(GoldButton())
                     }
@@ -115,70 +114,62 @@ struct CampaignBattleView: View {
     }
 }
 
-// Pick a card from a few on offer: your first card on sign-up, and your second after campaign level 3.
-struct CardPicker: View {
-    let eyebrow: String
-    let title: String
-    let subtitle: String
-    let ids: [String]
-    let cta: String
-    var showAdvantage = false
-    let onPick: (String) async -> Void
+// A 1-card Recruit Pack holding a starter you don't have yet: at sign-up, and after campaign levels 3 and 6.
+// Shows the pack and Open (or opens right away), then the card that came out.
+struct RecruitView: View {
+    @EnvironmentObject var store: GameStore
+    var eyebrow = "Recruit Pack"
+    var title = "Open your Recruit Pack"
+    var subtitle: String? = nil
+    var autoOpen = false           // the pack was already shown (campaign win), so open straight away
+    let onDone: () -> Void
 
-    @State var picked = 0
+    @State var card: Card?
     @State var busy = false
 
     var body: some View {
         ZStack {
             ScreenBackground()
-            VStack(spacing: 22) {
-                VStack(spacing: 8) {
-                    Text(eyebrow).sectionTitle()
-                    Text(title).font(.chakra(28)).foregroundColor(Theme.fg).multilineTextAlignment(.center)
-                    Text(subtitle).font(.barlow(15)).foregroundColor(Theme.muted).multilineTextAlignment(.center)
-                }
-                HStack(alignment: .bottom, spacing: ids.count > 2 ? 8 : 14) {
-                    ForEach(Array(ids.enumerated()), id: \.offset) { i, id in
-                        if let card = CardBook.card(id) {
-                            Button { withAnimation(.spring(response: 0.3)) { picked = i } } label: {
-                                CardView(card: card)
-                                    .overlay {
-                                        if i == picked {
-                                            RoundedRectangle(cornerRadius: 8).stroke(Theme.brass, lineWidth: 3)
-                                                .shadow(color: Theme.brass.opacity(0.7), radius: 12)
-                                        }
-                                    }
-                                    .opacity(i == picked ? 1 : 0.7)
-                                    .offset(y: i == picked ? -14 : 0)
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("\(cta) \(card.name)")
+            VStack(spacing: 20) {
+                if let card {
+                    VStack(spacing: 8) {
+                        Text("Recruit Pack").font(.chakra(13, semibold: true)).tracking(3).textCase(.uppercase).foregroundColor(Theme.cyan)
+                        Text("\(card.name) joined your team!").font(.chakra(28)).foregroundColor(Theme.fg).multilineTextAlignment(.center)
+                        if let n = store.profile?.team.count, n > 1 {
+                            Text(n == 2 ? "Two-card battles from here on." : "Your team is full: three-card battles.")
+                                .font(.barlow(15)).foregroundColor(Theme.muted)
                         }
                     }
-                }
-                .frame(maxWidth: ids.count > 2 ? .infinity : 330)
-                .padding(.top, 14)
-                if showAdvantage {
-                    VStack(spacing: 4) {
-                        Text("Class advantage · +20% damage").font(.chakra(11, semibold: true)).tracking(2)
-                            .textCase(.uppercase).foregroundColor(Theme.brass)
-                        (Text("Fighter").foregroundColor(Theme.cyan) + Text(" beats ") + Text("Beast").foregroundColor(Theme.pink)
-                         + Text(" · ") + Text("Beast").foregroundColor(Theme.pink) + Text(" beats ") + Text("Mech").foregroundColor(Theme.orange)
-                         + Text(" · ") + Text("Mech").foregroundColor(Theme.orange) + Text(" beats ") + Text("Fighter").foregroundColor(Theme.cyan))
-                            .font(.barlow(14, semibold: true)).foregroundColor(Theme.fg).multilineTextAlignment(.center)
+                    CardView(card: card).frame(width: 230)
+                        .shadow(color: Theme.classColor(card.cls).opacity(0.45), radius: 20)
+                        .transition(.scale(scale: 0.6).combined(with: .opacity))
+                    Button("Continue") { onDone() }.buttonStyle(GoldButton())
+                } else {
+                    VStack(spacing: 8) {
+                        Text(eyebrow).sectionTitle()
+                        Text(title).font(.chakra(28)).foregroundColor(Theme.fg).multilineTextAlignment(.center)
+                        if let subtitle { Text(subtitle).font(.barlow(15)).foregroundColor(Theme.muted).multilineTextAlignment(.center) }
                     }
-                    .padding(.horizontal, 16).padding(.vertical, 12).goldPanel()
-                }
-                if ids.indices.contains(picked), let card = CardBook.card(ids[picked]) {
-                    Button(busy ? "…" : "\(cta) \(card.name)") {
-                        busy = true
-                        Task { await onPick(card.id); busy = false }
+                    if let img = Art.pack("recruit") {
+                        Image(uiImage: img).resizable().scaledToFit().frame(width: 230)
+                            .shadow(color: Theme.cyan.opacity(0.45), radius: 24)
                     }
-                    .buttonStyle(GoldButton())
-                    .disabled(busy)
+                    if let e = store.error { Text(e).font(.barlow(14)).foregroundColor(Theme.pink).multilineTextAlignment(.center) }
+                    Button(busy ? "…" : "Open") { Task { await open() } }.buttonStyle(GoldButton()).disabled(busy)
                 }
             }
             .padding(16)
         }
+        .task { if autoOpen { await open() } }
+    }
+
+    private func open() async {
+        guard !busy else { return }
+        busy = true
+        if let id = await store.openRecruit(), let c = CardBook.card(id) {
+            Sound.rare.play()
+            withAnimation(.spring(response: 0.45, dampingFraction: 0.75)) { card = c }
+        }
+        busy = false
     }
 }

@@ -130,8 +130,8 @@ test('from chapter 2 enemies play power cards (a grind): fused teams can still w
 });
 
 test('each level needs double the XP of the last', () => {
-  assert.deepEqual([0, 99, 100, 299, 300, 699, 700, 1500].map(levelFor), [1, 1, 2, 2, 3, 3, 4, 5]);
-  assert.deepEqual([1, 2, 3, 4].map(levelStart), [0, 100, 300, 700]);
+  assert.deepEqual([0, 249, 250, 749, 750, 2500, 11250, 26250].map(levelFor), [1, 1, 2, 2, 3, 5, 10, 15]);
+  assert.deepEqual([1, 2, 3, 4].map(levelStart), [0, 250, 750, 1500]);
 });
 
 test('fusion boosts stats and unlocks a stronger second special', () => {
@@ -431,4 +431,18 @@ test('gauntlet: special cooldowns carry into the next fight, EMP\'s extra wears 
   const next = gauntletBattle(team, team.map(id => BY_ID[id].hp), ['moth'], {}, [], 2, carried);
   assert.deepEqual(next.teams[0].map(u => u.cd), [cd, 0, 0]);
   assert.ok(next.teams[0].every(u => !u.sh && !u.mi && !u.oc), 'other effects start fresh');
+});
+
+test('unlocks and the main quest line', async () => {
+  const { UNLOCKS, isUnlocked, recruitsOwed, mainProgress, MAIN_QUESTS } = await import('../src/game.js');
+  assert.equal(isUnlocked('spin', 9, 1), false); assert.equal(isUnlocked('spin', 10, 1), true);
+  assert.equal(isUnlocked('trades', 150, 9), false); assert.equal(isUnlocked('hunt', 0, 15), true);
+  assert.deepEqual([0, 2, 3, 5, 6, 40].map(recruitsOwed), [1, 1, 2, 2, 3, 3]);
+  assert.equal(MAIN_QUESTS.length, 26);
+  const have = { cleared: 4, level: 2, team: 2, friends: 0, ev: { spin: 3 } };
+  assert.deepEqual(mainProgress(3, have), { step: 4, total: 26, name: 'Clear Ch 1 · Lv 6', n: 4, goal: 6, gold: 0, xp: 100, done: false });
+  assert.equal(mainProgress(5, have, { spin: 3 }).done, false, 'spins from before the quest started don\'t count');
+  assert.equal(mainProgress(5, { ...have, ev: { spin: 4 } }, { spin: 3 }).done, true);
+  assert.equal(mainProgress(26, have), null);
+  assert.ok(Object.values(UNLOCKS).every(u => u.text));
 });

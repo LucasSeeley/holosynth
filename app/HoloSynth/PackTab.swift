@@ -643,3 +643,44 @@ struct Shake: GeometryEffect {
         ProjectionTransform(CGAffineTransform(translationX: 7 * sin(animatableData * .pi * 6), y: 0))
     }
 }
+
+// The Shop tab: locked (what opens it and your XP toward it) until the server says it's open.
+struct ShopGate: View {
+    @EnvironmentObject var store: GameStore
+
+    var body: some View {
+        if let p = store.profile, let need = p.locked?["shop"] {
+            ZStack {
+                ScreenBackground()
+                VStack(spacing: 16) {
+                    Image(systemName: "lock.fill").font(.system(size: 34)).foregroundColor(Theme.muted)
+                        .frame(width: 84, height: 84).goldPanel(42)
+                    Text("Shop").sectionTitle()
+                    Text(need.replacingOccurrences(of: "Reach player", with: "Opens at player"))
+                        .font(.chakra(26)).foregroundColor(Theme.fg).multilineTextAlignment(.center)
+                    Text("Daily cards and packs. Clear campaign levels and daily quests to level up.")
+                        .font(.barlow(15)).foregroundColor(Theme.muted).multilineTextAlignment(.center)
+                    VStack(spacing: 6) {
+                        HStack {
+                            Text("LV \(p.level)").font(.chakra(13)).foregroundColor(Theme.fg)
+                            Spacer()
+                            Text("\(p.xpInto) / \(p.xpNeed) XP").font(.barlow(13)).foregroundColor(Theme.muted).monospacedDigit()
+                        }
+                        GeometryReader { g in
+                            ZStack(alignment: .leading) {
+                                Capsule().fill(Theme.fg.opacity(0.12))
+                                Capsule().fill(LinearGradient(colors: [Color(hex: 0xE0A12A), Color(hex: 0xFFD77A)], startPoint: .leading, endPoint: .trailing))
+                                    .frame(width: g.size.width * CGFloat(p.xpInto) / CGFloat(p.xpNeed))
+                            }
+                        }
+                        .frame(height: 8)
+                    }
+                    .padding(.top, 6)
+                }
+                .padding(.horizontal, 28)
+            }
+        } else {
+            PackTab()
+        }
+    }
+}

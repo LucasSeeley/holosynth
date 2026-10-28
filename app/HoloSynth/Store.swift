@@ -46,7 +46,7 @@ final class GameStore: ObservableObject {
 
     // Any card id that shows up in the collection for the first time gets a NEW tag. Kept per account across launches.
     private func trackNew() {
-        guard let p = profile, !p.needsStarter else { return }
+        guard let p = profile, !p.team.isEmpty else { return }
         let d = UserDefaults.standard, seenKey = "seen.\(p.username)", newKey = "new.\(p.username)"
         let owned = Set(p.collection.keys)
         var fresh = Set(d.stringArray(forKey: newKey) ?? [])
@@ -145,14 +145,19 @@ final class GameStore: ObservableObject {
         }
     }
 
-    // First card on sign-up, and the card you pick after campaign level 3.
-    func pickStarter(_ id: String) async {
-        do { profile = try await API.call("starter", token: token, body: ["card": id]) }
-        catch { self.error = error.localizedDescription }
+    // Opens the next Recruit Pack; returns the starter that came out.
+    func openRecruit() async -> String? {
+        struct Reply: Decodable { let card: String; let profile: Profile }
+        do {
+            let r: Reply = try await API.call("recruit", token: token, body: [:])
+            profile = r.profile; error = nil
+            return r.card
+        } catch { self.error = error.localizedDescription; return nil }
     }
 
-    func pickReward(_ id: String) async {
-        do { profile = try await API.call("campaign/reward", token: token, body: ["card": id]) }
+    func claimMainQuest() async {
+        struct Reply: Decodable { let profile: Profile }
+        do { let r: Reply = try await API.call("mainquest/claim", token: token, body: [:]); profile = r.profile; error = nil }
         catch { self.error = error.localizedDescription }
     }
 

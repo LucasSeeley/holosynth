@@ -107,11 +107,13 @@ struct Profile: Decodable, Equatable {
     let gold: Int
     let xp: Int
     let levelXp: Int?           // XP into the current level
-    let levelNeed: Int?         // XP the current level takes (doubles every level)
+    let levelNeed: Int?         // XP the current level takes (250 more each level)
     let level: Int
     let team: [String]
     let collection: [String: Int]
-    let needsStarter: Bool
+    let recruit: Int?           // Recruit Packs waiting to be opened (each holds a starter)
+    let locked: [String: String]?   // features not open yet → what opens them ("Clear Ch 1 · Lv 10")
+    let mainQuest: MainQuest?   // the active main quest; nil once they're all done
     let wins: Int
     let packs: Int
     let unopened: [UnopenedPack]?   // packs waiting to be opened, oldest first
@@ -132,6 +134,18 @@ struct Profile: Decodable, Equatable {
     let campaign: Campaign
 }
 
+// One step of the main quest line, shown one at a time on the Play tab.
+struct MainQuest: Decodable, Equatable {
+    let step: Int
+    let total: Int
+    let name: String
+    let n: Int
+    let goal: Int
+    let gold: Int
+    let xp: Int
+    let done: Bool
+}
+
 struct Campaign: Decodable, Equatable {
     struct Level: Decodable, Equatable { let num: Int; let title: String; let enemies: [String]; let boss: Bool }
     let chapter: String
@@ -139,7 +153,6 @@ struct Campaign: Decodable, Equatable {
     let cleared: Int
     let total: Int
     let next: Level?             // nil once every chapter is beaten
-    let choose: [String]?        // starters on offer after level 3, until you pick one
     let friendsUnlocked: Bool
 }
 
@@ -149,8 +162,7 @@ struct CampaignRun: Decodable, Equatable {
         let won: Bool
         let gold: Int?
         let xp: Int?
-        let chooseCard: Bool?
-        let newCard: String?
+        let recruit: Bool?          // a Recruit Pack with the next starter (levels 3 and 6)
         let pack: [String]?
         let holo: [Int]?            // which of the pack's cards came out holo
         let packType: String?

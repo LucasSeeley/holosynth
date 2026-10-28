@@ -126,6 +126,7 @@ struct HomeView: View {
     @EnvironmentObject var store: GameStore
     @State private var tab = 0
     @State private var spinClosed = false   // closed the daily spin this session: it comes back next launch
+    @State private var welcome = false   // the first Recruit Pack, kept up until its card has been shown
 
     // Social tab badge: friend requests, challenges, offers to answer, and accepted offers to claim.
     private var socialBadge: Int {
@@ -138,7 +139,7 @@ struct HomeView: View {
         TabView(selection: $tab) {
             PlayTab(tab: $tab).tabItem { Label("Play", systemImage: "bolt.fill") }.tag(0)
                 .badge(store.profile?.quests?.claimable ?? 0)   // quest rewards waiting
-            PackTab().tabItem { Label("Shop", systemImage: "bag.fill") }.tag(1)
+            ShopGate().tabItem { Label("Shop", systemImage: "bag.fill") }.tag(1)
             CollectionTab().tabItem { Label("Cards", systemImage: "square.grid.3x3.fill") }.tag(2)
             SocialTab().tabItem { Label("Social", systemImage: "person.2.fill") }.tag(3)
                 .badge(socialBadge)
@@ -169,19 +170,17 @@ struct HomeView: View {
         }
         .onAppear { Music.play(.menu) }
         .fullScreenCover(isPresented: Binding(get: {
-            !spinClosed && store.profile.map { !$0.needsStarter && $0.nextSpin == 0 } == true
+            !spinClosed && store.profile.map { !$0.team.isEmpty && $0.locked?["spin"] == nil && $0.nextSpin == 0 } == true
         }, set: { if !$0 { spinClosed = true } })) {
             DailySpinView { pack in
                 spinClosed = true   // a won pack waits on the Play tab
             }
         }
-        // New accounts pick their first card before anything else.
-        .fullScreenCover(isPresented: Binding(get: { store.profile?.needsStarter == true }, set: { _ in })) {
-            CardPicker(eyebrow: "Welcome to HoloSynth", title: "Choose your first card",
-                       subtitle: "The other two join you as you clear the campaign.",
-                       ids: ["volt", "fang", "goliath"], cta: "Choose", showAdvantage: true) { id in
-                await store.pickStarter(id)
-            }
+        // New accounts open their first Recruit Pack before anything else.
+        .onReceive(store.$profile) { p in if let p, p.team.isEmpty, (p.recruit ?? 0) > 0 { welcome = true } }
+        .fullScreenCover(isPresented: $welcome) {
+            RecruitView(eyebrow: "Welcome to HoloSynth", title: "Open your Recruit Pack",
+                        subtitle: "It holds one of three starters. The other two come in Recruit Packs at campaign levels 3 and 6.") { welcome = false }
         }
     }
 }

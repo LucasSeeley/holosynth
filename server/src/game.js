@@ -11,7 +11,7 @@ export const CAMPAIGN_GOLD = [150, 200, 300, 400, 500];   // first clear of a ca
 export const CAMPAIGN_XP = [50, 100, 150, 200, 250];
 export const CHAPTERS_OPEN = 5;   // chapters past this show "More chapters are on the way"
 export const WIN_XP = 25;
-export const XP_PER_LEVEL = 100;
+export const XP_PER_LEVEL = 250;
 // +20% damage. Tech and magic each have a triangle, and every class also beats one class from the other side:
 // each class beats 2, is weak to 2 and is even with 1.
 export const BEATS = {
@@ -23,7 +23,7 @@ const beats = (a, b) => BEATS[a].includes(b);
 const heals = (card, move) => move === 'special' && !!card.special.heal;
 
 // Each level needs twice the XP of the one before: 100 to reach level 2, 200 more for 3, 400 more for 4...
-export const levelStart = level => XP_PER_LEVEL * (2 ** (level - 1) - 1);   // total XP at the start of `level`
+export const levelStart = level => XP_PER_LEVEL * level * (level - 1) / 2;   // total XP at the start of `level`: level n -> n+1 costs 250 x n
 export const levelFor = xp => { let l = 1; while (levelStart(l + 1) <= xp) l++; return l; };
 
 // ---- packs ----
@@ -795,8 +795,8 @@ export const UNLOCKS = {
   gauntlet: { cleared: 20, text: 'Clear Ch 1 · Lv 20' },
   ranked: { cleared: 40, text: 'Clear Ch 2 · Lv 10' },
   shop: { level: 5, text: 'Reach player level 5' },
-  trades: { level: 7, text: 'Reach player level 7' },
-  hunt: { level: 10, text: 'Reach player level 10' },
+  trades: { level: 10, text: 'Reach player level 10' },
+  hunt: { level: 15, text: 'Reach player level 15' },
 };
 export const isUnlocked = (key, cleared, level) => { const u = UNLOCKS[key]; return u.cleared ? cleared >= u.cleared : level >= u.level; };
 // Starters come out of 1-card Recruit Packs: one at sign-up, one after level 3, one after level 6.
@@ -824,13 +824,13 @@ export const MAIN_QUESTS = [
   ['Clear Ch 2 · Lv 10', { cleared: 40 }, { gold: 750 }],
   ['Win a Ranked match', { ev: 'rwin' }, { gold: 1000 }],
   ['Clear Ch 2 · Lv 30', { cleared: 60 }, { gold: 1000 }],
-  ['Reach player level 7', { level: 7 }, { gold: 1000 }],
+  ['Reach player level 10', { level: 10 }, { gold: 1000 }],
   ['Complete a trade', { ev: 'trade' }, { xp: 1000 }],
   ['Clear Ch 3 · Lv 30', { cleared: 90 }, { gold: 1000 }],
   ['Unlock a card passive', { ev: 'passive' }, { gold: 1500 }],
   ['Clear Ch 4 · Lv 30', { cleared: 120 }, { gold: 2500 }],
   ['Clear Ch 5 · Lv 30', { cleared: 150 }, { gold: 5000 }],
-  ['Reach player level 10', { level: 10 }, { gold: 2000 }],
+  ['Reach player level 15', { level: 15 }, { gold: 2000 }],
   ['Beat the Legend Hunt', { ev: 'hunt' }, { gold: 2500 }],
 ].map(([name, need, pay]) => ({ name, need, gold: pay.gold ?? 0, xp: pay.xp ?? 0 }));
 // Progress on main quest `step`: have = { cleared, level, team, friends, ev: lifetime counts }, base = ev counts when it started.

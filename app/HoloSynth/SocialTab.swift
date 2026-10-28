@@ -25,7 +25,8 @@ struct SocialTab: View {
                     }
                     if let s = store.social {
                         ForEach(s.challenges) { challengeCard($0) }
-                        if let t = s.trades, !t.isEmpty { trades(t) }
+                        if let need = store.profile?.locked?["trades"] { tradesLocked(need) }
+                        else if let t = s.trades, !t.isEmpty { trades(t) }
                         if !s.requests.isEmpty { requests(s.requests) }
                         if s.friends.isEmpty { empty } else { friends(s.friends) }
                     } else {
@@ -142,17 +143,34 @@ struct SocialTab: View {
         }
     }
 
+    // Trades aren't open yet: what opens them.
+    private func tradesLocked(_ need: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "lock.fill").font(.system(size: 18)).foregroundColor(Theme.muted)
+                .frame(width: 44, height: 44).background(Theme.ink.opacity(0.6), in: RoundedRectangle(cornerRadius: 12))
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Trades").font(.chakra(12, semibold: true)).tracking(2.5).textCase(.uppercase).foregroundColor(Theme.brass)
+                Text(need.replacingOccurrences(of: "Reach player", with: "Unlocks at player")).font(.barlow(14)).foregroundColor(Theme.muted)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(14)
+        .background(Theme.field, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.brass.opacity(0.2), lineWidth: 1))
+        .accessibilityElement(children: .combine)
+    }
+
     private func friends(_ list: [Social.Person]) -> some View {
         panel("Friends", count: list.count) {
             ForEach(list) { p in
                 row(p, subtitle: Text("Level \(p.level) · ") + seen(p), last: p == list.last) {
-                    Button { tradeWith = TradeTarget(name: p.name, avatar: p.avatar, counter: nil) } label: {
+                    if store.profile?.locked?["trades"] == nil { Button { tradeWith = TradeTarget(name: p.name, avatar: p.avatar, counter: nil) } label: {
                         Image(systemName: "arrow.left.arrow.right").font(.system(size: 16, weight: .bold)).foregroundColor(Theme.brass)
                             .frame(width: 40, height: 40)
                             .background(Theme.ink.opacity(0.6), in: RoundedRectangle(cornerRadius: 12))
                             .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.brass.opacity(0.5), lineWidth: 1))
                     }
-                    .accessibilityLabel("Trade with \(p.name)")
+                    .accessibilityLabel("Trade with \(p.name)") }
                     Button { challenge(p) } label: { SwordsButton(gold: false) }
                         .accessibilityLabel("Battle \(p.name)")
                 }

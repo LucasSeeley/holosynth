@@ -5,8 +5,9 @@ struct PlayTab: View {
     @EnvironmentObject var store: GameStore
     @Binding var tab: Int
 
-    enum Screen: Identifiable { case campaign, friend, reward, spin, gauntlet, hunt, quests, ranked, packs; var id: Self { self } }
+    enum Screen: Identifiable { case campaign, friend, recruit, spin, gauntlet, hunt, quests, ranked, packs; var id: Self { self } }
     @State var screen: Screen?
+    @State private var lastWasWin = false   // the Recruit Pack was just shown on the win screen: open it straight away
 
     var body: some View {
         ZStack {
@@ -15,6 +16,7 @@ struct PlayTab: View {
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 12) {
                         header(p)
+                        if let q = p.mainQuest { mainQuest(q) }
                         campaignTile(p)
                         if let u = p.unopened, !u.isEmpty { packsRow(u) }
                         daily(p)
@@ -34,7 +36,7 @@ struct PlayTab: View {
                 CampaignBattleView { next in
                     switch next {
                     case .none: screen = nil
-                    case .chooseCard: screen = .reward
+                    case .recruit: lastWasWin = true; screen = .recruit
                     case .pack: screen = nil   // the pack waits in the Packs row
                     }
                 }
@@ -52,12 +54,9 @@ struct PlayTab: View {
                 DailySpinView { _ in screen = nil }
             case .packs:
                 PackTab { screen = nil }
-            case .reward:
-                CardPicker(eyebrow: "Level 3 cleared", title: "A new card joins you",
-                           subtitle: "The other one joins after level 6.",
-                           ids: store.profile?.campaign.choose ?? [], cta: "Take") { id in
-                    await store.pickReward(id)
-                    screen = nil
+            case .recruit:
+                RecruitView(title: "Your next starter is waiting", autoOpen: store.profile?.team.isEmpty == false && lastWasWin) {
+                    screen = nil; lastWasWin = false
                 }
             }
         }
@@ -99,6 +98,42 @@ struct PlayTab: View {
         }
     }
 
+    // The active main quest: progress, then Claim once it's done. Only one shows at a time.
+    private func mainQuest(_ q: MainQuest) -> some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 5) {
+                Text("Main quest \(q.step) / \(q.total)").font(.chakra(10, semibold: true)).tracking(2.5).textCase(.uppercase).foregroundColor(Theme.brass)
+                Text(q.name).font(.chakra(16)).foregroundColor(Theme.fg).lineLimit(1).minimumScaleFactor(0.7)
+                HStack(spacing: 8) {
+                    GeometryReader { g in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(Theme.fg.opacity(0.12))
+                            Capsule().fill(LinearGradient(colors: [Color(hex: 0xE0A12A), Color(hex: 0xFFD77A)], startPoint: .leading, endPoint: .trailing))
+                                .frame(width: g.size.width * CGFloat(q.n) / CGFloat(max(q.goal, 1)))
+                        }
+                    }
+                    .frame(height: 6)
+                    Text(q.done ? "Done!" : "\(q.n) / \(q.goal)").font(.barlow(11)).foregroundColor(Color(hex: 0xA9A5C2)).monospacedDigit()
+                }
+            }
+            if q.done {
+                Button("Claim") { Task { await store.claimMainQuest() } }.buttonStyle(GoldButton(height: 40)).frame(width: 96)
+            } else {
+                HStack(spacing: 4) {
+                    if q.gold > 0 { Image(systemName: "circle.hexagongrid.fill").font(.system(size: 12)) }
+                    Text(q.gold > 0 ? "+\(q.gold)" : "+\(q.xp) XP").font(.chakra(14))
+                }
+                .foregroundColor(Theme.brass)
+            }
+        }
+        .padding(.horizontal, 14).padding(.vertical, 12)
+        .background(RadialGradient(colors: [Theme.brass.opacity(q.done ? 0.34 : 0.2), Theme.field], center: UnitPoint(x: 0, y: 0.5), startRadius: 0, endRadius: 260),
+                    in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.brass.opacity(q.done ? 0.85 : 0.5), lineWidth: 1))
+        .shadow(color: Theme.brass.opacity(q.done ? 0.3 : 0), radius: 9)
+        .accessibilityElement(children: .combine)
+    }
+
     private func campaignTile(_ p: Profile) -> some View {
         let c = p.campaign
         return ZStack(alignment: .bottomLeading) {
@@ -120,9 +155,9 @@ struct PlayTab: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             HStack(alignment: .bottom, spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
-                    if c.choose != nil {
-                        Text("Level 3 cleared").font(.chakra(13, semibold: true)).tracking(2).textCase(.uppercase).foregroundColor(Theme.brass)
-                        Text("A new card is waiting").font(.chakra(22)).foregroundColor(Theme.fg)
+                    if (p.recruit ?? 0) > 0 {
+                        Text("Recruit Pack").font(.chakra(13, semibold: true)).tracking(2).textCase(.uppercase).foregroundColor(Theme.brass)
+                        Text("Your next starter is waiting").font(.chakra(22)).foregroundColor(Theme.fg).lineLimit(1).minimumScaleFactor(0.6)
                     } else if let next = c.next {
                         Text(next.boss ? "Boss · Level \(next.num)" : "Level \(next.num)").font(.chakra(13, semibold: true))
                             .tracking(2).textCase(.uppercase).foregroundColor(Theme.brass)
@@ -134,8 +169,8 @@ struct PlayTab: View {
                     }
                 }
                 Spacer(minLength: 0)
-                if c.choose != nil {
-                    Button("Pick") { screen = .reward }.buttonStyle(GoldButton(height: 46)).frame(width: 110)
+                if (p.recruit ?? 0) > 0 {
+                    Button("Open") { screen = .recruit }.buttonStyle(GoldButton(height: 46)).frame(width: 110)
                 } else if c.next != nil {
                     Button(c.cleared == 0 ? "Start" : "Continue") { screen = .campaign }.buttonStyle(GoldButton(height: 46)).frame(width: 140)
                 }
@@ -186,19 +221,20 @@ struct PlayTab: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Daily").sectionTitle()
             HStack(spacing: 10) {
-                TimelineView(.periodic(from: .now, by: 1)) { _ in
-                    let ready = SpinClock.ready(p.nextSpin)
-                    PlayChip(title: "Spin", sub: ready ? "Ready!" : SpinClock.left(until: p.nextSpin), accent: 0xFF4D5E, alert: ready) {
-                        MiniWheel(lit: ready).frame(width: 36, height: 36)
-                    } action: { if ready { screen = .spin } }
-                }
                 if let q = p.quests {
                     PlayChip(title: "Quests", sub: q.bonus == "claimed" ? "All done" : "\(q.finished) of \(q.list.count)", accent: 0x3DFF8A,
                              alert: q.claimable > 0) {
                         Image(systemName: "scroll").font(.system(size: 26, weight: .medium)).foregroundColor(Theme.brass)
                     } action: { screen = .quests }
                 }
-                PlayChip(title: "Shop", sub: "New cards", accent: 0xB46BFF, alert: false) {
+                TimelineView(.periodic(from: .now, by: 1)) { _ in
+                    let ready = SpinClock.ready(p.nextSpin)
+                    PlayChip(title: "Spin", sub: ready ? "Ready!" : SpinClock.left(until: p.nextSpin), accent: 0xFF4D5E, alert: ready,
+                             lockText: p.locked?["spin"]) {
+                        MiniWheel(lit: ready).frame(width: 36, height: 36)
+                    } action: { if ready { screen = .spin } }
+                }
+                PlayChip(title: "Shop", sub: "New cards", accent: 0xB46BFF, alert: false, lockText: p.locked?["shop"]) {
                     if let img = Art.pack("omni") { Image(uiImage: img).resizable().scaledToFit().frame(height: 40) }
                 } action: { tab = 1 }
             }
@@ -206,24 +242,24 @@ struct PlayTab: View {
     }
 
     private func modes(_ p: Profile) -> some View {
-        let open = p.team.count >= 3
+        let lock = { (k: String) in p.locked?[k] }
         return VStack(alignment: .leading, spacing: 8) {
             Text("Modes").sectionTitle()
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
                 if let r = p.ranked {
-                    ModeTile(title: "Ranked", sub: "\(r.name) · #\(r.place) this week", accent: RankedView.color(r.rank), locked: !open, alert: r.alert) {
+                    ModeTile(title: "Ranked", sub: "\(r.name) · #\(r.place) this week", accent: RankedView.color(r.rank), lockText: lock("ranked"), alert: r.alert) {
                         RankEmblem(rank: r.rank, size: 70).padding(.top, 12)
                     } action: { screen = .ranked }
                 }
-                ModeTile(title: "Gauntlet", sub: "Best streak \(p.gauntlet.best)", accent: Theme.backRed, locked: !p.campaign.friendsUnlocked, alert: false) {
+                ModeTile(title: "Gauntlet", sub: "Best streak \(p.gauntlet.best)", accent: Theme.backRed, lockText: lock("gauntlet"), alert: false) {
                     Swords().fill(Theme.brass).frame(width: 60, height: 60).padding(.top, 18)
                 } action: { screen = .gauntlet }
                 if let h = p.hunt {
-                    ModeTile(title: "Legend Hunt", sub: huntLine(h), accent: HuntView.gold, locked: !open, alert: false, fill: true) {
+                    ModeTile(title: "Legend Hunt", sub: huntLine(h), accent: HuntView.gold, lockText: lock("hunt"), alert: false, fill: true) {
                         if let img = Art.image(h.legend) { Image(uiImage: img).resizable().scaledToFill() }
                     } action: { screen = .hunt }
                 }
-                ModeTile(title: "Friends", sub: "Battle a friend", accent: Color(hex: 0x3FF0FF), locked: !p.campaign.friendsUnlocked, alert: false) {
+                ModeTile(title: "Friends", sub: "Battle a friend", accent: Color(hex: 0x3FF0FF), lockText: lock("friends"), alert: false) {
                     Image(systemName: "bolt.fill").font(.system(size: 48)).foregroundColor(Theme.brass).padding(.top, 22)
                 } action: { screen = .friend }
             }
@@ -291,24 +327,33 @@ struct PlayChip<Icon: View>: View {
     let sub: String
     let accent: UInt32
     let alert: Bool
+    var lockText: String? = nil     // not open yet: shows what opens it, greyed out
     @ViewBuilder let icon: () -> Icon
     let action: () -> Void
 
     var body: some View {
+        let locked = lockText != nil
         Button(action: action) {
             VStack(spacing: 6) {
                 icon().frame(height: 40)
                 Text(title).font(.chakra(13)).foregroundColor(Theme.fg)
-                Text(sub).font(.barlow(11)).foregroundColor(Color(hex: 0xA9A5C2)).lineLimit(1).minimumScaleFactor(0.7).monospacedDigit()
+                if let lockText {
+                    Label(lockText.replacingOccurrences(of: "Clear ", with: "").replacingOccurrences(of: "Reach player level", with: "Player Lv"), systemImage: "lock.fill")
+                        .font(.barlow(11)).foregroundColor(Theme.muted).lineLimit(1).minimumScaleFactor(0.7)
+                } else {
+                    Text(sub).font(.barlow(11)).foregroundColor(Color(hex: 0xA9A5C2)).lineLimit(1).minimumScaleFactor(0.7).monospacedDigit()
+                }
             }
             .frame(maxWidth: .infinity).frame(height: 104)
             .background(Theme.field, in: RoundedRectangle(cornerRadius: 16))
             .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(hex: accent).opacity(alert ? 0.7 : 0.35), lineWidth: 1))
-            .overlay(alignment: .topTrailing) { if alert { Circle().fill(Theme.pink).frame(width: 10, height: 10).padding(9) } }
+            .overlay(alignment: .topTrailing) { if alert && !locked { Circle().fill(Theme.pink).frame(width: 10, height: 10).padding(9) } }
+            .saturation(locked ? 0 : 1).opacity(locked ? 0.55 : 1)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(title), \(sub)")
+        .disabled(locked)
+        .accessibilityLabel("\(title), \(lockText.map { "locked: \($0)" } ?? sub)")
     }
 }
 
@@ -317,13 +362,14 @@ struct ModeTile<Art: View>: View {
     let title: String
     let sub: String
     let accent: Color
-    let locked: Bool
+    let lockText: String?       // not open yet: what opens it
     let alert: Bool
     var fill = false            // the art fills the whole tile (a card picture)
     @ViewBuilder let art: () -> Art
     let action: () -> Void
 
     var body: some View {
+        let locked = lockText != nil
         Button(action: action) {
             ZStack(alignment: .bottomLeading) {
                 RadialGradient(colors: [accent.opacity(0.3), Theme.field], center: UnitPoint(x: 0.5, y: 0.35), startRadius: 0, endRadius: 120)
@@ -332,7 +378,7 @@ struct ModeTile<Art: View>: View {
                                startPoint: .top, endPoint: .bottom)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title).font(.chakra(17)).foregroundColor(Theme.fg)
-                    if locked { Label("Unlocks at level 6", systemImage: "lock.fill").font(.barlow(12)).foregroundColor(Theme.muted) }
+                    if let lockText { Label(lockText, systemImage: "lock.fill").font(.barlow(12)).foregroundColor(Theme.muted).lineLimit(1).minimumScaleFactor(0.7) }
                     else { Text(sub).font(.barlow(12)).foregroundColor(Color(hex: 0xA9A5C2)).lineLimit(1).minimumScaleFactor(0.7) }
                 }
                 .padding(12)
@@ -346,6 +392,6 @@ struct ModeTile<Art: View>: View {
         }
         .buttonStyle(.plain)
         .disabled(locked)
-        .accessibilityLabel("\(title), \(locked ? "unlocks at level 6" : sub)")
+        .accessibilityLabel("\(title), \(lockText.map { "locked: \($0)" } ?? sub)")
     }
 }
