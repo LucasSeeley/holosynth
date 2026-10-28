@@ -69,12 +69,14 @@ struct BattleBoard: View {
         }
         .onAppear {
             if shown == nil { shown = state; latest = state }
+            API.warm()
             if state.winner == nil { Music.play(.battle) }
             withAnimation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true)) { pulse = true }
         }
         .onDisappear { Music.play(.menu) }
         .onChange(of: state) { new in
             latest = new
+            if new.winner == nil { Music.play(.battle) }   // "Next battle" reuses this screen: bring the music back
             Task { await playBack() }
         }
     }
@@ -499,6 +501,7 @@ struct BattleBoard: View {
             send(from: from, move: "special", to: i)
         } else if side == you {
             guard !s.acted[you][i] else { return }
+            API.warm()   // picking a card: get the connection ready for the attack
             UISelectionFeedbackGenerator().selectionChanged()
             Sound.select.play()
             if selected == i { selected = nil; move = nil } else { selected = i; move = nil }

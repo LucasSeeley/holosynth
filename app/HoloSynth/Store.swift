@@ -13,6 +13,15 @@ enum API {
         return URL(string: s) ?? URL(string: "https://localhost")!
     }()
 
+    // A tiny request (no database) to wake the phone's radio and the connection before a move needs them:
+    // after the phone has sat idle, the first request otherwise pays a second or so to get going.
+    private static var lastWarm = Date.distantPast
+    static func warm() {
+        guard Date().timeIntervalSince(lastWarm) > 10 else { return }
+        lastWarm = Date()
+        Task.detached { _ = try? await URLSession.shared.data(from: base) }
+    }
+
     static func call<T: Decodable>(_ path: String, token: String?, body: [String: Any]? = nil) async throws -> T {
         var req = URLRequest(url: base.appendingPathComponent(path))
         req.timeoutInterval = 15
