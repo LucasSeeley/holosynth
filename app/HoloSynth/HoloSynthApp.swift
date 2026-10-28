@@ -170,7 +170,7 @@ struct HomeView: View {
         }
         .onAppear { Music.play(.menu) }
         .fullScreenCover(isPresented: Binding(get: {
-            !spinClosed && store.profile.map { !$0.team.isEmpty && $0.locked?["spin"] == nil && $0.nextSpin == 0 } == true
+            !spinClosed && !store.screenOpen && store.profile.map { !$0.team.isEmpty && $0.locked?["spin"] == nil && $0.nextSpin == 0 } == true
         }, set: { if !$0 { spinClosed = true } })) {
             DailySpinView { pack in
                 spinClosed = true   // a won pack waits on the Play tab

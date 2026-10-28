@@ -60,6 +60,7 @@ struct PlayTab: View {
                 }
             }
         }
+        .onChange(of: screen) { store.screenOpen = $0 != nil }
         .task {
             // A friend match left open (app closed mid-battle) reopens straight away.
             if let m: MatchView = try? await API.call("matches/current", token: store.token), m.status == "active" {

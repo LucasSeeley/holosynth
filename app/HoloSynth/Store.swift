@@ -42,6 +42,7 @@ final class GameStore: ObservableObject {
         didSet { UserDefaults.standard.set(token, forKey: "token") }
     }
     @Published var profile: Profile? { didSet { trackNew() } }
+    @Published var screenOpen = false   // a battle, pack or other full screen is up: popups (the daily spin) wait
     @Published var newCards: Set<String> = []   // cards you got and haven't tapped yet ("NEW" tag)
 
     // Any card id that shows up in the collection for the first time gets a NEW tag. Kept per account across launches.
