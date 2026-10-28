@@ -145,15 +145,19 @@ struct RecruitView: View {
                         .transition(.scale(scale: 0.6).combined(with: .opacity))
                     Button("Continue") { onDone() }.buttonStyle(GoldButton())
                 } else {
+                    // heading near the top, the pack centred in the space left, Open at the bottom
                     VStack(spacing: 8) {
                         Text(eyebrow).sectionTitle()
                         Text(title).font(.chakra(28)).foregroundColor(Theme.fg).multilineTextAlignment(.center)
                         if let subtitle { Text(subtitle).font(.barlow(15)).foregroundColor(Theme.muted).multilineTextAlignment(.center) }
                     }
+                    .padding(.top, 40)
+                    Spacer(minLength: 24)
                     if let img = Art.pack("recruit") {
                         Image(uiImage: img).resizable().scaledToFit().frame(width: 230)
                             .shadow(color: Theme.cyan.opacity(0.45), radius: 24)
                     }
+                    Spacer(minLength: 24)
                     if let e = store.error { Text(e).font(.barlow(14)).foregroundColor(Theme.pink).multilineTextAlignment(.center) }
                     Button(busy ? "…" : "Open") { Task { await open() } }.buttonStyle(GoldButton()).disabled(busy)
                 }
