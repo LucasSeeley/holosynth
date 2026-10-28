@@ -795,7 +795,9 @@ export const newCampaignBattle = (team, level, fus = {}, powers = []) =>
 export const UNLOCKS = {
   friends: { cleared: 6, text: 'Clear Ch 1 · Lv 6' },
   quests: { cleared: 10, text: 'Clear Ch 1 · Lv 10' },
-  packs: { cleared: 30, text: 'Beat Chapter 1' },   // Magic, Omni, Overload and Legends packs, and magic cards, in the Shop
+  packs: { cleared: 30, text: 'Beat Chapter 1' },   // Magic and Omni packs, and magic cards, in the Shop
+  overload: { cleared: 60, text: 'Beat Chapter 2' },
+  legends: { cleared: 90, text: 'Beat Chapter 3' },
   spin: { cleared: 10, text: 'Clear Ch 1 · Lv 10' },
   gauntlet: { cleared: 20, text: 'Clear Ch 1 · Lv 20' },
   ranked: { cleared: 40, text: 'Clear Ch 2 · Lv 10' },

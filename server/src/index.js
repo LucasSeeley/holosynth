@@ -359,7 +359,7 @@ async function setTeam(req, db, user) {
 
 async function buyPack(db, user, type = 'cyber') {
   await needUnlock(db, user, 'shop');
-  if (!['cyber', 'power'].includes(type)) await needUnlock(db, user, 'packs');
+  if (!['cyber', 'power'].includes(type)) await needUnlock(db, user, UNLOCKS[type] ? type : 'packs');   // overload / legends have their own
   if (!(type in PACK_TYPES)) throw new HttpError(400, 'Unknown pack.');
   if (!PACKS_OPEN.includes(type)) throw new HttpError(400, 'That pack is coming soon.');
   const cost = PACK_COSTS[type] ?? PACK_COST;

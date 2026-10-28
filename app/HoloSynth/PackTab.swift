@@ -350,8 +350,8 @@ struct PackTab: View {
     }
 
     private func packTile(_ pack: PackInfo, open: Bool, gold: Int) -> some View {
-        // Magic, Omni, Overload and Legends wait until chapter 1 is beaten: dimmed, a band across the pack saying so
-        let lockText = ["cyber", "power"].contains(pack.type) ? nil : store.profile?.locked?["packs"]
+        // Magic and Omni wait for chapter 1, Overload for chapter 2, Legends for chapter 3: dimmed, a band saying so
+        let lockText = ["cyber", "power"].contains(pack.type) ? nil : store.profile?.locked?[["overload", "legends"].contains(pack.type) ? pack.type : "packs"]
         return VStack(spacing: 6) {
             packImage(pack.type).frame(height: 150).brightness(lockText == nil ? 0 : -0.3)
                 .shadow(color: Color(hex: pack.glow).opacity(lockText == nil ? 0.35 : 0), radius: 10)

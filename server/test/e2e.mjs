@@ -35,17 +35,28 @@ if (!base.includes('localhost')) {
   check(img.ok && img.headers.get('content-type') === 'image/webp', 'card art served');
 }
 
+// Clear out test players a failed earlier run left behind (a passing run deletes its own at the end).
+{
+  const old = "(SELECT id FROM users WHERE username LIKE 'e2e\\_%' ESCAPE '\\')";   // test players are e2e_a_… / e2e_b_…
+  const sql = [`DELETE FROM friends WHERE user_id IN ${old} OR friend_id IN ${old}`,
+    `DELETE FROM challenges WHERE to_id IN ${old} OR match_id IN (SELECT id FROM matches WHERE p0 IN ${old} OR p1 IN ${old})`,
+    `DELETE FROM matches WHERE p0 IN ${old} OR p1 IN ${old}`, `DELETE FROM trades WHERE from_id IN ${old} OR to_id IN ${old}`,
+    ...'fused collection sessions progress presence spins gauntlet shop_buys hunts daily_quests quest_events ranked ranked_queue pack_inv powers power_team main_quest'.split(' ').map(t => `DELETE FROM ${t} WHERE user_id IN ${old}`),
+    `DELETE FROM users WHERE id IN ${old}`].join('; ');
+  try { execSync(`npx wrangler d1 execute holosynth --remote --command "${sql}"`, { cwd: new URL('..', import.meta.url), stdio: 'ignore' }); }
+  catch { console.log('could not clear old test players'); }
+}
 const tag = Date.now().toString(36).slice(-6);
 // How long the common calls take (shown as a notice on the build).
 const timed = async (label, p) => { const t0 = Date.now(); const r = await p; timings.push(`${label} ${Date.now() - t0}ms`); return r; };
 const timings = [];
-const a = await call('/signup', null, { username: `ana_${tag}`, password: 'secret1' });
-const b = await call('/signup', null, { username: `ben_${tag}`, password: 'secret2' });
+const a = await call('/signup', null, { username: `e2e_a_${tag}`, password: 'secret1' });
+const b = await call('/signup', null, { username: `e2e_b_${tag}`, password: 'secret2' });
 for (let i = 0; i < 3; i++) await timed('me', call('/me', a.token));
 check(a.profile.recruit === 1 && a.profile.gold === 0 && a.profile.team.length === 0 && a.profile.mainQuest.step === 1, 'new account starts empty, one Recruit Pack to open');
-await expectError(call('/signup', null, { username: `ANA_${tag}`, password: 'secret1' }), 409);
-await expectError(call('/login', null, { username: `ana_${tag}`, password: 'nope' }), 401);
-await call('/login', null, { username: `ana_${tag}`, password: 'secret1' });
+await expectError(call('/signup', null, { username: `E2E_A_${tag}`, password: 'secret1' }), 409);
+await expectError(call('/login', null, { username: `e2e_a_${tag}`, password: 'nope' }), 401);
+await call('/login', null, { username: `e2e_a_${tag}`, password: 'secret1' });
 
 await expectError(call('/campaign/start', a.token, {}), 400);   // no card yet
 const r1 = await call('/recruit', a.token, {});
@@ -97,7 +108,7 @@ const me = await call('/me', tokens[view.state.winner]);
 console.log(`player ${view.state.winner} won after ${moves} moves; gold ${me.gold}, wins ${me.wins}`);
 
 // friends: request, accept, challenge, decline, challenge again and play
-const an = `ana_${tag}`, bn = `ben_${tag}`;
+const an = `e2e_a_${tag}`, bn = `e2e_b_${tag}`;
 check((await call('/friends', a.token, { name: bn })).message.includes('sent'), 'request sent');
 await expectError(call('/friends', a.token, { name: an }), 400);              // yourself
 await expectError(call('/friends/challenge', a.token, { name: bn }), 400);    // not friends yet
