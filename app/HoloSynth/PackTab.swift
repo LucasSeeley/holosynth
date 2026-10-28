@@ -155,7 +155,15 @@ struct PackTab: View {
     }
 
     // A Recruit Pack: heading near the top, the pack centred in the space left, Open at the bottom; Open tears it like any pack.
-    private func recruitScreen(_ r: RecruitIntro) -> some View {
+    @ViewBuilder private func recruitScreen(_ r: RecruitIntro) -> some View {
+        if r.straightIn && store.error == nil {
+            Color.clear.task { await openRecruit() }   // straight to tearing it: you need the card to play
+        } else {
+            recruitPick(r)
+        }
+    }
+
+    private func recruitPick(_ r: RecruitIntro) -> some View {
         VStack(spacing: 14) {
             VStack(spacing: 8) {
                 Text(r.eyebrow).sectionTitle()
@@ -178,7 +186,6 @@ struct PackTab: View {
             Spacer(minLength: 0).frame(maxHeight: 40)
         }
         .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 24)
-        .task { if r.straightIn { await openRecruit() } }
     }
 
     private func openRecruit() async {
@@ -720,10 +727,10 @@ struct ShopGate: View {
     }
 }
 
-// What the Recruit Pack screen says. straightIn: the pack was already shown (campaign win), so go straight to tearing it.
+// What the Recruit Pack screen says if it can't go straight to the tear (straightIn; e.g. the open failed: try again).
 struct RecruitIntro {
     var eyebrow = "Recruit Pack"
     var title = "Open your Recruit Pack"
     var subtitle: String? = nil
-    var straightIn = false
+    var straightIn = true
 }

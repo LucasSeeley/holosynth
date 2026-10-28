@@ -115,15 +115,14 @@ struct CampaignBattleView: View {
 }
 
 // A 1-card Recruit Pack holding a starter you don't have yet: at sign-up, and after campaign levels 3 and 6.
-// It opens like every pack: tear the top, swipe the card over.
+// It goes straight to the tear screen like every pack (no Open: you need the card to play), then swipe the card over.
 struct RecruitView: View {
     var eyebrow = "Recruit Pack"
     var title = "Open your Recruit Pack"
     var subtitle: String? = nil
-    var autoOpen = false           // the pack was already shown (campaign win): go straight to tearing it
     let onDone: () -> Void
 
     var body: some View {
-        PackTab(onClose: onDone, recruit: RecruitIntro(eyebrow: eyebrow, title: title, subtitle: subtitle, straightIn: autoOpen))
+        PackTab(onClose: onDone, recruit: RecruitIntro(eyebrow: eyebrow, title: title, subtitle: subtitle))
     }
 }

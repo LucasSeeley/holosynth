@@ -7,7 +7,6 @@ struct PlayTab: View {
 
     enum Screen: Identifiable { case campaign, friend, recruit, spin, gauntlet, hunt, quests, ranked, packs; var id: Self { self } }
     @State var screen: Screen?
-    @State private var lastWasWin = false   // the Recruit Pack was just shown on the win screen: open it straight away
 
     var body: some View {
         ZStack {
@@ -36,7 +35,7 @@ struct PlayTab: View {
                 CampaignBattleView { next in
                     switch next {
                     case .none: screen = nil
-                    case .recruit: lastWasWin = true; screen = .recruit
+                    case .recruit: screen = .recruit
                     case .pack: screen = nil   // the pack waits in the Packs row
                     }
                 }
@@ -55,8 +54,8 @@ struct PlayTab: View {
             case .packs:
                 PackTab { screen = nil }
             case .recruit:
-                RecruitView(title: "Your next starter is waiting", autoOpen: store.profile?.team.isEmpty == false && lastWasWin) {
-                    screen = nil; lastWasWin = false
+                RecruitView(title: "Your next starter is waiting") {
+                    screen = nil
                 }
             }
         }
