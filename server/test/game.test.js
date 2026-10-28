@@ -120,10 +120,10 @@ test('chapters 2-5 are a grind: what got you in wins the first level but not the
     while (s.winner === null) { const m = aiMove(s, s.turn); applyMove(s, s.turn, m.from, m.move, m.to); } return s.winner === 0; };
   const f1 = { h: 1, b: 1, s: 1 }, f2 = { h: 2, b: 2, s: 2, p: true };
   const ladder = [   // [entry team, its fusion], [exit team, its fusion]
-    [[['volt', 'fang', 'chimera'], null], [['volt', 'fang', 'colossus'], f1]],
-    [[['volt', 'fang', 'bison'], f1], [['prism', 'bison', 'hexblade'], f1]],
-    [[['paladin', 'bison', 'sigil'], f1], [['warlord', 'ravager', 'raiju'], f2]],
-    [[['moth', 'aegis', 'shogun'], f2], [['lifeline', 'spellforge', 'raiju'], f2]],
+    [[['volt', 'fang', 'emberkoi'], null], [['volt', 'fang', 'chimera'], f1]],
+    [[['volt', 'fang', 'siren'], f1], [['hexqueen', 'deadeye', 'valkyrie'], f1]],
+    [[['archon', 'chronos', 'prismheart'], f1], [['glacia', 'paragon', 'shade'], f2]],
+    [[['wick', 'reactor', 'paragon'], f2], [['paragon', 'moss', 'glacia'], f2]],
   ];
   ladder.forEach(([[inT, inF], [outT, outF]], k) => {
     const first = (k + 1) * 30;
@@ -131,6 +131,8 @@ test('chapters 2-5 are a grind: what got you in wins the first level but not the
     for (let i = 0; i < 30; i++) assert.ok(won(outT, outF, first + i), `chapter ${k + 2} level ${i + 1}: exit team`);
   });
   assert.ok(CAMPAIGN.every(l => (l.lv ?? 0) <= 2), 'room to grow: no fusion 3 or holo enemies before later chapters');
+  assert.ok(CAMPAIGN.every((l, i) => l.enemies.every((id, j) => BY_ID[id].rarity !== 'Legendary' || (l.boss && j === 0 && i >= 90))), 'Legendaries only lead ch 4-5 bosses');
+  assert.equal(new Set(CAMPAIGN.map(l => l.title)).size, CAMPAIGN.length, 'level names are unique');
 });
 
 test('each level needs double the XP of the last', () => {
