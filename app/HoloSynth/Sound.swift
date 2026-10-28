@@ -14,7 +14,7 @@ enum AudioPrefs {
 
 // Sound effects (Resources/Sounds, synthesized by scratch scripts, no licences needed).
 enum Sound: String, CaseIterable {
-    case select, move, hit, crit, ko, turn, victory, defeat, tear, flip, rare, legendary, heal
+    case select, move, hit, crit, ko, turn, victory, defeat, tear, flip, rare, legendary, heal, dodge, deflect
 
     private static var players: [Sound: AVAudioPlayer] = {
         _ = session
