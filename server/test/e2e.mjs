@@ -67,9 +67,25 @@ check((await call('/login', null, { username: `A_${tag}@example.com`, password: 
   check((await call('/me', extra)).username === `e2e_a_${tag}`, 'second session works');
   await call('/logout', extra, {});
   await expectError(call('/me', extra), 401); }
-for (const page of ['terms', 'privacy']) {   // the pages sign-up links to
-  const r = await send(`${base}/${page}`);
-  check(r.ok && (r.headers.get('content-type') || '').includes('text/html') && (await r.text()).includes('Lucas Seeley'), `${page} page served`);
+// The web version: logging in from the site sets an HttpOnly cookie and never shows the page a token;
+// another site, or a cookie-signed change without the site's Origin, is refused.
+{
+  const origin = new URL(base).origin;
+  const web = (path, init = {}) => send(base + path, { ...init, headers: { 'Content-Type': 'application/json', ...init.headers } });
+  const res = await web('/login', { method: 'POST', headers: { Origin: origin }, body: JSON.stringify({ username: `e2e_a_${tag}`, password: 'secret11' }) });
+  const set = res.headers.get('set-cookie') || '', body = await res.json();
+  const cookie = (set.match(/__Host-hs=[0-9a-f]{64}/) || [])[0];
+  check(res.ok && cookie && /HttpOnly/i.test(set) && /Secure/i.test(set) && /SameSite=Strict/i.test(set) && !body.token && body.profile, 'web login sets a cookie, no token');
+  check((await web('/me', { headers: { Cookie: cookie } })).ok, 'cookie session works');
+  check((await web('/team', { method: 'POST', headers: { Cookie: cookie }, body: '{}' })).status === 403, 'cookie change without Origin refused');
+  check((await web('/team', { method: 'POST', headers: { Cookie: cookie, Origin: 'https://evil.example' }, body: '{}' })).status === 403, 'other site refused');
+  check((await web('/login', { method: 'POST', headers: { Origin: 'https://evil.example' }, body: JSON.stringify({ username: `e2e_a_${tag}`, password: 'secret11' }) })).status === 403, 'login from another site refused');
+  const out = await web('/logout', { method: 'POST', headers: { Cookie: cookie, Origin: origin }, body: '{}' });
+  check(out.ok && /Max-Age=0/.test(out.headers.get('set-cookie') || ''), 'web logout clears the cookie');
+  check((await web('/me', { headers: { Cookie: cookie } })).status === 401, 'cookie dead after logout');
+  const page = await send(base + '/');
+  check(page.ok && (page.headers.get('content-type') || '').includes('text/html') && /script-src 'self'/.test(page.headers.get('content-security-policy') || ''), 'web page served with its security headers');
+  check((await send(base + '/cards.json').then(r => r.json())).length >= 114, 'card list for the web');
 }
 
 await expectError(call('/campaign/start', a.token, {}), 400);   // no card yet

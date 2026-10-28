@@ -6,6 +6,7 @@ import {
   gauntletEnemies, gauntletBattle, gauntletHeal, gauntletCooldowns, fusedHp, FUSE_COPIES, FUSE_GOLD, FUSE_MAX, SECOND, SECOND_COST, PASSIVE_COST, POWERS, POWER_SLOTS, rankedPowers, gauntletGold, GAUNTLET_PACK_EVERY, newCampaignBattle, applyMove, aiMove,
   UNLOCKS, isUnlocked, recruitsOwed, mainProgress, MAIN_QUESTS, gauntletXp,
 } from './game.js';
+import CARDS from '../../shared/cards.json' with { type: 'json' };
 
 class HttpError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
 const json = (data, status = 200) => Response.json(data, { status });
@@ -31,7 +32,11 @@ async function newSession(db, userId) {
   await db.prepare('INSERT INTO sessions (token, user_id, created) VALUES (?, ?, ?)').bind(await sha256(token), userId, now()).run();
   return token;
 }
-const bearer = req => (req.headers.get('Authorization') || '').replace(/^Bearer /, '');
+// The app sends its token as a Bearer header; the web client never sees one: it rides in an HttpOnly cookie.
+const COOKIE = '__Host-hs';
+const cookieToken = req => (req.headers.get('Cookie') || '').match(/(?:^|;\s*)__Host-hs=([0-9a-f]{64})/)?.[1] || '';
+const bearer = req => (req.headers.get('Authorization') || '').replace(/^Bearer /, '') || cookieToken(req);
+const sessionCookie = (token, maxAge) => `${COOKIE}=${token}; Path=/; Max-Age=${maxAge}; HttpOnly; Secure; SameSite=Strict`;
 
 // Too many tries from one name or network: refuse for the rest of the window. Counts every try, kept in D1.
 async function limit(db, key, max, windowMs) {
@@ -1417,7 +1422,8 @@ async function route(req, env, ctx) {
   const [, a, b, c] = pathname.split('/');
   const method = req.method;
 
-  if (method === 'GET' && pathname === '/') return json({ name: 'HoloSynth', ok: true });
+  if (method === 'GET' && pathname === '/') return json({ name: 'HoloSynth', ok: true });   // the web build's index.html answers / first when deployed
+  if (method === 'GET' && pathname === '/cards.json') return withHeaders(json(CARDS), { 'Cache-Control': 'public, max-age=300' });
   if (method === 'GET' && pathname === '/HoloSynth.ipa') return file(env, 'HoloSynth.ipa', 'application/octet-stream');
   if (method === 'GET' && pathname === '/source.json') return file(env, 'source.json', 'application/json');
   if (method === 'GET' && pathname === '/icon.png') return file(env, 'icon.png', 'image/png');
@@ -1504,13 +1510,42 @@ async function route(req, env, ctx) {
   throw new HttpError(404, 'Not found.');
 }
 
+const withHeaders = (res, h) => { for (const [k, v] of Object.entries(h)) res.headers.set(k, v); return res; };
+const SECURITY = { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'X-Frame-Options': 'DENY',
+  'Content-Security-Policy': "default-src 'none'; frame-ancestors 'none'" };
+
+// Browsers (the web client) are told apart by their Origin header. A request from another site is refused outright, and a
+// cookie-signed change must come from this site (no cross-site request forgery). Logging in from the web sets the cookie
+// instead of handing the page a token.
+async function handle(req, env, ctx) {
+  const self = new URL(req.url).origin, origin = req.headers.get('Origin');
+  const { pathname } = new URL(req.url);
+  const changes = req.method !== 'GET' && req.method !== 'HEAD';
+  if (origin && origin !== self) throw new HttpError(403, 'Not allowed.');
+  if (changes && !origin && !req.headers.get('Authorization') && cookieToken(req)) throw new HttpError(403, 'Not allowed.');
+  let res = await route(req, env, ctx);
+  if (!origin || !res.ok) return res;
+  if (pathname === '/login' || pathname === '/signup') {
+    const { token, profile } = await res.json();
+    res = json({ profile });
+    res.headers.append('Set-Cookie', sessionCookie(token, SESSION_MS / 1000));
+  } else if (pathname === '/logout' || pathname === '/me/delete') {
+    res.headers.append('Set-Cookie', sessionCookie('', 0));
+  } else if (pathname === '/me' && cookieToken(req)) {
+    res.headers.append('Set-Cookie', sessionCookie(cookieToken(req), SESSION_MS / 1000));   // the session slides; so does the cookie
+  }
+  return res;
+}
+
 export default {
   async fetch(req, env, ctx) {
-    try { return await route(req, env, ctx); }
+    let res;
+    try { res = await handle(req, env, ctx); }
     catch (e) {
-      if (e instanceof HttpError) return json({ error: e.message }, e.status);
-      console.error(e);
-      return json({ error: 'Server error. Try again.' }, 500);
+      if (!(e instanceof HttpError)) console.error(e);
+      res = e instanceof HttpError ? json({ error: e.message }, e.status) : json({ error: 'Server error. Try again.' }, 500);
     }
+    if (!res.headers.has('Cache-Control')) res.headers.set('Cache-Control', 'no-store');
+    return withHeaders(res, SECURITY);
   },
 };

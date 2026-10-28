@@ -18,7 +18,7 @@ database_id = "__D1_ID__"
 binding = "FILES"
 id = "__KV_ID__"
 
-# Static pages served from this same Worker (Terms, Privacy Policy). Files that exist in ../web are served
-# directly; everything else reaches the Worker.
+# The web version (../web) is served from this same Worker, so the page and the game share one origin (cookie login,
+# no CORS). Files that exist there are served directly; everything else reaches the Worker.
 [assets]
 directory = "../web"
