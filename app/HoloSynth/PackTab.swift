@@ -47,12 +47,14 @@ struct PackTab: View {
             if onClose == nil { PlayerBar() }
             ZStack(alignment: .bottom) {
                 ScreenBackground()
-                if let recruit { recruitScreen(recruit) } else if onClose != nil { yourPacks } else { shop }
+                if let recruit {
+                    if !pulled.isEmpty { opening } else { recruitScreen(recruit) }
+                } else if onClose != nil { yourPacks } else { shop }
                 if let added { toast(added) }
             }
         }
         // Opening takes over the whole screen so the tabs can't be seen or tapped mid-rip.
-        .fullScreenCover(isPresented: Binding(get: { !pulled.isEmpty }, set: { if !$0 { pulled = [] } })) {
+        .fullScreenCover(isPresented: Binding(get: { recruit == nil && !pulled.isEmpty }, set: { if !$0 { pulled = [] } })) {
             ZStack {
                 ScreenBackground()
                 opening
@@ -157,7 +159,7 @@ struct PackTab: View {
     // A Recruit Pack: heading near the top, the pack centred in the space left, Open at the bottom; Open tears it like any pack.
     @ViewBuilder private func recruitScreen(_ r: RecruitIntro) -> some View {
         if r.straightIn && store.error == nil {
-            Color.clear.task { await openRecruit() }   // straight to tearing it: you need the card to play
+            Color.clear.onAppear { start([Self.unknown], type: "recruit") }   // straight to tearing it: you need the card to play
         } else {
             recruitPick(r)
         }
@@ -188,11 +190,15 @@ struct PackTab: View {
         .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 24)
     }
 
-    private func openRecruit() async {
-        guard !buying, pulled.isEmpty else { return }
-        buying = true
-        if let id = await store.openRecruit() { start([id], type: "recruit") }
-        buying = false
+    private func openRecruit() async { start([Self.unknown], type: "recruit") }
+
+    // The Recruit Pack's card is only given out once the pack is torn, so closing the app before that keeps it unopened.
+    private static let unknown = "?"
+    private func fetchRecruit() {
+        Task {
+            if let id = await store.openRecruit() { pulled = pulled.map { $0 == Self.unknown ? id : $0 } }
+            else { pulled = [] }   // back to the pack screen, which shows the error
+        }
     }
 
     private static func info(_ type: String) -> PackInfo { packs.first { $0.type == type } ?? packs[0] }
@@ -517,7 +523,7 @@ struct PackTab: View {
 
     // First swipe turns the top card over; the next swipe (or a short wait) throws it aside.
     private func swipe(_ i: Int, _ id: String, dir: CGFloat) {
-        guard dealt, i == current else { return }
+        guard dealt, i == current, id != Self.unknown else { return }   // a Recruit card still on its way
         throwDir[i] = dir
         guard flipped.contains(i) else {
             flip(i, id)
@@ -561,8 +567,9 @@ struct PackTab: View {
             VStack(spacing: 14) {
                 Text("Added to your collection").font(.barlow(15)).foregroundColor(Theme.muted)
                 Button("Done") {
+                    if recruit != nil { onClose?(); return }   // its own page: just close
                     pulled = []
-                    if let onClose, recruit != nil || owned.isEmpty { DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { onClose() } }   // after the cover slides away
+                    if let onClose, owned.isEmpty { DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { onClose() } }   // after the cover slides away
                 }
                 .buttonStyle(GoldButton(height: 50)).frame(width: 200)
             }
@@ -571,6 +578,7 @@ struct PackTab: View {
 
     private func tearOpen() {
         guard !torn else { return }
+        if pulled.contains(Self.unknown) { fetchRecruit() }
         UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
         Rip.end()
         Sound.tear.play()
