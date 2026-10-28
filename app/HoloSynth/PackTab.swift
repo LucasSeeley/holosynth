@@ -140,12 +140,10 @@ struct PackTab: View {
                 }
                 if let error = store.error { Text(error).font(.barlow(14, semibold: true)).foregroundColor(Theme.pink) }
                 Button("Open") {
+                    // the pack only opens on the server once it's torn, so closing the app before that keeps it
                     let type = list[i].type
-                    buying = true
-                    Task {
-                        if let r = await store.openPack(type) { start(r.cards, type: type, holo: r.holo ?? []) }
-                        buying = false
-                    }
+                    store.error = nil
+                    start(Array(repeating: Self.unknown, count: Self.info(type).cards), type: type)
                 }
                 .buttonStyle(GoldButton(height: 52)).frame(width: 240)
                 .disabled(buying)
@@ -193,8 +191,14 @@ struct PackTab: View {
 
     private func openRecruit() async { start([Self.unknown], type: "recruit") }
 
-    // The Recruit Pack's card is only given out once the pack is torn, so closing the app before that keeps it unopened.
+    // A pack's cards are only given out once it's torn, so closing the app before that keeps it unopened.
     private static let unknown = "?"
+    private func fetchPack(_ type: String) {
+        Task {
+            if let r = await store.openPack(type) { pulled = r.cards; pulledHolo = Set(r.holo ?? []) }
+            else { pulled = [] }   // back to Your packs, which shows the error
+        }
+    }
     private func fetchRecruit() {
         Task {
             if let id = await store.openRecruit() { pulled = pulled.map { $0 == Self.unknown ? id : $0 } }
@@ -617,7 +621,7 @@ struct PackTab: View {
 
     private func tearOpen() {
         guard !torn else { return }
-        if pulled.contains(Self.unknown) { fetchRecruit() }
+        if pulled.contains(Self.unknown) { if recruit != nil { fetchRecruit() } else { fetchPack(openType) } }
         UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
         Rip.end()
         Sound.tear.play()
