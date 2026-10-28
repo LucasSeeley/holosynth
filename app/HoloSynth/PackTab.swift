@@ -8,6 +8,7 @@ import UIKit
 struct PackTab: View {
     @EnvironmentObject var store: GameStore
     var onClose: (() -> Void)? = nil
+    var recruit: RecruitIntro? = nil                // a Recruit Pack (a starter inside) instead of your packs / the shop
     @State private var page = 0                   // which of your packs the carousel shows
     @State private var drag: CGFloat = 0          // finger offset while swiping the carousel
     @State private var added: String?             // pack type just bought, for the "added" toast
@@ -46,7 +47,7 @@ struct PackTab: View {
             if onClose == nil { PlayerBar() }
             ZStack(alignment: .bottom) {
                 ScreenBackground()
-                if onClose != nil { yourPacks } else { shop }
+                if let recruit { recruitScreen(recruit) } else if onClose != nil { yourPacks } else { shop }
                 if let added { toast(added) }
             }
         }
@@ -151,6 +152,40 @@ struct PackTab: View {
         }
         .padding(.top, 8).padding(.bottom, 24)
         .onChange(of: owned.count) { c in if page >= c { page = max(c - 1, 0) } }
+    }
+
+    // A Recruit Pack: heading near the top, the pack centred in the space left, Open at the bottom; Open tears it like any pack.
+    private func recruitScreen(_ r: RecruitIntro) -> some View {
+        VStack(spacing: 14) {
+            VStack(spacing: 8) {
+                Text(r.eyebrow).sectionTitle()
+                Text(r.title).font(.chakra(28)).foregroundColor(Theme.fg).multilineTextAlignment(.center)
+                if let sub = r.subtitle { Text(sub).font(.barlow(15)).foregroundColor(Theme.muted).multilineTextAlignment(.center) }
+            }
+            .padding(.top, 40)
+            Spacer(minLength: 0)
+            // the same pack, name and Open as Your packs
+            packImage("recruit").frame(width: 240).shadow(color: Theme.cyan.opacity(0.55), radius: 26)
+            VStack(spacing: 4) {
+                Text("Recruit Pack").font(.chakra(22)).tracking(1.5).textCase(.uppercase).foregroundColor(Theme.cyan)
+                Text("1 card · one of the three starters").font(.barlow(14)).foregroundColor(Theme.muted)
+            }
+            if let error = store.error { Text(error).font(.barlow(14, semibold: true)).foregroundColor(Theme.pink).multilineTextAlignment(.center) }
+            Button("Open") { Task { await openRecruit() } }
+                .buttonStyle(GoldButton(height: 52)).frame(width: 240)
+                .disabled(buying)
+                .padding(.top, 6)
+            Spacer(minLength: 0).frame(maxHeight: 40)
+        }
+        .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 24)
+        .task { if r.straightIn { await openRecruit() } }
+    }
+
+    private func openRecruit() async {
+        guard !buying, pulled.isEmpty else { return }
+        buying = true
+        if let id = await store.openRecruit() { start([id], type: "recruit") }
+        buying = false
     }
 
     private static func info(_ type: String) -> PackInfo { packs.first { $0.type == type } ?? packs[0] }
@@ -520,7 +555,7 @@ struct PackTab: View {
                 Text("Added to your collection").font(.barlow(15)).foregroundColor(Theme.muted)
                 Button("Done") {
                     pulled = []
-                    if let onClose, owned.isEmpty { DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { onClose() } }   // after the cover slides away
+                    if let onClose, recruit != nil || owned.isEmpty { DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { onClose() } }   // after the cover slides away
                 }
                 .buttonStyle(GoldButton(height: 50)).frame(width: 200)
             }
@@ -683,4 +718,12 @@ struct ShopGate: View {
             PackTab()
         }
     }
+}
+
+// What the Recruit Pack screen says. straightIn: the pack was already shown (campaign win), so go straight to tearing it.
+struct RecruitIntro {
+    var eyebrow = "Recruit Pack"
+    var title = "Open your Recruit Pack"
+    var subtitle: String? = nil
+    var straightIn = false
 }

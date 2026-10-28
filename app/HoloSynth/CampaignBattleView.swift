@@ -115,65 +115,15 @@ struct CampaignBattleView: View {
 }
 
 // A 1-card Recruit Pack holding a starter you don't have yet: at sign-up, and after campaign levels 3 and 6.
-// Shows the pack and Open (or opens right away), then the card that came out.
+// It opens like every pack: tear the top, swipe the card over.
 struct RecruitView: View {
-    @EnvironmentObject var store: GameStore
     var eyebrow = "Recruit Pack"
     var title = "Open your Recruit Pack"
     var subtitle: String? = nil
-    var autoOpen = false           // the pack was already shown (campaign win), so open straight away
+    var autoOpen = false           // the pack was already shown (campaign win): go straight to tearing it
     let onDone: () -> Void
 
-    @State var card: Card?
-    @State var busy = false
-
     var body: some View {
-        ZStack {
-            ScreenBackground()
-            VStack(spacing: 20) {
-                if let card {
-                    VStack(spacing: 8) {
-                        Text("Recruit Pack").font(.chakra(13, semibold: true)).tracking(3).textCase(.uppercase).foregroundColor(Theme.cyan)
-                        Text("\(card.name) joined your team!").font(.chakra(28)).foregroundColor(Theme.fg).multilineTextAlignment(.center)
-                        if let n = store.profile?.team.count, n > 1 {
-                            Text(n == 2 ? "Two-card battles from here on." : "Your team is full: three-card battles.")
-                                .font(.barlow(15)).foregroundColor(Theme.muted)
-                        }
-                    }
-                    CardView(card: card).frame(width: 230)
-                        .shadow(color: Theme.classColor(card.cls).opacity(0.45), radius: 20)
-                        .transition(.scale(scale: 0.6).combined(with: .opacity))
-                    Button("Continue") { onDone() }.buttonStyle(GoldButton())
-                } else {
-                    // heading near the top, the pack centred in the space left, Open at the bottom
-                    VStack(spacing: 8) {
-                        Text(eyebrow).sectionTitle()
-                        Text(title).font(.chakra(28)).foregroundColor(Theme.fg).multilineTextAlignment(.center)
-                        if let subtitle { Text(subtitle).font(.barlow(15)).foregroundColor(Theme.muted).multilineTextAlignment(.center) }
-                    }
-                    .padding(.top, 40)
-                    Spacer(minLength: 24)
-                    if let img = Art.pack("recruit") {
-                        Image(uiImage: img).resizable().scaledToFit().frame(width: 230)
-                            .shadow(color: Theme.cyan.opacity(0.45), radius: 24)
-                    }
-                    Spacer(minLength: 24)
-                    if let e = store.error { Text(e).font(.barlow(14)).foregroundColor(Theme.pink).multilineTextAlignment(.center) }
-                    Button(busy ? "…" : "Open") { Task { await open() } }.buttonStyle(GoldButton()).disabled(busy)
-                }
-            }
-            .padding(16)
-        }
-        .task { if autoOpen { await open() } }
-    }
-
-    private func open() async {
-        guard !busy else { return }
-        busy = true
-        if let id = await store.openRecruit(), let c = CardBook.card(id) {
-            Sound.rare.play()
-            withAnimation(.spring(response: 0.45, dampingFraction: 0.75)) { card = c }
-        }
-        busy = false
+        PackTab(onClose: onDone, recruit: RecruitIntro(eyebrow: eyebrow, title: title, subtitle: subtitle, straightIn: autoOpen))
     }
 }
