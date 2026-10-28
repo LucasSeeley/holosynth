@@ -525,12 +525,13 @@ struct BattleBoard: View {
     }
 
     private func send(from: Int, move mv: String, to: Int) {
-        // an attack on the enemy winds up right away (the lunge); the hit, dodge or block lands once the server answers
+        // an attack on the enemy starts on the tap: the card draws back (charging) while the server rolls the hit,
+        // then strikes as the answer lands, so the trip to the server is hidden in the wind-up
         if (mv == "basic" || mv == "special") && !healing && !playing {
             preHit = (from, to, mv)
             selected = nil; move = nil
             withAnimation { acting = you }
-            withAnimation(.easeIn(duration: 0.16)) { fx[key(you, from), default: HitFX()].lunge = 1 }
+            withAnimation(.easeOut(duration: 0.25)) { fx[key(you, from), default: HitFX()].lunge = -0.35 }
         }
         sending = true
         error = nil
@@ -579,16 +580,14 @@ struct BattleBoard: View {
     }
 
     // One attack: the attacker lunges, the target shakes and flashes, the number pops and the HP bar drains.
-    // `lunged`: your own attack, already wound up while the server answered. `guards`: blocks shown on the impact.
+    // `lunged`: your own attack, already drawn back while the server answered. `guards`: blocks shown on the impact.
     private func hit(_ start: BattleState, p: Int, from: Int, to: Int, dmg: Int, ko: Bool, special: Bool, dodge: Bool = false,
                      guards: [String] = [], boosts: [String] = [], lunged: Bool = false) async -> BattleState {
         var cur = start
         let a = key(p, from), t = key(1 - p, to)
-        if !lunged {
-            if acting != p { withAnimation { acting = p }; await pause(0.35) }
-            withAnimation(.easeIn(duration: 0.16)) { fx[a, default: HitFX()].lunge = 1 }
-            await pause(0.16)
-        }
+        if !lunged, acting != p { withAnimation { acting = p }; await pause(0.35) }
+        withAnimation(.easeIn(duration: 0.14)) { fx[a, default: HitFX()].lunge = 1 }   // the strike
+        await pause(0.14)
         if dodge {   // the target slips aside: no damage
             withAnimation(.spring(response: 0.35, dampingFraction: 0.55)) { fx[a]?.lunge = 0 }
             Sound.dodge.play()

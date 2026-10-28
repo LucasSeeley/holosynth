@@ -37,7 +37,7 @@ struct PlayTab: View {
             case .campaign:
                 CampaignBattleView { next in
                     switch next {
-                    case .none, .pack: screen = .map   // back to the map; a won pack waits in the Packs row
+                    case .none, .pack: screen = nil   // back to the Play tab; a won pack waits in the Packs row
                     case .recruit: screen = .recruit
                     }
                 }
