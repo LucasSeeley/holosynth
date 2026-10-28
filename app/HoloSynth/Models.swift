@@ -450,6 +450,7 @@ struct BattleState: Decodable, Equatable {
     var log: [LogEntry]
     var moves: Int?             // moves made so far (older matches don't have it)
     var pw: [[String]]?         // power cards each side still has to play
+    var seed: UInt32?           // dodge rolls: see BattleBoard.dodgeRoll
 }
 
 struct MatchView: Decodable, Equatable {
