@@ -181,10 +181,16 @@ struct CampaignMapView: View {
                     }
                     .frame(width: w, height: topPad + 29 * gap + bottomPad)
                 }
-                .startAtBottom()
-                .onAppear { scroll(proxy, done) }
+                .opensAt(anchor(done, viewport: geo.size.height)) { scroll(proxy, done) }
             }
         }
+    }
+
+    // Where the map first shows, as a scroll anchor: your next level about a third of the way down the screen.
+    // Content point a·H lines up with screen point a·h, so a = (y − 0.35·h) / (H − h).
+    private func anchor(_ done: Int, viewport h: CGFloat) -> UnitPoint {
+        let n = min(30, max(1, done + 1)), y = topPad + CGFloat(30 - n) * gap, H = topPad + 29 * gap + bottomPad
+        return UnitPoint(x: 0.5, y: H > h ? min(1, max(0, (y - 0.35 * h) / (H - h))) : 0)
     }
 
     private func scroll(_ proxy: ScrollViewProxy, _ done: Int) {
@@ -344,8 +350,8 @@ struct CampaignMapView: View {
 }
 
 private extension View {
-    // A chapter starts at level 1 (the bottom), then scrolls to your next level: no flash of the top on the way.
-    @ViewBuilder func startAtBottom() -> some View {
-        if #available(iOS 17, *) { defaultScrollAnchor(.bottom) } else { self }
+    // iOS 17+: the first frame is already at your level (no scrolling, so no flash). iOS 16: scroll there on appear.
+    @ViewBuilder func opensAt(_ anchor: UnitPoint, fallback: @escaping () -> Void) -> some View {
+        if #available(iOS 17, *) { defaultScrollAnchor(anchor) } else { onAppear(perform: fallback) }
     }
 }
