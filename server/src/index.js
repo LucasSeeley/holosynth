@@ -111,7 +111,9 @@ async function needUnlock(db, user, key) {
 async function questsFor(db, user, prog, collection, extra, shopped) {
   const day = dayStart(now());
   let row = await db.prepare('SELECT * FROM daily_quests WHERE user_id = ?').bind(user.id).first();
-  if (!row || row.day !== day) {
+  // re-pick if today's were picked while quests were still locked (they count only from when they open)
+  const pickedLocked = row && JSON.parse(row.base).cleared < UNLOCKS.quests.cleared;
+  if (!row || row.day !== day || pickedLocked) {
     const lvl = levelFor(user.xp), open = k => isUnlocked(k, prog.cleared, lvl);
     const can = ['wins', 'win1', ...(open('spin') ? ['spin'] : []), ...(open('shop') ? ['pack', 'shop'] : [])];
     if (prog.cleared + 2 <= OPEN_LEVELS) can.push('levels');
@@ -122,8 +124,9 @@ async function questsFor(db, user, prog, collection, extra, shopped) {
     if (open('hunt')) can.push('hunt');
     const base = { wins: prog.wins, packs: prog.packs, cleared: prog.cleared };
     await db.prepare(`INSERT INTO daily_quests (user_id, day, quests, base, claimed, bonus) VALUES (?1, ?2, ?3, ?4, '[]', 0)
-      ON CONFLICT (user_id) DO UPDATE SET day = ?2, quests = ?3, base = ?4, claimed = '[]', bonus = 0 WHERE daily_quests.day < ?2`)
-      .bind(user.id, day, JSON.stringify(pickQuests(user.id, day, can)), JSON.stringify(base)).run();
+      ON CONFLICT (user_id) DO UPDATE SET day = ?2, quests = ?3, base = ?4, claimed = '[]', bonus = 0
+      WHERE daily_quests.day < ?2 OR json_extract(daily_quests.base, '$.cleared') < ?5`)
+      .bind(user.id, day, JSON.stringify(pickQuests(user.id, day, can)), JSON.stringify(base), UNLOCKS.quests.cleared).run();
     row = await db.prepare('SELECT * FROM daily_quests WHERE user_id = ?').bind(user.id).first();
   }
   const { results } = await db.prepare('SELECT kind, n FROM quest_events WHERE user_id = ? AND day = ?').bind(user.id, day).all();
