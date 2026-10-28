@@ -396,7 +396,7 @@ struct LeaderboardView: View {
         }
         .task(id: everyone) {
             do { rows = try await API.call("leaderboard/\(everyone ? "everyone" : "friends")", token: store.token); error = nil }
-            catch { self.error = error.localizedDescription }
+            catch { if !Task.isCancelled { self.error = error.localizedDescription } }   // switching tabs cancels the old load: not an error
         }
     }
 
