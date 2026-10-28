@@ -118,19 +118,19 @@ test('chapters 2-5 are a grind: what got you in wins the first level but not the
   const fus = (team, f) => f ? Object.fromEntries(team.map(id => [id, { ...f, x: !!f.x && !!SECOND[id] }])) : {};
   const won = (team, f, level) => { const s = newCampaignBattle(team, level, fus(team, f));
     while (s.winner === null) { const m = aiMove(s, s.turn); applyMove(s, s.turn, m.from, m.move, m.to); } return s.winner === 0; };
-  const f1 = { h: 1, b: 1, s: 1 }, f2 = { h: 2, b: 2, s: 2, p: true }, f3 = { h: 3, b: 3, s: 3, x: true, p: true }, holo = { ...f3, o: true };
+  const f1 = { h: 1, b: 1, s: 1 }, f2 = { h: 2, b: 2, s: 2, p: true };
   const ladder = [   // [entry team, its fusion], [exit team, its fusion]
-    [[['volt', 'fang', 'narwhal'], null], [['overdrive', 'chronos', 'specter'], f1]],
-    [[['solmane', 'falcon', 'tankette'], f1], [['leviathan', 'glacia', 'thunderhide'], f2]],
-    [[['starwyrm', 'phoenix', 'aegis'], f2], [['celestia', 'zenith', 'stormclaw'], f3]],
-    [[['sandscorch', 'glacia', 'tyrannos'], f3], [['omnis', 'dawnbringer', 'ifrit'], holo]],
+    [[['volt', 'fang', 'chimera'], null], [['volt', 'fang', 'colossus'], f1]],
+    [[['volt', 'fang', 'bison'], f1], [['prism', 'bison', 'hexblade'], f1]],
+    [[['paladin', 'bison', 'sigil'], f1], [['warlord', 'ravager', 'raiju'], f2]],
+    [[['moth', 'aegis', 'shogun'], f2], [['lifeline', 'spellforge', 'raiju'], f2]],
   ];
   ladder.forEach(([[inT, inF], [outT, outF]], k) => {
     const first = (k + 1) * 30;
     assert.ok(won(inT, inF, first) && !won(inT, inF, first + 29), `chapter ${k + 2}: entry team`);
     for (let i = 0; i < 30; i++) assert.ok(won(outT, outF, first + i), `chapter ${k + 2} level ${i + 1}: exit team`);
   });
-  assert.ok(CAMPAIGN.slice(30).every(l => (l.lv ?? 0) <= 4) && CAMPAIGN[149].lv === 4, 'enemies fuse up to holo by the end');
+  assert.ok(CAMPAIGN.every(l => (l.lv ?? 0) <= 2), 'room to grow: no fusion 3 or holo enemies before later chapters');
 });
 
 test('each level needs double the XP of the last', () => {
