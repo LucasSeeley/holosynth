@@ -174,8 +174,9 @@ function Home() {
       <${Icon} name=${t.icon} size="22" /><span class="t">${t.name}</span>
       ${badges[t.key] > 0 && html`<span class="badge" aria-label="${badges[t.key]} waiting">${badges[t.key]}</span>`}
       ${t.key === 'cards' && s.newCards.size > 0 && html`<span class="navdot" aria-label="new cards"></span>`}</a>`;
+  const under = s.screens.length > 0;   // a full screen is up: everything behind it can't be focused or clicked
   return html`<div class="shell city">
-    <nav class="side" aria-label="Main">
+    <nav class="side" aria-label="Main" inert=${under}>
       <img class="logo" src="/img/logo.png" alt="HoloSynth" /><img class="mark" src="/img/icon.png" alt="HoloSynth" />
       ${TABS.map(t => navItem(t, 'nav'))}
       <a href="#/profile" class="me panel" style="text-decoration: none; color: var(--fg);" aria-label="Your profile">
@@ -187,14 +188,14 @@ function Home() {
           <span class="row head" style="gap: 5px; font-size: 15px; color: var(--gold-hi);"><${Coin} />${fmt(p.gold)}</span></div>
       </a>
     </nav>
-    <header class="topbar">
+    <header class="topbar" inert=${under}>
       <div class="col grow" style="gap: 5px;"><span class="head" style="font-size: 17px;">${p.username}</span>
         <div class="row" style="gap: 8px;"><span class="label" style="font-size: 12px; letter-spacing: 1.5px;">LV ${p.level}</span><${Bar} value=${xpInto(p)} max=${xpNeed(p)} style="width: 90px; height: 5px;" /></div></div>
       <span class="chip"><${Coin} />${fmt(p.gold)}</span>
     </header>
-    <main class="main" id="main"><${View} /></main>
-    <nav class="tabbar" aria-label="Main">${TABS.map(t => navItem(t, 'tab'))}</nav>
-    ${s.screens.map(sc => html`<${sc.view} key=${sc.id} ...${sc.props} close=${() => closeScreen(sc.id)} />`)}
+    <main class="main" id="main" inert=${under}><${View} /></main>
+    <nav class="tabbar" aria-label="Main" inert=${under}>${TABS.map(t => navItem(t, 'tab'))}</nav>
+    ${s.screens.map((sc, i) => html`<div class="layer" key=${sc.id} inert=${i < s.screens.length - 1}><${sc.view} ...${sc.props} close=${() => closeScreen(sc.id)} /></div>`)}
     ${s.error && !s.screens.length && html`<${Toast} />`}
   </div>`;
 }

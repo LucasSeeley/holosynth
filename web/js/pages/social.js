@@ -2,7 +2,8 @@
 // with the open trade under it in the middle, the picked friend's profile on the right. Phone: the app's single column.
 import { html, useState, useEffect } from '../vendor/preact-htm.js';
 import { CARDS, sortCards, SORTS, fusionTotal, tradeCard, tradeFusedId, tradeToken } from '../cards.js';
-import { useStore, api, set, socialAction, loadSocial, openScreen, local } from '../store.js';
+import { useStore, api, set, socialAction, loadSocial, openScreen, replaceScreen, local } from '../store.js';
+import { useFocusTop } from './cards.js';
 import { Icon, Card, Tile, Avatar, Coin, Screen, Modal, fmt } from '../ui.js';
 import { Sound } from '../sound.js';
 import { FriendBattle } from '../screens/friend.js';
@@ -58,8 +59,8 @@ export function SocialTab() {
             <button class="who" onClick=${() => viewPerson(f, false)} aria-label="${f.name}, level ${f.level}"><${Av} id=${f.avatar} online=${f.online} />
               <span class="col" style="gap: 1px; min-width: 0;"><span class="head ellipsis" style="font-size: 15px;">${f.name}</span><span class="tiny muted">Level ${f.level} · ${seen(f)}</span></span></button>
             <span class="row so-only-narrow" style="gap: 8px;">
-              ${!tradesLocked && html`<button class="so-sq" onClick=${() => newTrade(f)} aria-label="Trade with ${f.name}"><${Icon} name="swap" size="16" /></button>`}
-              <button class="so-sq" onClick=${() => battle(f)} aria-label="Battle ${f.name}"><${Icon} name="swords" size="20" /></button></span>
+              ${!tradesLocked && f.trade !== false && html`<button class="so-sq" onClick=${() => newTrade(f)} aria-label="Trade with ${f.name}"><${Icon} name="swap" size="16" /></button>`}
+              ${!p.locked?.friends && f.battle !== false && html`<button class="so-sq" onClick=${() => battle(f)} aria-label="Battle ${f.name}"><${Icon} name="swords" size="20" /></button>`}</span>
           </li>`)}</ul>`
         : html`<div class="so-empty so-o3"><div class="row" style="gap: 0;">${['volt', 'fang', 'goliath'].map((id, i) => html`<span style="margin-left: ${i ? -14 : 0}px;"><${Avatar} id=${id} size="56" /></span>`)}</div>
             <span class="head" style="font-size: 20px;">No friends yet</span><span class="small muted" style="max-width: 260px;">Add someone by their username, then challenge them straight from here.</span></div>`}
@@ -95,7 +96,7 @@ export function SocialTab() {
     </section>
     <aside class="so-right" aria-label="Profile">
       ${(isRequest ? selFriend : friend?.name) && html`<${PlayerPanel} key=${isRequest ? selFriend : friend.name} name=${isRequest ? selFriend : friend.name} request=${isRequest}
-        friend=${isRequest ? null : friend} tradesLocked=${tradesLocked} busy=${busy}
+        friend=${isRequest ? null : friend} tradesLocked=${tradesLocked} battleLocked=${p.locked?.friends} busy=${busy}
         onAnswer=${ok => act(ok ? 'friends' : 'friends/remove', { name: selFriend })}
         onBattle=${() => battle(friend)} onTrade=${() => newTrade(friend)}
         onRemove=${() => act('friends/remove', { name: friend.name }, () => setSelFriend(null))} />`}
@@ -104,7 +105,7 @@ export function SocialTab() {
 }
 
 // Someone's public card: picture, level, stats and team. A request gets Ignore / Accept; a friend gets Battle / New trade / Remove.
-function PlayerPanel({ name, request, friend, tradesLocked, busy, onAnswer, onBattle, onTrade, onRemove }) {
+function PlayerPanel({ name, request, friend, tradesLocked, battleLocked, busy, onAnswer, onBattle, onTrade, onRemove }) {
   const [pl, setPl] = useState(null), [err, setErr] = useState(null), [confirm, setConfirm] = useState(false);
   useEffect(() => { api('players/' + encodeURIComponent(name)).then(setPl, e => setErr(e.message)); }, [name]);
   if (err) return html`<section class="panel pad err">${err}</section>`;
@@ -120,8 +121,9 @@ function PlayerPanel({ name, request, friend, tradesLocked, busy, onAnswer, onBa
     <div class="so-team">${pl.team.map(id => html`<${Tile} id=${id} />`)}</div>
     ${request ? html`<div class="row" style="gap: 10px;"><button class="btn quiet" style="flex: 1; height: 44px;" disabled=${busy} onClick=${() => onAnswer(false)}>Ignore</button>
         <button class="btn gold" style="flex: 1; height: 44px;" disabled=${busy} onClick=${() => onAnswer(true)}>Accept</button></div>`
-      : friend && html`<button class="btn gold" onClick=${onBattle}>Battle</button>
-        ${!tradesLocked && html`<button class="btn out" style="height: 46px;" onClick=${onTrade}>New trade</button>`}
+      : friend && html`${friend.battle !== false && !battleLocked && html`<button class="btn gold" onClick=${onBattle}>Battle</button>`}
+        ${!tradesLocked && friend.trade !== false && html`<button class="btn out" style="height: 46px;" onClick=${onTrade}>New trade</button>`}
+        ${(friend.battle === false || friend.trade === false) && html`<span class="tiny muted" style="text-align: center;">${friend.battle === false && friend.trade === false ? "Hasn't unlocked Friendly Battles or trading yet" : friend.battle === false ? "Hasn't unlocked Friendly Battles yet" : "Hasn't unlocked trading yet"}</span>`}
         <button class="link" style="align-self: center; color: var(--muted); text-decoration: underline;" onClick=${() => setConfirm(true)}>Remove friend</button>`}
     ${confirm && html`<${Modal} label="Remove friend" onClose=${() => setConfirm(false)}><div class="col" style="text-align: center;">
       <span class="h2">Remove ${pl.name}?</span><span class="muted">You can add each other again any time.</span>
@@ -132,11 +134,12 @@ function PlayerPanel({ name, request, friend, tradesLocked, busy, onAnswer, onBa
 
 // Phone: a friend's or requester's profile on its own screen.
 function PlayerScreen({ close, name, request, onAnswer }) {
+  useFocusTop();
   const s = useStore(), friend = s.social?.friends.find(f => f.name === name);
   return html`<${Screen} close=${close} title=${name}><div class="so-wrap">
-    <${PlayerPanel} name=${name} request=${request} friend=${friend} tradesLocked=${s.profile?.locked?.trades}
-      onAnswer=${ok => { close(); onAnswer(ok); }} onBattle=${() => { close(); openScreen(FriendBattle, { friend: name }); }}
-      onTrade=${() => { close(); openScreen(TradeBuilder, { friend: name, avatar: friend.avatar }); }}
+    <${PlayerPanel} name=${name} request=${request} friend=${friend} tradesLocked=${s.profile?.locked?.trades} battleLocked=${s.profile?.locked?.friends}
+      onAnswer=${ok => { close(); onAnswer(ok); }} onBattle=${() => replaceScreen(FriendBattle, { friend: name })}
+      onTrade=${() => replaceScreen(TradeBuilder, { friend: name, avatar: friend.avatar })}
       onRemove=${async () => { close(); try { await socialAction('friends/remove', { name }); } catch (e) { set({ error: e.message }); } }} />
   </div><//>`;
 }
@@ -148,7 +151,8 @@ const fusionIn = (tok, lists) => { const id = tradeFusedId(tok); const c = id &&
 function TradeOffer({ trade, inline, onClose }) {
   const [busy, setBusy] = useState(false), [err, setErr] = useState(null);
   const fusions = Object.values(trade.fusions || {});
-  const done = d => { set({ social: d.social, profile: d.profile }); onClose?.(); openScreen(TradeDone, { d }); };
+  const go = (view, props) => onClose ? replaceScreen(view, props) : openScreen(view, props);   // on its own screen: swap it, history stays in step
+  const done = d => { set({ social: d.social, profile: d.profile }); go(TradeDone, { d }); };
   const answer = async action => {
     setBusy(true); setErr(null);
     try {
@@ -158,12 +162,12 @@ function TradeOffer({ trade, inline, onClose }) {
     } catch (e) { setErr(e.message); await loadSocial(); }
     setBusy(false);
   };
-  const counter = () => { onClose?.(); openScreen(TradeBuilder, { friend: trade.name, avatar: trade.avatar, counter: trade }); };
+  const counter = () => go(TradeBuilder, { friend: trade.name, avatar: trade.avatar, counter: trade });
   const side = (title, sub, ids, gold) => html`<div class="so-side">
     <div class="col grow" style="gap: 4px; min-width: 92px;"><span class="label">${title}</span><span class="tiny muted">${sub}</span>
       <span class="so-gold"><${Coin} size="18" />${fmt(gold)}</span><span class="tiny muted">gold</span></div>
     <div class="cards">${[0, 1, 2].map(i => ids[i] && tradeCard(ids[i]) ? html`<${Card} id=${tradeCard(ids[i]).id} fusion=${fusionIn(ids[i], [fusions])} />`
-      : html`<div class="slot"></div>`)}</div></div>`;
+      : html`<div class="slot"></div>`)}${!ids.length && html`<span class="none">${gold > 0 ? 'Just gold' : 'Nothing'}</span>`}</div></div>`;
   const ready = trade.mine && trade.status === 'accepted';
   return html`<div class=${inline ? 'so-trade' : 'col'} style=${inline ? '' : 'gap: 14px;'}>
     ${inline && html`<div class="row" style="gap: 12px;"><${Avatar} id=${trade.avatar} size="44" />
@@ -172,9 +176,9 @@ function TradeOffer({ trade, inline, onClose }) {
       <span class="small muted" style="margin-left: auto;">Up to 3 cards + gold each way</span></div>`}
     ${trade.mine && html`<span class="so-tag" style="color: ${ready ? 'var(--online)' : 'var(--muted)'}; border-color: ${ready ? 'var(--online)' : 'rgba(142,138,168,.6)'};">${ready ? 'Accepted' : `Pending · waiting for ${trade.name}`}</span>`}
     <div class="col" style="gap: 0;">
-      ${side('You give', trade.mine ? 'Held while the offer is open' : 'Spare copies only', trade.give, trade.giveGold)}
-      <div class="so-swap" aria-hidden="true"><${Icon} name="swap" size="18" /></div>
       ${side('You get', `From ${trade.name}`, trade.get, trade.getGold)}
+      <div class="so-swap" aria-hidden="true"><${Icon} name="swap" size="18" /></div>
+      ${side('You give', trade.mine ? 'Held while the offer is open' : 'Spare copies only', trade.give, trade.giveGold)}
     </div>
     ${err && html`<p class="err" role="alert" style="margin: 0;">${err}</p>`}
     <div class="row" style="gap: 12px; margin-top: auto; flex-wrap: wrap;">
@@ -187,6 +191,7 @@ function TradeOffer({ trade, inline, onClose }) {
   </div>`;
 }
 function TradeScreen({ close, id }) {
+  useFocusTop();
   const s = useStore(), t = (s.social?.trades || []).find(x => x.id === id);
   useEffect(() => { if (!t) close(); }, [t]);
   if (!t) return null;
@@ -194,6 +199,7 @@ function TradeScreen({ close, id }) {
     right=${html`<${Avatar} id=${t.avatar} size="40" />`}><div class="so-wrap"><${TradeOffer} trade=${t} onClose=${close} /></div><//>`;
 }
 function TradeDone({ close, d }) {
+  useFocusTop();
   useEffect(() => { Sound.play('rare'); }, []);
   return html`<${Screen} close=${close}><div class="so-done">
     <h2 class="h1 gold-glow" style="text-transform: uppercase; font-size: 34px;">Trade complete!</h2>
@@ -210,6 +216,7 @@ function TradeBuilder({ close, friend, avatar, counter }) {
   const [giveGold, setGiveGold] = useState(counter ? counter.giveGold : 0), [getGold, setGetGold] = useState(counter ? counter.getGold : 0);
   const [cards, setCards] = useState(null), [picking, setPicking] = useState(null), [err, setErr] = useState(null), [sending, setSending] = useState(false);
   useEffect(() => { api('trades/cards/' + encodeURIComponent(friend)).then(setCards, e => setErr(e.message)); }, []);
+  useFocusTop(picking);
   const lists = [cards?.mineFused || [], cards?.theirsFused || [], Object.values(counter?.fusions || {})];
   const send = async () => {
     setSending(true); setErr(null);

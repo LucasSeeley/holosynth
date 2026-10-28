@@ -194,6 +194,8 @@ struct Social: Decodable, Equatable {
         let avatar: String
         let online: Bool
         let seen: Double?       // ms since 1970, nil if never
+        let battle: Bool?       // they've unlocked Friendly Battles (nil from older servers: assume yes)
+        let trade: Bool?        // they've unlocked trading
         var id: String { name }
     }
     struct Challenge: Decodable, Equatable, Identifiable {

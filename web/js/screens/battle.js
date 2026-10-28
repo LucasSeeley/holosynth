@@ -142,7 +142,8 @@ export function BattleBoard({ state, you, eyebrow, title, foeName, leaveLabel, l
   useEffect(() => {
     const k = e => {
       if (e.target.closest?.('input, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
-      if (e.key === 'Escape') { if (v.shown.winner == null) { v.confirm = !v.confirm; bump(); } return; }
+      if (v.confirm || document.querySelector('.modal')) return;   // a dialog is up: it handles its own keys (Escape closes it)
+      if (e.key === 'Escape') { if (v.shown.winner == null) { v.confirm = true; bump(); } return; }
       const n = Number(e.key);
       if (n >= 1 && n <= 3 && v.shown.teams[you][n - 1]) { e.preventDefault(); tapRef.current(you, n - 1); return; }
       const mv = { q: 'basic', w: 'special', e: 'special2' }[e.key.toLowerCase()];
@@ -423,6 +424,13 @@ export function BattleBoard({ state, you, eyebrow, title, foeName, leaveLabel, l
       </div></${Modal}>`}
   </div>`;
 }
+
+// Full screens take focus when they open (what's behind them is inert), so keys and screen readers start there.
+// (Also when a loading view is swapped for the real one and focus fell back to the page.)
+// Waits a frame: the shell makes the page behind inert in the same update, which drops focus to <body>.
+export const focusOnce = el => {
+  if (el) requestAnimationFrame(() => { if (el.isConnected && !el.contains(document.activeElement)) el.focus({ preventScroll: true }); });
+};
 
 // GETs that answer `null` when there's nothing open (campaign/current, matches/current); store.api calls null an error.
 // shortcut: matches the store's error text; drop once api() lets a null reply through.

@@ -10,6 +10,14 @@ import { Sound } from '../sound.js';
 
 const wide = () => matchMedia('(min-width: 1280px)').matches;   // detail sits in the side column instead of its own screen
 
+// A full screen takes the keyboard focus when it opens (everything behind it is inert).
+export function useFocusTop(dep) {
+  useEffect(() => requestAnimationFrame(() => {
+    const top = [...document.querySelectorAll('.screen')].pop();
+    if (top && !top.contains(document.activeElement)) top.querySelector('button, input, [href], [tabindex]')?.focus();
+  }), [dep]);
+}
+
 export function CollectionTab() {
   const s = useStore(), p = s.profile;
   const [sort, setSort] = useState(local.get('collectionSort', 0));
@@ -66,12 +74,12 @@ export function CollectionTab() {
   const powerCount = Object.values(pOwned).reduce((a, b) => a + b, 0);
 
   const teamPanel = html`<section class="panel pad col cp-team" aria-label="Your team">
-    <div class="row" style="justify-content: space-between;"><span class="label">Your team</span>
-      <span class="tiny muted ellipsis">${pending ? `Choose who ${cardOf(pending)?.name} replaces` : 'Drag a card here, or press + Team'}</span></div>
+    <div class="cp-hd"><span class="label">Your team</span>
+      <span class="tiny muted">${pending ? `Choose who ${cardOf(pending)?.name} replaces` : 'Drag a card here, or press + Team'}</span></div>
     <div class="cp-slots">${[0, 1, 2].map(i => html`<${TeamSlot} i=${i} id=${team[i]} size=${teamSize} picking=${pending && i < teamSize} p=${p}
       onPick=${() => pending && put(pending, i)} onDrop=${id => put(id, i)} />`)}</div>
-    <div class="row" style="justify-content: space-between;"><span class="label" style="font-size: 11px; color: ${POWER_VIOLET};">Power cards</span>
-      <span class="tiny muted ellipsis">${pendingPower ? `Choose where ${powerOf(pendingPower)?.name} goes` : '2 per battle · used up when played'}</span></div>
+    <div class="cp-hd"><span class="label" style="font-size: 11px; color: ${POWER_VIOLET};">Power cards</span>
+      <span class="tiny muted">${pendingPower ? `Choose where ${powerOf(pendingPower)?.name} goes` : '2 per battle · used up when played'}</span></div>
     <div class="cp-pslots">${[0, 1].map(i => html`<${PowerSlot} id=${pTeam[i]} picking=${!!pendingPower}
       onPick=${() => pendingPower && putPower(pendingPower, i)} onDrop=${id => putPower(id, i)} />`)}</div>
     ${s.error && html`<p class="err" role="alert" style="margin: 0;">${s.error}</p>`}
@@ -158,10 +166,12 @@ function Cell({ e, p, isNew, pending, selected, onTag, onOpen }) {
 // ---- power cards ----
 export function PowerCard({ pw, style = '' }) {
   const tint = rarityColor(pw.rarity);
+  const [noArt, setNoArt] = useState(false);   // the symbol stands in until the art loads (or if it's missing)
   return html`<div class="card pcard" style=${style}><div class="face" style="--edge: ${tint}; --face: linear-gradient(135deg, #241240, #0B0918);">
     <div class="top" style="font-size: 4.5cqw;"><span style="font: 600 4.5cqw var(--head); letter-spacing: 1cqw; text-transform: uppercase; color: ${POWER_VIOLET};">Power</span>
       <span style="margin-left: auto; color: ${tint}; font-weight: 400;">${pw.rarity}</span></div>
-    <div class="art center" style="background: radial-gradient(circle, ${tint}59, #120A24 70%);"><${Icon} name=${pw.icon} size="30%" style="color: var(--cyan); filter: drop-shadow(0 0 4cqw var(--cyan)); width: 30cqw; height: 30cqw;" /></div>
+    ${noArt ? html`<div class="art center" style="background: radial-gradient(circle, ${tint}59, #120A24 70%);"><${Icon} name=${pw.icon} style="color: var(--cyan); filter: drop-shadow(0 0 4cqw var(--cyan)); width: 30cqw; height: 30cqw;" /></div>`
+      : html`<img class="art" src=${art('power_' + pw.id)} alt="" loading="lazy" draggable="false" onError=${() => setNoArt(true)} />`}
     <div style="font-size: 6cqw; font-weight: 700;" class="ellipsis">${pw.name}</div>
     <div style="font-size: 4.6cqw; color: var(--muted); line-height: 1.25;">${pw.effect}</div>
     <div class="quip" style="color: rgba(235,233,247,.5);">Used up when played</div>
@@ -171,10 +181,11 @@ function PowerCell({ pw, count, pending, onTag, onOpen }) {
   return html`<div class="cp-cell" draggable="true" onDragStart=${ev => ev.dataTransfer.setData('text/plain', 'pw:' + pw.id)}>
     <button class="cardbtn ${pending ? 'card sel' : ''}" onClick=${onOpen} aria-label="${pw.name}, open"><${PowerCard} pw=${pw} /></button>
     ${count > 1 && html`<span class="cp-pcount">×${count}</span>`}
-    <button class="cp-tag violet ${pending ? 'lit' : ''}" onClick=${onTag} aria-label="Take ${pw.name} into battle">+ Power</button>
+    <button class="cp-tag violet low ${pending ? 'lit' : ''}" onClick=${onTag} aria-label="Take ${pw.name} into battle">+ Power</button>
   </div>`;
 }
 function PowerZoom({ close, id }) {
+  useFocusTop();
   return html`<${Screen} close=${close} title=${powerOf(id).name}><div class="narrow" style="padding: 20px 40px; max-width: 380px;"><${PowerCard} pw=${powerOf(id)} /></div><//>`;
 }
 
@@ -217,6 +228,7 @@ function FuseScreen({ close, id, holo, start }) {
   const [view, setView] = useState(start);
   const [busy, setBusy] = useState(false), [err, setErr] = useState(null), [result, setResult] = useState(null);
   useEffect(() => { if (result) Sound.play('legendary'); }, [result]);
+  useFocusTop(result ? 'r' : view);
   if (!p) return null;
   const c = cardOf(id), { fusion, copies, holoCopies, spare } = fuseInfo(p, id, holo), gold = p.gold;
   const bumped = st => { const f = { h: 0, b: 0, s: 0, ...(fusion || {}) }; if (st === 'p') f.p = true; else if (st === 'x') f.x = true; else f[st] = Math.min(MAX, f[st] + 1); return f; };

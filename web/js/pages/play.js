@@ -23,6 +23,7 @@ export function PlayTab() {
     <div class="mainc">
       ${p.mainQuest && html`<${MainQuest} q=${p.mainQuest} />`}
       <${CampaignHero} p=${p} />
+      ${p.unopened?.length > 0 && html`<div class="narrow-only"><${PacksRow} u=${p.unopened} /></div>`}
       <span class="label">Daily</span>
       <${Daily} p=${p} />
       <span class="label">Modes</span>
@@ -35,7 +36,7 @@ export function PlayTab() {
           ${[0, 1, 2].map(i => html`<div class="grow" style="flex: 1;"><${Tile} id=${p.team[i]} fused=${fusionTotal(battleFusion(p, p.team[i])) > 0} sub=${i === 1 ? 'Level 3' : 'Level 6'} /></div>`)}
         </div>
       </section>
-      ${p.unopened?.length > 0 && html`<${PacksRow} u=${p.unopened} />`}
+      ${p.unopened?.length > 0 && html`<div class="wide-only"><${PacksRow} u=${p.unopened} /></div>`}
       <${Online} />
       <div class="stats3">
         ${[[fmt(p.wins), 'Wins'], [`${Object.keys(p.collection).length}/${CARDS.length}`, 'Cards'], [fmt(p.packs), 'Packs opened']].map(([v, k]) =>
@@ -156,7 +157,7 @@ function Online() {
       ${on.map(f => html`<li class="row" style="gap: 10px;">
         <span style="position: relative; display: flex;"><${Avatar} id=${f.avatar} size="38" /><span style="position: absolute; right: -1px; bottom: -1px; width: 11px; height: 11px; border-radius: 50%; background: var(--online); border: 2px solid #12101E;"></span></span>
         <div class="col grow" style="gap: 0;"><span class="head" style="font-size: 15px;">${f.name}</span><span class="tiny muted">Level ${f.level} · Online</span></div>
-        ${!locked && html`<button class="btn out sm" onClick=${() => openScreen(FriendBattle, { friend: f.name })}>Battle</button>`}
+        ${!locked && f.battle !== false && html`<button class="btn out sm" onClick=${() => openScreen(FriendBattle, { friend: f.name })}>Battle</button>`}
       </li>`)}
     </ul>
   </section>`;

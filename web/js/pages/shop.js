@@ -238,7 +238,7 @@ export function PackOpening({ type, count, load, onDone, onCancel, onFail, hideC
   const [dragX, setDragX] = useState(0);
   const [burst, setBurst] = useState(null);
   const [shake, setShake] = useState(false);
-  const tearDrag = useRef(null), cardDrag = useRef(null), stage = useRef(null), cur = useRef(0);
+  const tearDrag = useRef(null), cardDrag = useRef(null), stage = useRef(null), cur = useRef(0), root = useRef(null), tearBtn = useRef(null);
   cur.current = current;
 
   const packW = Math.min(w * 0.7, 300, (h - 220) * 631 / 1050);
@@ -274,7 +274,7 @@ export function PackOpening({ type, count, load, onDone, onCancel, onFail, hideC
   };
   const tmove = e => {
     const d = tearDrag.current;
-    if (!d || torn) return;
+    if (!d || d.key || torn) return;
     const z = parseFloat(document.documentElement.style.zoom) || 1;
     const p = Math.min(1, Math.abs(e.clientX / z - d.x) / (packW * 0.85));
     if (p <= progress) return;
@@ -283,7 +283,7 @@ export function PackOpening({ type, count, load, onDone, onCancel, onFail, hideC
     if (p >= 1) { tearDrag.current = null; tearOpen(); }
   };
   const tup = () => {
-    if (!tearDrag.current || torn) return;
+    if (!tearDrag.current || tearDrag.current.key || torn) return;
     tearDrag.current = null;
     Rip.end();
     if (progress > 0.7) tearOpen(); else setProgress(0);
@@ -321,8 +321,25 @@ export function PackOpening({ type, count, load, onDone, onCancel, onFail, hideC
     if (Math.abs(dx) > 60) swipe(i, dx > 0 ? 1 : -1); else if (!d.moved) swipe(i, 1);
     setDragX(0);
   };
+  // keyboard: focus starts on the pack; Enter/Space tears it (same rip, sounds and animation); after that the screen keeps focus
+  useEffect(() => { (tearBtn.current || root.current)?.focus(); }, []);
+  useEffect(() => { if (torn) root.current?.focus(); }, [torn]);
+  const keyTear = () => {
+    if (torn || tearDrag.current) return;
+    tearDrag.current = { key: true };
+    const t0 = performance.now(), from = progress;
+    const step = () => {
+      const p = Math.min(1, from + (performance.now() - t0) / 500);
+      Rip.scratch(0.6); setProgress(p);
+      if (p < 1) requestAnimationFrame(step); else { tearDrag.current = null; tearOpen(); }
+    };
+    requestAnimationFrame(step);
+  };
   useEffect(() => {
-    const k = e => { if (dealt && !finished && (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight')) { e.preventDefault(); swipe(cur.current, 1); } };
+    const k = e => {
+      if (!torn && e.key === 'Escape' && !hideClose) { e.preventDefault(); onCancel?.(); return; }
+      if (dealt && !finished && (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight')) { e.preventDefault(); swipe(cur.current, 1); }
+    };
     addEventListener('keydown', k); return () => removeEventListener('keydown', k);
   });
 
@@ -341,7 +358,8 @@ export function PackOpening({ type, count, load, onDone, onCancel, onFail, hideC
   const hintY = finished ? rows * (smallW * 1.4 + 10) / 2 + 40 : dealt ? bigW * 0.7 + 50 : packH / 2 + 36;
   const showHolo = dealt && current < n && flipped.has(current) && holo.has(current);
 
-  return html`<div class="screen city opening" role="dialog" aria-modal="true" aria-label="Opening ${info.name}">
+  const coarse = matchMedia('(pointer: coarse)').matches;
+  return html`<div class="screen city opening" ref=${root} tabindex="-1" role="dialog" aria-modal="true" aria-label="Opening ${info.name}">
     ${!torn && !hideClose && html`<div class="screenhead"><button class="close" onClick=${onCancel} aria-label="Close"><${Icon} name="x" /></button></div>`}
     <div class="stage" ref=${stage} onPointerDown=${tdown} onPointerMove=${tmove} onPointerUp=${tup} onPointerCancel=${tup}>
       <div class="leak" style="width: ${packW * 0.9}px; height: ${packH * 0.35}px; background: ${LEAK}; transform: translate(-50%, calc(-50% + ${tearY}px)) scale(${torn ? 1.3 : 1}); opacity: ${dealt ? 0 : torn ? 0.9 : progress * 0.5};"></div>
@@ -359,6 +377,8 @@ export function PackOpening({ type, count, load, onDone, onCancel, onFail, hideC
       ${!torn && progress > 0 && html`
         <div class="seam" style="width: ${packW * progress}px; left: calc(50% - ${packW / 2}px); top: calc(50% + ${tearY}px);"></div>
         <div class="spark" style="left: calc(50% - ${packW / 2 - packW * progress}px); top: calc(50% + ${tearY}px);"></div>`}
+      ${!torn && html`<button class="tearbtn" ref=${tearBtn} style="width: ${packW}px; height: ${packH}px;" aria-label="Tear open the ${info.name}. Press Enter."
+          onKeyDown=${e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); keyTear(); } }}></button>`}
       <div class="packpart top ${shake ? 'shake' : ''}" style="width: ${packW}px; height: ${packH}px; clip-path: ${CLIP_TOP}; transform-origin: 100% ${TEAR * 100}%;
           transform: translate(-50%, -50%) translate(${torn ? packW * 0.7 : 0}px, ${torn ? -packH * 0.7 : -progress * 6}px) rotate(${torn ? 50 : progress * 14}deg); opacity: ${torn ? 0 : 1};
           transition: ${torn ? 'transform .45s ease-in, opacity .45s ease-in' : 'none'};"><${PackImg} type=${type} height=${packH} /></div>
@@ -368,7 +388,7 @@ export function PackOpening({ type, count, load, onDone, onCancel, onFail, hideC
       })}</div>`}
       ${showHolo && html`<div class="holotext" style="top: calc(50% - ${bigW * 0.7 + 48}px);">HOLO!</div>`}
       <div class="hint" style="top: calc(50% + ${hintY}px);">
-        ${!torn ? html`<span style="opacity: ${progress > 0 ? 0 : 1};">${matchMedia('(pointer: coarse)').matches ? 'Swipe' : 'Drag'} across the top to tear it open</span>`
+        ${!torn ? html`<span style="opacity: ${progress > 0 ? 0 : 1};">${coarse ? 'Swipe across the top to tear it open' : 'Drag across the top to tear it open, or press Enter'}</span>`
           : dealt && current < n ? html`<span>${flipped.has(current) ? 'Swipe for the next card' : `Swipe to reveal ${current + 1} of ${n}`}</span>`
           : finished ? html`<div class="col" style="gap: 14px; align-items: center;"><span>Added to your collection</span>
               <button class="btn gold" style="width: 200px; height: 50px;" onClick=${onDone}>Done</button></div>` : null}

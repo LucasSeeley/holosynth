@@ -167,6 +167,7 @@ await call(`/matches/${fight.id}/leave`, a.token, {});
 await expectError(call('/avatar', a.token, { card: 'sovereign' }), 400);
 check((await call('/avatar', a.token, { card: 'goliath' })).avatar === 'goliath', 'avatar set');
 check((await call('/me', b.token)).friends === 1 && (await call('/social', b.token)).friends[0].avatar === 'goliath', 'avatar shows to friends');
+{ const f = (await call('/social', b.token)).friends[0]; check(f.battle === true && f.trade === false, 'friends list says what they have unlocked'); }
 await expectError(call('/fuse', a.token, { card: 'volt', stat: 'h' }), 400);   // one copy: nothing to fuse
 check(Array.isArray((await call('/me', a.token)).fused), 'profile lists fused copies');
 await expectError(call('/trades', a.token, { to: bn, giveGold: 10 }), 400);   // trades locked until player level 7

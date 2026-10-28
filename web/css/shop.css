@@ -99,6 +99,9 @@
 .sparks { width: 0; height: 0; pointer-events: none; }
 .sparks i { position: absolute; width: 5px; height: 5px; border-radius: 50%; animation: sparkout .8s ease-out forwards; }
 @keyframes sparkout { to { transform: translate(var(--x), var(--y)); opacity: 0; } }
+.opening:focus { outline: none; }
+.tearbtn { transform: translate(-50%, -50%); padding: 0; border: 0; background: none; border-radius: 12px; cursor: grab; z-index: 3; }
+.tearbtn:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 6px; }
 .ocard { touch-action: none; cursor: grab; outline: none; }
 .ocard:focus-visible .flip { outline: 2px solid var(--gold-hi); outline-offset: 4px; border-radius: 6%; }
 .flip { position: relative; aspect-ratio: 5 / 7; transform-style: preserve-3d; transition: transform .45s ease-in-out; }

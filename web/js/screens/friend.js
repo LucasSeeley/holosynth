@@ -4,7 +4,7 @@ import { html, useState, useEffect, useRef } from '../vendor/preact-htm.js';
 import { battleFusion } from '../cards.js';
 import { api, useStore, refresh, loadSocial } from '../store.js';
 import { Icon, Card } from '../ui.js';
-import { BattleBoard, ResultCard, apiOrNull } from './battle.js';
+import { BattleBoard, ResultCard, apiOrNull, focusOnce } from './battle.js';
 
 export function FriendBattle({ close, friend, join }) {
   const s = useStore(), p = s.profile;
@@ -42,6 +42,14 @@ export function FriendBattle({ close, friend, join }) {
     }, 2000);
     return () => clearInterval(i);
   }, [match?.id]);
+  // Escape closes the lobby, like the other screens (the board and the waiting screen have their own way out)
+  const inLobby = loaded && !match;
+  useEffect(() => {
+    if (!inLobby) return;
+    const k = e => { if (e.key === 'Escape' && !document.querySelector('.modal')) close(); };
+    addEventListener('keydown', k);
+    return () => removeEventListener('keydown', k);
+  }, [inLobby]);
   const leave = async () => {
     const m = live.current;
     if (!m) return;
@@ -49,7 +57,7 @@ export function FriendBattle({ close, friend, join }) {
     refresh();
   };
 
-  if (!loaded) return html`<div class="screen city center"><div class="spinner"></div></div>`;
+  if (!loaded) return html`<div class="screen city center" tabindex="-1" ref=${focusOnce}><div class="spinner"></div></div>`;
   if (match && match.status !== 'waiting' && match.state) {
     const m = match, st = m.state, foe = m.players[1 - m.you] ?? 'Opponent';
     const onMove = async (from, move, to) => {
@@ -63,7 +71,7 @@ export function FriendBattle({ close, friend, join }) {
         setSettled(true); throw e;
       }
     };
-    return html`<div class="screen city" role="dialog" aria-modal="true" aria-label="Friend battle">
+    return html`<div class="screen city" role="dialog" aria-modal="true" tabindex="-1" ref=${focusOnce} aria-label="Friend battle">
       <${BattleBoard} state=${st} you=${m.you} eyebrow="Friend battle" title="vs ${foe}" foeName=${foe}
         leaveLabel="Forfeit" leaveQuestion="Forfeit this match? Your opponent wins." onMove=${onMove} onLeave=${leave} onSettled=${() => setSettled(true)} />
       ${st.winner != null && settled && html`<${ResultCard} won=${st.winner === m.you}>
@@ -79,7 +87,7 @@ export function FriendBattle({ close, friend, join }) {
       try { if (navigator.share) { await navigator.share({ text }); return; } } catch { return; }
       try { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch {}
     };
-    return html`<div class="screen city" role="dialog" aria-modal="true" aria-label="Friend battle"><div class="scroll center">
+    return html`<div class="screen city" role="dialog" aria-modal="true" tabindex="-1" ref=${focusOnce} aria-label="Friend battle"><div class="scroll center">
       <div class="narrow col fb-wait">
         ${match.invitee ? html`
           <span class="label">Challenge sent</span>
@@ -97,7 +105,7 @@ export function FriendBattle({ close, friend, join }) {
       </div></div></div>`;
   }
   // lobby
-  return html`<div class="screen city" role="dialog" aria-modal="true" aria-label="Battle a friend">
+  return html`<div class="screen city" role="dialog" aria-modal="true" tabindex="-1" ref=${focusOnce} aria-label="Battle a friend">
     <div class="screenhead"><button class="close" onClick=${close} aria-label="Back"><${Icon} name="left" /></button><span class="h2">Battle a friend</span></div>
     <div class="scroll"><div class="narrow col fb-lobby">
       <span class="label" style="text-align: center;">Your team</span>

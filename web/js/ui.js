@@ -111,12 +111,14 @@ export const LockLine = ({ text }) => html`<span class="lockline"><${Icon} name=
 
 // A full-screen view: city backdrop, a close button, optional title. `close` comes from openScreen.
 export function Screen({ close, title, eyebrow, right, children, scroll = true, hideClose, class: cls = '' }) {
+  const ref = useRef();
+  useEffect(() => { if (!ref.current?.contains(document.activeElement)) ref.current?.focus({ preventScroll: true }); }, []);   // keyboard focus moves in
   useEffect(() => {
     const k = e => { if (e.key === 'Escape' && close && !hideClose) close(); };
     addEventListener('keydown', k);
     return () => removeEventListener('keydown', k);
   }, [close, hideClose]);
-  return html`<div class="screen city ${cls}" role="dialog" aria-modal="true" aria-label=${title || eyebrow}>
+  return html`<div class="screen city ${cls}" role="dialog" aria-modal="true" aria-label=${title || eyebrow} tabindex="-1" ref=${ref}>
     ${(title || eyebrow || !hideClose) && html`<div class="screenhead">
       ${!hideClose && html`<button class="close" onClick=${() => (close || closeScreen)()} aria-label="Close"><${Icon} name="x" /></button>`}
       <div class="col grow" style="gap: 2px;">

@@ -25,18 +25,21 @@
 .fchip i { width: 9px; height: 9px; border-radius: 2px; }
 .fchip.on { color: var(--fg); background: rgba(232,184,90,.14); border-color: rgba(232,184,90,.55); }
 .cp-count { margin-left: auto; }
-.cp-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 18px 16px; align-content: start; }
+.cp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 18px 16px; align-content: start; }
 .cp-cell { position: relative; min-width: 0; }
-.cp-cell.locked { opacity: .35; }
-.cp-cell.locked .num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+.cp-cell.locked .cardback { opacity: .35; }
+.cp-cell.locked .num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--fg); text-shadow: 0 1px 6px #000, 0 0 2px #000; }
 /* tag stuck to the card's left edge */
 .cp-tag { position: absolute; left: -1px; top: 22%; z-index: 2; height: 26px; padding: 0 10px 0 7px; border-radius: 0 9px 9px 0; cursor: pointer;
   font: 700 11px var(--head); letter-spacing: 1.2px; text-transform: uppercase; color: var(--brass); background: rgba(7,6,12,.88); border: 1px solid rgba(232,184,90,.7); border-left: 0; }
 .cp-tag.lit, .cp-tag.on { color: #1A0D05; background: linear-gradient(180deg, var(--gold-hi), var(--gold-lo)); }
 .cp-tag.on { cursor: default; border: 0; }
 .cp-tag.violet { color: #B98CFF; border-color: rgba(180,107,255,.7); }
+.cp-tag.low { top: auto; bottom: 7%; }   /* power cards: over the footer line, not the art */
+.cp-hd { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 10px; }
+.cp-hd .label { white-space: nowrap; }
 .cp-tag.violet.lit { color: #fff; background: var(--pw, #B46BFF); }
-.cp-pcount { position: absolute; top: -7px; right: -6px; height: 20px; padding: 0 7px; border-radius: 10px; background: #B46BFF; color: #fff; font: 700 11px var(--head); display: inline-flex; align-items: center; }
+.cp-pcount { position: absolute; bottom: -8px; right: -6px; height: 20px; padding: 0 7px; border-radius: 10px; background: #B46BFF; color: #fff; font: 700 11px var(--head); display: inline-flex; align-items: center; }
 .cp-slots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .cp-slot { position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 10px 8px 8px; min-width: 0; cursor: pointer; color: var(--fg);
   background: rgba(18,17,29,.9); border: 1px solid rgba(232,184,90,.35); border-radius: 14px; }
@@ -68,7 +71,6 @@
   .cp-teamtop .cp-team { max-width: 640px; }
   .cp-teamtop .cp-slot img, .cp-teamtop .cp-slot .ph { max-height: 80px; width: auto; max-width: 100%; }
 }
-@media (max-width: 1099px) { .cp-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media (max-width: 759px) {
   .cp-toolbar .h1 { display: none; }
   .cp-teamtop { order: -1; }
@@ -112,7 +114,8 @@
 .so-trade { padding: 22px; display: flex; flex-direction: column; gap: 14px; border-radius: 20px; border: 1px solid rgba(232,184,90,.4);
   background: radial-gradient(60% 50% at 50% 0%, rgba(63,240,255,.1), transparent 70%), rgba(18,16,30,.88); }
 .so-side { display: flex; align-items: center; gap: 18px; padding: 14px 18px; border-radius: 18px; background: rgba(7,6,12,.55); border: 1px solid rgba(232,184,90,.18); min-width: 0; }
-.so-side .cards { display: grid; grid-template-columns: repeat(3, 100px); gap: 10px; }
+.so-side .cards { position: relative; display: grid; grid-template-columns: repeat(3, 100px); gap: 10px; }
+.so-side .cards .none { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 14px; }
 .so-side .slot { aspect-ratio: 5/7; border-radius: 6px; border: 1px dashed rgba(232,184,90,.25); }
 .so-side button.slot { background: rgba(7,6,12,.5); color: var(--brass); cursor: pointer; display: flex; align-items: center; justify-content: center; border: 1.5px dashed rgba(232,184,90,.45); }
 .so-swap { align-self: center; width: 44px; height: 44px; margin: -22px 0; z-index: 1; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(7,6,12,.85); border: 1px solid rgba(232,184,90,.5); color: var(--brass); }
@@ -136,7 +139,7 @@
 .so-empty { text-align: center; padding: 30px 0 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .so-only-narrow { display: none; }
 @media (max-width: 1279px) {
-  .so { display: flex; flex-direction: column; gap: 12px; max-width: 720px; margin: 0 auto; }
+  .so { display: flex; flex-direction: column; align-items: stretch; gap: 12px; max-width: 720px; margin: 0 auto; }
   .so-left, .so-mid { display: contents; }   /* app order: challenges and trades, then requests, then friends */
   .so-o2 { order: 2; } .so-o3 { order: 3; }
   .so-right, .so-only-wide { display: none !important; }

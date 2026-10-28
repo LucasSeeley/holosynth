@@ -5,6 +5,7 @@ import { CARDS, card as cardOf, rarityColor, holoCount, xpInto, xpNeed } from '.
 import { useStore, api, set, setAvatar, setEmail, logout } from '../store.js';
 import { Icon, Avatar, Screen, Modal, fmt } from '../ui.js';
 import { Music, prefs, setEffects } from '../sound.js';
+import { useFocusTop } from './cards.js';
 
 const RAINBOW = 'linear-gradient(90deg, #FF3D6E, #FFB03D, #FFF03D, #3DFF8A, #3DD6FF, #8A5CFF, #FF3DF0)';
 
@@ -73,6 +74,7 @@ export function ProfileTab() {
 // Pick any card you own as your picture.
 function AvatarPicker({ close }) {
   const s = useStore(), p = s.profile;
+  useFocusTop();
   return html`<${Screen} close=${close} title="Choose your picture"><div class="so-wrap" style="width: min(900px, 100%);">
     <div class="pf-avatars">${CARDS.filter(c => p.collection[c.id]).map(c => html`<button aria-pressed=${p.avatar === c.id}
       onClick=${async () => { await setAvatar(c.id); close(); }}><${Avatar} id=${c.id} size="66" /><span class="head ellipsis" style="font-size: 12px; max-width: 100%;">${c.name}</span></button>`)}</div>

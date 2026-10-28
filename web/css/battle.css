@@ -181,7 +181,7 @@
 .cm-check { position: absolute; right: -4px; bottom: -4px; width: 22px; height: 22px; border-radius: 50%; background: var(--brass); color: #1A0D05; border: 2px solid var(--ink); display: flex; align-items: center; justify-content: center; }
 .cm-pack { position: absolute; right: -28px; bottom: -6px; height: 40px; transform: rotate(10deg); filter: drop-shadow(0 3px 4px rgba(0,0,0,.6)); }
 .cm-panel { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 10px 8px; display: flex; justify-content: center; pointer-events: none; }
-.cm-card { pointer-events: auto; width: min(560px, 100%); padding: 14px 16px; border-radius: 18px; background: rgba(14,12,24,.96); border: 1px solid rgba(142,138,168,.35); display: flex; align-items: center; gap: 12px;
+.cm-card { pointer-events: auto; width: min(560px, 100%); padding: 14px 16px; border-radius: 18px; background: #0E0C18; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border: 1px solid rgba(142,138,168,.35); display: flex; align-items: center; gap: 12px;
   box-shadow: 0 -6px 20px rgba(0,0,0,.6); }
 .cm-card.done { border-color: rgba(232,184,90,.45); }
 .cm-card.level { flex-direction: column; align-items: stretch; gap: 14px; padding: 16px; border-color: rgba(185,140,255,.35); }
@@ -201,3 +201,5 @@
 .fb-or i { flex: 1; height: 1px; background: rgba(232,184,90,.25); }
 .fb-wait { gap: 16px; padding: 24px 20px; text-align: center; align-items: center; }
 .fb-code { font: 700 54px var(--head); letter-spacing: 6px; padding: 8px 24px; border-radius: 16px; text-shadow: 0 0 14px rgba(232,184,90,.5); user-select: all; }
+
+.screen:focus { outline: none; }   /* focused on open for keys and screen readers, not to be shown */

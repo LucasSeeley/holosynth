@@ -3,7 +3,7 @@ import { html, useState, useEffect, useRef, useLayoutEffect } from '../vendor/pr
 import { card as cardOf, art, classColor, packImg } from '../cards.js';
 import { api, state as store, set, refresh, replaceScreen } from '../store.js';
 import { Icon, Coin, Bar, fmt } from '../ui.js';
-import { BattleBoard, ResultCard, apiOrNull } from './battle.js';
+import { BattleBoard, ResultCard, apiOrNull, focusOnce } from './battle.js';
 import { RecruitView } from '../pages/shop.js';
 
 const VIOLET = '#B98CFF';
@@ -40,12 +40,12 @@ export function CampaignMap({ close }) {
   };
   const battle = () => replaceScreen(CampaignBattle, {});
 
-  if (!map) return html`<div class="screen cm" role="dialog" aria-modal="true" aria-label="Campaign map">
+  if (!map) return html`<div class="screen cm" role="dialog" aria-modal="true" tabindex="-1" ref=${focusOnce} aria-label="Campaign map">
     <div class="screenhead"><button class="close" onClick=${close} aria-label="Back to Play"><${Icon} name="x" /></button></div>
     <div class="center grow col">${err ? html`<p class="err">${err}</p><button class="btn out" onClick=${close}>Back</button>` : html`<div class="spinner"></div>`}</div></div>`;
   const c = map.chapters[ch], cur = current(map);
   const done = Math.min(30, Math.max(0, map.cleared - ch * 30));
-  return html`<div class="screen cm" role="dialog" aria-modal="true" aria-label="Campaign map">
+  return html`<div class="screen cm" role="dialog" aria-modal="true" tabindex="-1" ref=${focusOnce} aria-label="Campaign map">
     <header class="cm-head">
       <div class="row" style="gap: 10px;">
         <button class="close" onClick=${close} aria-label="Back to Play"><${Icon} name="x" /></button>
@@ -180,10 +180,10 @@ export function CampaignBattle({ close }) {
     }
   };
   const onLeave = async () => { try { await api('campaign/leave', {}); } catch {} refresh(); close(); };
-  if (!run) return html`<div class="screen city" role="dialog" aria-modal="true" aria-label="Campaign battle">
+  if (!run) return html`<div class="screen city" role="dialog" aria-modal="true" tabindex="-1" ref=${focusOnce} aria-label="Campaign battle">
     <div class="center grow col" style="padding: 24px; text-align: center;">${err ? html`<p class="err">${err}</p><button class="btn out" onClick=${close}>Back</button>` : html`<div class="spinner"></div>`}</div></div>`;
   const r = run.result;
-  return html`<div class="screen city" role="dialog" aria-modal="true" aria-label="Campaign battle">
+  return html`<div class="screen city" role="dialog" aria-modal="true" tabindex="-1" ref=${focusOnce} aria-label="Campaign battle">
     <${BattleBoard} state=${run.state} you=${0} eyebrow=${run.boss ? `Boss · Level ${run.level}` : `Level ${run.level}`} title=${run.title}
       foeName=${run.boss ? 'The boss' : 'The enemy'} leaveLabel="Quit" leaveQuestion="Quit this fight? You can try again any time."
       onMove=${onMove} onLeave=${onLeave} onSettled=${() => setSettled(true)} />

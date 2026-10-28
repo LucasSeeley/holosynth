@@ -256,7 +256,7 @@ async function profile(db, user) {
       q("SELECT (SELECT v FROM ranked_meta WHERE k = 'week') AS week, (SELECT v FROM ranked_meta WHERE k = 'season') AS season"),
       q('SELECT * FROM ranked WHERE user_id = ?', user.id),
       q(`SELECT u.id, u.username AS name, r.week, r.points FROM users u LEFT JOIN ranked r ON r.user_id = u.id
-         WHERE COALESCE(r.rank, 0) = COALESCE((SELECT rank FROM ranked WHERE user_id = ?), 0)`, user.id),
+         WHERE COALESCE(r.rank, 0) = COALESCE((SELECT rank FROM ranked WHERE user_id = ?1), 0) AND (${RANKED_IN} OR u.id = ?1)`, user.id),
       q('SELECT * FROM daily_quests WHERE user_id = ?', user.id),
       q('SELECT kind, n FROM quest_events WHERE user_id = ? AND day = ?', user.id, day),
       q(`SELECT (SELECT email FROM emails WHERE user_id = ?1) AS email,
@@ -718,9 +718,19 @@ async function leaveMatch(db, user, id) {
 
 // ---- social ----
 const ONLINE_MS = 5 * 60 * 1000;
-const PERSON = `u.id, u.username, u.xp, u.team, p.seen, p.avatar`;
+const PERSON = `u.id, u.username, u.xp, u.team, p.seen, p.avatar, (SELECT cleared FROM progress WHERE user_id = u.id) AS cleared`;
+// battle / trade: whether they've unlocked Friendly Battles and trading (the app greys those buttons out otherwise)
 const person = r => ({ name: r.username, level: levelFor(r.xp), avatar: avatarOf(r.avatar, r.team),
-  online: !!r.seen && now() - r.seen < ONLINE_MS, seen: r.seen || null });
+  online: !!r.seen && now() - r.seen < ONLINE_MS, seen: r.seen || null,
+  battle: isUnlocked('friends', r.cleared ?? 0, levelFor(r.xp)), trade: isUnlocked('trades', r.cleared ?? 0, levelFor(r.xp)) });
+// Players in the Ranked tables (and its weekly moves, season rewards and opponents): only those who've unlocked it.
+const RANKED_IN = `COALESCE((SELECT cleared FROM progress WHERE user_id = u.id), 0) >= ${UNLOCKS.ranked.cleared}`;
+// The other player must have the feature open too, not just you.
+async function theyNeed(db, other, key, what) {
+  if (!isUnlocked(key, (await getProgress(db, other.id)).cleared, levelFor(other.xp))) {
+    throw new HttpError(400, `${other.username} hasn't unlocked ${what} yet (${UNLOCKS[key].text}).`);
+  }
+}
 
 async function socialView(db, user) {
   const [friends, requests, challenges, trades] = await db.batch([
@@ -819,6 +829,8 @@ async function claimTrade(req, db, user) {
 // Both players' tradeable cards, for building an offer.
 async function tradeCards(db, user, name) {
   const other = await friendByName(db, user, name);
+  await needUnlock(db, user, 'trades');
+  await theyNeed(db, other, 'trades', 'trading');
   const mine = await tradeable(db, user), theirs = await tradeable(db, other, true);   // you may ask for their team cards; they'd have to swap them out to accept
   return json({ mine: mine.plain, theirs: theirs.plain, mineFused: mine.fused.map(fusedView), theirsFused: theirs.fused.map(fusedView), gold: user.gold });
 }
@@ -839,6 +851,7 @@ async function offerTrade(req, db, user) {
   await needUnlock(db, user, 'trades');
   const b = await body(req);
   const other = await friendByName(db, user, b.to ?? '');
+  await theyNeed(db, other, 'trades', 'trading');
   const [give, giveGold] = tradeSide(b.give ?? [], b.giveGold);
   const [get, getGold] = tradeSide(b.get ?? [], b.getGold);
   if (!give.length && !get.length && !giveGold && !getGold) throw new HttpError(400, 'Add something to the trade.');
@@ -932,6 +945,8 @@ async function removeFriend(req, db, user) {
 async function challengeFriend(req, db, user) {
   const other = await otherUser(req, db, user);
   if (!await areFriends(db, user.id, other.id)) throw new HttpError(400, `Add ${other.username} as a friend first.`);
+  await needUnlock(db, user, 'friends');
+  await theyNeed(db, other, 'friends', 'Friendly Battles');
   if (JSON.parse(other.team).length < 3) throw new HttpError(400, `${other.username} can battle once they clear campaign level 6.`);
   const m = await openInvite(db, user);
   await db.prepare('INSERT INTO challenges (match_id, to_id) VALUES (?, ?)').bind(m.id, other.id).run();
@@ -1017,7 +1032,8 @@ async function rankedRollover(db) {
   for (let w = meta.week; w < week; w += WEEK_MS) {
     const claim = await db.prepare("UPDATE ranked_meta SET v = ? WHERE k = 'week' AND v = ?").bind(w + WEEK_MS, w).run();
     if (!claim.meta.changes) return;   // someone else is doing it
-    const { results } = await db.prepare('SELECT u.id, u.username, r.rank, r.week, r.points, r.best FROM users u LEFT JOIN ranked r ON r.user_id = u.id').all();
+    const { results } = await db.prepare(`SELECT u.id, u.username, r.rank, r.week, r.points, r.best FROM users u LEFT JOIN ranked r ON r.user_id = u.id
+      WHERE ${RANKED_IN}`).all();
     const byRank = {};
     for (const u of results) (byRank[u.rank ?? 0] ??= []).push({ id: u.id, name: u.username, points: u.week === w ? u.points : 0, best: u.best ?? 0 });
     const writes = [];
@@ -1037,7 +1053,7 @@ async function rankedRollover(db) {
     // last season's reward for everyone, by the best rank they reached; then everyone drops 2 ranks
     await db.batch([
       db.prepare(`INSERT INTO ranked (user_id, rank, week, points, best, reward)
-        SELECT id, 0, ?1, 0, 0, json_object('season', ?2, 'rank', 0) FROM users WHERE id NOT IN (SELECT user_id FROM ranked)`).bind(week, meta.season),
+        SELECT u.id, 0, ?1, 0, 0, json_object('season', ?2, 'rank', 0) FROM users u WHERE u.id NOT IN (SELECT user_id FROM ranked) AND ${RANKED_IN}`).bind(week, meta.season),
       db.prepare(`UPDATE ranked SET reward = json_object('season', ?1, 'rank', MAX(best, rank)), rank = MAX(0, rank - 2), best = MAX(0, rank - 2)`).bind(meta.season),
     ]);
   }
@@ -1047,7 +1063,7 @@ async function rankedView(db, user) {
   await rankedRollover(db);
   const t = now(), week = weekStart(t), me = await rankedRow(db, user.id);
   const { results } = await db.prepare(`SELECT u.id, u.username AS name, COALESCE(r.rank, 0) AS rank, r.week, r.points
-    FROM users u LEFT JOIN ranked r ON r.user_id = u.id WHERE COALESCE(r.rank, 0) = ?`).bind(me.rank).all();
+    FROM users u LEFT JOIN ranked r ON r.user_id = u.id WHERE COALESCE(r.rank, 0) = ?1 AND (${RANKED_IN} OR u.id = ?2)`).bind(me.rank, user.id).all();
   const table = rankTable(results.map(r => ({ id: r.id, name: r.name, points: r.week === week ? r.points : 0 })), week, me.rank, t)
     .map(r => ({ place: r.place, name: r.name, points: r.points, me: r.id === user.id, bot: r.bot }));
   const live = await db.prepare("SELECT id FROM matches WHERE (p0 = ?1 OR p1 = ?1) AND status = 'active' AND code LIKE '#%' LIMIT 1").bind(user.id).first();
@@ -1124,7 +1140,7 @@ async function rankedGhost(db, user) {
   if (view.liveMatch || view.run) return json({ view });
   const me = await rankedRow(db, user.id);
   const { results } = await db.prepare(`SELECT u.id, u.username, u.team, COALESCE(r.rank, 0) AS rank, p.avatar FROM users u
-    LEFT JOIN ranked r ON r.user_id = u.id LEFT JOIN presence p ON p.user_id = u.id WHERE u.id != ?`).bind(user.id).all();
+    LEFT JOIN ranked r ON r.user_id = u.id LEFT JOIN presence p ON p.user_id = u.id WHERE u.id != ? AND ${RANKED_IN}`).bind(user.id).all();
   const pool = results.filter(u => JSON.parse(u.team).length >= 3).sort((a, b) => Math.abs(a.rank - me.rank) - Math.abs(b.rank - me.rank));
   const near = pool.filter(u => Math.abs(u.rank - pool[0]?.rank) === 0);
   // With only a few players around, mostly face computer players so you're not always fighting the same team.
@@ -1495,7 +1511,7 @@ async function route(req, env, ctx) {
   }
   if (method === 'POST' && pathname === '/quests/claim') return claimQuest(req, db, user);
   if (a === 'ranked') {
-    if (method === 'GET' && !b) return json(await rankedView(db, user));
+    if (method === 'GET' && !b) { await needUnlock(db, user, 'ranked'); return json(await rankedView(db, user)); }
     if (method === 'POST' && b === 'search') return rankedSearch(db, user);
     if (method === 'POST' && b === 'cancel') return rankedCancel(db, user);
     if (method === 'POST' && b === 'ghost') return rankedGhost(db, user);
