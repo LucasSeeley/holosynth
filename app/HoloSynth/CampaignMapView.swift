@@ -23,7 +23,7 @@ struct CampaignMapView: View {
     private static let violet = Color(hex: 0xB98CFF)
     private let gap: CGFloat = 84            // between levels
     private let topPad: CGFloat = 70
-    private let bottomPad: CGFloat = 330     // room under level 1 for the panel
+    private let bottomPad: CGFloat = 420     // room under level 1 for the panel
 
     var body: some View {
         ZStack {
@@ -141,6 +141,11 @@ struct CampaignMapView: View {
             ScrollViewReader { proxy in
                 ScrollView(showsIndicators: false) {
                     ZStack(alignment: .topLeading) {
+                        // scroll targets: one plain row per level (positioned nodes can't be scrolled to reliably)
+                        VStack(spacing: 0) {
+                            ForEach((1...30).reversed(), id: \.self) { n in Color.clear.frame(height: gap).id(n) }
+                        }
+                        .padding(.top, topPad - gap / 2)
                         let pts = (1...30).map { point($0, width: w) }
                         let split = min(29, max(0, done))   // index of the last node the gold line reaches
                         curve(Array(pts[split...])).stroke(Theme.muted.opacity(0.4), style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [2, 10]))
@@ -150,7 +155,6 @@ struct CampaignMapView: View {
                         }
                         ForEach(c.levels, id: \.num) { l in
                             node(l, state: l.num - 1 < done ? .done : l.num - 1 == done ? .next : .locked)
-                                .id(l.num)
                                 .position(pts[l.num - 1])
                         }
                     }
@@ -164,7 +168,7 @@ struct CampaignMapView: View {
 
     private func scroll(_ proxy: ScrollViewProxy, _ done: Int) {
         let target = min(30, max(1, done + 1))
-        DispatchQueue.main.async { proxy.scrollTo(target, anchor: UnitPoint(x: 0.5, y: 0.35)) }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { proxy.scrollTo(target, anchor: UnitPoint(x: 0.5, y: 0.35)) }   // after the first layout
     }
 
     // MARK: nodes
