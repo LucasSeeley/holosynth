@@ -221,7 +221,7 @@ async function profile(db, user) {
   // Every read in one batch, so one round trip: separate queries queue one after another in the database.
   const t = now(), day = dayStart(t), week = weekStart(t);
   const q = (sql, ...args) => db.prepare(sql).bind(...args);
-  const [results, [progRow], [extra], ev0rows, fused, powerRows, [teamRow], [mainRowRead], [meta], [rankRow], rankPeers, [questRow], todayEvents] =
+  const [results, [progRow], [extra], ev0rows, fused, powerRows, [teamRow], [mainRowRead], [meta], [rankRow], rankPeers, [questRow], todayEvents, [emailRow]] =
     (await db.batch([
       q('SELECT card_id, count FROM collection WHERE user_id = ?', user.id),
       q('SELECT * FROM progress WHERE user_id = ?', user.id),
@@ -248,6 +248,7 @@ async function profile(db, user) {
          WHERE COALESCE(r.rank, 0) = COALESCE((SELECT rank FROM ranked WHERE user_id = ?), 0)`, user.id),
       q('SELECT * FROM daily_quests WHERE user_id = ?', user.id),
       q('SELECT kind, n FROM quest_events WHERE user_id = ? AND day = ?', user.id, day),
+      q('SELECT email FROM emails WHERE user_id = ?', user.id),
     ])).map(r => r.results);
   const prog = progRow ?? { user_id: user.id, cleared: 0, wins: 0, packs: 0, run: null };
   const mainRowNow = mainRowRead ?? { step: 0, base: '{}' };
@@ -272,6 +273,7 @@ async function profile(db, user) {
   const chapter = next ? next.chapter : CAMPAIGN[OPEN_LEVELS - 1].chapter;
   return {
     username: user.username,
+    email: emailRow?.email ?? null,   // null: an older account; the app asks for one
     gold: user.gold,
     xp: user.xp,
     level: levelFor(user.xp),
@@ -367,31 +369,40 @@ const addCard = (db, userId, id) => db.prepare(
   'INSERT INTO collection (user_id, card_id, count) VALUES (?, ?, 1) ON CONFLICT (user_id, card_id) DO UPDATE SET count = count + 1',
 ).bind(userId, id);
 
+export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 async function signup(req, db) {
-  const { username = '', password = '' } = await body(req);
-  const name = String(username).trim();
-  await limit(db, 'signup:' + clientIp(req), 3, 3600000);   // 3 new accounts an hour per network
+  const { username = '', password = '', email = '' } = await body(req);
+  const name = String(username).trim(), mail = String(email).trim().toLowerCase();
   if (!/^[A-Za-z0-9_]{3,16}$/.test(name)) throw new HttpError(400, 'Username must be 3–16 letters, numbers or _.');
-  if (String(password).length < 6) throw new HttpError(400, 'Password must be at least 6 characters.');
+  if (mail.length > 254 || !EMAIL_RE.test(mail)) throw new HttpError(400, 'Enter a valid email address.');
+  if (String(password).length < 8) throw new HttpError(400, 'Password must be at least 8 characters.');
   if (String(password).length > 128) throw new HttpError(400, 'Password must be at most 128 characters.');
+  if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) throw new HttpError(400, 'Password needs at least one letter and one number.');
   if (await db.prepare('SELECT 1 FROM users WHERE username = ?').bind(name).first()) {
     throw new HttpError(409, 'That username is taken.');
   }
+  if (await db.prepare('SELECT 1 FROM emails WHERE email = ?').bind(mail).first()) {
+    throw new HttpError(409, 'That email already has an account.');
+  }
+  await limit(db, 'signup:' + clientIp(req), 3, 3600000);   // 3 new accounts an hour per network (typos and taken names don't count)
   const salt = randomHex(16);
   const user = await db.prepare(
     'INSERT INTO users (username, pass_hash, salt, gold, team, created) VALUES (?, ?, ?, ?, ?, ?) RETURNING *',
   ).bind(name, await hashPassword(password, salt), salt, START_GOLD, '[]', now()).first();
-  await db.prepare('INSERT INTO progress (user_id) VALUES (?)').bind(user.id).run();
+  await db.batch([db.prepare('INSERT INTO progress (user_id) VALUES (?)').bind(user.id),
+    db.prepare('INSERT INTO emails (user_id, email, created) VALUES (?, ?, ?)').bind(user.id, mail, now())]);
   return json({ token: await newSession(db, user.id), profile: await profile(db, user) });
 }
 
 async function login(req, db, ctx) {
   const { username = '', password = '' } = await body(req);
-  const name = String(username).trim().slice(0, 32), pw = String(password).slice(0, 128);
+  const name = String(username).trim().slice(0, 254), pw = String(password).slice(0, 128);
   // 5 tries per name and 10 per network every 15 minutes, right or wrong (a right one clears the name's count)
   await limit(db, 'login:' + name.toLowerCase(), 5, 900000);
   await limit(db, 'loginip:' + clientIp(req), 10, 900000);
-  const user = await db.prepare('SELECT * FROM users WHERE username = ?').bind(name).first();
+  const user = name.includes('@')   // a username or the account's email
+    ? await db.prepare('SELECT u.* FROM emails e JOIN users u ON u.id = e.user_id WHERE e.email = ?').bind(name.toLowerCase()).first()
+    : await db.prepare('SELECT * FROM users WHERE username = ?').bind(name).first();
   if (!user || await hashPassword(pw, user.salt) !== user.pass_hash) {
     throw new HttpError(401, 'Wrong username or password.');
   }
@@ -400,6 +411,18 @@ async function login(req, db, ctx) {
     db.prepare('DELETE FROM sessions WHERE created < ?').bind(now() - SESSION_MS),
     db.prepare('DELETE FROM attempts WHERE since < ?').bind(now() - 86400000)]));
   return json({ token: await newSession(db, user.id), profile: await profile(db, user) });
+}
+
+// Add or change your email (asks for the password): accounts made before sign-up asked for one.
+async function setEmail(req, db, user) {
+  const { email = '', password = '' } = await body(req);
+  const mail = String(email).trim().toLowerCase();
+  if (mail.length > 254 || !EMAIL_RE.test(mail)) throw new HttpError(400, 'Enter a valid email address.');
+  if (await hashPassword(String(password).slice(0, 128), user.salt) !== user.pass_hash) throw new HttpError(401, 'Wrong password.');
+  if (await db.prepare('SELECT 1 FROM emails WHERE email = ? AND user_id != ?').bind(mail, user.id).first()) throw new HttpError(409, 'That email already has an account.');
+  await db.prepare(`INSERT INTO emails (user_id, email, created) VALUES (?1, ?2, ?3)
+    ON CONFLICT (user_id) DO UPDATE SET email = ?2, verified = 0, created = ?3`).bind(user.id, mail, now()).run();
+  return json(await profile(db, user));
 }
 
 // Ends this session (the app forgets its token too).
@@ -1371,7 +1394,7 @@ async function deleteAccount(req, db, user) {
     db.prepare('DELETE FROM matches WHERE p0 = ?1 OR p1 = ?1').bind(id),
     db.prepare('DELETE FROM trades WHERE from_id = ?1 OR to_id = ?1').bind(id),
     db.prepare('DELETE FROM fused WHERE user_id = ?1').bind(id),
-    ...['collection', 'sessions', 'progress', 'presence', 'spins', 'gauntlet', 'shop_buys', 'hunts', 'daily_quests', 'quest_events', 'ranked', 'ranked_queue', 'pack_inv', 'powers', 'power_team', 'main_quest'].map(t => db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(id)),
+    ...['collection', 'sessions', 'progress', 'presence', 'spins', 'gauntlet', 'shop_buys', 'hunts', 'daily_quests', 'quest_events', 'ranked', 'ranked_queue', 'pack_inv', 'powers', 'power_team', 'main_quest', 'emails'].map(t => db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(id)),
     db.prepare('DELETE FROM users WHERE id = ?').bind(id),
   ]);
   return json({ ok: true });
@@ -1412,6 +1435,7 @@ async function route(req, env, ctx) {
   if (method === 'GET' && pathname === '/me') return json(await profile(db, user));
   if (method === 'POST' && pathname === '/me/delete') return deleteAccount(req, db, user);
   if (method === 'POST' && pathname === '/logout') return logout(req, db);
+  if (method === 'POST' && pathname === '/me/email') return setEmail(req, db, user);
   if (method === 'POST' && pathname === '/team') return setTeam(req, db, user);
   if (method === 'POST' && pathname === '/fuse') return fuseCard(req, db, user);
   if (method === 'POST' && pathname === '/shop') return buyShop(req, db, user);

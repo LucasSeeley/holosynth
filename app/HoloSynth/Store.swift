@@ -66,10 +66,11 @@ final class GameStore: ObservableObject {
     @Published var error: String?
     @Published var social: Social?
 
-    func auth(username: String, password: String, newAccount: Bool) async {
+    func auth(username: String, email: String?, password: String, newAccount: Bool) async {
         do {
-            let reply: AuthReply = try await API.call(newAccount ? "signup" : "login", token: nil,
-                                                      body: ["username": username, "password": password])
+            var body: [String: Any] = ["username": username.trimmingCharacters(in: .whitespaces), "password": password]
+            if let email { body["email"] = email.trimmingCharacters(in: .whitespaces) }
+            let reply: AuthReply = try await API.call(newAccount ? "signup" : "login", token: nil, body: body)
             token = reply.token
             profile = reply.profile
             error = nil
@@ -81,6 +82,12 @@ final class GameStore: ObservableObject {
         do { profile = try await API.call("me", token: token) }
         catch let e as APIError where e.message.contains("log in") { logout() }
         catch { self.error = error.localizedDescription }
+    }
+
+    // Add an email to an older account; returns the error to show, or nil once saved.
+    func setEmail(_ email: String, password: String) async -> String? {
+        do { profile = try await API.call("me/email", token: token, body: ["email": email.trimmingCharacters(in: .whitespaces), "password": password]); return nil }
+        catch { return error.localizedDescription }
     }
 
     func logout() {

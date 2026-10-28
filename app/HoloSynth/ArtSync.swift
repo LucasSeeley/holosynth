@@ -70,11 +70,7 @@ struct ArtLoadingView: View {
                         .shadow(color: Color(hex: 0xFFAA28).opacity(0.35), radius: 18)
                 }
                 Text("RIP · BUILD · BATTLE").font(.chakra(12, semibold: true)).tracking(3.8).foregroundColor(Theme.brass).padding(.top, 6)
-                if let pack = Art.image("pack") {
-                    Image(uiImage: pack).resizable().scaledToFit().frame(height: 250).rotationEffect(.degrees(-4))
-                        .shadow(color: Theme.backRed.opacity(0.8), radius: 30, y: 18)
-                        .padding(.top, 34).padding(.bottom, 40)
-                }
+                PackFan(height: 240).padding(.top, 34).padding(.bottom, 40)
                 if sync.failed {
                     Text("Couldn't download the cards.\nCheck your connection.")
                         .font(.barlow(15, semibold: true)).foregroundColor(Theme.pink).multilineTextAlignment(.center)

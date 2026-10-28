@@ -191,3 +191,11 @@ CREATE TABLE IF NOT EXISTS attempts (
   n INTEGER NOT NULL,
   since INTEGER NOT NULL
 );
+-- Each account's email (its own table: the schema step only creates tables, it can't add columns to users).
+-- `verified` is for when email checks / password resets arrive.
+CREATE TABLE IF NOT EXISTS emails (
+  user_id INTEGER PRIMARY KEY,
+  email TEXT NOT NULL UNIQUE,
+  verified INTEGER NOT NULL DEFAULT 0,
+  created INTEGER NOT NULL
+);

@@ -111,6 +111,7 @@ extension Profile {
 
 struct Profile: Decodable, Equatable {
     let username: String
+    let email: String?            // nil: an older account, asked for one before playing
     let gold: Int
     let xp: Int
     let levelXp: Int?           // XP into the current level

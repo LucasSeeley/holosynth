@@ -9,7 +9,8 @@ struct HoloSynthApp: App {
     var body: some Scene {
         WindowGroup {
             Group {
-                if store.token == nil { AuthView() } else if !art.ready { ArtLoadingView() } else { HomeView() }
+                if store.token == nil { AuthView() } else if !art.ready { ArtLoadingView() }
+                else if let p = store.profile, p.email == nil { AddEmailView() } else { HomeView() }
             }
             .task { await art.run() }
             .environmentObject(store)
@@ -20,16 +21,37 @@ struct HoloSynthApp: App {
     }
 }
 
+// Sign up (username, email, password twice) or log in (username or email, password). Rules are checked as you type,
+// and the server checks them again.
 struct AuthView: View {
     @EnvironmentObject var store: GameStore
     @State private var username = ""
+    @State private var email = ""
     @State private var password = ""
+    @State private var confirm = ""
     @State private var newAccount = true
     @State private var busy = false
     @FocusState private var focus: Field?
-    enum Field { case user, pass }
+    enum Field { case user, email, pass, confirm }
 
     private let gold = Theme.brass
+
+    // what still stops the form, shown under the fields (nil: ready)
+    private var problem: String? {
+        if newAccount {
+            if !username.isEmpty && username.range(of: "^[A-Za-z0-9_]{3,16}$", options: .regularExpression) == nil { return "Username: 3–16 letters, numbers or _" }
+            if !email.isEmpty && email.trimmingCharacters(in: .whitespaces).range(of: "^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$", options: .regularExpression) == nil { return "Enter a valid email" }
+            if !password.isEmpty && (password.count < 8 || password.rangeOfCharacter(from: .letters) == nil || password.rangeOfCharacter(from: .decimalDigits) == nil) {
+                return "Password: 8+ characters with a letter and a number"
+            }
+            if !confirm.isEmpty && confirm != password { return "Passwords don't match" }
+        }
+        return nil
+    }
+    private var complete: Bool {
+        newAccount ? !username.isEmpty && !email.isEmpty && !password.isEmpty && !confirm.isEmpty && problem == nil
+                   : !username.isEmpty && !password.isEmpty
+    }
 
     var body: some View {
         ZStack {
@@ -43,27 +65,39 @@ struct AuthView: View {
                     Text("RIP · BUILD · BATTLE")
                         .font(.custom("ChakraPetch-SemiBold", size: 12)).tracking(3.8)
                         .foregroundColor(gold).padding(.top, 6)
-                    if let pack = Art.image("pack") {
-                        Image(uiImage: pack).resizable().scaledToFit().frame(height: 250)
-                            .rotationEffect(.degrees(-4))
-                            .shadow(color: Theme.backRed.opacity(0.8), radius: 30, y: 18)
-                            .padding(.top, 26).padding(.bottom, 30)
-                    }
+                    PackFan(height: newAccount ? 190 : 230).padding(.top, 22).padding(.bottom, 26)
                     VStack(spacing: 12) {
                         field(.user, icon: "person") {
-                            TextField("", text: $username, prompt: Text("Username").foregroundColor(Theme.muted))
+                            TextField("", text: $username, prompt: Text(newAccount ? "Username" : "Username or email").foregroundColor(Theme.muted))
                                 .textInputAutocapitalization(.never).autocorrectionDisabled()
                                 .textContentType(.username).submitLabel(.next)
-                                .onSubmit { focus = .pass }
+                                .onSubmit { focus = newAccount ? .email : .pass }
+                        }
+                        if newAccount {
+                            field(.email, icon: "envelope") {
+                                TextField("", text: $email, prompt: Text("Email").foregroundColor(Theme.muted))
+                                    .textInputAutocapitalization(.never).autocorrectionDisabled()
+                                    .keyboardType(.emailAddress).textContentType(.emailAddress).submitLabel(.next)
+                                    .onSubmit { focus = .pass }
+                            }
                         }
                         field(.pass, icon: "lock") {
                             SecureField("", text: $password, prompt: Text("Password").foregroundColor(Theme.muted))
-                                .textContentType(newAccount ? .newPassword : .password).submitLabel(.go)
-                                .onSubmit(submit)
+                                .textContentType(newAccount ? .newPassword : .password).submitLabel(newAccount ? .next : .go)
+                                .onSubmit { if newAccount { focus = .confirm } else { submit() } }
                         }
-                        if let error = store.error {
-                            Text(error).font(.custom("Barlow-SemiBold", size: 14)).foregroundColor(Theme.pink)
+                        if newAccount {
+                            field(.confirm, icon: "lock.rotation") {
+                                SecureField("", text: $confirm, prompt: Text("Confirm password").foregroundColor(Theme.muted))
+                                    .textContentType(.newPassword).submitLabel(.go)
+                                    .onSubmit(submit)
+                            }
+                        }
+                        if let msg = store.error ?? problem {
+                            Text(msg).font(.custom("Barlow-SemiBold", size: 14)).foregroundColor(Theme.pink)
                                 .multilineTextAlignment(.center)
+                        } else if newAccount && password.isEmpty {
+                            Text("8+ characters, with a letter and a number").font(.custom("Barlow-Regular", size: 13)).foregroundColor(Theme.muted)
                         }
                         Button(action: submit) {
                             Text(busy ? "…" : (newAccount ? "CREATE ACCOUNT" : "LOG IN"))
@@ -75,20 +109,22 @@ struct AuthView: View {
                                             in: RoundedRectangle(cornerRadius: 14))
                                 .shadow(color: Color(hex: 0xE0A12A).opacity(0.35), radius: 12, y: 8)
                         }
-                        .disabled(busy || username.isEmpty || password.isEmpty)
-                        .opacity(username.isEmpty || password.isEmpty ? 0.6 : 1)
+                        .disabled(busy || !complete)
+                        .opacity(complete ? 1 : 0.6)
                         .padding(.top, 6)
                     }
                     Button {
                         newAccount.toggle()
                         store.error = nil
+                        confirm = ""
                     } label: {
                         (Text(newAccount ? "Already have an account? " : "New here? ").foregroundColor(Theme.muted)
                          + Text(newAccount ? "Log in" : "Create an account").foregroundColor(gold)
                             .font(.custom("Barlow-SemiBold", size: 15)))
                             .font(.custom("Barlow-Regular", size: 15))
                     }
-                    .padding(.top, 18)
+                    .frame(minHeight: 44)
+                    .padding(.top, 12)
                 }
                 .padding(.horizontal, 24).padding(.top, 40).padding(.bottom, 30)
             }
@@ -112,12 +148,70 @@ struct AuthView: View {
     }
 
     private func submit() {
-        guard !busy, !username.isEmpty, !password.isEmpty else { return }
+        guard !busy, complete else { return }
         focus = nil
         busy = true
         Task {
-            await store.auth(username: username, password: password, newAccount: newAccount)
+            await store.auth(username: username, email: newAccount ? email : nil, password: password, newAccount: newAccount)
             busy = false
+        }
+    }
+}
+
+// The three packs fanned out: Magic, Cyber in front, Omni (login and loading screens).
+struct PackFan: View {
+    var height: CGFloat = 230
+    var body: some View {
+        ZStack {
+            pack("magic", angle: -13, x: -0.42)
+            pack("omni", angle: 13, x: 0.42)
+            pack("cyber", angle: -3, x: 0).zIndex(1)
+        }
+        .frame(height: height)
+        .shadow(color: Theme.backRed.opacity(0.8), radius: 30, y: 18)
+    }
+    @ViewBuilder private func pack(_ type: String, angle: Double, x: CGFloat) -> some View {
+        if let img = Art.pack(type) {
+            Image(uiImage: img).resizable().scaledToFit()
+                .frame(height: type == "cyber" ? height : height * 0.86)
+                .rotationEffect(.degrees(angle), anchor: .bottom)
+                .offset(x: x * height * 0.62)
+                .brightness(type == "cyber" ? 0 : -0.08)
+        }
+    }
+}
+
+// Accounts made before sign-up asked for an email add one once, before playing.
+struct AddEmailView: View {
+    @EnvironmentObject var store: GameStore
+    @State private var email = ""
+    @State private var password = ""
+    @State private var busy = false
+    @State private var error: String?
+
+    var body: some View {
+        ZStack {
+            ScreenBackground()
+            VStack(spacing: 14) {
+                Image(systemName: "envelope.badge").font(.system(size: 40, weight: .semibold)).foregroundColor(Theme.brass)
+                Text("Add your email").font(.chakra(26)).foregroundColor(Theme.fg)
+                Text("Every account needs one now. It'll let you reset your password later.")
+                    .font(.barlow(15)).foregroundColor(Theme.muted).multilineTextAlignment(.center)
+                TextField("", text: $email, prompt: Text("Email").foregroundColor(Theme.muted))
+                    .textInputAutocapitalization(.never).autocorrectionDisabled().keyboardType(.emailAddress).textContentType(.emailAddress)
+                    .font(.barlow(17)).foregroundColor(Theme.fg).padding(.horizontal, 16).frame(height: 54).goldPanel()
+                SecureField("", text: $password, prompt: Text("Your password").foregroundColor(Theme.muted))
+                    .textContentType(.password).font(.barlow(17)).foregroundColor(Theme.fg).padding(.horizontal, 16).frame(height: 54).goldPanel()
+                if let error { Text(error).font(.barlow(14, semibold: true)).foregroundColor(Theme.pink).multilineTextAlignment(.center) }
+                Button(busy ? "…" : "Save") {
+                    busy = true
+                    Task { error = await store.setEmail(email, password: password); busy = false }
+                }
+                .buttonStyle(GoldButton())
+                .disabled(busy || email.isEmpty || password.isEmpty)
+                Button("Log out") { store.logout() }.buttonStyle(OutlineButton())
+            }
+            .padding(24)
         }
     }
 }
