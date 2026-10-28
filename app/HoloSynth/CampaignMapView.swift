@@ -161,9 +161,10 @@ struct CampaignMapView: View {
             ScrollViewReader { proxy in
                 ScrollView(showsIndicators: false) {
                     ZStack(alignment: .topLeading) {
-                        // scroll targets: one plain row per level (positioned nodes can't be scrolled to reliably)
+                        // scroll targets: one plain row per level. String ids: a bare level number would also match the node ForEach,
+                        // whose positioned views span the whole map, and land mid-chapter
                         VStack(spacing: 0) {
-                            ForEach((1...30).reversed(), id: \.self) { n in Color.clear.frame(height: gap).id(n) }
+                            ForEach((1...30).reversed(), id: \.self) { n in Color.clear.frame(height: gap).id("row\(n)") }
                         }
                         .padding(.top, topPad - gap / 2)
                         let pts = (1...30).map { point($0, width: w) }
@@ -188,7 +189,7 @@ struct CampaignMapView: View {
 
     private func scroll(_ proxy: ScrollViewProxy, _ done: Int) {
         let target = min(30, max(1, done + 1))
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { proxy.scrollTo(target, anchor: UnitPoint(x: 0.5, y: 0.35)) }   // after the first layout
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { proxy.scrollTo("row\(target)", anchor: UnitPoint(x: 0.5, y: 0.35)) }   // after the first layout
     }
 
     // MARK: nodes
