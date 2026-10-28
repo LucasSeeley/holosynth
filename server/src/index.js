@@ -108,9 +108,9 @@ async function needUnlock(db, user, key) {
 }
 
 // Today's quests and progress. Picked the first time they're asked for each day, along with the counters they count from.
-async function questsFor(db, user, prog, collection, extra, shopped) {
+async function questsFor(db, user, prog, collection, extra, shopped, pre = null) {   // pre: { row, events } already read
   const day = dayStart(now());
-  let row = await db.prepare('SELECT * FROM daily_quests WHERE user_id = ?').bind(user.id).first();
+  let row = pre ? pre.row : await db.prepare('SELECT * FROM daily_quests WHERE user_id = ?').bind(user.id).first();
   // re-pick if today's were picked while quests were still locked (they count only from when they open)
   const pickedLocked = row && JSON.parse(row.base).cleared < UNLOCKS.quests.cleared;
   if (!row || row.day !== day || pickedLocked) {
@@ -129,7 +129,7 @@ async function questsFor(db, user, prog, collection, extra, shopped) {
       .bind(user.id, day, JSON.stringify(pickQuests(user.id, day, can)), JSON.stringify(base), UNLOCKS.quests.cleared).run();
     row = await db.prepare('SELECT * FROM daily_quests WHERE user_id = ?').bind(user.id).first();
   }
-  const { results } = await db.prepare('SELECT kind, n FROM quest_events WHERE user_id = ? AND day = ?').bind(user.id, day).all();
+  const results = pre ? pre.events : (await db.prepare('SELECT kind, n FROM quest_events WHERE user_id = ? AND day = ?').bind(user.id, day).all()).results;
   const ev = Object.fromEntries(results.map(r => [r.kind, r.n]));
   const base = JSON.parse(row.base), claimed = JSON.parse(row.claimed);
   const have = {
@@ -196,11 +196,14 @@ async function claimMain(db, user) {
 }
 
 async function profile(db, user) {
-  // Independent reads go out together: each one is a round trip to the database.
-  const [{ results }, prog, extra, ev0rows, fused, ranked, powers, powerTeam, mainRowNow] = await Promise.all([
-    db.prepare('SELECT card_id, count FROM collection WHERE user_id = ?').bind(user.id).all(),
-    getProgress(db, user.id),
-    db.prepare(`SELECT (SELECT avatar FROM presence WHERE user_id = ?1) AS avatar,
+  // Every read in one batch, so one round trip: separate queries queue one after another in the database.
+  const t = now(), day = dayStart(t), week = weekStart(t);
+  const q = (sql, ...args) => db.prepare(sql).bind(...args);
+  const [results, [progRow], [extra], ev0rows, fused, powerRows, [teamRow], [mainRowRead], [meta], [rankRow], rankPeers, [questRow], todayEvents] =
+    (await db.batch([
+      q('SELECT card_id, count FROM collection WHERE user_id = ?', user.id),
+      q('SELECT * FROM progress WHERE user_id = ?', user.id),
+      q(`SELECT (SELECT avatar FROM presence WHERE user_id = ?1) AS avatar,
     (SELECT last FROM spins WHERE user_id = ?1) AS spun,
     (SELECT GROUP_CONCAT(slot) FROM shop_buys WHERE user_id = ?1 AND day = ?2) AS shopped,
     (SELECT CASE WHEN state IS NOT NULL THEN 'playing' ELSE result END FROM hunts WHERE user_id = ?1 AND day = ?3) AS hunted,
@@ -210,16 +213,38 @@ async function profile(db, user) {
     (SELECT COUNT(*) FROM friends f JOIN friends g ON g.user_id = f.friend_id AND g.friend_id = f.user_id
        JOIN gauntlet x ON x.user_id = f.friend_id
        WHERE f.user_id = ?1 AND x.best > COALESCE((SELECT best FROM gauntlet WHERE user_id = ?1), 0)) AS gahead,
-    (SELECT COUNT(*) FROM friends f JOIN friends g ON g.user_id = f.friend_id AND g.friend_id = f.user_id WHERE f.user_id = ?1) AS friends`)
-    .bind(user.id, dayStart(now()), huntStart(now())).first(),
-    db.prepare('SELECT kind, n FROM quest_events WHERE user_id = ? AND day = 0').bind(user.id).all(),
-    fusedRows(db, user.id), rankedTile(db, user), powerCounts(db, user.id), loadout(db, user.id), mainRow(db, user.id),
-  ]);
+    (SELECT COUNT(*) FROM friends f JOIN friends g ON g.user_id = f.friend_id AND g.friend_id = f.user_id WHERE f.user_id = ?1) AS friends`,
+        user.id, day, huntStart(t)),
+      q('SELECT kind, n FROM quest_events WHERE user_id = ? AND day = 0', user.id),
+      q('SELECT * FROM fused WHERE user_id = ?', user.id),
+      q('SELECT power, count FROM powers WHERE user_id = ? AND count > 0', user.id),
+      q('SELECT team FROM power_team WHERE user_id = ?', user.id),
+      q('SELECT * FROM main_quest WHERE user_id = ?', user.id),
+      q("SELECT (SELECT v FROM ranked_meta WHERE k = 'week') AS week, (SELECT v FROM ranked_meta WHERE k = 'season') AS season"),
+      q('SELECT * FROM ranked WHERE user_id = ?', user.id),
+      q(`SELECT u.id, u.username AS name, r.week, r.points FROM users u LEFT JOIN ranked r ON r.user_id = u.id
+         WHERE COALESCE(r.rank, 0) = COALESCE((SELECT rank FROM ranked WHERE user_id = ?), 0)`, user.id),
+      q('SELECT * FROM daily_quests WHERE user_id = ?', user.id),
+      q('SELECT kind, n FROM quest_events WHERE user_id = ? AND day = ?', user.id, day),
+    ])).map(r => r.results);
+  const prog = progRow ?? { user_id: user.id, cleared: 0, wins: 0, packs: 0, run: null };
+  const mainRowNow = mainRowRead ?? { step: 0, base: '{}' };
+  const powers = Object.fromEntries(powerRows.map(r => [r.power, r.count]));
+  const powerTeam = [];   // as loadout(): your picks, as far as your copies go
+  for (const id of JSON.parse(teamRow?.team ?? '[]')) if ((powers[id] || 0) > powerTeam.filter(x => x === id).length) powerTeam.push(id);
+  let ranked;
+  if (meta.week === null || meta.week < week || meta.season < seasonOf(t)) ranked = await rankedTile(db, user);   // a new week or season to roll over first
+  else {
+    const me = rankRow ?? { rank: 0, week, points: 0, moved: null, reward: null };
+    const table = rankTable(rankPeers.map(r => ({ id: r.id, name: r.name, points: r.week === week ? r.points : 0 })), week, me.rank, t);
+    ranked = { rank: me.rank, name: RANKS[me.rank], place: table.find(r => r.id === user.id).place, points: weekPoints(me, week),
+      weekEnds: week + WEEK_MS, alert: !!(me.moved || me.reward) };
+  }
   const collection = Object.fromEntries(results.map(r => [r.card_id, r.count]));
   const sold = String(extra.shopped ?? '').split(',');
-  const ev0 = Object.fromEntries(ev0rows.results.map(r => [r.kind, r.n]));
+  const ev0 = Object.fromEntries(ev0rows.map(r => [r.kind, r.n]));
   const quests = isUnlocked('quests', prog.cleared, levelFor(user.xp))
-    ? await questsFor(db, user, prog, collection, extra, sold.filter(Boolean).length)
+    ? await questsFor(db, user, prog, collection, extra, sold.filter(Boolean).length, { row: questRow, events: todayEvents })
     : { list: [], bonus: 'locked', bonusPack: questBonus(prog.cleared, now()), next: dayStart(now()) + 86400000 };   // locked: nothing to claim, no badge
   const next = prog.cleared < OPEN_LEVELS ? CAMPAIGN[prog.cleared] : null;   // locked chapters count as done for now
   const chapter = next ? next.chapter : CAMPAIGN[OPEN_LEVELS - 1].chapter;
