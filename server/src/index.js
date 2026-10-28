@@ -725,6 +725,7 @@ const person = r => ({ name: r.username, level: levelFor(r.xp), avatar: avatarOf
   battle: isUnlocked('friends', r.cleared ?? 0, levelFor(r.xp)), trade: isUnlocked('trades', r.cleared ?? 0, levelFor(r.xp)) });
 // Players in the Ranked tables (and its weekly moves, season rewards and opponents): only those who've unlocked it.
 const RANKED_IN = `COALESCE((SELECT cleared FROM progress WHERE user_id = u.id), 0) >= ${UNLOCKS.ranked.cleared}`;
+const GAUNTLET_IN = `COALESCE((SELECT cleared FROM progress WHERE user_id = u.id), 0) >= ${UNLOCKS.gauntlet.cleared}`;   // same, for its friends board
 // The other player must have the feature open too, not just you.
 async function theyNeed(db, other, key, what) {
   if (!isUnlocked(key, (await getProgress(db, other.id)).cleared, levelFor(other.xp))) {
@@ -1414,7 +1415,7 @@ async function leaderboard(db, user, scope) {
   const q = scope === 'friends'
     ? db.prepare(`SELECT u.id, u.username, u.team, p.avatar, COALESCE(x.best, 0) AS best FROM users u
         LEFT JOIN gauntlet x ON x.user_id = u.id LEFT JOIN presence p ON p.user_id = u.id
-        WHERE u.id = ?1 OR u.id IN (SELECT f.friend_id FROM friends f JOIN friends g ON g.user_id = f.friend_id AND g.friend_id = f.user_id WHERE f.user_id = ?1)
+        WHERE u.id = ?1 OR (${GAUNTLET_IN} AND u.id IN (SELECT f.friend_id FROM friends f JOIN friends g ON g.user_id = f.friend_id AND g.friend_id = f.user_id WHERE f.user_id = ?1))
         ORDER BY best DESC, u.username`).bind(user.id)
     : db.prepare(`SELECT u.id, u.username, u.team, p.avatar, x.best FROM gauntlet x JOIN users u ON u.id = x.user_id
         LEFT JOIN presence p ON p.user_id = u.id WHERE x.best > 0 ORDER BY x.best DESC, u.username LIMIT 50`);
