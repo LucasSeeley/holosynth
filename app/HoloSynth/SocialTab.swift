@@ -164,15 +164,18 @@ struct SocialTab: View {
         panel("Friends", count: list.count) {
             ForEach(list) { p in
                 row(p, subtitle: Text("Level \(p.level) · ") + seen(p), last: p == list.last) {
-                    if store.profile?.locked?["trades"] == nil { Button { tradeWith = TradeTarget(name: p.name, avatar: p.avatar, counter: nil) } label: {
+                    // only what you both have unlocked
+                    if store.profile?.locked?["trades"] == nil && p.trade != false { Button { tradeWith = TradeTarget(name: p.name, avatar: p.avatar, counter: nil) } label: {
                         Image(systemName: "arrow.left.arrow.right").font(.system(size: 16, weight: .bold)).foregroundColor(Theme.brass)
                             .frame(width: 40, height: 40)
                             .background(Theme.ink.opacity(0.6), in: RoundedRectangle(cornerRadius: 12))
                             .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.brass.opacity(0.5), lineWidth: 1))
                     }
                     .accessibilityLabel("Trade with \(p.name)") }
-                    Button { challenge(p) } label: { SwordsButton(gold: false) }
-                        .accessibilityLabel("Battle \(p.name)")
+                    if store.profile?.locked?["friends"] == nil && p.battle != false {
+                        Button { challenge(p) } label: { SwordsButton(gold: false) }
+                            .accessibilityLabel("Battle \(p.name)")
+                    }
                 }
                 .contentShape(Rectangle())
                 .onTapGesture { friendCard = p }
