@@ -138,7 +138,8 @@ const ids = `(SELECT id FROM users WHERE username IN ('${an}', '${bn}'))`;
 const skipTo = cleared => execSync(`npx wrangler d1 execute holosynth --remote --command "UPDATE users SET xp = 60000 WHERE id IN ${ids}; UPDATE progress SET cleared = ${cleared} WHERE user_id IN ${ids}"`,
   { cwd: new URL('..', import.meta.url), stdio: 'ignore' });
 skipTo(40);
-check(Object.keys((await call('/me', a.token)).locked).length === 0, 'everything unlocked');
+check(Object.keys((await call('/me', a.token)).locked).sort().join() === 'legends,overload', 'all but Overload/Legends unlocked');
+await expectError(call('/packs', a.token, { type: 'overload' }), 400);   // Overload waits for Chapter 2
 // trades: team cards are locked, gold-only offers, counter, cancel, accept
 await expectError(call('/trades', a.token, { to: bn, give: ['volt'] }), 400);           // on a's team, no spare copy
 await expectError(call('/trades', a.token, { to: bn, giveGold: 1e9 }), 400);             // not that much gold
