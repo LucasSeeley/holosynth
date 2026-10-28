@@ -4,7 +4,6 @@ import UIKit
 // The Shop tab: daily cards and packs. Bought and won packs wait unopened; `onClose` set = "Your packs" (opened from the Play tab):
 // swipe between them, Open one, drag a finger across the top to tear it, watch the cards rise out, then reveal them
 // one at a time: swipe the top card of the stack to turn it over, swipe again (or wait) for the next.
-// Rarity tells early: light leaking from the tear takes the colour of the best card inside.
 struct PackTab: View {
     @EnvironmentObject var store: GameStore
     var onClose: (() -> Void)? = nil
@@ -419,13 +418,8 @@ struct PackTab: View {
 
     private var packArt: some View { packImage(openType) }
 
-    // Colour of the best card in the pack: white-gold for all commons.
-    private var leakColor: Color {
-        let order = ["Legendary", "Epic", "Rare"]
-        let rarities = pulled.map { packRarity($0) }
-        if let best = order.first(where: rarities.contains) { return Theme.rarityColor(best) }
-        return Color(hex: 0xFFE7A8)
-    }
+    // Same light for every pack, so the tear never gives away what's inside.
+    private let leakColor = Color(hex: 0xFFE7A8)
 
     private var opening: some View {
         GeometryReader { geo in
