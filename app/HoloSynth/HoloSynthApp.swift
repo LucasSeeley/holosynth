@@ -59,13 +59,13 @@ struct AuthView: View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
                     if let logo = Art.image("logo") {
-                        Image(uiImage: logo).resizable().scaledToFit().frame(maxWidth: newAccount ? 260 : 330)
+                        Image(uiImage: logo).resizable().scaledToFit().frame(maxWidth: 330)
                             .shadow(color: Color(hex: 0xFFAA28).opacity(0.35), radius: 18)
                     }
                     Text("RIP · BUILD · BATTLE")
                         .font(.custom("ChakraPetch-SemiBold", size: 12)).tracking(3.8)
                         .foregroundColor(gold).padding(.top, 6)
-                    PackFan(height: newAccount ? 140 : 220).padding(.top, 16).padding(.bottom, 20)   // sized so the whole form fits without scrolling
+                    PackFan(height: newAccount ? 120 : 210).padding(.top, 16).padding(.bottom, 20)   // sized so the whole form fits without scrolling
                     VStack(spacing: 12) {
                         field(.user, icon: "person") {
                             TextField("", text: $username, prompt: Text(newAccount ? "Username" : "Username or email").foregroundColor(Theme.muted))
@@ -165,14 +165,14 @@ private extension View {
     }
 }
 
-// The three packs fanned out: Magic, Cyber in front, Omni (login and loading screens).
+// The three packs fanned out: Cyber, Omni in front, Magic (login and loading screens).
 struct PackFan: View {
     var height: CGFloat = 230
     var body: some View {
         ZStack {
-            pack("magic", angle: -13, x: -0.42)
-            pack("omni", angle: 13, x: 0.42)
-            pack("cyber", angle: -3, x: 0).zIndex(1)
+            pack("cyber", angle: -13, x: -0.42)
+            pack("magic", angle: 13, x: 0.42)
+            pack("omni", angle: -3, x: 0).zIndex(1)
         }
         .frame(height: height)
         .shadow(color: Theme.backRed.opacity(0.8), radius: 30, y: 18)
@@ -180,10 +180,10 @@ struct PackFan: View {
     @ViewBuilder private func pack(_ type: String, angle: Double, x: CGFloat) -> some View {
         if let img = Art.pack(type) {
             Image(uiImage: img).resizable().scaledToFit()
-                .frame(height: type == "cyber" ? height : height * 0.86)
+                .frame(height: type == "omni" ? height : height * 0.86)
                 .rotationEffect(.degrees(angle), anchor: .bottom)
                 .offset(x: x * height * 0.62)
-                .brightness(type == "cyber" ? 0 : -0.08)
+                .brightness(type == "omni" ? 0 : -0.08)
         }
     }
 }
