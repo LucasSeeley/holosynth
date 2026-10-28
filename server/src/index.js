@@ -370,7 +370,7 @@ const addCard = (db, userId, id) => db.prepare(
 async function signup(req, db) {
   const { username = '', password = '' } = await body(req);
   const name = String(username).trim();
-  await limit(db, 'signup:' + clientIp(req), 10, 3600000);   // 10 new accounts an hour per network
+  await limit(db, 'signup:' + clientIp(req), 3, 3600000);   // 3 new accounts an hour per network
   if (!/^[A-Za-z0-9_]{3,16}$/.test(name)) throw new HttpError(400, 'Username must be 3–16 letters, numbers or _.');
   if (String(password).length < 6) throw new HttpError(400, 'Password must be at least 6 characters.');
   if (String(password).length > 128) throw new HttpError(400, 'Password must be at most 128 characters.');
@@ -388,9 +388,9 @@ async function signup(req, db) {
 async function login(req, db, ctx) {
   const { username = '', password = '' } = await body(req);
   const name = String(username).trim().slice(0, 32), pw = String(password).slice(0, 128);
-  // 10 tries per name and 30 per network every 15 minutes, right or wrong
-  await limit(db, 'login:' + name.toLowerCase(), 10, 900000);
-  await limit(db, 'loginip:' + clientIp(req), 30, 900000);
+  // 5 tries per name and 10 per network every 15 minutes, right or wrong (a right one clears the name's count)
+  await limit(db, 'login:' + name.toLowerCase(), 5, 900000);
+  await limit(db, 'loginip:' + clientIp(req), 10, 900000);
   const user = await db.prepare('SELECT * FROM users WHERE username = ?').bind(name).first();
   if (!user || await hashPassword(pw, user.salt) !== user.pass_hash) {
     throw new HttpError(401, 'Wrong username or password.');
