@@ -221,7 +221,7 @@ if (doneQ >= 0) {
 if (qs.list.every(q => q.n >= q.goal)) {
   for (let i = 0; i < 3; i++) if (i !== doneQ) await call('/quests/claim', a.token, { quest: i });
   const bonus = await call('/quests/claim', a.token, { quest: 'bonus' });
-  check(bonus.cards.length === 3 && bonus.type === 'omni' && bonus.profile.quests.bonus === 'claimed', 'all three done: free Omni pack');
+  check(bonus.cards.length === 3 && bonus.type === qs.bonusPack && bonus.profile.quests.bonus === 'claimed', 'all three done: the free pack it showed');
 }
 // legend hunt: one try a day against a fully fused Legendary
 check(done.hunt.status === 'ready' && done.hunt.legend, 'hunt ready');
