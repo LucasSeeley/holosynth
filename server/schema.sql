@@ -222,3 +222,9 @@ CREATE TABLE IF NOT EXISTS email_tokens (
   email TEXT NOT NULL,         -- the address it was sent to
   expires INTEGER NOT NULL
 );
+
+-- One inventory change at a time per player (trades, fusing, team, recruit). `until`: a lock left by a crashed request expires.
+CREATE TABLE IF NOT EXISTS locks (
+  user_id INTEGER PRIMARY KEY,
+  until INTEGER NOT NULL
+);

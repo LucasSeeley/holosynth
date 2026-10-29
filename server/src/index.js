@@ -46,21 +46,37 @@ async function limit(db, key, max, windowMs) {
   if (row.n > max) throw new HttpError(429, 'Too many tries. Wait a few minutes and try again.');
 }
 // IPv6 counts per /64 (one connection usually owns the whole block, so single addresses are free to rotate)
-const clientIp = req => { const ip = req.headers.get('CF-Connecting-IP') || 'unknown'; return ip.includes(':') ? ip.split(':').slice(0, 4).join(':') + '::/64' : ip; };
+export function ipKey(ip) {
+  if (!ip.includes(':')) return ip;
+  const [head, tail] = ip.split('::'), h = head ? head.split(':') : [], t = tail ? tail.split(':') : [];
+  const full = tail === undefined ? h : [...h, ...Array(Math.max(0, 8 - h.length - t.length)).fill('0'), ...t];   // "::" expanded
+  return full.slice(0, 4).map(g => (parseInt(g, 16) || 0).toString(16)).join(':') + '::/64';
+}
+const clientIp = req => ipKey(req.headers.get('CF-Connecting-IP') || 'unknown');
+
+// One inventory change at a time per player (trades, fusing, team, recruit): a burst of parallel requests can't all pass
+// the same "do you own it" check. fn gets the player re-read inside the lock.
+async function locked(db, userId, fn) {
+  const t = now(), until = t + 15000;
+  const got = await db.prepare(`INSERT INTO locks (user_id, until) VALUES (?1, ?2)
+    ON CONFLICT (user_id) DO UPDATE SET until = ?2 WHERE locks.until < ?3`).bind(userId, until, t).run();
+  if (!got.meta.changes) throw new HttpError(409, 'Still busy with your last action. Try again.');
+  try { return await fn(await freshUser(db, userId)); }
+  finally { await db.prepare('DELETE FROM locks WHERE user_id = ? AND until = ?').bind(userId, until).run(); }
+}
 
 async function currentUser(req, db, ctx) {
   const token = bearer(req);
   if (!req.headers.get('Authorization') && req.headers.get('X-HoloSynth') !== 'web') throw new HttpError(401, 'Please log in again.');
   if (!/^[0-9a-f]{64}$/.test(token)) throw new HttpError(401, 'Please log in again.');
   const hashed = await sha256(token), t = now();
-  // the progress row comes along (one trip instead of two for campaign moves, which need it straight away);
-  // sessions made before tokens were hashed are matched as they were, then swapped to the hash below
-  const row = await db.prepare(`SELECT u.*, s.token AS _stok, s.created AS _sused,
+  // the progress row comes along (one trip instead of two for campaign moves, which need it straight away)
+  const row = await db.prepare(`SELECT u.*, s.created AS _sused,
     (SELECT json_object('user_id', p.user_id, 'cleared', p.cleared, 'wins', p.wins, 'packs', p.packs, 'run', p.run) FROM progress p WHERE p.user_id = u.id) AS _prog
-    FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token IN (?1, ?2) AND s.created > ?3`).bind(hashed, token, t - SESSION_MS).first();
+    FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token = ?1 AND s.created > ?2`).bind(hashed, t - SESSION_MS).first();
   if (!row) throw new HttpError(401, 'Please log in again.');
-  if (row._stok !== hashed || row._sused < t - 86400000) {   // in the background: hash an old token, keep the session alive (once a day)
-    ctx?.waitUntil(db.prepare('UPDATE sessions SET token = ?1, created = ?2 WHERE token = ?3').bind(hashed, t, row._stok).run());
+  if (row._sused < t - 86400000) {   // in the background: keep the session alive (once a day)
+    ctx?.waitUntil(db.prepare('UPDATE sessions SET created = ?1 WHERE token = ?2').bind(t, hashed).run());
   }
   return row;
 }
@@ -380,14 +396,21 @@ async function setPowerTeam(req, db, user) {
   await db.prepare('INSERT INTO power_team (user_id, team) VALUES (?1, ?2) ON CONFLICT (user_id) DO UPDATE SET team = ?2').bind(user.id, JSON.stringify(powers)).run();
   return json(await profile(db, user));
 }
-// After a player's move: power cards they played are used up.
-// Called only after the move is saved (claimed), so a double-submitted move can't use a card up twice.
+// After a player's move: a power card they played (already paid for by withPower) comes off the equipped slots,
+// unless another copy still covers it.
 async function spendPowers(db, userId, before, after = []) {
-  const left = [...after];
-  let spent = false;
-  for (const id of before) { const i = left.indexOf(id); if (i >= 0) left.splice(i, 1); else { spent = true; await db.prepare('UPDATE powers SET count = count - 1 WHERE user_id = ? AND power = ? AND count > 0').bind(userId, id).run(); } }
-  // a used-up card also comes off the equipped slots (unless another copy still covers it)
-  if (spent) await db.prepare('UPDATE power_team SET team = ? WHERE user_id = ?').bind(JSON.stringify(await loadout(db, userId)), userId).run();
+  if (after.length < before.length) await db.prepare('UPDATE power_team SET team = ? WHERE user_id = ?').bind(JSON.stringify(await loadout(db, userId)), userId).run();
+}
+// A battle move that plays a power card uses up a copy first, so one copy can't be played in several battles at once.
+// The copy comes back if the move doesn't go through (bad move, or a double-submit).
+async function withPower(req, db, user, fn) {
+  const kind = (await body(req.clone())).move;
+  const id = typeof kind === 'string' && kind.startsWith('pw:') ? kind.slice(3) : null;
+  if (!id) return fn();
+  const took = await db.prepare('UPDATE powers SET count = count - 1 WHERE user_id = ? AND power = ? AND count > 0').bind(user.id, id).run();
+  if (!took.meta.changes) throw new HttpError(400, "You don't have that power card any more.");
+  try { return await fn(); }
+  catch (e) { await db.prepare('UPDATE powers SET count = count + 1 WHERE user_id = ? AND power = ?').bind(user.id, id).run(); throw e; }
 }
 const addCard = (db, userId, id) => db.prepare(
   'INSERT INTO collection (user_id, card_id, count) VALUES (?, ?, 1) ON CONFLICT (user_id, card_id) DO UPDATE SET count = count + 1',
@@ -428,14 +451,14 @@ async function signup(req, db, env, ctx) {
 async function login(req, db, ctx) {
   const { username = '', password = '' } = await body(req);
   const name = String(username).trim().slice(0, 254), pw = String(password).slice(0, 128);
-  // 5 tries per account (its name and email share one count) and 10 per network every 15 minutes, right or wrong;
-  // a right one clears the account's count
+  // 5 tries per name typed and 10 per network every 15 minutes, right or wrong; a right one clears the name's count.
+  // Counted by what was typed, not by account, so the counts don't tell which name and email go together.
   await limit(db, 'loginip:' + clientIp(req), 10, 900000);
+  const key = 'login:' + name.toLowerCase();
+  await limit(db, key, 5, 900000);
   const user = name.includes('@')   // a username or the account's email
     ? await db.prepare('SELECT u.* FROM emails e JOIN users u ON u.id = e.user_id WHERE e.email = ?').bind(name.toLowerCase()).first()
     : await db.prepare('SELECT * FROM users WHERE username = ?').bind(name).first();
-  const key = 'login:' + (user ? user.id : name.toLowerCase());
-  await limit(db, key, 5, 900000);
   // a name that doesn't exist takes as long as a wrong password, so timing doesn't tell which names are real
   const hash = await hashPassword(pw, user ? user.salt : 'no-such-user');
   if (!user || hash !== user.pass_hash) throw new HttpError(401, 'Wrong username or password.');
@@ -446,15 +469,22 @@ async function login(req, db, ctx) {
   return json({ token: await newSession(db, user.id), profile: await profile(db, user) });
 }
 
+// The password asked again before a big change: 5 tries per 15 minutes, so a stolen session can't guess it.
+async function checkPassword(db, user, password) {
+  await limit(db, 'pwcheck:' + user.id, 5, 900000);
+  if (await hashPassword(String(password).slice(0, 128), user.salt) !== user.pass_hash) throw new HttpError(401, 'Wrong password.');
+}
 // Add or change your email (asks for the password): accounts made before sign-up asked for one.
 async function setEmail(req, db, user, env, ctx) {
   const { email = '', password = '' } = await body(req);
   const mail = String(email).trim().toLowerCase();
   if (mail.length > 254 || !EMAIL_RE.test(mail)) throw new HttpError(400, 'Enter a valid email address.');
-  if (await hashPassword(String(password).slice(0, 128), user.salt) !== user.pass_hash) throw new HttpError(401, 'Wrong password.');
+  await checkPassword(db, user, password);
   if (await db.prepare('SELECT 1 FROM emails WHERE email = ? AND user_id != ?').bind(mail, user.id).first()) throw new HttpError(409, 'That email already has an account.');
-  await db.prepare(`INSERT INTO emails (user_id, email, created) VALUES (?1, ?2, ?3)
-    ON CONFLICT (user_id) DO UPDATE SET email = ?2, verified = 0, created = ?3`).bind(user.id, mail, now()).run();
+  await limit(db, 'verifymail:' + user.id, 3, 3600000);   // each change sends an email
+  await db.batch([db.prepare(`INSERT INTO emails (user_id, email, created) VALUES (?1, ?2, ?3)
+    ON CONFLICT (user_id) DO UPDATE SET email = ?2, verified = 0, created = ?3`).bind(user.id, mail, now()),
+    db.prepare('DELETE FROM email_tokens WHERE user_id = ?').bind(user.id)]);   // links sent to the old address stop working
   ctx?.waitUntil(sendVerify(db, env, user, mail).catch(e => console.error(e)));
   return json(await profile(db, user));
 }
@@ -510,18 +540,19 @@ async function resendVerify(db, env, user) {
   return json({ ok: true, message: `Sent to ${e.email}` });
 }
 // Forgot password: emails a reset link. Always the same answer, so it can't be used to find accounts.
-async function forgotPassword(req, db, env) {
+async function forgotPassword(req, db, env, ctx) {
   const name = String((await body(req)).name ?? '').trim().slice(0, 254);
   await limit(db, 'forgotip:' + clientIp(req), 5, 3600000);
   const user = name.includes('@')
     ? await db.prepare('SELECT u.*, e.email AS mail FROM emails e JOIN users u ON u.id = e.user_id WHERE e.email = ?').bind(name.toLowerCase()).first()
     : await db.prepare('SELECT u.*, e.email AS mail FROM users u JOIN emails e ON e.user_id = u.id WHERE u.username = ?').bind(name).first();
-  if (user) {
-    try { await limit(db, 'forgot:' + user.id, 3, 3600000); } catch { return json({ ok: true, message: SAME_ANSWER }); }
+  // sent in the background, so a real account doesn't answer slower than a made-up one
+  if (user) ctx.waitUntil((async () => {
+    await limit(db, 'forgot:' + user.id, 3, 3600000);
     const token = await emailToken(db, user.id, 'reset', user.mail, RESET_MS);
     await sendEmail(env, user.mail, 'Reset your HoloSynth password', [`Hi ${user.username}, someone (hopefully you) asked to reset your password.`,
       "The link works for 1 hour. If it wasn't you, ignore this email: your password stays the same."], 'Reset password', `${SITE}/#/reset?t=${token}`);
-  }
+  })().catch(e => { if (!(e instanceof HttpError)) console.error(e); }));
   return json({ ok: true, message: SAME_ANSWER });
 }
 async function resetPassword(req, db) {
@@ -534,7 +565,7 @@ async function resetPassword(req, db) {
   await db.batch([db.prepare('UPDATE users SET pass_hash = ?, salt = ? WHERE id = ?').bind(await hashPassword(pw, salt), salt, row.user_id),
     db.prepare('DELETE FROM sessions WHERE user_id = ?').bind(row.user_id),   // logged out everywhere
     db.prepare('UPDATE emails SET verified = 1 WHERE user_id = ? AND email = ?').bind(row.user_id, row.email),   // they got the email
-    db.prepare('DELETE FROM attempts WHERE key = ?').bind('login:' + row.user_id)]);
+    db.prepare("DELETE FROM attempts WHERE key IN ('login:' || lower((SELECT username FROM users WHERE id = ?1)), 'login:' || ?2)").bind(row.user_id, row.email)]);
   return json({ ok: true });
 }
 
@@ -561,7 +592,7 @@ async function seeCards(req, db, user) {
 // Ends this session (the app forgets its token too).
 async function logout(req, db) {
   const token = bearer(req);
-  await db.prepare('DELETE FROM sessions WHERE token IN (?, ?)').bind(await sha256(token), token).run();
+  await db.prepare('DELETE FROM sessions WHERE token = ?').bind(await sha256(token)).run();
   return json({ ok: true });
 }
 
@@ -732,6 +763,7 @@ async function matchView(db, m, user) {
 }
 
 async function createMatch(db, user) {
+  await needUnlock(db, user, 'friends');
   return json(await matchView(db, await openInvite(db, user), user));
 }
 
@@ -751,6 +783,7 @@ async function openInvite(db, user) {
 
 async function joinMatch(req, db, user) {
   needFullTeam(user);
+  await needUnlock(db, user, 'friends');
   const { code = '' } = await body(req);
   const m = await db.prepare("SELECT * FROM matches WHERE code = ? AND status = 'waiting'")
     .bind(String(code).trim().toUpperCase()).first();
@@ -796,8 +829,7 @@ async function move(req, db, user, id) {
   if (done) {
     const winnerId = state.winner === 0 ? m.p0 : m.p1;
     if (m.code.startsWith('#')) await finishRankedMatch(db, m, winnerId);
-    else await db.batch([db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(WIN_GOLD, WIN_XP, winnerId),
-      bumpProgress(db, winnerId, 'wins'), questEvent(db, winnerId, 'friend')]);   // forfeits don't count for the quest
+    else await db.batch([...await friendWin(db, winnerId), questEvent(db, winnerId, 'friend')]);   // forfeits don't count for the quest
   }
   return json(await matchView(db, { ...m, state: JSON.stringify(state), status: done ? 'done' : 'active' }, user));
 }
@@ -810,14 +842,23 @@ async function leaveMatch(db, user, id) {
     const state = JSON.parse(m.state);
     const you = m.p0 === user.id ? 0 : 1;
     state.winner = 1 - you;
-    await db.prepare("UPDATE matches SET state = ?, status = 'done', updated = ? WHERE id = ?")
+    const left = await db.prepare("UPDATE matches SET state = ?, status = 'done', updated = ? WHERE id = ? AND status = 'active'")
       .bind(JSON.stringify(state), now(), m.id).run();
+    if (!left.meta.changes) return json({ ok: true });   // already over: pays once
     const winnerId = you === 0 ? m.p1 : m.p0;
-    if (m.code.startsWith('#')) await finishRankedMatch(db, m, winnerId);
-    else await db.batch([db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(WIN_GOLD, WIN_XP, winnerId),
-      bumpProgress(db, winnerId, 'wins')]);
+    // quitting straight away pays the winner nothing (a second account can't be used to farm wins)
+    const played = (state.moves || 0) >= FORFEIT_MOVES;
+    if (m.code.startsWith('#')) await finishRankedMatch(db, m, winnerId, played);
+    else if (played) await db.batch(await friendWin(db, winnerId));
   }
   return json({ ok: true });
+}
+const FORFEIT_MOVES = 6, FRIEND_PAID_DAY = 10;
+// A friend-battle win: gold and XP for the first FRIEND_PAID_DAY a day, the win always counts.
+async function friendWin(db, winnerId) {
+  const paid = (await db.prepare("SELECT n FROM quest_events WHERE user_id = ? AND day = ? AND kind = 'fpaid'").bind(winnerId, dayStart(now())).first())?.n ?? 0;
+  return [bumpProgress(db, winnerId, 'wins'), ...(paid < FRIEND_PAID_DAY ? [questEvent(db, winnerId, 'fpaid'),
+    db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(WIN_GOLD, WIN_XP, winnerId)] : [])];
 }
 
 // ---- social ----
@@ -911,7 +952,7 @@ const tradeSide = (cards, gold) => {
     throw new HttpError(400, 'Pick up to 3 cards each side.');
   const g = Number(gold ?? 0);
   if (!Number.isInteger(g) || g < 0 || g > 1e7) throw new HttpError(400, 'That gold amount is not valid.');
-  return [cards, g];
+  return [cards.map(t => cardOf(t) + (t.includes('#') ? '#' + fusedIdOf(t) : '')), g];   // "L#12.0" is "L#12": one copy can't be listed twice
 };
 async function friendByName(db, user, name) {
   const other = await db.prepare('SELECT * FROM users WHERE username = ?').bind(String(name).trim()).first();
@@ -1008,10 +1049,12 @@ async function answerTrade(req, db, user, action) {
     const blocked = covers(await tradeable(db, user, true), get) && get.map(cardOf).find(c => team.includes(c));
     await fail(blocked ? `Can't accept: ${BY_ID[blocked].name} is on your team. Take it off your team first.` : 'You no longer have everything this offer asks for.');
   }
-  if (user.gold < t.get_gold) await fail("You don't have the gold this offer asks for.");
+  if (t.get_gold) {
+    const paid = await db.prepare('UPDATE users SET gold = gold - ? WHERE id = ? AND gold >= ?').bind(t.get_gold, user.id, t.get_gold).run();
+    if (!paid.meta.changes) await fail("You don't have the gold this offer asks for.");
+  }
   // I get their held side now; mine is held for them until they claim it from the Social tab
   await db.batch([...handTo(db, user.id, give, t.give_gold), ...holdOut(db, user.id, get),
-    db.prepare('UPDATE users SET gold = gold - ? WHERE id = ?').bind(t.get_gold, user.id),
     questEvent(db, user.id, 'trade'), questEvent(db, t.from_id, 'trade')]);
   return json({ message: null, received: give.map(cardOf), gold: t.give_gold, from: from.username,
     social: await socialView(db, user), profile: await profile(db, await freshUser(db, user.id)) });
@@ -1200,10 +1243,10 @@ function rankedResult(db, me, won, week) {
 }
 
 // Live ranked matches are friend-battle matches whose code starts with '#'; they pay out here instead.
-async function finishRankedMatch(db, m, winnerId) {
+async function finishRankedMatch(db, m, winnerId, payWinner = true) {   // payWinner false: an early quit, only the quitter's loss counts
   await rankedRollover(db);
   const week = weekStart(now()), writes = [];
-  for (const id of [m.p0, m.p1]) writes.push(...rankedResult(db, await rankedRow(db, id), id === winnerId, week).writes);
+  for (const id of [m.p0, m.p1]) if (payWinner || id !== winnerId) writes.push(...rankedResult(db, await rankedRow(db, id), id === winnerId, week).writes);
   await db.batch(writes);
 }
 
@@ -1536,15 +1579,18 @@ async function leaderboard(db, user, scope) {
 // Deletes your account and everything tied to it (the build's live test uses this to clean up after itself).
 async function deleteAccount(req, db, user) {
   const { password = '' } = await body(req);   // asked again: a stolen session alone can't delete an account
-  if (await hashPassword(String(password).slice(0, 128), user.salt) !== user.pass_hash) throw new HttpError(401, 'Wrong password.');
+  await checkPassword(db, user, password);
   const id = user.id;
+  // what other players have held in trades with this account goes back to them (or is paid out, if this account accepted)
+  const held = (await db.prepare("SELECT * FROM trades WHERE to_id = ? AND status IN ('open', 'accepted')").bind(id).all()).results;
   await db.batch([
+    ...held.flatMap(t => t.status === 'open' ? giveBack(db, t) : handTo(db, t.from_id, JSON.parse(t.get), t.get_gold)),
     db.prepare('DELETE FROM friends WHERE user_id = ?1 OR friend_id = ?1').bind(id),
     db.prepare('DELETE FROM challenges WHERE to_id = ?1 OR match_id IN (SELECT id FROM matches WHERE p0 = ?1 OR p1 = ?1)').bind(id),
     db.prepare('DELETE FROM matches WHERE p0 = ?1 OR p1 = ?1').bind(id),
     db.prepare('DELETE FROM trades WHERE from_id = ?1 OR to_id = ?1').bind(id),
     db.prepare('DELETE FROM fused WHERE user_id = ?1').bind(id),
-    ...['collection', 'sessions', 'progress', 'presence', 'spins', 'gauntlet', 'shop_buys', 'hunts', 'daily_quests', 'quest_events', 'ranked', 'ranked_queue', 'pack_inv', 'powers', 'power_team', 'main_quest', 'emails', 'agreements', 'seen_cards', 'email_tokens'].map(t => db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(id)),
+    ...['collection', 'sessions', 'progress', 'presence', 'spins', 'gauntlet', 'shop_buys', 'hunts', 'daily_quests', 'quest_events', 'ranked', 'ranked_queue', 'pack_inv', 'powers', 'power_team', 'main_quest', 'emails', 'agreements', 'seen_cards', 'email_tokens', 'locks'].map(t => db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(id)),
     db.prepare('DELETE FROM users WHERE id = ?').bind(id),
   ]);
   return json({ ok: true });
@@ -1576,7 +1622,7 @@ async function route(req, env, ctx) {
     return res;
   }
   if (method === 'POST' && pathname === '/signup') return signup(req, db, env, ctx);
-  if (method === 'POST' && pathname === '/password/forgot') return forgotPassword(req, db, env);
+  if (method === 'POST' && pathname === '/password/forgot') return forgotPassword(req, db, env, ctx);
   if (method === 'POST' && pathname === '/password/reset') return resetPassword(req, db);
   if (method === 'GET' && pathname === '/verify') return verifyLink(req, db);
   if (method === 'POST' && pathname === '/login') return login(req, db, ctx);
@@ -1592,13 +1638,13 @@ async function route(req, env, ctx) {
   if (method === 'POST' && pathname === '/me/verify') return resendVerify(db, env, user);
   if (method === 'POST' && pathname === '/me/agree') return agree(req, db, user);
   if (method === 'POST' && pathname === '/cards/seen') return seeCards(req, db, user);
-  if (method === 'POST' && pathname === '/team') return setTeam(req, db, user);
-  if (method === 'POST' && pathname === '/fuse') return fuseCard(req, db, user);
+  if (method === 'POST' && pathname === '/team') return locked(db, user.id, u => setTeam(req, db, u));
+  if (method === 'POST' && pathname === '/fuse') return locked(db, user.id, u => fuseCard(req, db, u));
   if (method === 'POST' && pathname === '/shop') return buyShop(req, db, user);
   if (method === 'POST' && pathname === '/packs/open') return openInv(req, db, user);
   if (method === 'POST' && pathname === '/powers/team') return setPowerTeam(req, db, user);
   if (method === 'POST' && pathname === '/packs') return buyPack(db, user, String((await body(req)).type ?? 'cyber'));
-  if (method === 'POST' && pathname === '/recruit') return openRecruit(db, user);
+  if (method === 'POST' && pathname === '/recruit') return locked(db, user.id, u => openRecruit(db, u));
   if (method === 'POST' && pathname === '/mainquest/claim') return claimMain(db, user);
   if (method === 'POST' && pathname === '/avatar') return setAvatar(req, db, user);
   if (method === 'POST' && pathname === '/spin') return spin(db, user);
@@ -1609,14 +1655,14 @@ async function route(req, env, ctx) {
   if (method === 'POST' && pathname === '/friends/challenge') return challengeFriend(req, db, user);
   if (method === 'POST' && pathname === '/challenges/decline') return declineChallenge(req, db, user);
   if (method === 'GET' && a === 'trades' && b === 'cards' && c) return tradeCards(db, user, decodeURIComponent(c));
-  if (method === 'POST' && pathname === '/trades') return offerTrade(req, db, user);
-  if (method === 'POST' && pathname === '/trades/claim') return claimTrade(req, db, user);
-  if (method === 'POST' && a === 'trades' && ['accept', 'decline', 'cancel'].includes(b)) return answerTrade(req, db, user, b);
+  if (method === 'POST' && pathname === '/trades') return locked(db, user.id, u => offerTrade(req, db, u));
+  if (method === 'POST' && pathname === '/trades/claim') return locked(db, user.id, u => claimTrade(req, db, u));
+  if (method === 'POST' && a === 'trades' && ['accept', 'decline', 'cancel'].includes(b)) return locked(db, user.id, u => answerTrade(req, db, u, b));
   if (a === 'campaign') {
     if (method === 'GET' && b === 'current') return json(runView(JSON.parse((await getProgress(db, user.id)).run)));
     if (method === 'GET' && b === 'map') return json(campaignMap((await getProgress(db, user.id)).cleared));
     if (method === 'POST' && b === 'start') return startCampaign(db, user);
-    if (method === 'POST' && b === 'move') return campaignMove(req, db, user);
+    if (method === 'POST' && b === 'move') return withPower(req, db, user, () => campaignMove(req, db, user));
     if (method === 'POST' && b === 'leave') return leaveCampaign(db, user);
   }
   if (method === 'POST' && pathname === '/quests/claim') return claimQuest(req, db, user);
@@ -1625,7 +1671,7 @@ async function route(req, env, ctx) {
     if (method === 'POST' && b === 'search') return rankedSearch(db, user);
     if (method === 'POST' && b === 'cancel') return rankedCancel(db, user);
     if (method === 'POST' && b === 'ghost') return rankedGhost(db, user);
-    if (method === 'POST' && b === 'move') return rankedMove(req, db, user);
+    if (method === 'POST' && b === 'move') return withPower(req, db, user, () => rankedMove(req, db, user));
     if (method === 'POST' && b === 'leave') return rankedLeave(db, user);
     if (method === 'POST' && b === 'seen') return rankedSeen(db, user);
     if (method === 'POST' && b === 'claim') return rankedClaim(db, user);
@@ -1633,14 +1679,14 @@ async function route(req, env, ctx) {
   if (a === 'hunt') {
     if (method === 'GET' && !b) return huntHome(db, user);
     if (method === 'POST' && b === 'start') return startHunt(db, user);
-    if (method === 'POST' && b === 'move') return huntMove(req, db, user);
+    if (method === 'POST' && b === 'move') return withPower(req, db, user, () => huntMove(req, db, user));
     if (method === 'POST' && b === 'leave') return leaveHunt(db, user);
   }
   if (a === 'gauntlet') {
     if (method === 'GET' && !b) return gauntletHome(db, user);
     if (method === 'POST' && b === 'start') return startGauntlet(db, user);
     if (method === 'POST' && b === 'next') return nextGauntletFight(db, user);
-    if (method === 'POST' && b === 'move') return gauntletMove(req, db, user);
+    if (method === 'POST' && b === 'move') return withPower(req, db, user, () => gauntletMove(req, db, user));
     if (method === 'POST' && b === 'leave') return leaveGauntlet(db, user);
   }
   if (method === 'GET' && a === 'leaderboard' && (b === 'friends' || b === 'everyone')) return json(await leaderboard(db, user, b));
@@ -1650,7 +1696,7 @@ async function route(req, env, ctx) {
     if (method === 'POST' && b === 'join') return joinMatch(req, db, user);
     const id = Number(b);
     if (method === 'GET' && !c) return json(await matchView(db, await getMatch(db, user, id), user));
-    if (method === 'POST' && c === 'move') return move(req, db, user, id);
+    if (method === 'POST' && c === 'move') return withPower(req, db, user, () => move(req, db, user, id));
     if (method === 'POST' && c === 'leave') return leaveMatch(db, user, id);
   }
   throw new HttpError(404, 'Not found.');
