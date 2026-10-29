@@ -1,0 +1,29 @@
+# Manual: forward support@holosynth.app to the support inbox with Cloudflare Email Routing.
+# Results are posted as annotations (the raw logs aren't readable from Claude's side).
+name: email-routing
+
+on:
+  workflow_dispatch:
+    inputs:
+      to:
+        description: Inbox to forward support@ to
+        required: true
+
+jobs:
+  route:
+    runs-on: ubuntu-latest
+    env:
+      CF: https://api.cloudflare.com/client/v4
+      AUTH: "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}"
+      ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      TO: ${{ inputs.to }}
+    steps:
+      - run: |
+          note() { echo "::notice title=$1::$(echo "$2" | jq -c '{success, errors: [.errors[]?.message], result: (.result | if type == "object" then {id, name, status, enabled, email, verified} else (. | length) end)}' 2>/dev/null | head -c 900)"; }
+          Z=$(curl -s -H "$AUTH" "$CF/zones?name=holosynth.app"); note zone "$Z"
+          ZONE=$(echo "$Z" | jq -r '.result[0].id')
+          R=$(curl -s -X POST -H "$AUTH" "$CF/zones/$ZONE/email/routing/enable"); note enable "$R"
+          R=$(curl -s -X POST -H "$AUTH" -H 'Content-Type: application/json' "$CF/accounts/$ACCOUNT/email/routing/addresses" -d "{\"email\":\"$TO\"}"); note destination "$R"
+          R=$(curl -s -X POST -H "$AUTH" -H 'Content-Type: application/json' "$CF/zones/$ZONE/email/routing/rules" \
+            -d "{\"name\":\"support\",\"enabled\":true,\"matchers\":[{\"type\":\"literal\",\"field\":\"to\",\"value\":\"support@holosynth.app\"}],\"actions\":[{\"type\":\"forward\",\"value\":[\"$TO\"]}]}"); note rule "$R"
+          R=$(curl -s -H "$AUTH" "$CF/zones/$ZONE/email/routing"); note status "$R"
