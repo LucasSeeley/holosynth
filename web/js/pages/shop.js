@@ -83,19 +83,18 @@ function Shop({ p }) {
       <div class="row"><span class="label">Today in the shop</span>
         <span class="small muted" style="margin-left: auto;"><${Icon} name="clock" size="13" style="vertical-align: -2px;" /> New in <b class="head" style="color: var(--fg);">${left(sh.next)}</b></span></div>
       <div class="todayrow">
-        <section class="featured" style="--tint: ${rarityColor(rc.rarity)};">
-          <button class="featcard ${rare.sold ? 'sold' : ''} ${cardLock(p, rc) ? 'locked' : ''}" onClick=${() => setZoomed(rc.id)} aria-label="Look at ${rc.name}">
-            <${Card} id=${rc.id} />${cardLock(p, rc) && html`<${LockBand} text=${cardLock(p, rc)} />`}</button>
-          <div class="col featinfo">
-            <span class="label" style="color: var(--tint); font-size: 12px; letter-spacing: 2.5px;">Featured ${rc.rarity} · ${rc.cls}</span>
-            <span class="featname">${rc.name}</span>
-            <span class="muted small">${rc.hp} HP · ${rc.basic.name} ${rc.basic.dmg} · ${rc.special.name} ${rc.special.dmg}</span>
-            <span class="featquip">“${rc.quip}”</span>
-            <div class="featbuy">${buyBtn(rare, 0, 'big')}</div>
+        <section class="featured panel" style="--tint: ${rarityColor(rc.rarity)};">
+          <span class="label commonslabel" style="color: var(--tint); font-size: 11px;">Featured ${rc.rarity}</span>
+          <div class="common">
+            <button class="cbtn featcard ${rare.sold ? 'sold' : ''} ${cardLock(p, rc) ? 'locked' : ''}" onClick=${() => setZoomed(rc.id)} aria-label="Look at ${rc.name}">
+              <span class="wideonly"><${Card} id=${rc.id} /></span>
+              <span class="phoneonly ctile" style="--edge: ${rarityColor(rc.rarity)};"><img src=${art(rc.id)} alt="" /><span class="cname">${rc.name}</span></span>
+              ${cardLock(p, rc) && html`<${LockBand} text=${cardLock(p, rc)} />`}</button>
+            ${buyBtn(rare, 0)}
           </div>
         </section>
         <section class="commons panel">
-          <span class="label commonslabel" style="color: var(--muted); font-size: 11px;">Commons · ${fmt(sh.cards[1]?.price ?? 500)} each</span>
+          <span class="label commonslabel" style="color: var(--muted); font-size: 11px;">Commons</span>
           <div class="commonsrow">
             ${sh.cards.slice(1).map((item, i) => {
               const c = card(item.id); if (!c) return null;

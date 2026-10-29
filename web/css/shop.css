@@ -11,18 +11,16 @@
 .shop { display: flex; flex-direction: column; gap: 18px; }
 .shophead { display: flex; align-items: flex-end; gap: 16px; }
 .shopgold { margin-left: auto; height: 40px; padding: 0 16px; border-radius: 20px; font-size: 18px; color: var(--gold-hi); }
-.todayrow { display: flex; gap: 18px; align-items: stretch; }
-.featured { flex: 1.25; display: flex; gap: 24px; padding: 20px; border-radius: 20px; border: 1px solid color-mix(in srgb, var(--tint) 45%, transparent);
-  background: radial-gradient(70% 90% at 15% 30%, color-mix(in srgb, var(--tint) 22%, transparent), transparent 70%), rgba(18,16,30,.88); box-shadow: 0 0 24px color-mix(in srgb, var(--tint) 18%, transparent); min-width: 0; }
-.featcard { flex: none; width: 176px; position: relative; padding: 0; border: 0; background: none; cursor: zoom-in; text-align: left; }
-.featinfo { gap: 10px; padding-top: 6px; min-width: 0; flex: 1; }
-.featname { font: 700 36px/1 var(--head); }
-.featquip { font-size: 14px; font-style: italic; color: rgba(235,233,247,.75); }
-.featbuy { margin-top: auto; width: 220px; max-width: 100%; }
+.todayrow { --cw: clamp(150px, 12vw, 240px); display: flex; gap: 18px; align-items: stretch; }   /* --cw: one shop card's width */
+/* the featured rare sits in a panel like the commons', same card size, its rarity colour on the border and glow */
+.featured { flex: none; padding: 20px; display: flex; flex-direction: column; gap: 12px; border-color: color-mix(in srgb, var(--tint) 55%, transparent);
+  background: radial-gradient(90% 70% at 50% 40%, color-mix(in srgb, var(--tint) 16%, transparent), transparent 75%), rgba(18,16,30,.88); box-shadow: 0 0 22px color-mix(in srgb, var(--tint) 20%, transparent); }
+.featured .common { flex: none; width: var(--cw); margin-block: auto; }
+.featured .card .face { box-shadow: 0 0 16px color-mix(in srgb, var(--tint) 45%, transparent); }
 .btn.big.sm { height: 50px; font-size: 16px; }
 .commons { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-.commonsrow { display: flex; gap: 14px; }
-.common { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.commonsrow { display: flex; gap: 14px; justify-content: center; margin-block: auto; }
+.common { flex: 0 1 var(--cw); min-width: 0; display: flex; flex-direction: column; gap: 10px; }
 .cbtn { position: relative; padding: 0; border: 0; background: none; cursor: zoom-in; text-align: left; display: block; width: 100%; }
 .cbtn.sold, .featcard.sold { opacity: .5; }
 .cbtn.locked .card, .featcard.locked .card, .cbtn.locked .ctile { filter: brightness(.7); }
@@ -45,11 +43,10 @@
 .packtile .btn { margin-top: auto; }
 .packtoast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 30; display: flex; align-items: center; gap: 12px; padding: 10px 18px 10px 14px; border-radius: 16px;
   background: rgba(7,6,12,.96); border: 1px solid rgba(232,184,90,.7); box-shadow: 0 8px 30px rgba(0,0,0,.6); animation: pop .25s; }
-@media (max-width: 1279px) { .todayrow { flex-direction: column; } .packgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 1279px) { .packgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 759px) {
   .shop { gap: 14px; } .shophead { display: none; }
-  .featured { padding: 12px; gap: 14px; } .featcard { width: 132px; } .featname { font-size: 24px; } .featquip { display: none; }
-  .featinfo { gap: 8px; padding-top: 0; justify-content: center; } .featbuy { margin-top: 0; width: 100%; }
+  .featured { padding: 0; background: none; border: 0; box-shadow: none; } .featured .common { width: auto; }
   .commons { padding: 0; background: none; border: 0; } .commonslabel { display: none; } .commonsrow { gap: 10px; }
   .ctile { position: relative; height: 92px; border-radius: 10px; overflow: hidden; border: 1px solid var(--edge); }
   .ctile img { width: 100%; height: 100%; object-fit: cover; }
