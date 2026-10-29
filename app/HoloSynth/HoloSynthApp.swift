@@ -145,7 +145,7 @@ struct AuthView: View {
                     Text("© 2026 Lucas Seeley. All rights reserved.").font(.custom("Barlow-Regular", size: 11)).foregroundColor(Theme.muted)
                         .padding(.top, 4)
                 }
-                .padding(.horizontal, 24).padding(.top, newAccount ? 12 : 40).padding(.bottom, 16)
+                .padding(.horizontal, 24).padding(.top, newAccount ? 30 : 40).padding(.bottom, 16)
             }
             .scrollDismissesKeyboard(.interactively)
             .staticWhenItFits()   // it only scrolls when the keyboard is up
