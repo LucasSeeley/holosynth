@@ -62,7 +62,7 @@ export function ProfileTab() {
       </section>
     </div>
     <footer class="pf-legal">
-      <p><a href="/terms" target="_blank" rel="noopener">Terms and Conditions</a> · <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a></p>
+      <p><a href="https://holosynth.app/terms" target="_blank" rel="noopener">Terms and Conditions</a> · <a href="https://holosynth.app/privacy" target="_blank" rel="noopener">Privacy Policy</a></p>
       <p class="tiny muted">© 2026 Lucas Seeley. All rights reserved.</p>
     </footer>
     ${modal === 'avatar' && html`<${AvatarPicker} close=${() => setModal(null)} />`}

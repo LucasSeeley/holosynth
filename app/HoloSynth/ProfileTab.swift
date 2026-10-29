@@ -113,8 +113,8 @@ struct ProfileTab: View {
     private var legal: some View {
         VStack(spacing: 6) {
             HStack(spacing: 14) {
-                Link("Terms and Conditions", destination: API.base.appendingPathComponent("terms"))
-                Link("Privacy Policy", destination: API.base.appendingPathComponent("privacy"))
+                Link("Terms and Conditions", destination: URL(string: "https://holosynth.app/terms")!)
+                Link("Privacy Policy", destination: URL(string: "https://holosynth.app/privacy")!)
             }
             .font(.barlow(13, semibold: true)).tint(Theme.brass)
             Text("© 2026 Lucas Seeley. All rights reserved.").font(.barlow(12)).foregroundColor(Theme.muted)

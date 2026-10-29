@@ -92,16 +92,16 @@ function AuthView() {
         : newAccount && !f.password && html`<p class="small muted" style="text-align: center; margin: 0;">8+ characters, with a letter and a number</p>`}
       ${newAccount && html`<div class="agree">
         <label><input type="checkbox" checked=${f.terms} onChange=${e => setF({ ...f, terms: e.target.checked })} />
-          <span>I have read and agree to the <a href="/terms" target="_blank" rel="noopener">Terms and Conditions</a></span></label>
+          <span>I have read and agree to the <a href="https://holosynth.app/terms" target="_blank" rel="noopener">Terms and Conditions</a></span></label>
         <label><input type="checkbox" checked=${f.privacy} onChange=${e => setF({ ...f, privacy: e.target.checked })} />
-          <span>I have read and agree to the <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a></span></label>
+          <span>I have read and agree to the <a href="https://holosynth.app/privacy" target="_blank" rel="noopener">Privacy Policy</a></span></label>
       </div>`}
       <button class="btn gold big wide" disabled=${busy || !complete} style="margin-top: 6px;">${busy ? '…' : newAccount ? 'Create account' : 'Log in'}</button>
       ${!newAccount && html`<button type="button" class="link" style="align-self: center;" onClick=${() => setForgot(true)}>Forgot password?</button>`}
       <button type="button" class="link" style="min-height: 44px; font-weight: 400; color: var(--muted);"
         onClick=${() => { setNew(!newAccount); set({ error: null }); setF({ ...f, confirm: '' }); }}>
         ${newAccount ? 'Already have an account? ' : 'New here? '}<b style="color: var(--brass);">${newAccount ? 'Log in' : 'Create an account'}</b></button>
-      ${!newAccount && html`<p class="legal"><a href="/terms" target="_blank" rel="noopener">Terms and Conditions</a> · <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a></p>`}
+      ${!newAccount && html`<p class="legal"><a href="https://holosynth.app/terms" target="_blank" rel="noopener">Terms and Conditions</a> · <a href="https://holosynth.app/privacy" target="_blank" rel="noopener">Privacy Policy</a></p>`}
       <p class="legal">© 2026 Lucas Seeley. All rights reserved.</p>
     </form>
     ${forgot && html`<${ForgotModal} name=${f.username} close=${() => setForgot(false)} />`}
@@ -176,9 +176,9 @@ function AgreeView() {
     <p class="muted" style="margin: 0;">Please read and agree to our Terms and Conditions and Privacy Policy.</p>
     <div class="agree" style="text-align: left; align-self: stretch;">
       <label><input type="checkbox" checked=${terms} onChange=${e => setT(e.target.checked)} />
-        <span>I have read and agree to the <a href="/terms" target="_blank" rel="noopener">Terms and Conditions</a></span></label>
+        <span>I have read and agree to the <a href="https://holosynth.app/terms" target="_blank" rel="noopener">Terms and Conditions</a></span></label>
       <label><input type="checkbox" checked=${privacy} onChange=${e => setP(e.target.checked)} />
-        <span>I have read and agree to the <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a></span></label>
+        <span>I have read and agree to the <a href="https://holosynth.app/privacy" target="_blank" rel="noopener">Privacy Policy</a></span></label>
     </div>
     ${err && html`<p class="err" role="alert" style="margin: 0;">${err}</p>`}
     <button class="btn gold big wide" disabled=${busy || !terms || !privacy}>${busy ? '…' : 'Continue'}</button>

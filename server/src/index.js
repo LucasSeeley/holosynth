@@ -422,7 +422,7 @@ const addCard = (db, userId, id) => db.prepare(
   'INSERT INTO collection (user_id, card_id, count) VALUES (?, ?, 1) ON CONFLICT (user_id, card_id) DO UPDATE SET count = count + 1',
 ).bind(userId, id);
 
-// The "last updated" dates on web/terms.html and web/privacy.html: change these with them.
+// The "last updated" dates on site/terms.html and site/privacy.html (holosynth.app): change these with them.
 const TERMS_VERSION = '2026-10-28', PRIVACY_VERSION = '2026-10-28';
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 // Names that could pass as the game or its staff; checked without case, _ or digits ("Admin_1" counts).
@@ -1738,6 +1738,8 @@ const SECURITY = { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-r
 async function handle(req, env, ctx) {
   const self = new URL(req.url).origin, origin = req.headers.get('Origin');
   const { pathname } = new URL(req.url);
+  const legal = pathname.match(/^\/(privacy|terms)(\.html)?$/);   // the legal pages live on holosynth.app; older app builds still link here
+  if (legal) return new Response(null, { status: 301, headers: { Location: `https://holosynth.app/${legal[1]}` } });
   const changes = req.method !== 'GET' && req.method !== 'HEAD';
   const viaCookie = !req.headers.get('Authorization') && !!cookieToken(req);
   if (origin && origin !== self) throw new HttpError(403, 'Not allowed.');

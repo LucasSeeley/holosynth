@@ -265,7 +265,7 @@ struct AgreeRow: View {
             .accessibilityLabel("I have read and agree to the \(name)")
             .accessibilityValue(on ? "checked" : "not checked")
             (Text("I have read and agree to the ").foregroundColor(Color(hex: 0xA9A5C2))
-             + Text(.init("[\(name)](\(API.base.appendingPathComponent(path).absoluteString))")).font(.custom("Barlow-SemiBold", size: 14)))
+             + Text(.init("[\(name)](https://holosynth.app/\(path))")).font(.custom("Barlow-SemiBold", size: 14)))
                 .font(.custom("Barlow-Regular", size: 14)).tint(Theme.brass)
                 .fixedSize(horizontal: false, vertical: true)
         }
