@@ -174,7 +174,7 @@ img { display: block; -webkit-user-drag: none; user-select: none; }   /* picture
 .card .pas { display: flex; align-items: center; gap: 2cqw; padding: 1.2cqw 2.5cqw; border-radius: 3cqw; color: var(--cyan); background: rgba(63,240,255,.12); border: 1px solid rgba(63,240,255,.55); font-size: 4.4cqw; font-weight: 700; }
 .card .pas .pn { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card .pas .pv { font: 4.3cqw ui-monospace, monospace; }
-.card .quip { margin-top: auto; text-align: center; font-size: 3.6cqw; font-style: italic; color: rgba(235,233,247,.62); line-height: 1.25;
+.card .quip { margin-top: auto; text-align: center; font-size: 3cqw; font-style: italic; color: rgba(235,233,247,.62); line-height: 1.25;
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .card .foil { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen; background-size: 300% 300%; animation: foil 6s linear infinite;
   background-image: linear-gradient(115deg, transparent 15%, rgba(63,240,255,.28) 30%, rgba(255,63,164,.24) 45%, rgba(255,215,122,.28) 60%, rgba(124,255,107,.2) 72%, transparent 85%); }

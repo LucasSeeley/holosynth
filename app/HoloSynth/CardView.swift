@@ -70,9 +70,9 @@ struct CardView: View {
                 }
                 Spacer(minLength: 0)
                 Text(card.quip)
-                    .font(.system(size: w * 0.036).italic())
+                    .font(.system(size: w * 0.03).italic())   // one line, the same size as the printed cards
                     .foregroundColor(Theme.fg.opacity(0.62))
-                    .multilineTextAlignment(.center).lineLimit(3).minimumScaleFactor(0.7)
+                    .multilineTextAlignment(.center).lineLimit(1).minimumScaleFactor(0.7)
                     .frame(maxWidth: .infinity)
             }
             .foregroundColor(Theme.fg)
