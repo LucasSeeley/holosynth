@@ -55,8 +55,8 @@ jobs:
         id: deploy
         run: |
           npx wrangler deploy | tee deploy.log
-          URL=$(grep -o 'https://[a-zA-Z0-9.-]*workers\.dev' deploy.log | head -1)
-          test -n "$URL"
+          grep -q 'workers\.dev' deploy.log
+          URL=https://play.holosynth.app   # the game's address: the app, the tests and SideStore links all use it
           echo "url=$URL" >> "$GITHUB_OUTPUT"
           # Publish the server address on the commit so it can be read without the Actions logs.
           gh api "repos/${{ github.repository }}/statuses/${{ github.sha }}" \
@@ -70,7 +70,7 @@ jobs:
             if curl -sf https://play.holosynth.app/cards.json -o /dev/null; then echo "::notice title=domain::play.holosynth.app is live"; exit 0; fi
             sleep 20
           done
-          echo "::warning title=domain::play.holosynth.app not answering yet"
+          echo "::error title=domain::play.holosynth.app not answering"; exit 1
 
       - name: Upload card art (only images that changed)
         run: node upload-art.mjs "${{ steps.deploy.outputs.url }}" "${{ steps.setup.outputs.kv }}"
