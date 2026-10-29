@@ -64,6 +64,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
 
+      - name: Check the game's address answers
+        run: |
+          for i in 1 2 3 4 5 6; do
+            if curl -sf https://play.holosynth.app/cards.json -o /dev/null; then echo "::notice title=domain::play.holosynth.app is live"; exit 0; fi
+            sleep 20
+          done
+          echo "::warning title=domain::play.holosynth.app not answering yet"
+
       - name: Upload card art (only images that changed)
         run: node upload-art.mjs "${{ steps.deploy.outputs.url }}" "${{ steps.setup.outputs.kv }}"
 

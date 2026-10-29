@@ -1,7 +1,10 @@
 name = "holosynth"
 main = "src/index.js"
 compatibility_date = "2025-06-01"
-workers_dev = true
+workers_dev = true   # the old address keeps working for app builds that still use it
+
+# The game's own address (holosynth.app itself is kept for a website later).
+routes = [{ pattern = "play.holosynth.app", custom_domain = true }]
 
 # Run the Worker near the database: every request makes several D1 reads, so distance to D1 is most of the wait.
 [placement]
