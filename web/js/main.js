@@ -1,8 +1,8 @@
 // HoloSynth web: boot, sign-in, and the app shell (sidebar on wide screens, the app's tab bar on phones).
 import { html, render, useState, useEffect } from './vendor/preact-htm.js';
 import { loadCards, card, xpInto, xpNeed } from './cards.js';
-import { state, useStore, set, boot, auth, setEmail, agree, logout, loadSocial, refresh, openScreen, closeScreen, screenOpen, local } from './store.js';
-import { Icon, Coin, Avatar, Bar, fmt, PackImg } from './ui.js';
+import { state, useStore, set, api, boot, auth, setEmail, agree, logout, loadSocial, refresh, openScreen, closeScreen, screenOpen, local } from './store.js';
+import { Icon, Coin, Avatar, Bar, fmt, PackImg, Modal } from './ui.js';
 import { Music } from './sound.js';
 import { PlayTab } from './pages/play.js';
 import { ShopTab, RecruitView } from './pages/shop.js';
@@ -57,6 +57,7 @@ function AuthView() {
   useEffect(() => { if (location.pathname !== '/' || location.hash) goHome(false); }, []);
   const [f, setF] = useState({ username: '', email: '', password: '', confirm: '', terms: false, privacy: false });
   const [newAccount, setNew] = useState(true);
+  const [forgot, setForgot] = useState(false);
   const [busy, setBusy] = useState(false);
   const upd = k => e => setF({ ...f, [k]: e.target.value });
   let problem = null;
@@ -96,13 +97,57 @@ function AuthView() {
           <span>I have read and agree to the <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a></span></label>
       </div>`}
       <button class="btn gold big wide" disabled=${busy || !complete} style="margin-top: 6px;">${busy ? '…' : newAccount ? 'Create account' : 'Log in'}</button>
+      ${!newAccount && html`<button type="button" class="link" style="align-self: center;" onClick=${() => setForgot(true)}>Forgot password?</button>`}
       <button type="button" class="link" style="min-height: 44px; font-weight: 400; color: var(--muted);"
         onClick=${() => { setNew(!newAccount); set({ error: null }); setF({ ...f, confirm: '' }); }}>
         ${newAccount ? 'Already have an account? ' : 'New here? '}<b style="color: var(--brass);">${newAccount ? 'Log in' : 'Create an account'}</b></button>
       ${!newAccount && html`<p class="legal"><a href="/terms" target="_blank" rel="noopener">Terms and Conditions</a> · <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a></p>`}
       <p class="legal">© 2026 Lucas Seeley. All rights reserved.</p>
     </form>
+    ${forgot && html`<${ForgotModal} name=${f.username} close=${() => setForgot(false)} />`}
   </div></div>`;
+}
+
+// Forgot password: emails a reset link (the answer is the same whether or not the account exists).
+function ForgotModal({ name, close }) {
+  const [v, setV] = useState(name || ''), [busy, setBusy] = useState(false), [msg, setMsg] = useState(null), [err, setErr] = useState(null);
+  const go = async e => {
+    e.preventDefault(); setBusy(true); setErr(null);
+    try { setMsg((await api('password/forgot', { name: v.trim() })).message); } catch (x) { setErr(x.message); }
+    setBusy(false);
+  };
+  return html`<${Modal} label="Forgot password" onClose=${close}><form class="col" onSubmit=${go}>
+    <span class="h2">Forgot password</span>
+    ${msg ? html`<p class="soft" style="margin: 0;">${msg}</p><button type="button" class="btn gold" onClick=${close}>OK</button>`
+      : html`<p class="muted small" style="margin: 0;">Enter your username or email and we'll email you a link to set a new password.</p>
+        <input class="field" placeholder="Username or email" autocomplete="username" autocapitalize="off" value=${v} onInput=${e => setV(e.target.value)} />
+        ${err && html`<p class="err" role="alert" style="margin: 0;">${err}</p>`}
+        <button class="btn gold" disabled=${busy || !v.trim()}>${busy ? '…' : 'Send link'}</button>`}
+  </form><//>`;
+}
+
+// The page the reset email links to (#/reset?t=…): choose a new password.
+function ResetView() {
+  const token = new URLSearchParams(location.hash.split('?')[1] || '').get('t') || '';
+  const [pw, setPw] = useState(''), [c, setC] = useState(''), [busy, setBusy] = useState(false), [err, setErr] = useState(null), [done, setDone] = useState(false);
+  const bad = pw && (pw.length < 8 || !/[A-Za-z]/.test(pw) || !/[0-9]/.test(pw)) ? 'Password: 8+ characters with a letter and a number' : c && c !== pw ? "Passwords don't match" : null;
+  const go = async e => {
+    e.preventDefault(); setBusy(true); setErr(null);
+    try { await api('password/reset', { token, password: pw }); setDone(true); } catch (x) { setErr(x.message); }
+    setBusy(false);
+  };
+  const home = () => { history.replaceState(null, '', '/'); set({ authed: false, profile: null }); };
+  return html`<div class="auth city"><form class="authbox" onSubmit=${go} style="text-align: center; align-items: center;">
+    <${Icon} name="lock" size="40" style="color: var(--brass);" />
+    <h1 class="h1" style="font-size: 26px;">${done ? 'Password changed' : 'Set a new password'}</h1>
+    ${done ? html`<p class="muted" style="margin: 0;">You've been logged out everywhere. Log in with your new password.</p>
+        <button type="button" class="btn gold big wide" onClick=${home}>Log in</button>`
+      : html`<input class="field" type="password" placeholder="New password" autocomplete="new-password" value=${pw} onInput=${e => setPw(e.target.value)} />
+        <input class="field" type="password" placeholder="Confirm new password" autocomplete="new-password" value=${c} onInput=${e => setC(e.target.value)} />
+        ${(err || bad) && html`<p class="err" role="alert" style="margin: 0;">${err || bad}</p>`}
+        <button class="btn gold big wide" disabled=${busy || !pw || pw !== c || !!bad}>${busy ? '…' : 'Save password'}</button>
+        <button type="button" class="link" onClick=${home}>Back to log in</button>`}
+  </form></div>`;
 }
 
 // Accounts made before sign-up asked for an email add one once, before playing.
@@ -214,8 +259,13 @@ function Toast() {
   return html`<div class="toast" role="alert">${s.error}</div>`;
 }
 
+// Coming back from the verify email's link: say how it went, then carry on to the home page.
+const linkNote = { '#/verified': 'Email verified ✓', '#/linkexpired': 'That link has expired or was already used.' }[location.hash];
+if (linkNote) { history.replaceState(null, '', '/'); setTimeout(() => set({ error: linkNote }), 1500); }
+
 function App() {
   const s = useStore();
+  if (location.hash.startsWith('#/reset')) return html`<${ResetView} />`;
   if (s.authed === null) return html`<${Loading} />`;
   if (!s.authed) return html`<${AuthView} />`;
   if (s.profile && s.profile.email == null) return html`<${AddEmailView} />`;

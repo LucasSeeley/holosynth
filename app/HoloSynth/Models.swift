@@ -112,6 +112,7 @@ extension Profile {
 struct Profile: Decodable, Equatable {
     let username: String
     let email: String?            // nil: an older account, asked for one before playing
+    let emailVerified: Bool?
     let agreed: Bool?             // false: asked to agree to the Terms and Privacy Policy before playing
     let gold: Int
     let xp: Int

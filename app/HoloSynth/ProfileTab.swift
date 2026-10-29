@@ -7,6 +7,7 @@ struct ProfileTab: View {
     @State private var effects = AudioPrefs.effects
     @State private var picking = false
     @State private var confirmLogout = false
+    @State private var verifySent: String?   // the verify email went out (or why not)
 
     var body: some View {
         ZStack {
@@ -123,6 +124,29 @@ struct ProfileTab: View {
 
     private var settings: some View {
         VStack(spacing: 0) {
+            if let p = store.profile, let email = p.email {
+                HStack(spacing: 10) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Email")
+                        Text(email).font(.barlow(13)).foregroundColor(Theme.muted).lineLimit(1).truncationMode(.middle)
+                    }
+                    Spacer(minLength: 4)
+                    if p.emailVerified == true {
+                        Text("Verified").font(.barlow(13, semibold: true)).foregroundColor(Color(hex: 0x3DFF8A))
+                    } else {
+                        Button(verifySent ?? "Verify") {
+                            Task {
+                                struct Reply: Decodable { let message: String? }
+                                do { let r: Reply = try await API.call("me/verify", token: store.token, body: [:]); verifySent = r.message ?? "Sent" }
+                                catch { verifySent = error.localizedDescription }
+                            }
+                        }
+                        .font(.barlow(13, semibold: true)).foregroundColor(Theme.pink).disabled(verifySent != nil)
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                    }
+                }
+                Divider().overlay(Theme.brass.opacity(0.1)).padding(.vertical, 10)
+            }
             Toggle("Music", isOn: $music)
                 .onChange(of: music) { Music.setEnabled($0) }
             Divider().overlay(Theme.brass.opacity(0.1)).padding(.vertical, 10)

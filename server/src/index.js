@@ -261,7 +261,8 @@ async function profile(db, user) {
       q('SELECT kind, n FROM quest_events WHERE user_id = ? AND day = ?', user.id, day),
       q(`SELECT (SELECT email FROM emails WHERE user_id = ?1) AS email,
          (SELECT terms || '|' || privacy FROM agreements WHERE user_id = ?1) AS agreed,
-         (SELECT ids FROM seen_cards WHERE user_id = ?1) AS seen`, user.id),
+         (SELECT ids FROM seen_cards WHERE user_id = ?1) AS seen,
+         (SELECT verified FROM emails WHERE user_id = ?1) AS verified`, user.id),
     ])).map(r => r.results);
   const prog = progRow ?? { user_id: user.id, cleared: 0, wins: 0, packs: 0, run: null };
   const mainRowNow = mainRowRead ?? { step: 0, base: '{}' };
@@ -294,6 +295,7 @@ async function profile(db, user) {
   return {
     username: user.username,
     email: emailRow?.email ?? null,   // null: an older account; the app asks for one
+    emailVerified: !!emailRow?.verified,
     agreed: emailRow?.agreed === `${TERMS_VERSION}|${PRIVACY_VERSION}`,   // false: asked to agree (again, after either page changes)
     gold: user.gold,
     xp: user.xp,
@@ -394,7 +396,7 @@ const addCard = (db, userId, id) => db.prepare(
 // The "last updated" dates on web/terms.html and web/privacy.html: change these with them.
 const TERMS_VERSION = '2026-10-28', PRIVACY_VERSION = '2026-10-28';
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-async function signup(req, db) {
+async function signup(req, db, env, ctx) {
   const { username = '', password = '', email = '', agree } = await body(req);
   const name = String(username).trim(), mail = String(email).trim().toLowerCase();
   if (agree !== true) throw new HttpError(400, 'Agree to the Terms and Conditions and the Privacy Policy to create an account.');
@@ -419,6 +421,7 @@ async function signup(req, db) {
   await db.batch([db.prepare('INSERT INTO progress (user_id) VALUES (?)').bind(user.id),
     db.prepare('INSERT INTO emails (user_id, email, created) VALUES (?, ?, ?)').bind(user.id, mail, now()),
     db.prepare('INSERT INTO agreements (user_id, terms, privacy, at) VALUES (?, ?, ?, ?)').bind(user.id, TERMS_VERSION, PRIVACY_VERSION, now())]);
+  ctx?.waitUntil(sendVerify(db, env, user, mail).catch(e => console.error(e)));
   return json({ token: await newSession(db, user.id), profile: await profile(db, user) });
 }
 
@@ -444,7 +447,7 @@ async function login(req, db, ctx) {
 }
 
 // Add or change your email (asks for the password): accounts made before sign-up asked for one.
-async function setEmail(req, db, user) {
+async function setEmail(req, db, user, env, ctx) {
   const { email = '', password = '' } = await body(req);
   const mail = String(email).trim().toLowerCase();
   if (mail.length > 254 || !EMAIL_RE.test(mail)) throw new HttpError(400, 'Enter a valid email address.');
@@ -452,7 +455,87 @@ async function setEmail(req, db, user) {
   if (await db.prepare('SELECT 1 FROM emails WHERE email = ? AND user_id != ?').bind(mail, user.id).first()) throw new HttpError(409, 'That email already has an account.');
   await db.prepare(`INSERT INTO emails (user_id, email, created) VALUES (?1, ?2, ?3)
     ON CONFLICT (user_id) DO UPDATE SET email = ?2, verified = 0, created = ?3`).bind(user.id, mail, now()).run();
+  ctx?.waitUntil(sendVerify(db, env, user, mail).catch(e => console.error(e)));
   return json(await profile(db, user));
+}
+
+// ---- email (Resend): verification and password reset links ----
+const SITE = 'https://play.holosynth.app';
+const VERIFY_MS = 7 * 86400000, RESET_MS = 3600000;
+const SAME_ANSWER = "If that account exists, we've emailed a reset link to its address.";
+const esc = t => String(t).replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
+async function sendEmail(env, to, subject, lines, button, url) {
+  if (!env.RESEND_API_KEY) { console.log('email not sent (no RESEND_API_KEY):', subject); return; }   // local runs
+  const html = `<div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:24px;color:#1a1626">
+    <h2 style="margin:0 0 16px">HoloSynth</h2>${lines.map(l => `<p style="font-size:15px;line-height:1.5">${esc(l)}</p>`).join('')}
+    <p style="margin:24px 0"><a href="${url}" style="background:#E0A12A;color:#1A0D05;padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:bold">${esc(button)}</a></p>
+    <p style="font-size:12px;color:#777">If the button doesn't work, open this link: ${esc(url)}</p>
+    <p style="font-size:12px;color:#777">© 2026 Lucas Seeley · Questions? support@holosynth.app</p></div>`;
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST', headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from: 'HoloSynth <noreply@holosynth.app>', to: [to], reply_to: 'support@holosynth.app', subject, html,
+      text: `${lines.join('\n\n')}\n\n${button}: ${url}` }),
+  });
+  if (!res.ok) console.error('email failed', res.status, await res.text());
+}
+async function emailToken(db, userId, kind, email, ms) {
+  const token = randomHex(32);
+  await db.batch([db.prepare('DELETE FROM email_tokens WHERE user_id = ? AND kind = ?').bind(userId, kind),   // only the newest link works
+    db.prepare('INSERT INTO email_tokens (token, user_id, kind, email, expires) VALUES (?, ?, ?, ?, ?)').bind(await sha256(token), userId, kind, email, now() + ms)]);
+  return token;
+}
+async function sendVerify(db, env, user, email) {
+  const token = await emailToken(db, user.id, 'verify', email, VERIFY_MS);
+  await sendEmail(env, email, 'Verify your HoloSynth email', [`Hi ${user.username}, tap below to confirm this is your email.`, 'The link works for 7 days.'],
+    'Verify email', `${SITE}/verify?t=${token}`);
+}
+// Takes a link's token (it works once): its row if it's still valid, else null.
+async function useToken(db, token, kind) {
+  if (!/^[0-9a-f]{64}$/.test(String(token))) return null;
+  const row = await db.prepare('DELETE FROM email_tokens WHERE token = ? AND kind = ? RETURNING *').bind(await sha256(token), kind).first();
+  return row && row.expires > now() ? row : null;
+}
+// The link in the verify email (a browser page load): marks the address verified, then opens the game.
+async function verifyLink(req, db) {
+  const row = await useToken(db, new URL(req.url).searchParams.get('t'), 'verify');
+  if (row) await db.prepare('UPDATE emails SET verified = 1 WHERE user_id = ? AND email = ?').bind(row.user_id, row.email).run();
+  return new Response(null, { status: 302, headers: { Location: `/#/${row ? 'verified' : 'linkexpired'}` } });
+}
+async function resendVerify(db, env, user) {
+  const e = await db.prepare('SELECT email, verified FROM emails WHERE user_id = ?').bind(user.id).first();
+  if (!e) throw new HttpError(400, 'Add an email first.');
+  if (e.verified) return json({ ok: true, message: 'Already verified.' });
+  await limit(db, 'verifymail:' + user.id, 3, 3600000);
+  await sendVerify(db, env, user, e.email);
+  return json({ ok: true, message: `Sent to ${e.email}` });
+}
+// Forgot password: emails a reset link. Always the same answer, so it can't be used to find accounts.
+async function forgotPassword(req, db, env) {
+  const name = String((await body(req)).name ?? '').trim().slice(0, 254);
+  await limit(db, 'forgotip:' + clientIp(req), 5, 3600000);
+  const user = name.includes('@')
+    ? await db.prepare('SELECT u.*, e.email AS mail FROM emails e JOIN users u ON u.id = e.user_id WHERE e.email = ?').bind(name.toLowerCase()).first()
+    : await db.prepare('SELECT u.*, e.email AS mail FROM users u JOIN emails e ON e.user_id = u.id WHERE u.username = ?').bind(name).first();
+  if (user) {
+    try { await limit(db, 'forgot:' + user.id, 3, 3600000); } catch { return json({ ok: true, message: SAME_ANSWER }); }
+    const token = await emailToken(db, user.id, 'reset', user.mail, RESET_MS);
+    await sendEmail(env, user.mail, 'Reset your HoloSynth password', [`Hi ${user.username}, someone (hopefully you) asked to reset your password.`,
+      "The link works for 1 hour. If it wasn't you, ignore this email: your password stays the same."], 'Reset password', `${SITE}/#/reset?t=${token}`);
+  }
+  return json({ ok: true, message: SAME_ANSWER });
+}
+async function resetPassword(req, db) {
+  const { token, password = '' } = await body(req);
+  const pw = String(password);
+  if (pw.length < 8 || pw.length > 128 || !/[A-Za-z]/.test(pw) || !/[0-9]/.test(pw)) throw new HttpError(400, 'Password: 8+ characters with a letter and a number.');
+  const row = await useToken(db, token, 'reset');
+  if (!row) throw new HttpError(400, 'That link has expired or was already used. Ask for a new one.');
+  const salt = randomHex(16);
+  await db.batch([db.prepare('UPDATE users SET pass_hash = ?, salt = ? WHERE id = ?').bind(await hashPassword(pw, salt), salt, row.user_id),
+    db.prepare('DELETE FROM sessions WHERE user_id = ?').bind(row.user_id),   // logged out everywhere
+    db.prepare('UPDATE emails SET verified = 1 WHERE user_id = ? AND email = ?').bind(row.user_id, row.email),   // they got the email
+    db.prepare('DELETE FROM attempts WHERE key = ?').bind('login:' + row.user_id)]);
+  return json({ ok: true });
 }
 
 // Agree to the current Terms and Conditions and Privacy Policy (accounts made before sign-up asked, or after they change).
@@ -1461,7 +1544,7 @@ async function deleteAccount(req, db, user) {
     db.prepare('DELETE FROM matches WHERE p0 = ?1 OR p1 = ?1').bind(id),
     db.prepare('DELETE FROM trades WHERE from_id = ?1 OR to_id = ?1').bind(id),
     db.prepare('DELETE FROM fused WHERE user_id = ?1').bind(id),
-    ...['collection', 'sessions', 'progress', 'presence', 'spins', 'gauntlet', 'shop_buys', 'hunts', 'daily_quests', 'quest_events', 'ranked', 'ranked_queue', 'pack_inv', 'powers', 'power_team', 'main_quest', 'emails', 'agreements', 'seen_cards'].map(t => db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(id)),
+    ...['collection', 'sessions', 'progress', 'presence', 'spins', 'gauntlet', 'shop_buys', 'hunts', 'daily_quests', 'quest_events', 'ranked', 'ranked_queue', 'pack_inv', 'powers', 'power_team', 'main_quest', 'emails', 'agreements', 'seen_cards', 'email_tokens'].map(t => db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(id)),
     db.prepare('DELETE FROM users WHERE id = ?').bind(id),
   ]);
   return json({ ok: true });
@@ -1492,7 +1575,10 @@ async function route(req, env, ctx) {
     if (res.ok) res.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
     return res;
   }
-  if (method === 'POST' && pathname === '/signup') return signup(req, db);
+  if (method === 'POST' && pathname === '/signup') return signup(req, db, env, ctx);
+  if (method === 'POST' && pathname === '/password/forgot') return forgotPassword(req, db, env);
+  if (method === 'POST' && pathname === '/password/reset') return resetPassword(req, db);
+  if (method === 'GET' && pathname === '/verify') return verifyLink(req, db);
   if (method === 'POST' && pathname === '/login') return login(req, db, ctx);
 
   const user = await currentUser(req, db, ctx);
@@ -1502,7 +1588,8 @@ async function route(req, env, ctx) {
   if (method === 'GET' && pathname === '/me') return json(await profile(db, user));
   if (method === 'POST' && pathname === '/me/delete') return deleteAccount(req, db, user);
   if (method === 'POST' && pathname === '/logout') return logout(req, db);
-  if (method === 'POST' && pathname === '/me/email') return setEmail(req, db, user);
+  if (method === 'POST' && pathname === '/me/email') return setEmail(req, db, user, env, ctx);
+  if (method === 'POST' && pathname === '/me/verify') return resendVerify(db, env, user);
   if (method === 'POST' && pathname === '/me/agree') return agree(req, db, user);
   if (method === 'POST' && pathname === '/cards/seen') return seeCards(req, db, user);
   if (method === 'POST' && pathname === '/team') return setTeam(req, db, user);

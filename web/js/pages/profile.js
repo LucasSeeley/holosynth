@@ -12,7 +12,9 @@ const RAINBOW = 'linear-gradient(90deg, #FF3D6E, #FFB03D, #FFF03D, #3DFF8A, #3DD
 export function ProfileTab() {
   const s = useStore(), p = s.profile;
   const [music, setMusic] = useState(prefs.music), [effects, setFx] = useState(prefs.effects);
-  const [modal, setModal] = useState(null);     // 'avatar' | 'email' | 'logout' | 'delete'
+  const [modal, setModal] = useState(null);
+  const [sent, setSent] = useState(null);   // the verify email went out
+  const sendVerify = async () => { try { setSent((await api('me/verify', {})).message); } catch (e) { setSent(e.message); } };     // 'avatar' | 'email' | 'logout' | 'delete'
   if (!p) return null;
   const since = new Date(p.since).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
   const frac = xpInto(p) / xpNeed(p), R = 54, C = 2 * Math.PI * R;
@@ -51,7 +53,9 @@ export function ProfileTab() {
         ${toggle('Sound effects', effects, on => { setFx(on); setEffects(on); })}
       </section>
       <section class="panel pad" style="padding-top: 4px; padding-bottom: 4px; border-color: rgba(232,184,90,.2);" aria-label="Account">
-        <div class="pf-set"><div class="col grow" style="gap: 2px; min-width: 0;"><span>Email</span><span class="small muted ellipsis">${p.email || 'None yet'}</span></div>
+        <div class="pf-set"><div class="col grow" style="gap: 2px; min-width: 0;"><span>Email</span><span class="small muted ellipsis">${p.email || 'None yet'}</span>
+            ${p.email && (p.emailVerified ? html`<span class="tiny" style="color: var(--online);">Verified</span>`
+              : html`<span class="tiny" style="color: var(--pink);">Not verified · <button class="link tiny" disabled=${!!sent} onClick=${sendVerify}>${sent || 'Send link'}</button></span>`)}</div>
           <button class="btn out sm" onClick=${() => setModal('email')}>Change</button></div>
         <div class="pf-set"><button class="link" style="color: var(--pink); font-size: 15px;" onClick=${() => setModal('logout')}>Log out</button></div>
         <div class="pf-set"><button class="link" style="color: var(--muted); font-weight: 400;" onClick=${() => setModal('delete')}>Delete account</button></div>

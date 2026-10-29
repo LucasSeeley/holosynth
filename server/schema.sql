@@ -213,3 +213,12 @@ CREATE TABLE IF NOT EXISTS seen_cards (
   user_id INTEGER PRIMARY KEY,
   ids TEXT NOT NULL
 );
+
+-- One-time links sent by email: verify an address, or reset a password. Only a hash of the token is kept.
+CREATE TABLE IF NOT EXISTS email_tokens (
+  token TEXT PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  kind TEXT NOT NULL,          -- verify | reset
+  email TEXT NOT NULL,         -- the address it was sent to
+  expires INTEGER NOT NULL
+);

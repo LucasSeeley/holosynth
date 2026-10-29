@@ -34,6 +34,9 @@ struct AuthView: View {
     @State private var agreeTerms = false
     @State private var agreePrivacy = false
     @State private var busy = false
+    @State private var forgotOpen = false
+    @State private var forgotName = ""
+    @State private var forgotReply: String?
     @FocusState private var focus: Field?
     enum Field { case user, email, pass, confirm }
 
@@ -122,6 +125,10 @@ struct AuthView: View {
                         .disabled(busy || !complete)
                         .opacity(complete ? 1 : 0.6)
                         .padding(.top, 6)
+                        if !newAccount {
+                            Button("Forgot password?") { forgotName = username; forgotOpen = true }
+                                .font(.custom("Barlow-SemiBold", size: 15)).foregroundColor(gold).frame(minHeight: 36)
+                        }
                     }
                     Button {
                         newAccount.toggle()
@@ -143,6 +150,15 @@ struct AuthView: View {
             .scrollDismissesKeyboard(.interactively)
             .staticWhenItFits()   // it only scrolls when the keyboard is up
         }
+        // Forgot password: the server emails a link that opens the reset page on the web.
+        .alert("Forgot password", isPresented: $forgotOpen) {
+            TextField("Username or email", text: $forgotName).textInputAutocapitalization(.never).autocorrectionDisabled()
+            Button("Send link") { Task { forgotReply = await sendForgot(forgotName) } }
+            Button("Cancel", role: .cancel) {}
+        } message: { Text("We'll email you a link to set a new password.") }
+        .alert(forgotReply ?? "", isPresented: Binding(get: { forgotReply != nil }, set: { if !$0 { forgotReply = nil } })) {
+            Button("OK", role: .cancel) {}
+        }
     }
 
     private func field<Content: View>(_ which: Field, icon: String, @ViewBuilder _ content: () -> Content) -> some View {
@@ -158,6 +174,12 @@ struct AuthView: View {
         .shadow(color: on ? gold.opacity(0.18) : .clear, radius: 6)
         .contentShape(Rectangle())
         .onTapGesture { focus = which }
+    }
+
+    private func sendForgot(_ name: String) async -> String {
+        struct Reply: Decodable { let message: String }
+        do { let r: Reply = try await API.call("password/forgot", token: nil, body: ["name": name.trimmingCharacters(in: .whitespaces)]); return r.message }
+        catch { return error.localizedDescription }
     }
 
     private func submit() {

@@ -53,21 +53,21 @@ const tag = Date.now().toString(36).slice(-6);
 // How long the common calls take (shown as a notice on the build).
 const timed = async (label, p) => { const t0 = Date.now(); const r = await p; timings.push(`${label} ${Date.now() - t0}ms`); return r; };
 const timings = [];
-await expectError(call('/signup', null, { username: `e2e_a_${tag}`, email: `a_${tag}@example.com`, password: 'secret11' }), 400);   // must agree to the Terms and Privacy Policy
+await expectError(call('/signup', null, { username: `e2e_a_${tag}`, email: `delivered+a_${tag}@resend.dev`, password: 'secret11' }), 400);   // must agree to the Terms and Privacy Policy
 await expectError(call('/signup', null, { agree: true, username: `e2e_a_${tag}`, email: 'nope', password: 'secret11' }), 400);   // email checked
-await expectError(call('/signup', null, { agree: true, username: `e2e_a_${tag}`, email: `a_${tag}@example.com`, password: 'short' }), 400);   // 8+ characters
-const a = await call('/signup', null, { agree: true, username: `e2e_a_${tag}`, email: `a_${tag}@example.com`, password: 'secret11' });
-const b = await call('/signup', null, { agree: true, username: `e2e_b_${tag}`, email: `b_${tag}@example.com`, password: 'secret22' });
+await expectError(call('/signup', null, { agree: true, username: `e2e_a_${tag}`, email: `delivered+a_${tag}@resend.dev`, password: 'short' }), 400);   // 8+ characters
+const a = await call('/signup', null, { agree: true, username: `e2e_a_${tag}`, email: `delivered+a_${tag}@resend.dev`, password: 'secret11' });
+const b = await call('/signup', null, { agree: true, username: `e2e_b_${tag}`, email: `delivered+b_${tag}@resend.dev`, password: 'secret22' });
 for (let i = 0; i < 3; i++) await timed('me', call('/me', a.token));
 check(a.profile.agreed === true, 'sign-up records the agreement');
 await expectError(call('/me/agree', a.token, {}), 400);
 check((await call('/me/agree', a.token, { agree: true })).agreed === true, 'agreeing again (older accounts) works');
 check(a.profile.recruit === 1 && a.profile.gold === 0 && a.profile.team.length === 0 && a.profile.mainQuest.step === 1, 'new account starts empty, one Recruit Pack to open');
-await expectError(call('/signup', null, { agree: true, username: `E2E_A_${tag}`, email: `c_${tag}@example.com`, password: 'secret11' }), 409);   // name taken (any case)
-await expectError(call('/signup', null, { agree: true, username: `e2e_c_${tag}`, email: `A_${tag}@Example.com`, password: 'secret11' }), 409);   // email taken (any case)
+await expectError(call('/signup', null, { agree: true, username: `E2E_A_${tag}`, email: `delivered+c_${tag}@resend.dev`, password: 'secret11' }), 409);   // name taken (any case)
+await expectError(call('/signup', null, { agree: true, username: `e2e_c_${tag}`, email: `delivered+A_${tag}@Resend.dev`, password: 'secret11' }), 409);   // email taken (any case)
 await expectError(call('/login', null, { username: `e2e_a_${tag}`, password: 'nope' }), 401);
-await expectError(call('/signup', null, { agree: true, username: `e2e_c_${tag}`, email: `c_${tag}@example.com`, password: 'abcdefgh' }), 400);   // needs a number
-check((await call('/login', null, { username: `A_${tag}@example.com`, password: 'secret11' })).profile.email === `a_${tag}@example.com`, 'log in with email');
+await expectError(call('/signup', null, { agree: true, username: `e2e_c_${tag}`, email: `delivered+c_${tag}@resend.dev`, password: 'abcdefgh' }), 400);   // needs a number
+check((await call('/login', null, { username: `delivered+A_${tag}@resend.dev`, password: 'secret11' })).profile.email === `delivered+a_${tag}@resend.dev`, 'log in with email');
 { const extra = (await call('/login', null, { username: `e2e_a_${tag}`, password: 'secret11' })).token;   // log in, then log out: that token stops working
   check((await call('/me', extra)).username === `e2e_a_${tag}`, 'second session works');
   await call('/logout', extra, {});
