@@ -1,0 +1,80 @@
+/* holosynth.app landing page: same look as the game (dark city, red glow, brass/gold, Chakra Petch + Barlow). */
+@font-face { font-family: 'Chakra Petch'; font-weight: 700; font-display: swap; src: url(/fonts/ChakraPetch-Bold.ttf) format('truetype'); }
+@font-face { font-family: 'Barlow'; font-weight: 400; font-display: swap; src: url(/fonts/Barlow-Regular.ttf) format('truetype'); }
+@font-face { font-family: 'Barlow'; font-weight: 600; font-display: swap; src: url(/fonts/Barlow-SemiBold.ttf) format('truetype'); }
+
+:root {
+  --ink: #07060C; --panel: #12111D; --line: #262338;
+  --fg: #EBE9F7; --muted: #8E8AA8; --soft: #A9A5C2;
+  --brass: #E8B85A; --gold-hi: #FFD77A; --gold-lo: #E0A12A; --red: #9E1024;
+  --head: 'Chakra Petch', system-ui, sans-serif; --body: 'Barlow', system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { background: var(--ink); }
+body { margin: 0; background: var(--ink); color: var(--fg); font: 17px/1.5 var(--body); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+img { display: block; max-width: 100%; height: auto; }
+a { color: var(--brass); }
+:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 3px; }
+h1, h2, h3 { font-family: var(--head); font-weight: 700; margin: 0; line-height: 1.1; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; height: 58px; padding: 0 40px; border-radius: 16px; text-decoration: none;
+  font: 700 18px var(--head); letter-spacing: 2px; text-transform: uppercase; color: #2A1A00;
+  background: linear-gradient(180deg, var(--gold-hi), var(--gold-lo)); box-shadow: 0 0 28px rgba(255, 197, 61, .35), inset 0 1px 0 rgba(255,255,255,.5);
+  transition: transform .15s, box-shadow .15s; }
+.btn:hover { transform: translateY(-2px); box-shadow: 0 0 40px rgba(255, 197, 61, .55), inset 0 1px 0 rgba(255,255,255,.5); }
+
+/* hero: the city backdrop with a red glow, logo, pitch, play button, then the five packs fanned out */
+.hero { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 18px; padding: 56px 16px 0; overflow: hidden;
+  background: radial-gradient(70% 50% at 50% 35%, rgba(158, 16, 36, .45), transparent 70%),
+    linear-gradient(180deg, rgba(7,6,12,.55), rgba(7,6,12,.2) 40%, var(--ink) 98%), url(/img/login_bg.webp) center top / cover no-repeat; }
+.logo { width: min(560px, 88vw); filter: drop-shadow(0 0 24px rgba(255, 120, 40, .35)); }
+.hero h1 { text-wrap: balance; font-size: clamp(30px, 5vw, 54px); margin-top: 6px; text-shadow: 0 2px 20px rgba(0,0,0,.7); }
+.lede { max-width: 620px; margin: 0; color: var(--soft); font-size: clamp(17px, 2vw, 20px); }
+.small { margin: -6px 0 0; color: var(--muted); font-size: 14px; }
+.packs { display: flex; justify-content: center; align-items: flex-end; margin-top: 28px; width: min(1100px, 100%); }
+.packs img { width: 19%; margin: 0 -2%; filter: drop-shadow(0 18px 30px rgba(0,0,0,.7)); transition: transform .25s; }
+.packs img:nth-child(1) { transform: rotate(-12deg) translateY(40px); }
+.packs img:nth-child(2) { transform: rotate(-6deg) translateY(12px); }
+.packs img:nth-child(3) { transform: scale(1.12); z-index: 1; }
+.packs img:nth-child(4) { transform: rotate(6deg) translateY(12px); }
+.packs img:nth-child(5) { transform: rotate(12deg) translateY(40px); }
+
+main { display: flex; flex-direction: column; align-items: center; gap: 96px; padding: 80px 16px 96px; }
+section { width: min(1100px, 100%); text-align: center; }
+section h2 { font-size: clamp(28px, 4vw, 42px); }
+section > p { margin: 10px auto 0; max-width: 560px; color: var(--soft); }
+
+.cardrow { display: flex; justify-content: center; gap: 18px; margin-top: 36px; }
+.cardrow img { width: calc((100% - 72px) / 5); max-width: 200px; border-radius: 6.5% / 4.8%; box-shadow: 0 14px 34px rgba(0,0,0,.6); transition: transform .2s; }
+.cardrow img:hover { transform: translateY(-8px) rotate(-1deg); }
+
+.features { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; text-align: left; }
+.feature { padding: 26px 22px; border-radius: 20px; border: 1px solid rgba(232, 184, 90, .22);
+  background: radial-gradient(90% 70% at 20% 0%, rgba(158, 16, 36, .22), transparent 70%), var(--panel); }
+.feature h3 { font-size: 21px; color: var(--gold-hi); }
+.feature p { margin: 10px 0 0; color: var(--soft); font-size: 16px; }
+.icons { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
+.icons img { width: 26px; height: 26px; }
+
+.cta { display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 56px 16px; border-radius: 28px; border: 1px solid rgba(232, 184, 90, .3);
+  background: radial-gradient(60% 90% at 50% 100%, rgba(158, 16, 36, .45), transparent 75%), var(--panel); }
+
+footer { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 28px 16px 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; text-align: center; }
+footer nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 24px; }
+footer a { color: var(--soft); text-decoration: none; }
+footer a:hover { color: var(--gold-hi); }
+footer p { margin: 0; }
+
+@media (max-width: 900px) { .features { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) {
+  .hero { padding-top: 40px; gap: 14px; }
+  .hero h1 br { display: none; }
+  .btn { height: 54px; padding: 0 32px; font-size: 16px; }
+  .packs img { width: 23%; margin: 0 -3.5%; }
+  main { gap: 64px; padding: 56px 16px 64px; }
+  .cardrow { flex-wrap: wrap; gap: 12px; }
+  .cardrow img { width: calc((100% - 24px) / 3); }
+  .features { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { .btn, .cardrow img { transition: none; } }
