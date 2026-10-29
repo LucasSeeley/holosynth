@@ -1,0 +1,8 @@
+# holosynth.app landing page: a static-files-only Worker serving ../site (deployed by the "site" job in build.yml).
+name = "holosynth-site"
+compatibility_date = "2026-10-01"
+workers_dev = false
+routes = [{ pattern = "holosynth.app", custom_domain = true }]
+
+[assets]
+directory = "../site"
