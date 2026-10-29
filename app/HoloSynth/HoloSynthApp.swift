@@ -126,7 +126,7 @@ struct AuthView: View {
                         .opacity(complete ? 1 : 0.6)
                         .padding(.top, 6)
                         if !newAccount {
-                            Button("Forgot password?") { forgotName = username; forgotOpen = true }
+                            Button("Forgot password?") { focus = nil; forgotName = username; forgotReply = nil; forgotOpen = true }
                                 .font(.custom("Barlow-SemiBold", size: 15)).foregroundColor(gold).frame(minHeight: 36)
                         }
                     }
@@ -151,15 +151,45 @@ struct AuthView: View {
             .staticWhenItFits()   // it only scrolls when the keyboard is up
         }
         // Forgot password: the server emails a link that opens the reset page on the web.
-        .alert("Forgot password", isPresented: $forgotOpen) {
-            TextField("Username or email", text: $forgotName).textInputAutocapitalization(.never).autocorrectionDisabled()
-            Button("Send link") { Task { forgotReply = await sendForgot(forgotName) } }
-            Button("Cancel", role: .cancel) {}
-        } message: { Text("We'll email you a link to set a new password.") }
-        .alert(forgotReply ?? "", isPresented: Binding(get: { forgotReply != nil }, set: { if !$0 { forgotReply = nil } })) {
-            Button("OK", role: .cancel) {}
+        .overlay { if forgotOpen { forgotPanel } }
+    }
+
+    private var forgotPanel: some View {
+        ZStack {
+            Color.black.opacity(0.6).ignoresSafeArea()
+                .onTapGesture { if !busy { closeForgot() } }
+            VStack(spacing: 14) {
+                Text("Forgot password").font(.chakra(24)).foregroundColor(Theme.fg)
+                if let reply = forgotReply {
+                    Text(reply).font(.barlow(15)).foregroundColor(Theme.muted).multilineTextAlignment(.center)
+                    Button("Done", action: closeForgot).buttonStyle(GoldButton())
+                } else {
+                    Text("We'll email you a link to set a new password.")
+                        .font(.barlow(15)).foregroundColor(Theme.muted).multilineTextAlignment(.center)
+                    TextField("", text: $forgotName, prompt: Text("Username or email").foregroundColor(Theme.muted))
+                        .textInputAutocapitalization(.never).autocorrectionDisabled().keyboardType(.emailAddress)
+                        .submitLabel(.send).onSubmit(sendForgotLink)
+                        .font(.barlow(17)).foregroundColor(Theme.fg).tint(gold)
+                        .padding(.horizontal, 16).frame(height: 54).goldPanel()
+                    Button(busy ? "…" : "Send link", action: sendForgotLink).buttonStyle(GoldButton())
+                        .disabled(busy || forgotName.trimmingCharacters(in: .whitespaces).isEmpty)
+                    Button("Cancel", action: closeForgot).buttonStyle(OutlineButton()).disabled(busy)
+                }
+            }
+            .padding(22).frame(maxWidth: 380)
+            .background(Color(hex: 0x0E0C18), in: RoundedRectangle(cornerRadius: 18))
+            .overlay(RoundedRectangle(cornerRadius: 18).stroke(gold.opacity(0.28), lineWidth: 1))
+            .padding(24)
         }
     }
+
+    private func sendForgotLink() {
+        guard !busy, !forgotName.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        busy = true
+        Task { forgotReply = await sendForgot(forgotName); busy = false }
+    }
+
+    private func closeForgot() { forgotOpen = false; forgotReply = nil }
 
     private func field<Content: View>(_ which: Field, icon: String, @ViewBuilder _ content: () -> Content) -> some View {
         let on = focus == which
