@@ -122,8 +122,7 @@ function Shop({ p }) {
         return html`<div class="packtile ${lock ? 'locked' : ''}" style="--glow: ${pk.glow};" aria-label="${pk.name}, ${pk.cards} cards, ${pk.contents}">
           <div class="packart"><${PackImg} type=${pk.type} height="178" />${lock && html`<${LockBand} text=${lock} />`}</div>
           <span class="pkname">${pk.name}</span>
-          <span class="pkdesc wideonly">${pk.type === 'power' ? pk.contents : `${pk.cards} cards · ${pk.contents.replace('A guaranteed ', 'a ').replace(' + 7 more', '').replace(' + 4 more cards', '')}`}</span>
-          <span class="pkdesc phoneonly">${pk.cards} cards</span>
+          <span class="pkdesc">${pk.cards} cards</span>
           ${lock ? html`<button class="btn sm wide lockedbtn" disabled><${Icon} name="lock" size="12" /><span class="wideonly">${lock}</span><span class="phoneonly">Locked</span></button>`
             : html`<button class="btn gold sm wide" disabled=${!onSale || buying || gold < pk.price} onClick=${() => buyPk(pk)}>
                 ${onSale ? html`<${BtnCoin} />${fmt(pk.price)}` : 'Soon'}</button>`}

@@ -40,7 +40,7 @@
 .packtile.locked .packart img { filter: grayscale(.85) brightness(.55); }
 .packtile .lockband { display: none; }
 .pkname { font: 700 17px var(--head); margin-top: 4px; text-align: center; }
-.pkdesc { font-size: 13px; color: var(--muted); text-align: center; min-height: 34px; }
+.pkdesc { font-size: 13px; color: var(--muted); text-align: center; }
 .packtile .btn { margin-top: auto; }
 .packtoast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 30; display: flex; align-items: center; gap: 12px; padding: 10px 18px 10px 14px; border-radius: 16px;
   background: rgba(7,6,12,.96); border: 1px solid rgba(232,184,90,.7); box-shadow: 0 8px 30px rgba(0,0,0,.6); animation: pop .25s; }
