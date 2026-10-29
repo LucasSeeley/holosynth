@@ -48,8 +48,9 @@
 @media (max-width: 759px) {
   .shop { gap: 14px; } .shophead { display: none; }
   .todayrow { flex-direction: column; gap: 14px; }   /* like the app: featured card + its info in a panel, the commons in a row under it */
-  .featured { flex-direction: row; align-items: center; gap: 16px; padding: 14px; } .featured .common { width: 40%; margin: 0; }
-  .featinfo { display: flex; flex-direction: column; gap: 10px; flex: 1; min-width: 0; }
+  .featured { flex-direction: row; align-items: stretch; gap: 16px; padding: 14px; } .featured .common { width: 40%; margin: 0; }
+  .featinfo { display: flex; flex-direction: column; gap: 10px; flex: 1; min-width: 0; padding-top: 6px; }
+  .featinfo > :last-child { margin-top: auto; }   /* buy button bottom lines up with the card bottom */
   .featname { font: 700 26px/1 var(--head); }
   .commons { padding: 0; background: none; border: 0; } .commonslabel { display: none; } .commonsrow { gap: 10px; }
   .ctile { position: relative; height: 92px; border-radius: 10px; overflow: hidden; border: 1px solid var(--edge); }
