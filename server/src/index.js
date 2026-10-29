@@ -425,6 +425,9 @@ const addCard = (db, userId, id) => db.prepare(
 // The "last updated" dates on web/terms.html and web/privacy.html: change these with them.
 const TERMS_VERSION = '2026-10-28', PRIVACY_VERSION = '2026-10-28';
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+// Names that could pass as the game or its staff; checked without case, _ or digits ("Admin_1" counts).
+export const reservedName = n => { const k = n.toLowerCase().replace(/[_0-9]/g, '');
+  return /holosynth|admin|moderator|official/.test(k) || ['support', 'staff', 'system', 'dev', 'developer', 'help', 'team', 'mod', 'root', 'owner', 'server', 'null', 'undefined'].includes(k); };
 async function signup(req, db, env, ctx) {
   const { username = '', password = '', email = '', agree } = await body(req);
   const name = String(username).trim(), mail = String(email).trim().toLowerCase();
@@ -437,7 +440,7 @@ async function signup(req, db, env, ctx) {
   // checking names and emails is limited too (20 an hour per network), so the form can't be used to list accounts.
   // IPv6 networks count per /48 here: anyone can get a /48 of /64s for free, so new accounts can't be made one /64 after another
   await limit(db, 'signupchk:' + clientIp(req, 3), 20, 3600000);
-  if (await db.prepare('SELECT 1 FROM users WHERE username = ?').bind(name).first()) {
+  if (reservedName(name) || await db.prepare('SELECT 1 FROM users WHERE username = ?').bind(name).first()) {
     throw new HttpError(409, 'That username is taken.');
   }
   if (await emailTaken(db, mail)) throw new HttpError(409, 'That email already has an account.');
