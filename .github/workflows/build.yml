@@ -55,7 +55,6 @@ jobs:
         id: deploy
         run: |
           npx wrangler deploy | tee deploy.log
-          grep -q 'workers\.dev' deploy.log
           URL=https://play.holosynth.app   # the game's address: the app, the tests and SideStore links all use it
           echo "url=$URL" >> "$GITHUB_OUTPUT"
           # Publish the server address on the commit so it can be read without the Actions logs.

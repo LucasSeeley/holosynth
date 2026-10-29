@@ -11,9 +11,6 @@ import { SocialTab } from './pages/social.js';
 import { ProfileTab } from './pages/profile.js';
 import { DailySpin } from './screens/spin.js';
 
-// The old address sends people to the game's own one (play.holosynth.app); they log in again there once.
-if (location.hostname.endsWith('.workers.dev')) location.replace('https://play.holosynth.app/' + location.hash);
-
 // Very wide screens (1440p, 4K) get the same layout zoomed up, so nothing ends up tiny in a corner.
 function fitZoom() {
   const w = innerWidth, h = innerHeight;   // CSS zoom doesn't change these

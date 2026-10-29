@@ -1,7 +1,7 @@
 name = "holosynth"
 main = "src/index.js"
 compatibility_date = "2025-06-01"
-workers_dev = true   # the old address keeps working for app builds that still use it
+workers_dev = false   # the old *.workers.dev address is off: everything uses play.holosynth.app
 
 # The game's own address (holosynth.app itself is kept for a website later).
 routes = [{ pattern = "play.holosynth.app", custom_domain = true }]
