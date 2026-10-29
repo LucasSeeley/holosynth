@@ -35,7 +35,7 @@ async function newSession(db, userId) {
 // The app sends its token as a Bearer header; the web client never sees one: it rides in an HttpOnly cookie.
 const COOKIE = '__Host-hs';
 const cookieToken = req => (req.headers.get('Cookie') || '').match(/(?:^|;\s*)__Host-hs=([0-9a-f]{64})/)?.[1] || '';
-const bearer = req => (req.headers.get('Authorization') || '').replace(/^Bearer /, '') || cookieToken(req);
+const bearer = req => { const h = req.headers.get('Authorization'); return h === null ? cookieToken(req) : h.replace(/^Bearer /, ''); };
 const sessionCookie = (token, maxAge) => `${COOKIE}=${token}; Path=/; Max-Age=${maxAge}; HttpOnly; Secure; SameSite=Strict`;
 
 // Too many tries from one name or network: refuse for the rest of the window. Counts every try, kept in D1.
@@ -46,13 +46,13 @@ async function limit(db, key, max, windowMs) {
   if (row.n > max) throw new HttpError(429, 'Too many tries. Wait a few minutes and try again.');
 }
 // IPv6 counts per /64 (one connection usually owns the whole block, so single addresses are free to rotate)
-export function ipKey(ip) {
+export function ipKey(ip, groups = 4) {   // IPv6: the first `groups` groups (4: the /64, 3: the /48)
   if (!ip.includes(':')) return ip;
   const [head, tail] = ip.split('::'), h = head ? head.split(':') : [], t = tail ? tail.split(':') : [];
   const full = tail === undefined ? h : [...h, ...Array(Math.max(0, 8 - h.length - t.length)).fill('0'), ...t];   // "::" expanded
-  return full.slice(0, 4).map(g => (parseInt(g, 16) || 0).toString(16)).join(':') + '::/64';
+  return full.slice(0, groups).map(g => (parseInt(g, 16) || 0).toString(16)).join(':') + `::/${groups * 16}`;
 }
-const clientIp = req => ipKey(req.headers.get('CF-Connecting-IP') || 'unknown');
+const clientIp = (req, groups) => ipKey(req.headers.get('CF-Connecting-IP') || 'unknown', groups);
 
 // One inventory change at a time per player (trades, fusing, team, recruit): a burst of parallel requests can't all pass
 // the same "do you own it" check. fn gets the player re-read inside the lock.
@@ -84,8 +84,14 @@ async function currentUser(req, db, ctx) {
 const MAX_BODY = 16384;   // every request the game makes is tiny
 async function body(req) {
   if (Number(req.headers.get('Content-Length') || 0) > MAX_BODY) throw new HttpError(413, 'Request too large.');
-  const text = await req.text();
-  if (text.length > MAX_BODY) throw new HttpError(413, 'Request too large.');
+  let text = '';   // read in chunks and stop past the cap (a chunked upload has no Content-Length to check)
+  if (req.body) {
+    const reader = req.body.pipeThrough(new TextDecoderStream()).getReader();
+    for (let r; !(r = await reader.read()).done;) {
+      text += r.value;
+      if (text.length > MAX_BODY) { reader.cancel(); throw new HttpError(413, 'Request too large.'); }
+    }
+  }
   try { return JSON.parse(text); } catch { throw new HttpError(400, 'Bad request.'); }
 }
 
@@ -428,15 +434,14 @@ async function signup(req, db, env, ctx) {
   if (String(password).length < 8) throw new HttpError(400, 'Password must be at least 8 characters.');
   if (String(password).length > 128) throw new HttpError(400, 'Password must be at most 128 characters.');
   if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) throw new HttpError(400, 'Password needs at least one letter and one number.');
-  // checking names and emails is limited too (20 an hour per network), so the form can't be used to list accounts
-  await limit(db, 'signupchk:' + clientIp(req), 20, 3600000);
+  // checking names and emails is limited too (20 an hour per network), so the form can't be used to list accounts.
+  // IPv6 networks count per /48 here: anyone can get a /48 of /64s for free, so new accounts can't be made one /64 after another
+  await limit(db, 'signupchk:' + clientIp(req, 3), 20, 3600000);
   if (await db.prepare('SELECT 1 FROM users WHERE username = ?').bind(name).first()) {
     throw new HttpError(409, 'That username is taken.');
   }
-  if (await db.prepare('SELECT 1 FROM emails WHERE email = ?').bind(mail).first()) {
-    throw new HttpError(409, 'That email already has an account.');
-  }
-  await limit(db, 'signup:' + clientIp(req), 3, 3600000);   // 3 new accounts an hour per network (typos and taken names don't count)
+  if (await emailTaken(db, mail)) throw new HttpError(409, 'That email already has an account.');
+  await limit(db, 'signup:' + clientIp(req, 3), 3, 3600000);   // 3 new accounts an hour per network (typos and taken names don't count)
   const salt = randomHex(16);
   const user = await db.prepare(
     'INSERT INTO users (username, pass_hash, salt, gold, team, created) VALUES (?, ?, ?, ?, ?, ?) RETURNING *',
@@ -469,6 +474,15 @@ async function login(req, db, ctx) {
   return json({ token: await newSession(db, user.id), profile: await profile(db, user) });
 }
 
+// An email is taken if another account has verified it, or claimed it within the last week (its verify link still works).
+// An older unverified claim is dropped, so nobody can hold on to an address they don't own.
+async function emailTaken(db, mail, userId = 0) {
+  const row = await db.prepare('SELECT user_id, verified, created FROM emails WHERE email = ? AND user_id != ?').bind(mail, userId).first();
+  if (!row) return false;
+  if (row.verified || row.created > now() - VERIFY_MS) return true;
+  await db.prepare('DELETE FROM emails WHERE user_id = ? AND verified = 0').bind(row.user_id).run();
+  return false;
+}
 // The password asked again before a big change: 5 tries per 15 minutes, so a stolen session can't guess it.
 async function checkPassword(db, user, password) {
   await limit(db, 'pwcheck:' + user.id, 5, 900000);
@@ -480,7 +494,7 @@ async function setEmail(req, db, user, env, ctx) {
   const mail = String(email).trim().toLowerCase();
   if (mail.length > 254 || !EMAIL_RE.test(mail)) throw new HttpError(400, 'Enter a valid email address.');
   await checkPassword(db, user, password);
-  if (await db.prepare('SELECT 1 FROM emails WHERE email = ? AND user_id != ?').bind(mail, user.id).first()) throw new HttpError(409, 'That email already has an account.');
+  if (await emailTaken(db, mail, user.id)) throw new HttpError(409, 'That email already has an account.');
   await limit(db, 'verifymail:' + user.id, 3, 3600000);   // each change sends an email
   await db.batch([db.prepare(`INSERT INTO emails (user_id, email, created) VALUES (?1, ?2, ?3)
     ON CONFLICT (user_id) DO UPDATE SET email = ?2, verified = 0, created = ?3`).bind(user.id, mail, now()),
@@ -853,7 +867,7 @@ async function leaveMatch(db, user, id) {
   }
   return json({ ok: true });
 }
-const FORFEIT_MOVES = 6, FRIEND_PAID_DAY = 10;
+const FORFEIT_MOVES = 6, FRIEND_PAID_DAY = 10, RANKED_PAIR_DAY = 3;
 // A friend-battle win: gold and XP for the first FRIEND_PAID_DAY a day, the win always counts.
 async function friendWin(db, winnerId) {
   const paid = (await db.prepare("SELECT n FROM quest_events WHERE user_id = ? AND day = ? AND kind = 'fpaid'").bind(winnerId, dayStart(now())).first())?.n ?? 0;
@@ -1258,7 +1272,11 @@ async function rankedSearch(db, user) {
   const view = await rankedView(db, user);
   if (view.liveMatch || view.run) return json({ view });
   await db.prepare('DELETE FROM ranked_queue WHERE since < ?').bind(now() - 20000).run();
-  const other = await db.prepare('SELECT q.user_id, u.team FROM ranked_queue q JOIN users u ON u.id = q.user_id WHERE q.user_id != ? ORDER BY q.since LIMIT 1').bind(user.id).first();
+  // the same two players meet at most RANKED_PAIR_DAY times a day (a second account can't feed someone points)
+  const other = await db.prepare(`SELECT q.user_id, u.team FROM ranked_queue q JOIN users u ON u.id = q.user_id WHERE q.user_id != ?1
+    AND (SELECT COUNT(*) FROM matches m WHERE m.code LIKE '#%' AND m.updated > ?2
+      AND ((m.p0 = ?1 AND m.p1 = q.user_id) OR (m.p1 = ?1 AND m.p0 = q.user_id))) < ?3
+    ORDER BY q.since LIMIT 1`).bind(user.id, dayStart(now()), RANKED_PAIR_DAY).first();
   if (other) {
     const claimed = await db.prepare('DELETE FROM ranked_queue WHERE user_id = ?').bind(other.user_id).run();
     if (claimed.meta.changes) {
@@ -1583,6 +1601,8 @@ async function deleteAccount(req, db, user) {
   const id = user.id;
   // what other players have held in trades with this account goes back to them (or is paid out, if this account accepted)
   const held = (await db.prepare("SELECT * FROM trades WHERE to_id = ? AND status IN ('open', 'accepted')").bind(id).all()).results;
+  const mine = (await db.prepare("SELECT give FROM trades WHERE from_id = ? AND status = 'open'").bind(id).all()).results;
+  const heldFused = mine.flatMap(t => JSON.parse(t.give)).filter(tok => tok.includes('#')).map(fusedIdOf);   // parked with user 0
   await db.batch([
     ...held.flatMap(t => t.status === 'open' ? giveBack(db, t) : handTo(db, t.from_id, JSON.parse(t.get), t.get_gold)),
     db.prepare('DELETE FROM friends WHERE user_id = ?1 OR friend_id = ?1').bind(id),
@@ -1590,6 +1610,7 @@ async function deleteAccount(req, db, user) {
     db.prepare('DELETE FROM matches WHERE p0 = ?1 OR p1 = ?1').bind(id),
     db.prepare('DELETE FROM trades WHERE from_id = ?1 OR to_id = ?1').bind(id),
     db.prepare('DELETE FROM fused WHERE user_id = ?1').bind(id),
+    ...heldFused.map(f => db.prepare('DELETE FROM fused WHERE id = ? AND user_id = 0').bind(f)),
     ...['collection', 'sessions', 'progress', 'presence', 'spins', 'gauntlet', 'shop_buys', 'hunts', 'daily_quests', 'quest_events', 'ranked', 'ranked_queue', 'pack_inv', 'powers', 'power_team', 'main_quest', 'emails', 'agreements', 'seen_cards', 'email_tokens', 'locks'].map(t => db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(id)),
     db.prepare('DELETE FROM users WHERE id = ?').bind(id),
   ]);
