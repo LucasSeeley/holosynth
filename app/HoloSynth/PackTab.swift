@@ -292,9 +292,12 @@ struct PackTab: View {
                 Text(c.name).font(.chakra(24)).foregroundColor(Theme.fg).lineLimit(1).minimumScaleFactor(0.6)
                 Text("\(c.hp) HP · \(c.basic.name) \(c.basic.dmg) · \(c.special.name) \(c.special.dmg)")
                     .font(.barlow(13)).foregroundColor(Theme.muted)
+                Spacer(minLength: 0)   // pushes the button down so its bottom lines up with the card's bottom
                 if cardLock(c) != nil { lockedButton(height: 42) } else { buyButton(item, slot: 0, gold: gold, height: 42) }
             }
+            .padding(.top, 6).frame(maxHeight: .infinity)
         }
+        .fixedSize(horizontal: false, vertical: true)
         .padding(12)
         .background(RadialGradient(colors: [tint.opacity(0.22), Theme.field], center: UnitPoint(x: 0.2, y: 0.3), startRadius: 0, endRadius: 260),
                     in: RoundedRectangle(cornerRadius: 18))
