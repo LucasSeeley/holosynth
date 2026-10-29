@@ -17,7 +17,7 @@
   },
   "look": "A short scrappy boxer robot with mismatched battery-pack gloves and a cracked face screen, bouncing on its toes.",
   "color": "#3ff0ff",
-  "quip": "Cracked face, mismatched gloves, and still bouncing like he's winning.",
+  "quip": "Cracked face, mismatched gloves, still bouncing.",
   "passive": "momentum"
  },
  {
@@ -59,7 +59,7 @@
   },
   "look": "A tiny squat robot with a big determined face and two stumpy legs, straining to hold an oversized orange cannon over its head.",
   "color": "#ff8a3d",
-  "quip": "Can barely hold the cannon. Has never once missed the point.",
+  "quip": "Can barely lift the cannon. Never misses the point.",
   "passive": "armor"
  },
  {
@@ -80,7 +80,7 @@
   },
   "look": "A gangly nervous rookie swordsman robot with a face screen showing wide anxious eyes, a dented practice helmet too big for it, gripping a bent metal-ruler sword with both shaky hands, knees knocking.",
   "color": "#8f7bff",
-  "quip": "Sword is a ruler. Helmet is a bucket. Confidence is on backorder.",
+  "quip": "Sword's a ruler. Helmet's a bucket. Still brave.",
   "passive": "firststrike"
  },
  {
@@ -269,7 +269,7 @@
   },
   "look": "A shy little robot half-hiding under a ragged violet tarp, only its eyes glowing.",
   "color": "#8f7bff",
-  "quip": "Hides under a tarp. You can still see the eyes. He thinks he's winning.",
+  "quip": "Hides under a tarp. The eyes give him away.",
   "passive": "momentum"
  },
  {
@@ -374,7 +374,7 @@
   },
   "look": "A sneaky little rubbery robot with suction-cup hands, slurping juice from a battery through a magenta straw, guilty grin.",
   "color": "#ff3df0",
-  "quip": "Caught red-handed, magenta-strawed, and completely unrepentant.",
+  "quip": "Caught red-handed. Not even a little sorry.",
   "passive": "thorns"
  },
  {
@@ -521,7 +521,7 @@
   },
   "look": "A small safe-cracker robot with a dial-lock for a face and a stethoscope, cyan readout.",
   "color": "#3ff0ff",
-  "quip": "Listens to your secrets through a stethoscope. Reports nothing.",
+  "quip": "Hears every secret. Tells none of them.",
   "passive": "momentum"
  },
  {
@@ -689,7 +689,7 @@
   },
   "look": "A small mole bot with a hand-crank drill nose and a miner lamp, dirt on its face.",
   "color": "#ffd23d",
-  "quip": "Pops up in the wrong place every time. Still blames the map.",
+  "quip": "Always pops up in the wrong place. Blames the map.",
   "passive": "armor"
  },
  {
@@ -1424,7 +1424,7 @@
   },
   "look": "A round beetle robot standing upright on little legs, teal oil-slick shell, wobbly antennae, a brave face, holding a bottle-cap shield.",
   "color": "#2fe3c4",
-  "quip": "Brave face, wobbly antennae, bottle-cap shield. Please be gentle.",
+  "quip": "Bottle-cap shield, wobbly antennae. Be gentle.",
   "passive": "lifesteal"
  },
  {
@@ -1697,7 +1697,7 @@
   },
   "look": "A small shaky robot riding a jackhammer, amber dust cloud.",
   "color": "#ffb03d",
-  "quip": "Teeth rattle, knees rattle, jackhammer rattles. All of him rattles.",
+  "quip": "Teeth rattle, knees rattle. All of him rattles.",
   "passive": "armor"
  },
  {
@@ -2117,7 +2117,7 @@
   },
   "look": "A lean robo-lion cub with a curled amber scorpion tail, confident.",
   "color": "#ffb03d",
-  "quip": "A cub with a stinger and plenty of confidence. Mostly aimed.",
+  "quip": "A cub with a stinger. Mostly aimed.",
   "passive": "executioner"
  },
  {
@@ -2404,7 +2404,7 @@
   },
   "look": "An ancient chrome alpha predator on a cliff in a lightning storm, eyes burning.",
   "color": "#ff4d5e",
-  "quip": "Stands on the cliff, lightning behind him. Staged it, obviously.",
+  "quip": "Lightning behind him on the cliff. Staged, obviously.",
   "special2": {
    "name": "Predator Dominion",
    "dmg": 70,
@@ -3096,7 +3096,7 @@
   },
   "look": "A scholarly mage robot in tidy blue robes holding one glowing spellbook.",
   "color": "#3d6bff",
-  "quip": "Has read every spell twice. Highlights nothing, judges everything.",
+  "quip": "Read every spell twice. Judges everything.",
   "passive": "quickcharge"
  },
  {
@@ -3139,7 +3139,7 @@
   },
   "look": "A gentle white stone guardian robot carrying a small glowing jade basin.",
   "color": "#3dd9a0",
-  "quip": "Calm as stone. The basin is always full, the patience less so.",
+  "quip": "Calm as stone. Patience, less so.",
   "passive": "regen"
  },
  {
@@ -3245,7 +3245,7 @@
   },
   "look": "A young lion spirit with a short mane of warm sunlight.",
   "color": "#ff6a1f",
-  "quip": "Mane of sunlight, ego of the same. Roars at sunrise on principle.",
+  "quip": "Mane of sunlight, ego to match. Roars at sunrise.",
   "passive": "phaseshift"
  },
  {
@@ -3367,7 +3367,7 @@
   },
   "look": "A towering platinum sorcerer android crowned by orbiting rune planets, magic storm around it.",
   "color": "#e8e8ff",
-  "quip": "Orbiting rune planets. They are not allowed to orbit anyone else.",
+  "quip": "Rune planets orbit him. Him only.",
   "special2": {
    "name": "Final Word",
    "dmg": 70,
@@ -3550,7 +3550,7 @@
   },
   "look": "A mountain-sized titan mech carrying a glowing ringed planet on its shoulders, clouds at its knees.",
   "color": "#3d6bff",
-  "quip": "Carries a planet on his shoulders. Ask nicely before he moves.",
+  "quip": "Carries a planet. Ask nicely before he moves.",
   "special2": {
    "name": "World Engine",
    "dmg": 90,
@@ -3628,7 +3628,7 @@
   },
   "look": "A time-sorceress android with floating clock-rune rings and a cracked hourglass heart, time shattering around her.",
   "color": "#3dffc4",
-  "quip": "Already knows how this ends. The cracked hourglass says hurry.",
+  "quip": "Knows how this ends. The hourglass says hurry.",
   "special2": {
    "name": "Hourglass Shatter",
    "dmg": 85,
@@ -3994,7 +3994,7 @@
   },
   "look": "A blacksmith android hammering a molten orange rune on an anvil, sparks flying.",
   "color": "#ff8a1f",
-  "quip": "Hammers spells into shape. Customer service is mostly dents.",
+  "quip": "Hammers spells into shape. Service comes with dents.",
   "special2": {
    "name": "Molten Sigil",
    "dmg": 65,
@@ -4124,7 +4124,7 @@
   },
   "look": "A lightning beast of yellow electricity with a small thundercloud mane, crackling.",
   "color": "#ffe84d",
-  "quip": "Tiny thundercloud, big voltage, nap schedule non-negotiable.",
+  "quip": "Tiny thundercloud, big voltage, strict nap schedule.",
   "special2": {
    "name": "Storm Call",
    "dmg": 65,
@@ -4151,7 +4151,7 @@
   },
   "look": "A crystal-chandelier healer android pouring warm golden light from its hands.",
   "color": "#fff3d6",
-  "quip": "Chandelier by day, emergency lighting by night. Tips welcome.",
+  "quip": "Chandelier by day, emergency lighting by night.",
   "special2": {
    "name": "Prism Flare",
    "dmg": 65,
@@ -4294,7 +4294,7 @@
   },
   "look": "A knight robot in clean pale-gold armour holding a halberd.",
   "color": "#ffe9a3",
-  "quip": "Pale-gold armour, spotless halberd, zero tolerance for scuffs.",
+  "quip": "Spotless halberd, zero tolerance for scuffs.",
   "passive": "momentum"
  },
  {
@@ -4357,7 +4357,7 @@
   },
   "look": "A clever robo-octopus with hot-pink arms holding small tools.",
   "color": "#ff3da8",
-  "quip": "Eight arms, eight tools, zero sympathy for flat-pack furniture.",
+  "quip": "Eight arms, eight tools, no patience for flat-pack.",
   "passive": "executioner"
  },
  {
