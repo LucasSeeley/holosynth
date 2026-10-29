@@ -46,8 +46,9 @@
 @media (max-width: 1279px) { .packgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 759px) {
   .shop { gap: 14px; } .shophead { display: none; }
-  .featured { padding: 0; background: none; border: 0; box-shadow: none; } .featured .common { width: auto; }
-  .commons { padding: 0; background: none; border: 0; } .commonslabel { display: none; } .commonsrow { gap: 10px; }
+  .todayrow { gap: 10px; }   /* the featured tile is the first of four equal tiles: 1 : 3 split */
+  .featured { flex: 1 1 0; min-width: 0; padding: 0; background: none; border: 0; box-shadow: none; } .featured .common { width: auto; }
+  .commons { flex: 3 1 0; padding: 0; background: none; border: 0; } .commonslabel { display: none; } .commonsrow { gap: 10px; }
   .ctile { position: relative; height: 92px; border-radius: 10px; overflow: hidden; border: 1px solid var(--edge); }
   .ctile img { width: 100%; height: 100%; object-fit: cover; }
   .ctile .cname { position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 6px 4px; font: 700 12px var(--head); background: linear-gradient(transparent, rgba(7,6,12,.95)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
