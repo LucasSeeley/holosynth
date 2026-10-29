@@ -1611,7 +1611,7 @@ async function deleteAccount(req, db, user) {
     db.prepare('DELETE FROM trades WHERE from_id = ?1 OR to_id = ?1').bind(id),
     db.prepare('DELETE FROM fused WHERE user_id = ?1').bind(id),
     ...heldFused.map(f => db.prepare('DELETE FROM fused WHERE id = ? AND user_id = 0').bind(f)),
-    ...['collection', 'sessions', 'progress', 'presence', 'spins', 'gauntlet', 'shop_buys', 'hunts', 'daily_quests', 'quest_events', 'ranked', 'ranked_queue', 'pack_inv', 'powers', 'power_team', 'main_quest', 'emails', 'agreements', 'seen_cards', 'email_tokens', 'locks'].map(t => db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(id)),
+    ...['collection', 'sessions', 'progress', 'presence', 'spins', 'gauntlet', 'shop_buys', 'hunts', 'daily_quests', 'quest_events', 'ranked', 'ranked_queue', 'pack_inv', 'powers', 'power_team', 'main_quest', 'emails', 'agreements', 'seen_cards', 'email_tokens', 'locks', 'activity'].map(t => db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(id)),
     db.prepare('DELETE FROM users WHERE id = ?').bind(id),
   ]);
   return json({ ok: true });
@@ -1649,9 +1649,11 @@ async function route(req, env, ctx) {
   if (method === 'POST' && pathname === '/login') return login(req, db, ctx);
 
   const user = await currentUser(req, db, ctx);
-  // last seen, for "online" on friends lists (written at most every 30 s), in the background: no request waits on it
-  ctx.waitUntil(db.prepare(`INSERT INTO presence (user_id, seen) VALUES (?1, ?2)
-    ON CONFLICT (user_id) DO UPDATE SET seen = ?2 WHERE presence.seen < ?2 - 30000`).bind(user.id, now()).run());
+  // last seen, for "online" on friends lists (written at most every 30 s), and which days each player played (the usage
+  // dashboard), in the background: no request waits on them
+  ctx.waitUntil(db.batch([db.prepare(`INSERT INTO presence (user_id, seen) VALUES (?1, ?2)
+    ON CONFLICT (user_id) DO UPDATE SET seen = ?2 WHERE presence.seen < ?2 - 30000`).bind(user.id, now()),
+    db.prepare('INSERT OR IGNORE INTO activity (user_id, day) VALUES (?, ?)').bind(user.id, dayStart(now()))]));
   if (method === 'GET' && pathname === '/me') return json(await profile(db, user));
   if (method === 'POST' && pathname === '/me/delete') return deleteAccount(req, db, user);
   if (method === 'POST' && pathname === '/logout') return logout(req, db);

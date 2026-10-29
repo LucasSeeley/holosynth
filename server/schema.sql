@@ -228,3 +228,10 @@ CREATE TABLE IF NOT EXISTS locks (
   user_id INTEGER PRIMARY KEY,
   until INTEGER NOT NULL
 );
+
+-- The days each player opened the game (one row a player a day), for the usage dashboard. `day`: UTC midnight, in ms.
+CREATE TABLE IF NOT EXISTS activity (
+  user_id INTEGER NOT NULL,
+  day INTEGER NOT NULL,
+  PRIMARY KEY (user_id, day)
+);
