@@ -87,9 +87,13 @@ function Shop({ p }) {
           <span class="label commonslabel" style="color: var(--tint); font-size: 11px;">Featured ${rc.rarity}</span>
           <div class="common">
             <button class="cbtn featcard ${rare.sold ? 'sold' : ''} ${cardLock(p, rc) ? 'locked' : ''}" onClick=${() => setZoomed(rc.id)} aria-label="Look at ${rc.name}">
-              <span class="wideonly"><${Card} id=${rc.id} /></span>
-              <span class="phoneonly ctile" style="--edge: ${rarityColor(rc.rarity)};"><img src=${art(rc.id)} alt="" /><span class="cname">${rc.name}</span></span>
-              ${cardLock(p, rc) && html`<${LockBand} text=${cardLock(p, rc)} />`}</button>
+              <${Card} id=${rc.id} />${cardLock(p, rc) && html`<${LockBand} text=${cardLock(p, rc)} />`}</button>
+            <span class="wideonly">${buyBtn(rare, 0)}</span>
+          </div>
+          <div class="featinfo">
+            <span class="label" style="color: var(--tint); font-size: 12px;">Featured ${rc.rarity}</span>
+            <span class="featname">${rc.name}</span>
+            <span class="muted small">${rc.hp} HP · ${rc.basic.name} ${rc.basic.dmg} · ${rc.special.name} ${rc.special.dmg}</span>
             ${buyBtn(rare, 0)}
           </div>
         </section>
