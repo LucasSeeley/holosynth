@@ -685,8 +685,8 @@ const passXp = (db, userId, amount, win = false) => {
       claimed = CASE WHEN pass.season = ?2 THEN pass.claimed ELSE '[]' END,
       season = ?2, day = ?4`).bind(userId, season, amount, day, w, PASS_WIN_CAP);
 };
-// Every battle win: the win counter and its Pass XP.
-const winWrites = (db, userId) => [bumpProgress(db, userId, 'wins'), passXp(db, userId, PASS_WIN_XP, true)];
+// Every battle win: the win counter and its Pass XP (only Gauntlet wins count toward the daily Pass XP cap).
+const winWrites = (db, userId, capped = false) => [bumpProgress(db, userId, 'wins'), passXp(db, userId, PASS_WIN_XP, capped)];
 const passView = row => {
   const t = now(), season = seasonOf(t), mine = row && row.season === season;
   return { season, ends: seasonEnd(season), xp: mine ? row.xp : 0, per: PASS_PER, tiers: PASS_TIERS,
@@ -789,7 +789,7 @@ async function campaignWin(db, user, level) {
     .bind(user.id, level).run();
   if (!res.meta.changes) return { won: true, gold: 0, xp: 0 };
   const gold = CAMPAIGN_GOLD[CAMPAIGN[level].chapter], xp = CAMPAIGN_XP[CAMPAIGN[level].chapter];
-  await db.batch([db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(gold, xp, user.id), passXp(db, user.id, PASS_WIN_XP, true)]);
+  await db.batch([db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(gold, xp, user.id), passXp(db, user.id, PASS_WIN_XP)]);
   const result = { won: true, gold, xp };
   const num = level + 1;
   if (NEW_CARD_AFTER.includes(num)) result.recruit = true;   // a Recruit Pack with the next starter
@@ -1607,7 +1607,7 @@ async function gauntletMove(req, db, user) {
     hp: gauntletHeal(run.state.teams[0]), cds: gauntletCooldowns(run.state.teams[0]), enemies: gauntletEnemies(run.fight + 1), state: null };
   let pack = null, packType = null, holo = null;
   next.xp = (run.xp || 0) + gauntletXp(run.fight);
-  const writes = [db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(gold, gauntletXp(run.fight), user.id), ...winWrites(db, user.id),
+  const writes = [db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(gold, gauntletXp(run.fight), user.id), ...winWrites(db, user.id, true),
     questEvent(db, user.id, 'streak', next.wins, true), ...(next.wins === 10 ? [questEvent(db, user.id, 'g10')] : [])];
   if (next.wins % GAUNTLET_PACK_EVERY === 0) {
     packType = (await getProgress(db, user.id)).cleared < UNLOCKS.packs.cleared ? 'cyber' : freePack();   // Cyber only until chapter 1 is beaten

@@ -39,7 +39,7 @@ struct PassView: View {
                         track(p, outer: proxy)
                         HStack(spacing: 10) {
                             earn("Daily quests", "100 to 250 Pass XP each")
-                            earn("Battle wins", "20 Pass XP, 10 wins a day")
+                            earn("Battle wins", "20 Pass XP each (Gauntlet: 10 a day)")
                         }
                         .fixedSize(horizontal: false, vertical: true)   // both boxes the same height
                         .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 24)
