@@ -148,7 +148,8 @@ async function fuseCard(req, db, user) {
   const writes = [];
   if (target) writes.push(db.prepare(`UPDATE fused SET ${stat} = ${stat === 'x' || stat === 'p' ? 1 : `${stat} + 1`} WHERE id = ?`).bind(target.id));
   else writes.push(db.prepare(`INSERT INTO fused (user_id, card_id, ${stat}) VALUES (?, ?, 1)`).bind(user.id, card));
-  writes.push(questEvent(db, user.id, stat === 'p' ? 'passive' : 'fuse'));
+  writes.push(questEvent(db, user.id, 'fuse'));   // any fuse counts for "Fuse a card"
+  if (stat === 'p') writes.push(questEvent(db, user.id, 'passive'));
   await db.batch(writes);
   return json(await profile(db, await freshUser(db, user.id)));
 }
