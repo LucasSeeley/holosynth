@@ -939,7 +939,7 @@ const FORFEIT_MOVES = 6, FRIEND_PAID_DAY = 10, RANKED_PAIR_DAY = 3;
 // A friend-battle win: gold and XP for the first FRIEND_PAID_DAY a day, the win always counts.
 async function friendWin(db, winnerId) {
   const paid = (await db.prepare("SELECT n FROM quest_events WHERE user_id = ? AND day = ? AND kind = 'fpaid'").bind(winnerId, dayStart(now())).first())?.n ?? 0;
-  return [...winWrites(db, winnerId), ...(paid < FRIEND_PAID_DAY ? [questEvent(db, winnerId, 'fpaid'),
+  return [bumpProgress(db, winnerId, 'wins'), ...(paid < FRIEND_PAID_DAY ? [questEvent(db, winnerId, 'fpaid'),   // no Pass XP for friend battles
     db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(WIN_GOLD, WIN_XP, winnerId)] : [])];
 }
 
