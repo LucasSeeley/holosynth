@@ -94,13 +94,13 @@
 .stage { position: relative; flex: 1; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
 .stage > * { position: absolute; left: 50%; top: 50%; }
 .leak { border-radius: 50%; filter: blur(40px); transition: opacity .4s, transform .45s; pointer-events: none; }
-.packpart { pointer-events: none; filter: drop-shadow(0 0 24px rgba(158,16,36,.7)); transition: transform .55s ease-in, opacity .5s; }
+.packpart { z-index: 50; pointer-events: none; filter: drop-shadow(0 0 24px rgba(158,16,36,.7)); transition: transform .55s ease-in, opacity .5s; }
 .packpart img { width: 100%; height: 100%; display: block; }
 .packpart.shake { animation: shake .4s linear; }
 @keyframes shake { 20%, 60% { margin-left: -7px; } 40%, 80% { margin-left: 7px; } }
-.seam { position: absolute; height: 4px; border-radius: 2px; transform: translateY(-50%); background: linear-gradient(90deg, #FFE7A8, #fff); box-shadow: 0 0 8px #FFE7A8; pointer-events: none; }
-.spark { width: 14px; height: 14px; border-radius: 50%; background: #fff; filter: blur(2px); box-shadow: 0 0 12px #FFE7A8; transform: translate(-50%, -50%); pointer-events: none; }
-.sparks { width: 0; height: 0; pointer-events: none; }
+.seam { z-index: 55; position: absolute; height: 4px; border-radius: 2px; transform: translateY(-50%); background: linear-gradient(90deg, #FFE7A8, #fff); box-shadow: 0 0 8px #FFE7A8; pointer-events: none; }
+.spark { z-index: 55; width: 14px; height: 14px; border-radius: 50%; background: #fff; filter: blur(2px); box-shadow: 0 0 12px #FFE7A8; transform: translate(-50%, -50%); pointer-events: none; }
+.sparks { z-index: 55; width: 0; height: 0; pointer-events: none; }
 .sparks i { position: absolute; width: 5px; height: 5px; border-radius: 50%; animation: sparkout .8s ease-out forwards; }
 @keyframes sparkout { to { transform: translate(var(--x), var(--y)); opacity: 0; } }
 .opening:focus { outline: none; }

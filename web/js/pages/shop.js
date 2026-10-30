@@ -367,7 +367,7 @@ export function PackOpening({ type, count, load, onDone, onCancel, onFail, hideC
       <div class="leak" style="width: ${packW * 0.9}px; height: ${packH * 0.35}px; background: ${LEAK}; transform: translate(-50%, calc(-50% + ${tearY}px)) scale(${torn ? 1.3 : 1}); opacity: ${dealt ? 0 : torn ? 0.9 : progress * 0.5};"></div>
       ${cards.map((id, i) => {
         const sl = slot(i);
-        return html`<div class="ocard" key=${i} style="width: ${bigW}px; z-index: ${dealt && !finished ? n - i + 5 : 1}; transform: translate(-50%, -50%) translate(${sl.x}px, ${sl.y}px) rotate(${sl.a}deg) scale(${sl.s});
+        return html`<div class="ocard" key=${i} style="width: ${bigW}px; z-index: ${dealt && !finished ? n - i + 60 : finished ? 1 : n - i}; transform: translate(-50%, -50%) translate(${sl.x}px, ${sl.y}px) rotate(${sl.a}deg) scale(${sl.s});
             transition: ${cardDrag.current && i === current ? 'none' : 'transform .55s cubic-bezier(.2,.9,.3,1.12)'}; pointer-events: ${dealt && i === current ? 'auto' : 'none'}; visibility: ${torn ? 'visible' : 'hidden'};"
             onPointerDown=${e => cdown(e, i)} onPointerMove=${cmove} onPointerUp=${e => cup(e, i)} onPointerCancel=${e => cup(e, i)}
             role=${dealt && i === current ? 'button' : null} tabindex=${dealt && i === current ? 0 : -1} aria-label=${dealt && i === current ? (flipped.has(i) ? 'Next card' : `Reveal card ${i + 1} of ${n}`) : null}>
