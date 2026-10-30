@@ -56,6 +56,7 @@
 .pass .ptier.final { width: auto; align-items: flex-start; }
 .pass .ptier.final > :not(.ptile) { width: 104px; text-align: center; justify-content: center; }
 .pass .ptier.final .ptile { width: auto; aspect-ratio: auto; height: calc(104px * 7 / 5); flex-direction: row; gap: 8px; border: 0; background: none; box-shadow: none; overflow: visible; }
-.pfull { width: 104px; }
+.pfull { width: 104px; height: calc(104px * 7 / 5); flex: none; }
+.pfull > * { width: 300px; transform: scale(calc(104 / 300)); transform-origin: 0 0; }   /* laid out large, where text and icons line up exactly, then shrunk */
 .pass .ptier.final .ptile > img { height: 100%; width: auto; }
 @media (pointer: fine) and (min-width: 760px) { .ptrack { padding-left: 56px; padding-right: 56px; } }   /* keep the end tiles clear of the arrows */

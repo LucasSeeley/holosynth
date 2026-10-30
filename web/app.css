@@ -168,13 +168,17 @@ img { display: block; -webkit-user-drag: none; user-select: none; }   /* picture
 .card .moves { display: flex; flex-direction: column; gap: 2cqw; }
 .card .mv { display: flex; align-items: baseline; height: 5.6cqw; gap: 2cqw; }
 .card .mv .n { flex: 1; font-size: 4.6cqw; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.card .mv .cd { align-self: center; position: relative; top: -.6cqw; line-height: 1; padding-top: .4cqw; box-sizing: border-box; width: 5cqw; height: 5cqw; border-radius: 50%; font: 3cqw ui-monospace, monospace; display: inline-flex; align-items: center; justify-content: center; flex: none; }
-.card .mv .d { font: 4.3cqw ui-monospace, Menlo, Consolas, monospace; }
+/* names and numbers share one baseline (browsers round each text's baseline on its own, so centring them drifts by a pixel).
+   The circle and the passive's diamond sit on that baseline taking no height (negative top margin), then move down so their
+   centres meet the middle of the text; the offsets were measured from rendered pixels. */
+.card .mv .cd { width: 5.6cqw; height: 5.6cqw; margin-top: -5.6cqw; position: relative; top: 1.18cqw; flex: none; overflow: visible; }   /* one drawing, so the digit stays centred in its circle at any size */
+.card .mv .cd text { font: 12.5px system-ui, -apple-system, 'Segoe UI', sans-serif; fill: currentColor; }
+.card .mv .d { font-size: 4.3cqw; font-variant-numeric: tabular-nums; }
 .card .mv .d.heal { color: var(--online); }
-.card .pas { display: flex; align-items: baseline; gap: 2cqw; padding: 1.2cqw 2.5cqw; border-radius: 3cqw; color: var(--cyan); background: rgba(63,240,255,.12); border: 1px solid rgba(63,240,255,.55); font-size: 4.4cqw; font-weight: 700; }
-.card .pas svg { width: 4.4cqw; height: 4.4cqw; flex: none; align-self: center; }   /* names and numbers share a baseline; the icon sits centred */   /* scale with the card so small cards keep room for the quip */
+.card .pas { display: flex; align-items: baseline; gap: 2cqw; padding: 1.45cqw 2.5cqw .95cqw; border-radius: 3cqw; color: var(--cyan); background: rgba(63,240,255,.12); border: 1px solid rgba(63,240,255,.55); font-size: 4.4cqw; font-weight: 700; }
+.card .pas svg { width: 4.4cqw; height: 4.4cqw; margin-top: -4.4cqw; position: relative; top: .55cqw; flex: none; }   /* scales with the card so small cards keep room for the quip */
 .card .pas .pn { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.card .pas .pv { font: 4.3cqw ui-monospace, monospace; }
+.card .pas .pv { font-size: 4.3cqw; font-weight: 400; font-variant-numeric: tabular-nums; }
 .card .quip { margin-top: auto; text-align: center; font-size: 3cqw; font-style: italic; color: rgba(235,233,247,.62); line-height: 1.25;
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .card .foil { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen; background: no-repeat 100% 100% / 300% 300%; animation: foil 6s linear infinite;

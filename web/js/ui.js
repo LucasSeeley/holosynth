@@ -70,7 +70,7 @@ export function Card({ id, fusion, hpNow, cooldown = 0, count, isNew, selected, 
   const mhp = maxHP(c, fusion), pas = fusion?.p || synth ? passiveOf(c) : null, col = classColor(c.cls);
   const row = (name, d, cd, ready, heal, boosted) => html`<div class="mv">
       <span class="n">${name}</span>
-      ${cd != null && html`<span class="cd" style="background: color-mix(in srgb, ${col} ${ready ? 28 : 60}%, transparent);">${cd}</span>`}
+      ${cd != null && html`<svg class="cd" viewBox="0 0 20 20" aria-label="cooldown ${cd}"><circle cx="10" cy="10" r="10" fill="color-mix(in srgb, ${col} ${ready ? 28 : 60}%, transparent)" /><text x="10" y="14.5" text-anchor="middle">${cd}</text></svg>`}
       <span class="d ${heal ? 'heal' : boosted ? 'gold' : ''}" style=${boosted ? 'font-weight:700' : ''}>${heal ? `+${d} HP` : d}</span></div>`;
   const body = html`<div class="face" style="--edge: ${edge}; --face: ${face};">
       <div class="top"><img src=${classIcon(c.cls)} alt=${c.cls} /><span class="nm">${c.name}</span>
