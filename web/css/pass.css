@@ -42,7 +42,7 @@
 .ptier.current .ptile { border: 2px solid var(--gold-hi); } .ptier.current .pnum { color: var(--gold-hi); }
 .ptier.locked .ptile { border-color: rgba(158,16,36,.6); }
 .ptier.locked.big .ptile { background: radial-gradient(80% 60% at 50% 40%, rgba(158,16,36,.35), transparent 75%), #14121F; }
-.pearn { display: flex; gap: 10px; width: min(420px, 100%); margin: 14px auto 0; padding: 0 16px; }
+.pearn { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: min(420px, 100%); margin: 14px auto 0; padding: 0 16px; }
 .pearn div { flex: 1; padding: 10px 12px; border-radius: 14px; background: var(--field); border: 1px solid rgba(235,233,247,.08); font-size: 13px; color: var(--soft); }
 .pearn b { display: block; color: var(--fg); font: 700 14px var(--head); }
 /* wide: the same swipe row as the app, centred, with arrows for a mouse */

@@ -37,11 +37,18 @@ struct PassView: View {
                         progress(p).padding(.horizontal, 16).padding(.top, 18)
                         if let note { Text(note).font(.barlow(13, semibold: true)).foregroundColor(HuntView.gold).padding(.top, 12) }
                         track(p, outer: proxy)
-                        HStack(spacing: 10) {
-                            earn("Daily quests", "100 to 250 Pass XP each")
-                            earn("Battle wins", "20 Pass XP each (Gauntlet and Ranked: 10 a day)")
+                        VStack(spacing: 10) {   // 2 x 2, each row's boxes the same height
+                            HStack(spacing: 10) {
+                                earn("Daily quests", "100 to 250 Pass XP each")
+                                earn("Legend Hunt", "200 Pass XP for a win")
+                            }
+                            .fixedSize(horizontal: false, vertical: true)
+                            HStack(spacing: 10) {
+                                earn("Gauntlet & Ranked", "20 Pass XP a win, 10 wins a day each")
+                                earn("Campaign", "20 Pass XP for each new level")
+                            }
+                            .fixedSize(horizontal: false, vertical: true)
                         }
-                        .fixedSize(horizontal: false, vertical: true)   // both boxes the same height
                         .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 24)
                     }
                 } }
