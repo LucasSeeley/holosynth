@@ -125,8 +125,8 @@ export const dailyPack = t => {
   return freeOpen()[((h ^ (h >>> 13)) >>> 0) % freeOpen().length];
 };
 // ---- daily shop ----
-// One Rare and three Commons a day, the same for everyone; resets at midnight UTC. Each player can buy each card once.
-export const SHOP_PRICES = { Common: 500, Rare: 2500 };
+// One featured card (a Rare, or an Epic about 1 day in 5) and three Commons a day, the same for everyone;
+// resets at midnight UTC. Each player can buy each card once.
 // mulberry32: the same seed always gives the same numbers.
 function seeded(seed) {
   let h = seed >>> 0;
@@ -137,11 +137,35 @@ function seeded(seed) {
     return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
   };
 }
+// Featured price by rarity and tier: the stronger half of each rarity (HP + basic + special) costs more.
+const power = c => c.hp + c.basic.dmg + c.special.dmg;
+const HIGH_TIER = new Set(['Rare', 'Epic'].flatMap(r => {
+  const pool = CARDS.filter(c => c.rarity === r).sort((a, b) => power(b) - power(a) || a.num - b.num);
+  return pool.slice(0, Math.floor(pool.length / 2)).map(c => c.id);
+}));
+const PRICES = { Common: [500, 500], Rare: [2500, 4000], Epic: [8000, 12000] };
+export const shopPrice = id => PRICES[BY_ID[id].rarity][HIGH_TIER.has(id) ? 1 : 0];
+export const SHOP_EPIC_ODDS = 0.2;
+// A rotation through a pool: a fresh shuffle every pool-length days, so a card can't come up on back-to-back days.
+function rotation(pool, day, salt) {
+  const n = pool.length, perm = cycle => {
+    const rand = seeded(cycle * 2654435761 + salt), a = pool.map(c => c.id);
+    for (let i = n - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  };
+  const cycle = Math.floor(day / n), a = perm(cycle);
+  if (day % n === 0 && a[0] === perm(cycle - 1)[n - 1]) [a[0], a[1]] = [a[1], a[0]];   // a new shuffle mustn't start with yesterday's card
+  return a[day % n];
+}
+const SHOP_RARES = CARDS.filter(c => c.rarity === 'Rare'), SHOP_EPICS = CARDS.filter(c => c.rarity === 'Epic');
 export function dailyShop(t) {
-  const rand = seeded(Math.floor(t / DAY_MS) * 2246822519 + 374761393);
-  const pick = pool => pool.splice(Math.floor(rand() * pool.length), 1)[0].id;
-  const rares = CARDS.filter(c => c.rarity === 'Rare'), commons = CARDS.filter(c => c.rarity === 'Common');
-  return [pick(rares), pick(commons), pick(commons), pick(commons)];
+  const day = Math.floor(t / DAY_MS), rand = seeded(day * 2246822519 + 374761393);
+  const epic = seeded(day * 2654435761 + 1013904223)() < SHOP_EPIC_ODDS;
+  const featured = epic ? rotation(SHOP_EPICS, day, 97) : rotation(SHOP_RARES, day, 31);
+  rand();   // the first number used to pick the Rare: skipping it keeps the Commons the same as before
+  const commons = CARDS.filter(c => c.rarity === 'Common');
+  const pick = () => commons.splice(Math.floor(rand() * commons.length), 1)[0].id;
+  return [featured, pick(), pick(), pick()];
 }
 export function spinWheel(rand = Math.random) {
   let r = rand() * 100;

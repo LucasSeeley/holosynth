@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { rarityOf, newBattle, SLOT_ODDS, TIER_OF, FAVOURITE_POWERS, POWERS, newCampaignBattle, applyMove as applyMove_, DODGE, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS, levelFor, levelStart, fusedHp, fusedDmg, SECOND, FUSE_GOLD, dailyShop, huntFoes, HUNT_MS, huntBattle, huntPack, HUNT_FUSION, pickQuests, QUESTS, QUEST_PAY, weekStart, seasonOf, seasonEnd, rankMove, rankTable, rankBots, rankedTeam, rankedFusions, RANKS, RANK_REWARDS, WEEK_MS } from '../src/game.js';
+import { rarityOf, newBattle, SLOT_ODDS, TIER_OF, FAVOURITE_POWERS, POWERS, newCampaignBattle, applyMove as applyMove_, DODGE, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS, levelFor, levelStart, fusedHp, fusedDmg, SECOND, FUSE_GOLD, dailyShop, shopPrice, huntFoes, HUNT_MS, huntBattle, huntPack, HUNT_FUSION, pickQuests, QUESTS, QUEST_PAY, weekStart, seasonOf, seasonEnd, rankMove, rankTable, rankBots, rankedTeam, rankedFusions, RANKS, RANK_REWARDS, WEEK_MS } from '../src/game.js';
 const applyMove = (s, p, from, move, to) => applyMove_(s, p, from, move, to, () => 1);   // no dodges: tests check exact numbers
 
 const fixed = v => () => v;
@@ -241,14 +241,28 @@ test('every magic card is complete', () => {
   }
 });
 
-test('daily shop: one Rare then three different Commons, the same all day, new the next day', () => {
+test('daily shop: a featured Rare or Epic then three different Commons, the same all day, new the next day', () => {
   const day = 20000 * 86400000, a = dailyShop(day);
-  assert.equal(BY_ID[a[0]].rarity, 'Rare');
+  assert.ok(['Rare', 'Epic'].includes(BY_ID[a[0]].rarity));
   assert.ok(a.slice(1).every(id => BY_ID[id].rarity === 'Common'));
   assert.equal(new Set(a).size, 4);
   assert.deepEqual(dailyShop(day + 86399999), a);
   const week = Array.from({ length: 7 }, (_, d) => dailyShop(day + d * 86400000).join());
   assert.ok(new Set(week).size > 1);
+});
+
+test('daily shop: the featured card never repeats day to day, Epics are about 1 day in 5, prices by rarity and tier', () => {
+  const D = 86400000, start = 20000, days = 2000;
+  const feat = Array.from({ length: days }, (_, d) => dailyShop((start + d) * D)[0]);
+  for (let d = 1; d < days; d++) assert.notEqual(feat[d], feat[d - 1], `day ${d}`);
+  const epics = feat.filter(id => BY_ID[id].rarity === 'Epic').length / days;
+  assert.ok(epics > 0.15 && epics < 0.25, String(epics));
+  assert.equal(new Set(feat.filter(id => BY_ID[id].rarity === 'Rare')).size, 48);   // every Rare gets its day
+  const prices = r => Object.values(BY_ID).filter(c => c.rarity === r).map(c => shopPrice(c.id));
+  assert.deepEqual([...new Set(prices('Rare'))].sort((a, b) => a - b), [2500, 4000]);
+  assert.deepEqual([...new Set(prices('Epic'))].sort((a, b) => a - b), [8000, 12000]);
+  assert.equal(prices('Rare').filter(p => p === 4000).length, 24);
+  assert.ok(prices('Common').every(p => p === 500));
 });
 
 test('legend hunt: every 8 hours a fully fused Legendary and two medium fused supports; the pack holds the Legendary 1 in 5, else an Epic', () => {

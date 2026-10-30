@@ -2,7 +2,7 @@
 // It also serves the iPhone app download (IPA + SideStore source) from the KV namespace bound as FILES.
 import {
   BY_ID, STARTER_TEAM, START_GOLD, PACK_COST, PACK_COSTS, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN_XP, CAMPAIGN, CHAPTERS, CHAPTERS_OPEN, NEW_CARD_AFTER, OPEN_LEVELS,
-  levelFor, levelStart, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, dailyShop, SHOP_PRICES, huntFoes, huntStart, HUNT_MS, huntBattle, huntPack, HUNT_GOLD, HUNT_XP, QUESTS, QUEST_PAY, questBonus, pickQuests, RANKS, RANK_REWARDS, RANKED_WIN, RANKED_LOSS, RANKED_GOLD, RANKED_XP, WEEK_MS, weekStart, seasonOf, seasonEnd, rankMove, rankTable, rankedTeam, botName, rankedFusions,
+  levelFor, levelStart, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, dailyShop, shopPrice, huntFoes, huntStart, HUNT_MS, huntBattle, huntPack, HUNT_GOLD, HUNT_XP, QUESTS, QUEST_PAY, questBonus, pickQuests, RANKS, RANK_REWARDS, RANKED_WIN, RANKED_LOSS, RANKED_GOLD, RANKED_XP, WEEK_MS, weekStart, seasonOf, seasonEnd, rankMove, rankTable, rankedTeam, botName, rankedFusions,
   gauntletEnemies, gauntletBattle, gauntletHeal, gauntletCooldowns, fusedHp, FUSE_COPIES, FUSE_GOLD, FUSE_MAX, SECOND, SECOND_COST, PASSIVE_COST, POWERS, POWER_SLOTS, rankedPowers, gauntletGold, GAUNTLET_PACK_EVERY, newCampaignBattle, applyMove, aiMove,
   UNLOCKS, isUnlocked, recruitsOwed, mainProgress, MAIN_QUESTS, gauntletXp,
 } from './game.js';
@@ -338,7 +338,7 @@ async function profile(db, user) {
     spinPack: dailyPack(now()),   // which pack the wheel's pack slot gives today
     packsOpen: PACKS_OPEN,        // packs on sale; the rest say "Coming soon"
     shop: {   // today's cards (slot 0 is the Rare); new ones at midnight UTC
-      cards: dailyShop(now()).map((id, i) => ({ id, price: SHOP_PRICES[BY_ID[id].rarity], sold: sold.includes(String(i)) })),
+      cards: dailyShop(now()).map((id, i) => ({ id, price: shopPrice(id), sold: sold.includes(String(i)) })),
       next: dayStart(now()) + 86400000,
     },
     fused: fused.map(fusedView),
@@ -651,7 +651,7 @@ async function buyShop(req, db, user) {
   if (!Number.isInteger(slot) || !id) throw new HttpError(400, 'Unknown shop card.');
   if (id !== card) throw new HttpError(400, 'The shop just changed. Take another look.');
   if (PACK_TYPES.magic.includes(BY_ID[id].cls)) await needUnlock(db, user, 'packs');   // magic cards wait for chapter 1 too
-  const price = SHOP_PRICES[BY_ID[id].rarity];
+  const price = shopPrice(id);
   const claim = await db.prepare('INSERT OR IGNORE INTO shop_buys (user_id, day, slot) VALUES (?, ?, ?)').bind(user.id, day, slot).run();
   if (!claim.meta.changes) throw new HttpError(400, 'You already bought that one today.');
   const paid = await db.prepare('UPDATE users SET gold = gold - ? WHERE id = ? AND gold >= ?').bind(price, user.id, price).run();
