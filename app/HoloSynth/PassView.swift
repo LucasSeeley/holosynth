@@ -237,9 +237,9 @@ struct SeasonCardView: View {
     let width: CGFloat
     var body: some View {
         if let id, let c = CardBook.card(id) {
-            CardView(card: c).frame(width: width)
+            CardView(card: c).frame(width: width, height: width * 7 / 5)   // pin 5:7 so a scroll row can't squeeze it
         } else {
-            CardBack().frame(width: width)
+            CardBack().frame(width: width, height: width * 7 / 5)
                 .overlay(Text("?").font(.chakra(width * 0.34)).foregroundColor(.white.opacity(0.9)).shadow(color: Color(hex: 0x78DCFF), radius: 12))
                 .modifier(HoloFoil(on: true, width: width))
         }
