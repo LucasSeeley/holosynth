@@ -685,7 +685,18 @@ const passXp = (db, userId, amount, win = false) => {
       claimed = CASE WHEN pass.season = ?2 THEN pass.claimed ELSE '[]' END,
       season = ?2, day = ?4`).bind(userId, season, amount, day, w, PASS_WIN_CAP);
 };
-// Every battle win: the win counter and its Pass XP (only Gauntlet wins count toward the daily Pass XP cap).
+// A ranked win's Pass XP: its own daily cap, counted from today's ranked wins ('rwin', logged after this in the same batch).
+const passXpRanked = (db, userId) => {
+  const t = now(), season = seasonOf(t), day = dayStart(t);
+  return db.prepare(`INSERT INTO pass (user_id, season, xp, day, wins, claimed) VALUES (?1, ?2, ?3, ?4, 0, '[]')
+    ON CONFLICT (user_id) DO UPDATE SET
+      xp = (CASE WHEN pass.season = ?2 THEN pass.xp ELSE 0 END)
+         + (CASE WHEN COALESCE((SELECT n FROM quest_events WHERE user_id = ?1 AND day = ?4 AND kind = 'rwin'), 0) >= ?5 THEN 0 ELSE ?3 END),
+      wins = CASE WHEN pass.season = ?2 AND pass.day = ?4 THEN pass.wins ELSE 0 END,
+      claimed = CASE WHEN pass.season = ?2 THEN pass.claimed ELSE '[]' END,
+      season = ?2, day = ?4`).bind(userId, season, PASS_WIN_XP, day, PASS_WIN_CAP);
+};
+// Every battle win: the win counter and its Pass XP (Gauntlet wins have a daily Pass XP cap; ranked has its own, above).
 const winWrites = (db, userId, capped = false) => [bumpProgress(db, userId, 'wins'), passXp(db, userId, PASS_WIN_XP, capped)];
 const passView = row => {
   const t = now(), season = seasonOf(t), mine = row && row.season === season;
@@ -1309,7 +1320,7 @@ function rankedResult(db, me, won, week) {
   const writes = [db.prepare(`INSERT INTO ranked (user_id, rank, week, points, best) VALUES (?1, ?2, ?3, ?4, ?2)
     ON CONFLICT (user_id) DO UPDATE SET week = ?3, points = ?4, run = NULL`).bind(me.user_id, me.rank, week, points)];
   if (won) writes.push(db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(RANKED_GOLD, RANKED_XP, me.user_id),
-    ...winWrites(db, me.user_id), questEvent(db, me.user_id, 'rwin'));
+    bumpProgress(db, me.user_id, 'wins'), passXpRanked(db, me.user_id), questEvent(db, me.user_id, 'rwin'));
   return { writes, delta: won ? RANKED_WIN : -Math.min(RANKED_LOSS, weekPoints(me, week)), points };
 }
 

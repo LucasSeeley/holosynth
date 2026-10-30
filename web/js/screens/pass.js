@@ -92,7 +92,7 @@ export function SeasonPass({ close }) {
       </div>
       <div class="pearn">
         <div><b>Daily quests</b>100 to 250 Pass XP each</div>
-        <div><b>Battle wins</b>20 Pass XP each (Gauntlet: 10 a day)</div>
+        <div><b>Battle wins</b>20 Pass XP each (Gauntlet and Ranked: 10 a day)</div>
       </div>
     </div>
   </${Screen}>`;
