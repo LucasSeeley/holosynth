@@ -120,6 +120,7 @@ async function fusionsFor(db, userId) {
 async function fuseCard(req, db, user) {
   const { card = '', stat = '', holo = false } = await body(req);
   if (!BY_ID[card] || !['h', 'b', 's', 'x', 'p'].includes(stat)) throw new HttpError(400, 'Pick a card and a stat to fuse.');
+  if (BY_ID[card].cls === 'Synth') throw new HttpError(400, "Synth cards are one of a kind and can't be fused.");
   const count = (await db.prepare('SELECT count FROM collection WHERE user_id = ? AND card_id = ?').bind(user.id, card).first())?.count ?? 0;
   const rows = await fusedRows(db, user.id, card);
   const target = rows.filter(r => !!r.o === !!holo).sort((a, b) => fusionScore(b) - fusionScore(a))[0];
@@ -708,7 +709,7 @@ async function claimPass(req, db, user) {
     let pack = null;
     if (reward.gold) writes.push(db.prepare('UPDATE users SET gold = gold + ? WHERE id = ?').bind(reward.gold, me.id));
     if (reward.power) writes.push(addPower(db, me.id, reward.power));
-    if (reward.card) writes.push(...cardWrites(db, me.id, { cards: [reward.card], holo: [0] }));   // the season card comes holo
+    if (reward.card) writes.push(addCard(db, me.id, reward.card));
     if (reward.pack) {
       pack = openPack(me.packs_since_legend, reward.pack);
       writes.push(...packWrites(db, me.id, pack, reward.pack),

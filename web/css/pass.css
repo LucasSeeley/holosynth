@@ -2,7 +2,7 @@
 .pass { display: flex; flex-direction: column; padding: 0 0 28px; }
 .phero { position: relative; height: 300px; display: flex; justify-content: center; align-items: center; }
 .phero > img { position: absolute; transform: translateX(64px) rotate(9deg); filter: drop-shadow(0 18px 30px rgba(0,0,0,.7)); }
-.pscard { position: relative; width: 170px; transform: translateX(-40px) rotate(-6deg); filter: drop-shadow(0 24px 34px rgba(0,0,0,.7)); }
+.pscard { position: relative; width: 170px; transform: translateX(-40px); filter: drop-shadow(0 24px 34px rgba(0,0,0,.7)); }
 .pmystery { position: relative; aspect-ratio: 5 / 7; border-radius: 6% / 4.3%; overflow: hidden; box-shadow: 0 0 0 2px rgba(255,215,122,.8), 0 0 40px rgba(120,220,255,.3); }
 .pmystery .cardback { position: absolute; inset: 0; border-radius: 0; }
 .pholo { position: absolute; inset: 0; mix-blend-mode: screen; opacity: .55; background-size: 250% 100%;
@@ -21,7 +21,7 @@
 .pbar { height: 12px; border-radius: 6px; background: rgba(235,233,247,.1); overflow: hidden; box-shadow: inset 0 0 0 1px rgba(232,184,90,.25); }
 .pbar i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold-lo), var(--gold-hi)); box-shadow: 0 0 12px rgba(255,197,61,.6); }
 .pnote { text-align: center; color: var(--gold-hi); margin: 12px 16px 0; }
-.ptrack { display: flex; gap: 12px; overflow-x: auto; padding: 22px 16px 10px; scrollbar-width: none; scroll-snap-type: x proximity; }
+.ptrack { position: relative; display: flex; gap: 12px; overflow-x: auto; padding: 22px 16px 10px; scrollbar-width: none; scroll-snap-type: x proximity; }
 .ptrack::-webkit-scrollbar { display: none; }
 .ptier { flex: none; width: 104px; display: flex; flex-direction: column; align-items: center; gap: 8px; scroll-snap-align: center; }
 .ptile { width: 100%; aspect-ratio: 5 / 7; border-radius: 10px; position: relative; overflow: hidden; display: flex; flex-direction: column;
@@ -30,8 +30,11 @@
 .pface { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; min-height: 0; }
 .pcoins { width: 72px; }
 .ppower { width: 64px; container-type: inline-size; }
-.pmini { position: absolute; z-index: 2; width: 44px; right: 6px; bottom: 2px; transform: rotate(8deg); container-type: inline-size; }
-.pmini .pmystery { box-shadow: 0 0 0 1px var(--gold-hi); }
+/* tier 30: the season card up front, its Legends Pack peeking out behind */
+.pfin { position: relative; width: 86px; height: 92px; margin-top: 6px; }
+.pfin > img { position: absolute; left: 0; top: 4px; height: 78px; transform: rotate(-10deg); opacity: .9; }
+.pfcard { position: absolute; right: 2px; top: 6px; width: 52px; transform: rotate(6deg); container-type: inline-size; filter: drop-shadow(0 6px 10px rgba(0,0,0,.6)); }
+.pname small { display: block; font: 400 10px var(--body); color: var(--soft); margin-top: 2px; }
 .pname { font: 600 12px/1.2 var(--head); text-align: center; padding: 0 6px 8px; }
 .pnum { font: 700 14px var(--head); color: var(--muted); }
 .ptier .btn { height: 30px; padding: 0 14px; font-size: 12px; }

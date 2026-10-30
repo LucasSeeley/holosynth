@@ -312,6 +312,7 @@ struct PassInfo: Decodable, Equatable {
     struct Reward: Decodable, Equatable { let gold: Int?; let power: String?; let pack: String?; let card: String? }
     let season: Int; let ends: Double; let xp: Int; let per: Int; let tiers: Int; let claimed: [Int]; let rewards: [Reward]
     var tier: Int { min(tiers, xp / max(per, 1)) }   // tiers reached
+    var shown: Int { min(tiers, tier + 1) }          // the tier being worked on (all of them once every tier is reached)
     var toClaim: Int { (0..<min(tier, rewards.count)).filter { !claimed.contains($0 + 1) }.count }
 }
 struct PassClaimReply: Decodable { let tier: Int; let reward: PassInfo.Reward; let profile: Profile }
@@ -502,7 +503,7 @@ enum Theme {
         case "Arcanist": return Color(hex: 0x9B6BFF)
         case "Spirit": return Color(hex: 0x2FE3C4)
         case "Mystic": return Color(hex: 0xFFC53D)
-        case "Synth": return Color(hex: 0xDDE6FF)
+        case "Synth": return Color(hex: 0xA8B8FF)
         default: return orange
         }
     }

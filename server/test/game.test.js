@@ -141,7 +141,7 @@ test('each level needs double the XP of the last', () => {
 });
 
 test('fusion boosts stats and unlocks a stronger second special', () => {
-  assert.equal(Object.keys(SECOND).length, 45);
+  assert.equal(Object.keys(SECOND).length, 46);   // 45 Epics and Legendaries + the Synth Zero
   assert.deepEqual(FUSE_GOLD, [1000, 2500, 5000]);
   for (const [id, m] of Object.entries(SECOND)) {
     assert.ok(['Epic', 'Legendary'].includes(BY_ID[id].rarity), id);
@@ -502,4 +502,9 @@ test('season pass: 30 tiers, packs at 5/10/15/20/25, Legends (and the season car
   assert.equal(passTier(PASS_PER * 7 + 5), 7);
   assert.equal(passTier(PASS_PER * 99), PASS_TIERS);
   assert.equal(BY_ID[r[PASS_TIERS - 1].card].cls, 'Synth');   // Season 0's card is the Synth Zero
+  // Synths are never fused: printed stats in multiples of 5, second special and passive always on
+  const z = BY_ID.zero;
+  assert.ok([z.hp, z.basic.dmg, z.special.dmg, z.special2.dmg].every(n => n % 5 === 0));
+  const u = newBattle(['zero'], ['volt'], () => 0).teams[0][0];
+  assert.equal(u.hp, z.hp); assert.equal(u.cd2, 0); assert.equal(u.ps, z.passive);
 });

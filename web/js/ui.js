@@ -66,7 +66,8 @@ export function Card({ id, fusion, hpNow, cooldown = 0, count, isNew, selected, 
   if (!c) return html`<div class="card ${cls}" style=${style}><div class="cardback"></div></div>`;
   const total = fusionTotal(fusion), fused = total > 0, edge = fused ? 'var(--gold-text)' : rarityColor(c.rarity);
   const face = `linear-gradient(135deg, color-mix(in srgb, ${c.color} 38%, #12111D), color-mix(in srgb, ${c.color} 12%, #0A0912))`;
-  const mhp = maxHP(c, fusion), pas = fusion?.p ? passiveOf(c) : null, col = classColor(c.cls);
+  const synth = c.cls === 'Synth';   // one of a kind: second special and passive always on, never fused
+  const mhp = maxHP(c, fusion), pas = fusion?.p || synth ? passiveOf(c) : null, col = classColor(c.cls);
   const row = (name, d, cd, ready, heal, boosted) => html`<div class="mv">
       <span class="n">${name}</span>
       ${cd != null && html`<span class="cd" style="background: color-mix(in srgb, ${col} ${ready ? 28 : 60}%, transparent);">${cd}</span>`}
@@ -79,11 +80,11 @@ export function Card({ id, fusion, hpNow, cooldown = 0, count, isNew, selected, 
       <div class="moves">
         ${row(c.basic.name, dmg(c, 'basic', fusion), null, true, false, (fusion?.b || 0) > 0)}
         ${row(c.special.name, dmg(c, 'special', fusion), cooldown > 0 ? cooldown : c.special.cd, cooldown === 0, c.special.heal, (fusion?.s || 0) > 0)}
-        ${fusion?.x && c.special2 && html`<div class="gold">${row(c.special2.name, dmg(c, 'special2', fusion), c.special2.cd, true, false, true)}</div>`}
+        ${(fusion?.x || synth) && c.special2 && html`<div class=${synth ? '' : 'gold'}>${row(c.special2.name, dmg(c, 'special2', fusion), c.special2.cd, true, false, !synth)}</div>`}
       </div>
       ${pas && html`<div class="pas" title=${pas.text}><${Icon} name="diamond" size="9" /><span class="pn">${pas.name}</span><span class="pv">${pas.short}</span></div>`}
       <div class="quip">${c.quip}</div>
-      ${fusion?.o && html`<div class="foil"></div>`}
+      ${(fusion?.o || c.cls === 'Synth') && html`<div class="foil"></div>`}
     </div>
     ${count > 1 && html`<span class="pill count">×${count}</span>`}
     ${isNew && html`<span class="pill new">NEW</span>`}`;

@@ -239,7 +239,7 @@ struct PlayTab: View {
                     HStack(alignment: .firstTextBaseline) {
                         Text("Season \(pass.season) Pass").font(.chakra(17)).foregroundColor(Theme.fg)
                         Spacer(minLength: 6)
-                        Text("Tier \(pass.tier) of \(pass.tiers)").font(.barlow(13)).foregroundColor(Color(hex: 0xA9A5C2)).monospacedDigit()
+                        Text("Tier \(pass.shown) of \(pass.tiers)").font(.barlow(13)).foregroundColor(Color(hex: 0xA9A5C2)).monospacedDigit()
                     }
                     GeometryReader { g in
                         ZStack(alignment: .leading) {
@@ -251,7 +251,7 @@ struct PlayTab: View {
                     if pass.toClaim > 0 {
                         Text("\(pass.toClaim) to claim").font(.barlow(13, semibold: true)).foregroundColor(HuntView.gold)
                     } else {
-                        Text("Ends in \(HuntView.left(pass.ends))").font(.barlow(13)).foregroundColor(Color(hex: 0xA9A5C2))
+                        Text("Ends in \(PassView.ends(pass.ends))").font(.barlow(13)).foregroundColor(Color(hex: 0xA9A5C2))
                     }
                 }
             }
@@ -263,7 +263,7 @@ struct PlayTab: View {
             .overlay(alignment: .topTrailing) { if pass.toClaim > 0 { Circle().fill(Theme.pink).frame(width: 10, height: 10).padding(9) } }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Season \(pass.season) pass, tier \(pass.tier) of \(pass.tiers)\(pass.toClaim > 0 ? ", \(pass.toClaim) to claim" : "")")
+        .accessibilityLabel("Season \(pass.season) pass, tier \(pass.shown) of \(pass.tiers)\(pass.toClaim > 0 ? ", \(pass.toClaim) to claim" : "")")
     }
 
     private func daily(_ p: Profile) -> some View {

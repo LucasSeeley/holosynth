@@ -99,11 +99,11 @@ function PassRow({ pass }) {
   const tier = Math.min(pass.tiers, Math.floor(pass.xp / pass.per));
   const ready = pass.rewards.filter((_, i) => i < tier && !pass.claimed.includes(i + 1)).length;
   const into = tier >= pass.tiers ? pass.per : pass.xp - tier * pass.per;
-  return html`<button class="passrow" onClick=${() => openScreen(SeasonPass, {})} aria-label="Season ${pass.season} pass, tier ${tier} of ${pass.tiers}${ready ? `, ${ready} to claim` : ''}">
+  return html`<button class="passrow" onClick=${() => openScreen(SeasonPass, {})} aria-label="Season ${pass.season} pass, tier ${Math.min(pass.tiers, tier + 1)} of ${pass.tiers}${ready ? `, ${ready} to claim` : ''}">
     <span class="pr-card"><${SeasonCard} id=${pass.rewards[pass.tiers - 1].card} /></span>
     <div class="col grow" style="gap: 6px; min-width: 0;">
       <div class="row" style="align-items: baseline;"><span class="head" style="font-size: 18px;">Season ${pass.season} Pass</span>
-        <span class="small soft num" style="margin-left: auto;">Tier ${tier} of ${pass.tiers}</span></div>
+        <span class="small soft num" style="margin-left: auto;">Tier ${Math.min(pass.tiers, tier + 1)} of ${pass.tiers}</span></div>
       <${Bar} value=${into} max=${pass.per} />
       <span class="small soft">${ready ? html`<b style="color: var(--gold-hi);">${ready} to claim</b>` : `Ends in ${left(pass.ends)}`}</span>
     </div>

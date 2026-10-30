@@ -23,9 +23,9 @@ struct PassView: View {
         ZStack {
             ScreenBackground()
             if let p = store.profile?.pass {
-                ScrollView(showsIndicators: false) {
+                ScrollViewReader { proxy in ScrollView(showsIndicators: false) {
                     VStack(spacing: 0) {
-                        header(p).padding(.horizontal, 16)
+                        header(p).padding(.horizontal, 16).id("top")
                         hero(p)
                         VStack(spacing: 6) {
                             let prize = p.rewards.last?.card.flatMap { CardBook.card($0) }
@@ -36,14 +36,15 @@ struct PassView: View {
                         .padding(.horizontal, 24)
                         progress(p).padding(.horizontal, 16).padding(.top, 18)
                         if let note { Text(note).font(.barlow(13, semibold: true)).foregroundColor(HuntView.gold).padding(.top, 12) }
-                        track(p)
+                        track(p, outer: proxy)
                         HStack(spacing: 10) {
-                            earn("Daily quests", "100, 150 and 250 Pass XP")
-                            earn("Battle wins", "20 Pass XP each, up to 10 a day")
+                            earn("Daily quests", "100 to 250 Pass XP each")
+                            earn("Battle wins", "20 Pass XP, 10 wins a day")
                         }
+                        .fixedSize(horizontal: false, vertical: true)   // both boxes the same height
                         .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 24)
                     }
-                }
+                } }
             } else {
                 ProgressView().tint(Theme.brass)
             }
@@ -62,7 +63,7 @@ struct PassView: View {
             Text("Season \(p.season)").font(.chakra(24)).foregroundColor(Theme.fg)
             Spacer()
             TimelineView(.periodic(from: .now, by: 60)) { _ in
-                (Text("Ends in ") + Text(HuntView.left(p.ends)).font(.chakra(13)).foregroundColor(Theme.fg))
+                (Text("Ends in ") + Text(Self.ends(p.ends)).font(.chakra(13)).foregroundColor(Theme.fg))
                     .font(.barlow(13)).foregroundColor(Color(hex: 0xA9A5C2))
             }
         }
@@ -77,7 +78,7 @@ struct PassView: View {
                     .rotationEffect(.degrees(9)).offset(x: 60).shadow(color: .black.opacity(0.7), radius: 18, y: 14)
             }
             SeasonCardView(id: p.rewards.last?.card, width: 160)
-                .rotationEffect(.degrees(-6)).offset(x: -38).shadow(color: .black.opacity(0.7), radius: 20, y: 16)
+                .offset(x: -38)   // kept straight so its stats read cleanly.shadow(color: .black.opacity(0.7), radius: 20, y: 16)
         }
         .frame(height: 290)
         .accessibilityHidden(true)
@@ -88,13 +89,19 @@ struct PassView: View {
         return HStack(spacing: 14) {
             VStack(spacing: 0) {
                 Text("TIER").font(.chakra(10, semibold: true)).tracking(1)
-                Text("\(p.tier)").font(.chakra(24)).monospacedDigit()
+                Text("\(p.shown)").font(.chakra(24)).monospacedDigit()
             }
             .foregroundColor(Color(hex: 0x2A1A00))
             .frame(width: 62, height: 62)
             .background(LinearGradient(colors: [HuntView.gold, Color(hex: 0xE0A12A)], startPoint: .top, endPoint: .bottom), in: Hexagon())
-            .accessibilityElement(children: .ignore).accessibilityLabel("Tier \(p.tier) of \(p.tiers)")
-            VStack(alignment: .leading, spacing: 6) {
+            .accessibilityElement(children: .ignore).accessibilityLabel("Tier \(p.shown) of \(p.tiers)")
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text(p.tier >= p.tiers ? "Every tier reached" : "\(into.formatted()) / \(p.per.formatted()) Pass XP")
+                    Spacer()
+                    if p.toClaim > 0 { Text("\(p.toClaim) to claim").foregroundColor(HuntView.gold) }
+                }
+                .font(.barlow(13)).foregroundColor(Color(hex: 0xA9A5C2)).monospacedDigit()
                 GeometryReader { g in
                     ZStack(alignment: .leading) {
                         Capsule().fill(Color.white.opacity(0.1))
@@ -104,27 +111,23 @@ struct PassView: View {
                     }
                 }
                 .frame(height: 12)
-                HStack {
-                    Text(p.tier >= p.tiers ? "Every tier reached" : "\(into.formatted()) / \(p.per.formatted()) to tier \(p.tier + 1)")
-                    Spacer()
-                    if p.toClaim > 0 { Text("\(p.toClaim) to claim").foregroundColor(HuntView.gold) }
-                }
-                .font(.barlow(13)).foregroundColor(Color(hex: 0xA9A5C2)).monospacedDigit()
             }
         }
     }
 
-    private func track(_ p: PassInfo) -> some View {
+    private func track(_ p: PassInfo, outer: ScrollViewProxy?) -> some View {
         let firstReady = (0..<p.tier).first { !p.claimed.contains($0 + 1) }
         let focus = (firstReady ?? min(p.tier, p.tiers - 1)) + 1
-        return ScrollViewReader { proxy in
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(alignment: .top, spacing: 12) {
-                    ForEach(Array(p.rewards.enumerated()), id: \.offset) { i, r in tier(i + 1, r, p).id(i + 1) }
-                }
-                .padding(.horizontal, 16).padding(.vertical, 22)
+        return ScrollView(.horizontal, showsIndicators: false) {
+            HStack(alignment: .top, spacing: 12) {
+                ForEach(Array(p.rewards.enumerated()), id: \.offset) { i, r in tier(i + 1, r, p).id(i + 1) }
             }
-            .onAppear { proxy.scrollTo(focus, anchor: .center) }
+            .padding(.horizontal, 16).padding(.vertical, 22)
+        }
+        .onAppear {
+            guard let proxy = outer else { return }
+            proxy.scrollTo(focus, anchor: .center)
+            proxy.scrollTo("top", anchor: .top)   // scrollTo also moves the page; put the page back at the top
         }
     }
 
@@ -142,9 +145,15 @@ struct PassView: View {
                 } else {
                     VStack(spacing: 4) {
                         art(r, final: final).frame(maxHeight: .infinity)
-                        Text(Self.name(final ? PassInfo.Reward(gold: nil, power: nil, pack: r.pack, card: "season") : r))
-                            .font(.chakra(12, semibold: true)).foregroundColor(Theme.fg).multilineTextAlignment(.center)
-                            .lineLimit(2).minimumScaleFactor(0.8).padding(.horizontal, 6).padding(.bottom, 8)
+                        VStack(spacing: 2) {
+                            if final, let id = r.card, let c = CardBook.card(id) {   // the season card's name, its pack underneath
+                                Text(c.name).font(.chakra(13, semibold: true)).foregroundColor(Theme.fg)
+                                Text("+ \(Self.packNames[r.pack ?? ""] ?? "Pack")").font(.barlow(10)).foregroundColor(Color(hex: 0xA9A5C2))
+                            } else {
+                                Text(Self.name(r)).font(.chakra(12, semibold: true)).foregroundColor(Theme.fg)
+                            }
+                        }
+                        .multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.8).padding(.horizontal, 6).padding(.bottom, 8)
                     }
                 }
             }
@@ -177,9 +186,13 @@ struct PassView: View {
         } else if let id = r.power, let pw = Power.all.first(where: { $0.id == id }) {
             PowerCardView(power: pw).frame(width: 64, height: 90)
         } else if let pack = r.pack, let img = Art.pack(pack) {
-            ZStack(alignment: .bottomTrailing) {
+            if final {   // the season card up front, its pack peeking out behind
+                ZStack {
+                    Image(uiImage: img).resizable().scaledToFit().frame(height: 78).rotationEffect(.degrees(-10)).offset(x: -14).opacity(0.9)
+                    SeasonCardView(id: r.card, width: 52).rotationEffect(.degrees(6)).offset(x: 14).shadow(color: .black.opacity(0.6), radius: 6, y: 4)
+                }
+            } else {
                 Image(uiImage: img).resizable().scaledToFit().frame(height: 100)
-                if final { SeasonCardView(id: r.card, width: 44).rotationEffect(.degrees(8)).offset(x: 10, y: 4) }
             }
         }
     }
@@ -189,9 +202,14 @@ struct PassView: View {
             Text(title).font(.chakra(14)).foregroundColor(Theme.fg)
             Text(text).font(.barlow(13)).foregroundColor(Color(hex: 0xA9A5C2)).fixedSize(horizontal: false, vertical: true)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .padding(.horizontal, 12).padding(.vertical, 10)
         .background(Theme.field, in: RoundedRectangle(cornerRadius: 14))
+    }
+    // "23d 4h" (or "5h 12m" on the last day) until `ms`.
+    static func ends(_ ms: Double) -> String {
+        let m = max(0, Int(ms / 1000 - Date().timeIntervalSince1970)) / 60
+        return m >= 1440 ? "\(m / 1440)d \(m % 1440 / 60)h" : HuntView.left(ms)
     }
 
     private func claim(_ t: Int) {
@@ -218,7 +236,7 @@ struct SeasonCardView: View {
     let width: CGFloat
     var body: some View {
         if let id, let c = CardBook.card(id) {
-            CardView(card: c, fusion: .holoCopy).frame(width: width)
+            CardView(card: c).frame(width: width)
         } else {
             CardBack().frame(width: width)
                 .overlay(Text("?").font(.chakra(width * 0.34)).foregroundColor(.white.opacity(0.9)).shadow(color: Color(hex: 0x78DCFF), radius: 12))

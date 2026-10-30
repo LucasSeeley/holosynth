@@ -50,12 +50,12 @@ struct CardView: View {
                     moveRow(card.basic.name, dmg: card.dmg("basic", fusion), cd: nil, w: w, boosted: (fusion?.b ?? 0) > 0)
                     moveRow(card.special.name, dmg: card.dmg("special", fusion), cd: cooldown > 0 ? cooldown : card.special.cd, w: w,
                             ready: cooldown == 0, heal: card.special.heals, boosted: (fusion?.s ?? 0) > 0)
-                    if fusion?.x == true, let s2 = card.special2 {
-                        moveRow(s2.name, dmg: card.dmg("special2", fusion), cd: s2.cd, w: w, boosted: true)
+                    if fusion?.x == true || card.cls == "Synth", let s2 = card.special2 {   // Synths: always on, never fused
+                        moveRow(s2.name, dmg: card.dmg("special2", fusion), cd: s2.cd, w: w, boosted: card.cls != "Synth")
                             .foregroundColor(Self.goldText)
                     }
                 }
-                if fusion?.passive == true, let ps = Passives.of(card) {
+                if fusion?.passive == true || card.cls == "Synth", let ps = Passives.of(card) {
                     HStack(spacing: w * 0.02) {
                         Image(systemName: "diamond.fill").font(.system(size: w * 0.035))
                         Text(ps.name).lineLimit(1).minimumScaleFactor(0.6)
@@ -83,7 +83,7 @@ struct CardView: View {
             .overlay(RoundedRectangle(cornerRadius: w * 0.06, style: .continuous)
                 .stroke((fusion?.total ?? 0) > 0 ? Self.goldText : Theme.rarityColor(card.rarity), lineWidth: max(1, w * ((fusion?.total ?? 0) > 0 ? 0.012 : 0.008))))
             .shadow(color: (fusion?.total ?? 0) > 0 ? Self.goldText.opacity(0.45) : .clear, radius: w * 0.06)
-            .modifier(HoloFoil(on: fusion?.holo == true, width: w))
+            .modifier(HoloFoil(on: fusion?.holo == true || card.cls == "Synth", width: w))   // Synths always look holo
         }
         .aspectRatio(5.0 / 7.0, contentMode: .fit)
     }

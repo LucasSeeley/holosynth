@@ -46,9 +46,13 @@ struct FuseSheet: View {
                 pipLabel("HP", fusion?.h ?? 0); pipLabel("Basic", fusion?.b ?? 0); pipLabel("Special", fusion?.s ?? 0)
             }
             .font(.barlow(14)).foregroundColor(Theme.muted)
-            Button { fusing = true } label: { Label("Fuse", systemImage: "sparkles") }.buttonStyle(GoldButton())
-                .padding(.horizontal, 24)
-            Text("Fusing uses spare copies and some gold").font(.barlow(13)).foregroundColor(Theme.muted)
+            if card.cls == "Synth" {
+                Text("Synth cards are one of a kind and can't be fused.").font(.barlow(13)).foregroundColor(Theme.muted)
+            } else {
+                Button { fusing = true } label: { Label("Fuse", systemImage: "sparkles") }.buttonStyle(GoldButton())
+                    .padding(.horizontal, 24)
+                Text("Fusing uses spare copies and some gold").font(.barlow(13)).foregroundColor(Theme.muted)
+            }
             Spacer(minLength: 0)
         }
         .padding(.vertical, 20)

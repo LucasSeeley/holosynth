@@ -4727,14 +4727,14 @@
   "name": "Zero",
   "rarity": "Legendary",
   "cls": "Synth",
-  "hp": 125,
+  "hp": 150,
   "basic": {
    "name": "Test Strike",
-   "dmg": 25
+   "dmg": 30
   },
   "special": {
    "name": "Blueprint Burst",
-   "dmg": 55,
+   "dmg": 65,
    "cd": 3
   },
   "look": "The very first android ever built, kneeling half-assembled on a lab rig while robot arms fit its white armour, blueprint holograms all around.",
@@ -4742,7 +4742,7 @@
   "quip": "The first one built. Everyone else is a copy.",
   "special2": {
    "name": "Full Assembly",
-   "dmg": 75,
+   "dmg": 85,
    "cd": 4
   },
   "passive": "rebirth"

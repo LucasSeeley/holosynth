@@ -176,9 +176,9 @@ img { display: block; -webkit-user-drag: none; user-select: none; }   /* picture
 .card .pas .pv { font: 4.3cqw ui-monospace, monospace; }
 .card .quip { margin-top: auto; text-align: center; font-size: 3cqw; font-style: italic; color: rgba(235,233,247,.62); line-height: 1.25;
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.card .foil { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen; background-size: 300% 300%; animation: foil 6s linear infinite;
-  background-image: linear-gradient(115deg, transparent 15%, rgba(63,240,255,.28) 30%, rgba(255,63,164,.24) 45%, rgba(255,215,122,.28) 60%, rgba(124,255,107,.2) 72%, transparent 85%); }
-@keyframes foil { to { background-position: 300% 0; } }
+.card .foil { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen; background: no-repeat 100% 100% / 300% 300%; animation: foil 6s linear infinite;
+  background-image: linear-gradient(115deg, transparent 25%, rgba(63,240,255,.28) 36%, rgba(255,63,164,.24) 46%, rgba(255,215,122,.28) 56%, rgba(124,255,107,.2) 65%, transparent 75%); }
+@keyframes foil { to { background-position: 0 0; } }   /* one diagonal sweep, no repeat seam */
 .card .pill { position: absolute; z-index: 1; height: 20px; padding: 0 7px; border-radius: 10px; font: 700 11px var(--head); letter-spacing: .8px; display: inline-flex; align-items: center; }
 .card .pill.count { bottom: -8px; right: -6px; background: var(--brass); color: #1A0D05; }
 .card .pill.new { top: -10px; right: -6px; background: var(--cyan); color: #04161A; }

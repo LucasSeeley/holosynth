@@ -18,10 +18,11 @@ export const rewardName = r => r.gold ? `${fmt(r.gold)} gold` : r.power ? power(
   : r.card ? `Season card + ${packInfo(r.pack).name}` : packInfo(r.pack).name;
 const RewardArt = ({ r }) => r.gold ? html`<${Coins} n=${r.gold} />`
   : r.power ? html`<div class="ppower"><${PowerCard} pw=${power(r.power)} /></div>`
-  : html`<${PackImg} type=${r.pack} height="104" />${r.tier30 && html`<div class="pmini"><${SeasonCard} id=${r.card} /></div>`}`;
+  : r.tier30 ? html`<span class="pfin"><${PackImg} type=${r.pack} height="92" /><span class="pfcard"><${SeasonCard} id=${r.card} /></span></span>`
+  : html`<${PackImg} type=${r.pack} height="104" />`;
 
-// The season card (it comes holo): the real card once it's out, a shimmering card back until then.
-export const SeasonCard = ({ id }) => id ? html`<${Card} id=${id} fusion=${{ o: 1 }} />` : html`<div class="pmystery"><${CardBack} /><span class="pholo"></span><span class="pq">?</span></div>`;
+// The season card (Synths always look holo): the real card once it's out, a shimmering card back until then.
+export const SeasonCard = ({ id }) => id ? html`<${Card} id=${id} />` : html`<div class="pmystery"><${CardBack} /><span class="pholo"></span><span class="pq">?</span></div>`;
 
 export function SeasonPass({ close }) {
   const s = useStore(), p = s.profile?.pass;
@@ -34,7 +35,8 @@ export function SeasonPass({ close }) {
   useEffect(() => {   // open on the first reward to claim, else the tier you're working on
     const el = track.current; if (!el || !p) return;
     const ready = p.rewards.findIndex((_, i) => i < tier && !p.claimed.includes(i + 1));
-    el.querySelector(`[data-tier="${(ready >= 0 ? ready : Math.min(tier, p.tiers - 1)) + 1}"]`)?.scrollIntoView({ inline: 'center', block: 'nearest' });
+    const t = el.querySelector(`[data-tier="${(ready >= 0 ? ready : Math.min(tier, p.tiers - 1)) + 1}"]`);
+    if (t) el.scrollLeft = t.offsetLeft - (el.clientWidth - t.clientWidth) / 2;   // only the row scrolls, not the page
   }, [!!p]);
   if (!p) return null;
 
@@ -49,6 +51,7 @@ export function SeasonPass({ close }) {
   };
   const final = p.rewards[p.tiers - 1], toClaim = p.rewards.filter((_, i) => i < tier && !p.claimed.includes(i + 1)).length;
   const into = tier >= p.tiers ? p.per : p.xp - tier * p.per;
+  const shown = Math.min(p.tiers, tier + 1);   // the tier you're working on (all 30 once every tier is reached)
   return html`<${Screen} close=${close} title="Season ${p.season}" right=${html`<span class="small soft">Ends in <b class="head" style="color: var(--fg);">${left(p.ends)}</b></span>`}>
     <div class="pass">
       <div class="phero" aria-hidden="true"><${PackImg} type=${final.pack} height="250" /><div class="pscard"><${SeasonCard} id=${final.card} /></div></div>
@@ -57,13 +60,13 @@ export function SeasonPass({ close }) {
         <p>A holo ${final.card ? card(final.card)?.cls + ' ' : ''}card you can only get this season. Reach tier ${p.tiers} to unlock it, plus a ${packInfo(final.pack).name}.</p>
       </div>
       <div class="pprog">
-        <div class="pbadge" aria-label="Tier ${tier} of ${p.tiers}"><small>Tier</small><b>${tier}</b></div>
-        <div class="grow">
-          <div class="pbar"><i style="width: ${100 * into / p.per}%"></i></div>
-          <div class="row small soft" style="justify-content: space-between; margin-top: 6px;">
-            <span>${tier >= p.tiers ? 'Every tier reached' : `${fmt(into)} / ${fmt(p.per)} to tier ${tier + 1}`}</span>
+        <div class="pbadge" aria-label="Tier ${shown} of ${p.tiers}"><small>Tier</small><b>${shown}</b></div>
+        <div class="grow col" style="gap: 8px;">
+          <div class="row small soft" style="justify-content: space-between;">
+            <span class="num">${tier >= p.tiers ? 'Every tier reached' : `${fmt(into)} / ${fmt(p.per)} Pass XP`}</span>
             ${toClaim > 0 && html`<span style="color: var(--gold-hi);">${toClaim} to claim</span>`}
           </div>
+          <div class="pbar"><i style="width: ${100 * into / p.per}%"></i></div>
         </div>
       </div>
       ${note && html`<p class="pnote small" role="status">${note}</p>`}
@@ -77,7 +80,8 @@ export function SeasonPass({ close }) {
           const big = !!r.pack;
           return html`<div class="ptier ${st} ${big ? 'big' : ''} ${t === p.tiers ? 'final' : ''}" data-tier=${t}>
             <div class="ptile" aria-label="Tier ${t}: ${rewardName(r)}">
-              ${st === 'locked' && !big ? html`<${CardBack} />` : html`<div class="pface"><${RewardArt} r=${{ ...r, tier30: t === p.tiers }} /></div><span class="pname">${rewardName(r)}</span>`}
+              ${st === 'locked' && !big ? html`<${CardBack} />` : html`<div class="pface"><${RewardArt} r=${{ ...r, tier30: t === p.tiers }} /></div>${t === p.tiers && r.card
+                ? html`<span class="pname">${card(r.card)?.name}<small>+ ${packInfo(r.pack).name}</small></span>` : html`<span class="pname">${rewardName(r)}</span>`}`}
             </div>
             <span class="pnum num">${t}</span>
             ${claimed ? html`<span class="pok">Claimed</span>`
@@ -88,8 +92,8 @@ export function SeasonPass({ close }) {
       </div>
       </div>
       <div class="pearn">
-        <div><b>Daily quests</b>100, 150 and 250 Pass XP</div>
-        <div><b>Battle wins</b>20 Pass XP each, up to 10 a day</div>
+        <div><b>Daily quests</b>100 to 250 Pass XP each</div>
+        <div><b>Battle wins</b>20 Pass XP, 10 wins a day</div>
       </div>
     </div>
   </${Screen}>`;

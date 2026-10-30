@@ -215,7 +215,7 @@ function Detail({ id, holo, p, onTeam }) {
     </div>
     ${pas && html`<div class="cp-pas"><b>◆ ${pas.name}</b> · ${pas.text}${fusion?.p ? '' : ' (fuse to unlock)'}</div>`}
     <div class="row" style="gap: 10px;">
-      <button class="btn gold" style="flex: 1;" onClick=${() => openScreen(FuseScreen, { id, holo, start: 'fuse' })}><${Icon} name="sparkle" size="16" />Fuse</button>
+      ${c.cls !== 'Synth' && html`<button class="btn gold" style="flex: 1;" onClick=${() => openScreen(FuseScreen, { id, holo, start: 'fuse' })}><${Icon} name="sparkle" size="16" />Fuse</button>`}
       <button class="btn out" style="flex: 1; height: 48px;" disabled=${inTeam} onClick=${onTeam}>${inTeam ? 'On team' : '+ Team'}</button>
     </div>
     <span class="tiny muted" style="text-align: center;">Fusing uses spare copies and some gold</span>
@@ -255,8 +255,9 @@ function FuseScreen({ close, id, holo, start }) {
       <div class="row muted" style="gap: 14px; flex-wrap: wrap; justify-content: center; font-size: 14px;">
         <span><b class="head" style="color: var(--fg);">×${holo ? holoCopies : copies - holoCopies}</b> ${holo ? 'holo' : 'copies'}</span>
         <span>HP <${Pips} level=${fusion?.h || 0} size="7" /></span><span>Basic <${Pips} level=${fusion?.b || 0} size="7" /></span><span>Special <${Pips} level=${fusion?.s || 0} size="7" /></span></div>
+      ${c.cls === 'Synth' ? html`<span class="small muted">Synth cards are one of a kind and can't be fused.</span>` : html`
       <button class="btn gold big wide" onClick=${() => setView('fuse')}><${Icon} name="sparkle" size="18" />Fuse</button>
-      <span class="small muted">Fusing uses spare copies and some gold</span>
+      <span class="small muted">Fusing uses spare copies and some gold</span>`}
     </div><//>`;
   }
   const statRow = (title, sub, stat, now, next) => {

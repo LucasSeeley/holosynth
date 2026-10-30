@@ -298,7 +298,7 @@ export const seasonEnd = s => Date.UTC(2026, 11 + s, 1);
 // Pass XP: claiming a daily quest (100 / 150 / 250 by tier), and 20 a battle win for the first 10 wins a day.
 export const PASS_TIERS = 30, PASS_PER = 600, PASS_QUEST_XP = [100, 150, 250], PASS_WIN_XP = 20, PASS_WIN_CAP = 10;
 // Each season's exclusive card, given with the Legends Pack at tier 30 (only from that season's pass).
-export const SEASON_CARDS = { 0: 'zero' };   // given holo
+export const SEASON_CARDS = { 0: 'zero' };
 const PASS_POWERS = { 3: 'overclock', 8: 'shield', 13: 'recharge', 18: 'repair', 23: 'mirror', 28: 'restore' };
 const PASS_PACKS = { 5: 'cyber', 10: 'omni', 15: 'magic', 20: 'omni', 25: 'omni', 30: 'legends' };
 export const passRewards = season => Array.from({ length: PASS_TIERS }, (_, i) => {
@@ -356,7 +356,7 @@ export function rankedTeam(rank, rand = Math.random) {
 // Epic and Legendary cards can also unlock a second, stronger special (10 copies + 10,000 gold); the special bonus applies to it too.
 export const FUSE_COPIES = [1, 3, 5], FUSE_MAX = 3, SECOND_COST = { copies: 10, gold: 10000 };
 export const FUSE_GOLD = [1000, 2500, 5000];   // gold for a stat's 1st, 2nd and 3rd fusion
-export const SECOND = Object.fromEntries(CARDS.filter(c => c.special2).map(c => [c.id, c.special2]));   // Epic & Legendary only
+export const SECOND = Object.fromEntries(ALL_CARDS.filter(c => c.special2).map(c => [c.id, c.special2]));   // Epic & Legendary only
 // Every card has a passive (cards.json "passive"), switched on by fusion for 1 copy + 2,500 gold. Values by rarity
 // (Common, Rare, Epic, Legendary), in % except Quick Charge (turns off the special's cooldown).
 export const PASSIVE_COST = { copies: 1, gold: 2500 };
@@ -426,7 +426,8 @@ const unitMax = u => u.max ?? BY_ID[u.id].hp;
 export function newBattle(teamA, teamB, rand = Math.random, fusA = {}, fusB = {}) {
   const side = (ids, fus) => ids.map(id => {
     const f = fus[id];
-    if (!f) return { id, hp: BY_ID[id].hp, cd: 0 };
+    // Synths can't be fused: they always have their second special and passive, at their printed stats.
+    if (!f) return { id, hp: BY_ID[id].hp, cd: 0, ...(BY_ID[id].cls === 'Synth' ? { cd2: 0, ps: BY_ID[id].passive } : {}) };
     const max = fusedHp(id, f);
     return { id, hp: max, cd: 0, max, f, ...(f.x && SECOND[id] ? { cd2: 0 } : {}), ...(f.p ? { ps: BY_ID[id].passive } : {}) };
   });
