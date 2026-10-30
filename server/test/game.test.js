@@ -508,3 +508,11 @@ test('season pass: 30 tiers, packs at 5/10/15/20/25, Legends (and the season car
   const u = newBattle(['zero'], ['volt'], () => 0).teams[0][0];
   assert.equal(u.hp, z.hp); assert.equal(u.cd2, 0); assert.equal(u.ps, z.passive);
 });
+
+test('packs hold at most 1 power card (2 in an Overload); Power packs are all power cards', () => {
+  for (const type of ['cyber', 'magic', 'omni', 'legends', 'overload']) for (let i = 0; i < 2000; i++) {
+    const n = openPack(0, type).cards.filter(id => id.startsWith('pw:')).length;
+    assert.ok(n <= (type === 'overload' ? 2 : 1), `${type} had ${n}`);
+  }
+  assert.ok(openPack(0, 'power').cards.every(id => id.startsWith('pw:')));
+});

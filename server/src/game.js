@@ -90,7 +90,14 @@ export function openPack(packsSinceLegend, type = 'cyber', rand = Math.random) {
   if (type === 'power') return { cards: Array.from({ length: POWER_PACK.size }, () => powerOf(rand)), holo: [], packsSinceLegend };   // power cards only
   // a pack's guaranteed card is the last one, so it's revealed last
   const last = { legends: LEGENDS_BEST, overload: OVERLOAD_BEST }[type];
-  const rows = Array.from({ length: size }, (_, i) => rollRow(rand, last && i === size - 1 ? last : SLOT_ODDS));
+  // at most 1 power card a pack (2 in an Overload); once that's reached, later slots roll characters only
+  const cap = type === 'overload' ? 2 : 1, NO_POWER = SLOT_ODDS.filter(r => r[1] !== 'power');
+  let powers = 0;
+  const rows = Array.from({ length: size }, (_, i) => {
+    const row = rollRow(rand, last && i === size - 1 ? last : powers >= cap ? NO_POWER : SLOT_ODDS);
+    if (row[1] === 'power') powers++;
+    return row;
+  });
   const cards = rows.map(([r, t]) => (t === 'power' ? powerRow(r, rand) : pickOf(r, type, rand, t)));
   return {
     cards,
