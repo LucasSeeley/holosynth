@@ -5,7 +5,7 @@ struct PlayTab: View {
     @EnvironmentObject var store: GameStore
     @Binding var tab: Int
 
-    enum Screen: Identifiable { case map, campaign, friend, recruit, spin, gauntlet, hunt, quests, ranked, packs; var id: Self { self } }
+    enum Screen: Identifiable { case map, campaign, friend, recruit, spin, gauntlet, hunt, quests, ranked, packs, pass; var id: Self { self } }
     @State var screen: Screen?
     @State private var claiming = false
 
@@ -19,6 +19,7 @@ struct PlayTab: View {
                         if let q = p.mainQuest { mainQuest(q) }
                         campaignTile(p)
                         if let u = p.unopened, !u.isEmpty { packsRow(u) }
+                        if let pass = p.pass { passRow(pass) }
                         daily(p)
                         modes(p)
                         teamPanel(p)
@@ -47,6 +48,8 @@ struct PlayTab: View {
                 GauntletView { _ in screen = nil; Task { await store.refresh() } }
             case .ranked:
                 RankedView { _ in screen = nil; Task { await store.refresh() } }
+            case .pass:
+                PassView { screen = nil }
             case .quests:
                 QuestsView { _, _ in screen = nil }
             case .hunt:
@@ -224,6 +227,43 @@ struct PlayTab: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(total == 1 ? "1 pack to open" : "\(total) packs to open")
+    }
+
+    // The season pass: its prize card, your tier and progress; opens the pass.
+    private func passRow(_ pass: PassInfo) -> some View {
+        let into = pass.tier >= pass.tiers ? pass.per : pass.xp - pass.tier * pass.per
+        return Button { screen = .pass } label: {
+            HStack(spacing: 14) {
+                SeasonCardView(id: pass.rewards.last?.card, width: 46).rotationEffect(.degrees(-5))
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text("Season \(pass.season) Pass").font(.chakra(17)).foregroundColor(Theme.fg)
+                        Spacer(minLength: 6)
+                        Text("Tier \(pass.tier) of \(pass.tiers)").font(.barlow(13)).foregroundColor(Color(hex: 0xA9A5C2)).monospacedDigit()
+                    }
+                    GeometryReader { g in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(Color.white.opacity(0.1))
+                            Capsule().fill(Theme.brass).frame(width: g.size.width * CGFloat(into) / CGFloat(max(pass.per, 1)))
+                        }
+                    }
+                    .frame(height: 6)
+                    if pass.toClaim > 0 {
+                        Text("\(pass.toClaim) to claim").font(.barlow(13, semibold: true)).foregroundColor(HuntView.gold)
+                    } else {
+                        Text("Ends in \(HuntView.left(pass.ends))").font(.barlow(13)).foregroundColor(Color(hex: 0xA9A5C2))
+                    }
+                }
+            }
+            .padding(.horizontal, 14).padding(.vertical, 12)
+            .contentShape(Rectangle())
+            .background(RadialGradient(colors: [Color(hex: 0x3DD6FF).opacity(0.2), Theme.field], center: .leading, startRadius: 0, endRadius: 260),
+                        in: RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(hex: 0x3DD6FF).opacity(0.55), lineWidth: 1))
+            .overlay(alignment: .topTrailing) { if pass.toClaim > 0 { Circle().fill(Theme.pink).frame(width: 10, height: 10).padding(9) } }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Season \(pass.season) pass, tier \(pass.tier) of \(pass.tiers)\(pass.toClaim > 0 ? ", \(pass.toClaim) to claim" : "")")
     }
 
     private func daily(_ p: Profile) -> some View {

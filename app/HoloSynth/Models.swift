@@ -139,6 +139,7 @@ struct Profile: Decodable, Equatable {
     let shop: Shop?             // today's shop cards
     let hunt: HuntInfo?         // today's Legend Hunt
     let quests: Quests?         // today's daily quests
+    let pass: PassInfo?         // the season pass (older servers leave it out)
     let ranked: RankedTileInfo? // your ranked rank and place this week
     let fused: [FusedCopy]?     // fused copies you own
     let gauntlet: GauntletStats
@@ -302,6 +303,18 @@ struct Quests: Decodable, Equatable {
     var claimable: Int { list.filter { $0.done && !$0.claimed }.count + (bonus == "ready" ? 1 : 0) }
 }
 struct QuestReply: Decodable { let cards: [String]?; let holo: [Int]?; let type: String?; let profile: Profile }
+
+// MARK: Season pass
+
+// This season's pass: Pass XP (per tier = `per`), the tiers claimed, and each tier's reward (gold, a power card, or a pack;
+// the last tier's pack comes with the season's own card, nil until it's out). ends = ms since 1970.
+struct PassInfo: Decodable, Equatable {
+    struct Reward: Decodable, Equatable { let gold: Int?; let power: String?; let pack: String?; let card: String? }
+    let season: Int; let ends: Double; let xp: Int; let per: Int; let tiers: Int; let claimed: [Int]; let rewards: [Reward]
+    var tier: Int { min(tiers, xp / max(per, 1)) }   // tiers reached
+    var toClaim: Int { (0..<min(tier, rewards.count)).filter { !claimed.contains($0 + 1) }.count }
+}
+struct PassClaimReply: Decodable { let tier: Int; let reward: PassInfo.Reward; let profile: Profile }
 
 // MARK: Legend Hunt
 
@@ -489,6 +502,7 @@ enum Theme {
         case "Arcanist": return Color(hex: 0x9B6BFF)
         case "Spirit": return Color(hex: 0x2FE3C4)
         case "Mystic": return Color(hex: 0xFFC53D)
+        case "Synth": return Color(hex: 0xDDE6FF)
         default: return orange
         }
     }

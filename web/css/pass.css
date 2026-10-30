@@ -1,0 +1,54 @@
+/* Season Pass: the prize up top, your tier, then one card-shaped tile per tier (a swipe row on phones, a grid when wide). */
+.pass { display: flex; flex-direction: column; padding: 0 0 28px; }
+.phero { position: relative; height: 300px; display: flex; justify-content: center; align-items: center; }
+.phero > img { position: absolute; transform: translateX(64px) rotate(9deg); filter: drop-shadow(0 18px 30px rgba(0,0,0,.7)); }
+.pscard { position: relative; width: 170px; transform: translateX(-40px) rotate(-6deg); filter: drop-shadow(0 24px 34px rgba(0,0,0,.7)); }
+.pmystery { position: relative; aspect-ratio: 5 / 7; border-radius: 6% / 4.3%; overflow: hidden; box-shadow: 0 0 0 2px rgba(255,215,122,.8), 0 0 40px rgba(120,220,255,.3); }
+.pmystery .cardback { position: absolute; inset: 0; border-radius: 0; }
+.pholo { position: absolute; inset: 0; mix-blend-mode: screen; opacity: .55; background-size: 250% 100%;
+  background-image: linear-gradient(115deg, transparent 20%, rgba(255,61,110,.35) 32%, rgba(255,240,61,.35) 42%, rgba(61,255,138,.35) 52%, rgba(61,214,255,.4) 62%, rgba(138,92,255,.35) 72%, transparent 84%);
+  animation: psheen 4s ease-in-out infinite; }
+@keyframes psheen { 0%, 100% { background-position: 100% 0; } 50% { background-position: 0 0; } }
+.pq { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font: 700 26cqw var(--head); container-type: inline-size; color: rgba(255,255,255,.9); text-shadow: 0 0 24px rgba(120,220,255,.8); }
+.pmystery { container-type: inline-size; } .pq { font-size: 34cqw; }
+.pprize { text-align: center; padding: 0 24px; }
+.pprize h2 { font: 700 26px var(--head); margin: 0; }
+.pprize p { margin: 6px auto 0; max-width: 320px; color: var(--soft); font-size: 14px; }
+.pprog { display: flex; align-items: center; gap: 14px; width: min(560px, 100%); margin: 18px auto 0; padding: 0 16px; }
+.pbadge { width: 62px; height: 62px; flex: none; clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+  background: linear-gradient(180deg, var(--gold-hi), var(--gold-lo)); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #2A1A00; }
+.pbadge small { font: 600 10px var(--head); letter-spacing: 1px; text-transform: uppercase; } .pbadge b { font: 700 24px/1 var(--head); }
+.pbar { height: 12px; border-radius: 6px; background: rgba(235,233,247,.1); overflow: hidden; box-shadow: inset 0 0 0 1px rgba(232,184,90,.25); }
+.pbar i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold-lo), var(--gold-hi)); box-shadow: 0 0 12px rgba(255,197,61,.6); }
+.pnote { text-align: center; color: var(--gold-hi); margin: 12px 16px 0; }
+.ptrack { display: flex; gap: 12px; overflow-x: auto; padding: 22px 16px 10px; scrollbar-width: none; scroll-snap-type: x proximity; }
+.ptrack::-webkit-scrollbar { display: none; }
+.ptier { flex: none; width: 104px; display: flex; flex-direction: column; align-items: center; gap: 8px; scroll-snap-align: center; }
+.ptile { width: 100%; aspect-ratio: 5 / 7; border-radius: 10px; position: relative; overflow: hidden; display: flex; flex-direction: column;
+  background: radial-gradient(80% 60% at 50% 40%, rgba(232,184,90,.16), transparent 75%), #14121F; border: 1px solid rgba(232,184,90,.35); }
+.ptile > .cardback { position: absolute; inset: 0; border-radius: 0; border: 0; }
+.pface { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; min-height: 0; }
+.pcoins { width: 72px; }
+.ppower { width: 64px; container-type: inline-size; }
+.pmini { position: absolute; z-index: 2; width: 44px; right: 6px; bottom: 2px; transform: rotate(8deg); container-type: inline-size; }
+.pmini .pmystery { box-shadow: 0 0 0 1px var(--gold-hi); }
+.pname { font: 600 12px/1.2 var(--head); text-align: center; padding: 0 6px 8px; }
+.pnum { font: 700 14px var(--head); color: var(--muted); }
+.ptier .btn { height: 30px; padding: 0 14px; font-size: 12px; }
+.pok { font: 600 12px var(--head); color: var(--online); } .pcur { font: 600 12px var(--head); color: var(--gold-hi); }
+.ptier.claimed .ptile { opacity: .45; }
+.ptier.ready .ptile { border-color: var(--gold-hi); box-shadow: 0 0 18px rgba(255,197,61,.45); }
+.ptier.current .ptile { border: 2px solid var(--gold-hi); } .ptier.current .pnum { color: var(--gold-hi); }
+.ptier.locked .ptile { border-color: rgba(158,16,36,.6); }
+.ptier.locked.big .ptile { background: radial-gradient(80% 60% at 50% 40%, rgba(158,16,36,.35), transparent 75%), #14121F; }
+.ptier.final .ptile { border-color: var(--gold-hi); box-shadow: 0 0 22px rgba(120,220,255,.35); }
+.pearn { display: flex; gap: 10px; width: min(560px, 100%); margin: 14px auto 0; padding: 0 16px; }
+.pearn div { flex: 1; padding: 10px 12px; border-radius: 14px; background: var(--field); border: 1px solid rgba(235,233,247,.08); font-size: 13px; color: var(--soft); }
+.pearn b { display: block; color: var(--fg); font: 700 14px var(--head); }
+/* wide: the same swipe row as the app, centred, with arrows for a mouse */
+.ptrackwrap { position: relative; width: min(1100px, 100%); margin: 0 auto; }
+.parr { position: absolute; top: 92px; z-index: 2; width: 44px; height: 44px; border-radius: 22px; background: rgba(7,6,12,.8); border: 1px solid rgba(232,184,90,.4);
+  color: var(--brass); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.parr.l { left: 4px; } .parr.r { right: 4px; }
+@media (pointer: coarse), (max-width: 759px) { .parr { display: none; } }
+@media (prefers-reduced-motion: reduce) { .pholo { animation: none; } }

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { rarityOf, newBattle, SLOT_ODDS, TIER_OF, FAVOURITE_POWERS, POWERS, newCampaignBattle, applyMove as applyMove_, DODGE, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS, levelFor, levelStart, fusedHp, fusedDmg, SECOND, FUSE_GOLD, dailyShop, shopPrice, huntFoes, HUNT_MS, huntBattle, huntPack, HUNT_FUSION, pickQuests, QUESTS, QUEST_PAY, weekStart, seasonOf, seasonEnd, rankMove, rankTable, rankBots, rankedTeam, rankedFusions, RANKS, RANK_REWARDS, WEEK_MS } from '../src/game.js';
+import { rarityOf, newBattle, SLOT_ODDS, TIER_OF, FAVOURITE_POWERS, POWERS, newCampaignBattle, applyMove as applyMove_, DODGE, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS, levelFor, levelStart, fusedHp, fusedDmg, SECOND, FUSE_GOLD, dailyShop, shopPrice, passRewards, passTier, PASS_TIERS, PASS_PER, huntFoes, HUNT_MS, huntBattle, huntPack, HUNT_FUSION, pickQuests, QUESTS, QUEST_PAY, weekStart, seasonOf, seasonEnd, rankMove, rankTable, rankBots, rankedTeam, rankedFusions, RANKS, RANK_REWARDS, WEEK_MS } from '../src/game.js';
 const applyMove = (s, p, from, move, to) => applyMove_(s, p, from, move, to, () => 1);   // no dodges: tests check exact numbers
 
 const fixed = v => () => v;
@@ -190,8 +190,11 @@ test('gauntlet: enemies grow with the streak, damage carries over, wins heal 20%
   assert.deepEqual(gauntletHeal(s.teams[0]), [42, 0, 70]);   // +20% of 60, KO stays out, capped at full
 });
 
-test('six classes: each beats 2, is weak to 2, even with 1', () => {
-  const classes = Object.keys(BEATS);
+test('six classes: each beats 2, is weak to 2, even with 1; Synth is neutral and never in packs', () => {
+  assert.deepEqual(BEATS.Synth, []);
+  assert.ok(Object.values(BEATS).every(l => !l.includes('Synth')));
+  for (let i = 0; i < 300; i++) assert.ok(openPack(0, 'legends').cards.every(id => id.startsWith('pw:') || BY_ID[id].cls !== 'Synth'));
+  const classes = Object.keys(BEATS).filter(c => c !== 'Synth');
   assert.equal(classes.length, 6);
   for (const c of classes) {
     const weak = classes.filter(o => BEATS[o].includes(c));
@@ -488,4 +491,15 @@ test('the campaign map shows every open chapter, but ones you have not reached a
   assert.ok(m.chapters[1].levels[9].boss && m.chapters[1].levels[9].pack === 'magic' && m.chapters[1].gold === 200 && m.chapters[1].levels[0].enemies.length > 0);
   assert.ok(m.chapters[2].levels.every(l => l.enemies.length === 0 && l.title === ''), 'nothing to peek at in a locked chapter');
   assert.equal(campaignMap(60).chapters[2].locked, undefined);
+});
+
+test('season pass: 30 tiers, packs at 5/10/15/20/25, Legends (and the season card) at 30, tiers every 600 XP', () => {
+  const r = passRewards(0);
+  assert.equal(r.length, PASS_TIERS);
+  assert.deepEqual([5, 10, 15, 20, 25, 30].map(t => r[t - 1].pack), ['cyber', 'omni', 'magic', 'omni', 'omni', 'legends']);
+  assert.ok(r.every(x => x.gold || x.power || x.pack));
+  assert.equal(passTier(PASS_PER - 1), 0);
+  assert.equal(passTier(PASS_PER * 7 + 5), 7);
+  assert.equal(passTier(PASS_PER * 99), PASS_TIERS);
+  assert.equal(BY_ID[r[PASS_TIERS - 1].card].cls, 'Synth');   // Season 0's card is the Synth Zero
 });

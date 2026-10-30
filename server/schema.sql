@@ -235,3 +235,14 @@ CREATE TABLE IF NOT EXISTS activity (
   day INTEGER NOT NULL,
   PRIMARY KEY (user_id, day)
 );
+
+-- Season pass: this season's Pass XP and claimed tiers per player (a row from an old season counts as empty);
+-- day/wins count today's battle wins, since only the first few a day pay Pass XP.
+CREATE TABLE IF NOT EXISTS pass (
+  user_id INTEGER PRIMARY KEY,
+  season INTEGER NOT NULL,
+  xp INTEGER NOT NULL DEFAULT 0,
+  day INTEGER NOT NULL DEFAULT 0,
+  wins INTEGER NOT NULL DEFAULT 0,
+  claimed TEXT NOT NULL DEFAULT '[]'
+);

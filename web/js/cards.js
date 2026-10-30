@@ -20,7 +20,7 @@ export const classIcon = cls => `/img/class_${cls.toLowerCase()}.png`;
 export const packImg = type => type === 'cyber' ? '/img/pack.webp' : `/img/pack_${type}.webp`;
 
 // colours (Theme in the app)
-export const CLASS_COLOR = { Fighter: '#3FF0FF', Beast: '#FF3FA4', Mech: '#FF8A3D', Arcanist: '#9B6BFF', Spirit: '#2FE3C4', Mystic: '#FFC53D' };
+export const CLASS_COLOR = { Fighter: '#3FF0FF', Beast: '#FF3FA4', Mech: '#FF8A3D', Arcanist: '#9B6BFF', Spirit: '#2FE3C4', Mystic: '#FFC53D', Synth: '#DDE6FF' };
 export const RARITY_COLOR = { Common: '#9A97AD', Rare: '#4AA8FF', Epic: '#B46BFF', Legendary: '#FFC53D' };
 export const classColor = cls => CLASS_COLOR[cls] || '#FF8A3D';
 export const rarityColor = r => RARITY_COLOR[r] || '#9A97AD';

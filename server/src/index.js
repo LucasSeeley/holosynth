@@ -2,7 +2,7 @@
 // It also serves the iPhone app download (IPA + SideStore source) from the KV namespace bound as FILES.
 import {
   BY_ID, STARTER_TEAM, START_GOLD, PACK_COST, PACK_COSTS, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN_XP, CAMPAIGN, CHAPTERS, CHAPTERS_OPEN, NEW_CARD_AFTER, OPEN_LEVELS,
-  levelFor, levelStart, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, dailyShop, shopPrice, huntFoes, huntStart, HUNT_MS, huntBattle, huntPack, HUNT_GOLD, HUNT_XP, QUESTS, QUEST_PAY, questBonus, pickQuests, RANKS, RANK_REWARDS, RANKED_WIN, RANKED_LOSS, RANKED_GOLD, RANKED_XP, WEEK_MS, weekStart, seasonOf, seasonEnd, rankMove, rankTable, rankedTeam, botName, rankedFusions,
+  levelFor, levelStart, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, dailyShop, shopPrice, huntFoes, huntStart, HUNT_MS, huntBattle, huntPack, HUNT_GOLD, HUNT_XP, QUESTS, QUEST_PAY, questBonus, pickQuests, RANKS, RANK_REWARDS, RANKED_WIN, RANKED_LOSS, RANKED_GOLD, RANKED_XP, WEEK_MS, weekStart, seasonOf, seasonEnd, PASS_TIERS, PASS_PER, PASS_QUEST_XP, PASS_WIN_XP, PASS_WIN_CAP, passRewards, passTier, rankMove, rankTable, rankedTeam, botName, rankedFusions,
   gauntletEnemies, gauntletBattle, gauntletHeal, gauntletCooldowns, fusedHp, FUSE_COPIES, FUSE_GOLD, FUSE_MAX, SECOND, SECOND_COST, PASSIVE_COST, POWERS, POWER_SLOTS, rankedPowers, gauntletGold, GAUNTLET_PACK_EVERY, newCampaignBattle, applyMove, aiMove,
   UNLOCKS, isUnlocked, recruitsOwed, mainProgress, MAIN_QUESTS, gauntletXp,
 } from './game.js';
@@ -225,7 +225,8 @@ async function claimQuest(req, db, user) {
   const res = await db.prepare('UPDATE daily_quests SET claimed = ? WHERE user_id = ? AND day = ? AND claimed = ?')
     .bind(JSON.stringify([...JSON.parse(row.claimed), quest]), user.id, day, row.claimed).run();
   if (!res.meta.changes) throw new HttpError(409, 'Quests changed. Refreshing.');
-  await db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(q.gold, q.xp, user.id).run();
+  await db.batch([db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(q.gold, q.xp, user.id),
+    passXp(db, user.id, PASS_QUEST_XP[QUESTS[q.id].tier])]);
   return json({ cards: null, type: null, profile: await profile(db, await freshUser(db, user.id)) });
 }
 
@@ -254,7 +255,7 @@ async function profile(db, user) {
   // Every read in one batch, so one round trip: separate queries queue one after another in the database.
   const t = now(), day = dayStart(t), week = weekStart(t);
   const q = (sql, ...args) => db.prepare(sql).bind(...args);
-  const [results, [progRow], [extra], ev0rows, fused, powerRows, [teamRow], [mainRowRead], [meta], [rankRow], rankPeers, [questRow], todayEvents, [emailRow]] =
+  const [results, [progRow], [extra], ev0rows, fused, powerRows, [teamRow], [mainRowRead], [meta], [rankRow], rankPeers, [questRow], todayEvents, [emailRow], [passRow]] =
     (await db.batch([
       q('SELECT card_id, count FROM collection WHERE user_id = ?', user.id),
       q('SELECT * FROM progress WHERE user_id = ?', user.id),
@@ -285,6 +286,7 @@ async function profile(db, user) {
          (SELECT terms || '|' || privacy FROM agreements WHERE user_id = ?1) AS agreed,
          (SELECT ids FROM seen_cards WHERE user_id = ?1) AS seen,
          (SELECT verified FROM emails WHERE user_id = ?1) AS verified`, user.id),
+      q('SELECT * FROM pass WHERE user_id = ?', user.id),
     ])).map(r => r.results);
   const prog = progRow ?? { user_id: user.id, cleared: 0, wins: 0, packs: 0, run: null };
   const mainRowNow = mainRowRead ?? { step: 0, base: '{}' };
@@ -343,6 +345,7 @@ async function profile(db, user) {
     },
     fused: fused.map(fusedView),
     quests,
+    pass: passView(passRow),   // the season pass: Pass XP, claimed tiers and each tier's reward
     ranked,
     hunt: { ...huntFoes(now()), status: extra.hunted ?? 'ready', next: huntStart(now()) + HUNT_MS },   // ready | playing | won | lost
     gauntlet: { best: extra.gbest || 0, rank: extra.gahead + 1 },   // rank among you and your friends
@@ -667,6 +670,55 @@ const bumpProgress = (db, userId, field) => db.prepare(
   `INSERT INTO progress (user_id, ${field}) VALUES (?, 1) ON CONFLICT (user_id) DO UPDATE SET ${field} = ${field} + 1`,
 ).bind(userId);
 
+// ---- season pass ----
+// Adds Pass XP for the current season (a new season starts from 0 with nothing claimed). A win pays only for the
+// first PASS_WIN_CAP wins of the day.
+const passXp = (db, userId, amount, win = false) => {
+  const t = now(), season = seasonOf(t), day = dayStart(t), w = win ? 1 : 0;
+  return db.prepare(`INSERT INTO pass (user_id, season, xp, day, wins, claimed) VALUES (?1, ?2, ?3, ?4, ?5, '[]')
+    ON CONFLICT (user_id) DO UPDATE SET
+      xp = (CASE WHEN pass.season = ?2 THEN pass.xp ELSE 0 END)
+         + (CASE WHEN ?5 = 1 AND pass.season = ?2 AND pass.day = ?4 AND pass.wins >= ?6 THEN 0 ELSE ?3 END),
+      wins = (CASE WHEN pass.season = ?2 AND pass.day = ?4 THEN pass.wins ELSE 0 END) + ?5,
+      claimed = CASE WHEN pass.season = ?2 THEN pass.claimed ELSE '[]' END,
+      season = ?2, day = ?4`).bind(userId, season, amount, day, w, PASS_WIN_CAP);
+};
+// Every battle win: the win counter and its Pass XP.
+const winWrites = (db, userId) => [bumpProgress(db, userId, 'wins'), passXp(db, userId, PASS_WIN_XP, true)];
+const passView = row => {
+  const t = now(), season = seasonOf(t), mine = row && row.season === season;
+  return { season, ends: seasonEnd(season), xp: mine ? row.xp : 0, per: PASS_PER, tiers: PASS_TIERS,
+    claimed: mine ? JSON.parse(row.claimed) : [], rewards: passRewards(season) };
+};
+// Claims a reached tier's reward (1-30).
+async function claimPass(req, db, user) {
+  const { tier } = await body(req);
+  if (!Number.isInteger(tier) || tier < 1 || tier > PASS_TIERS) throw new HttpError(400, 'Unknown tier.');
+  return locked(db, user.id, async me => {
+    const row = await db.prepare('SELECT * FROM pass WHERE user_id = ?').bind(me.id).first();
+    const view = passView(row);
+    if (passTier(view.xp) < tier) throw new HttpError(400, "You haven't reached that tier yet.");
+    if (view.claimed.includes(tier)) throw new HttpError(400, 'You already claimed that one.');
+    const reward = view.rewards[tier - 1];
+    if (tier === PASS_TIERS && !reward.card) throw new HttpError(400, `The Season ${view.season} card isn't out yet. Check back soon.`);
+    const claim = await db.prepare('UPDATE pass SET claimed = ? WHERE user_id = ? AND season = ? AND claimed = ?')
+      .bind(JSON.stringify([...view.claimed, tier]), me.id, view.season, row.claimed).run();
+    if (!claim.meta.changes) throw new HttpError(409, 'The pass changed. Take another look.');
+    const writes = [];
+    let pack = null;
+    if (reward.gold) writes.push(db.prepare('UPDATE users SET gold = gold + ? WHERE id = ?').bind(reward.gold, me.id));
+    if (reward.power) writes.push(addPower(db, me.id, reward.power));
+    if (reward.card) writes.push(...cardWrites(db, me.id, { cards: [reward.card], holo: [0] }));   // the season card comes holo
+    if (reward.pack) {
+      pack = openPack(me.packs_since_legend, reward.pack);
+      writes.push(...packWrites(db, me.id, pack, reward.pack),
+        db.prepare('UPDATE users SET packs_since_legend = ? WHERE id = ?').bind(pack.packsSinceLegend, me.id));
+    }
+    await db.batch(writes);
+    return json({ tier, reward, profile: await profile(db, await freshUser(db, me.id)) });
+  });
+}
+
 // ---- starter card & campaign ----
 // Opens the player's next Recruit Pack: a random starter they don't have yet, straight onto their team.
 async function openRecruit(db, user) {
@@ -735,7 +787,7 @@ async function campaignWin(db, user, level) {
     .bind(user.id, level).run();
   if (!res.meta.changes) return { won: true, gold: 0, xp: 0 };
   const gold = CAMPAIGN_GOLD[CAMPAIGN[level].chapter], xp = CAMPAIGN_XP[CAMPAIGN[level].chapter];
-  await db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(gold, xp, user.id).run();
+  await db.batch([db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(gold, xp, user.id), passXp(db, user.id, PASS_WIN_XP, true)]);
   const result = { won: true, gold, xp };
   const num = level + 1;
   if (NEW_CARD_AFTER.includes(num)) result.recruit = true;   // a Recruit Pack with the next starter
@@ -874,7 +926,7 @@ const FORFEIT_MOVES = 6, FRIEND_PAID_DAY = 10, RANKED_PAIR_DAY = 3;
 // A friend-battle win: gold and XP for the first FRIEND_PAID_DAY a day, the win always counts.
 async function friendWin(db, winnerId) {
   const paid = (await db.prepare("SELECT n FROM quest_events WHERE user_id = ? AND day = ? AND kind = 'fpaid'").bind(winnerId, dayStart(now())).first())?.n ?? 0;
-  return [bumpProgress(db, winnerId, 'wins'), ...(paid < FRIEND_PAID_DAY ? [questEvent(db, winnerId, 'fpaid'),
+  return [...winWrites(db, winnerId), ...(paid < FRIEND_PAID_DAY ? [questEvent(db, winnerId, 'fpaid'),
     db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(WIN_GOLD, WIN_XP, winnerId)] : [])];
 }
 
@@ -1236,10 +1288,10 @@ async function rankedView(db, user) {
   return {
     rank: me.rank, ranks: RANKS, rewards: RANK_REWARDS.map(([gold, pack]) => ({ gold, pack })),
     points: weekPoints(me, week), place: table.find(r => r.me).place, table,
-    weekEnds: week + WEEK_MS, season: seasonOf(t) + 1, seasonEnds: seasonEnd(seasonOf(t)), best: me.best,
+    weekEnds: week + WEEK_MS, season: seasonOf(t), seasonEnds: seasonEnd(seasonOf(t)), best: me.best,
     run: me.run ? JSON.parse(me.run) : null, liveMatch: live?.id ?? null,
     moved: me.moved ? JSON.parse(me.moved) : null,
-    reward: reward ? { season: reward.season + 1, rank: reward.rank, gold: RANK_REWARDS[reward.rank][0], pack: RANK_REWARDS[reward.rank][1] } : null,
+    reward: reward ? { season: reward.season, rank: reward.rank, gold: RANK_REWARDS[reward.rank][0], pack: RANK_REWARDS[reward.rank][1] } : null,
   };
 }
 
@@ -1255,7 +1307,7 @@ function rankedResult(db, me, won, week) {
   const writes = [db.prepare(`INSERT INTO ranked (user_id, rank, week, points, best) VALUES (?1, ?2, ?3, ?4, ?2)
     ON CONFLICT (user_id) DO UPDATE SET week = ?3, points = ?4, run = NULL`).bind(me.user_id, me.rank, week, points)];
   if (won) writes.push(db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(RANKED_GOLD, RANKED_XP, me.user_id),
-    bumpProgress(db, me.user_id, 'wins'), questEvent(db, me.user_id, 'rwin'));
+    ...winWrites(db, me.user_id), questEvent(db, me.user_id, 'rwin'));
   return { writes, delta: won ? RANKED_WIN : -Math.min(RANKED_LOSS, weekPoints(me, week)), points };
 }
 
@@ -1459,7 +1511,7 @@ async function huntMove(req, db, user) {
   await db.batch([...packWrites(db, user.id, pack, 'overload'),
     db.prepare('UPDATE users SET packs_since_legend = ?, gold = gold + ?, xp = xp + ? WHERE id = ?')
       .bind(pack.packsSinceLegend, HUNT_GOLD, HUNT_XP, user.id),
-    bumpProgress(db, user.id, 'wins'), questEvent(db, user.id, 'hunt')]);
+    ...winWrites(db, user.id), questEvent(db, user.id, 'hunt')]);
   return json({ legend: h.legend, state, result: { won: true, pack: pack.cards, holo: pack.holo, packType: 'overload', gold: HUNT_GOLD, xp: HUNT_XP },
     profile: await profile(db, await freshUser(db, user.id)) });
 }
@@ -1553,7 +1605,7 @@ async function gauntletMove(req, db, user) {
     hp: gauntletHeal(run.state.teams[0]), cds: gauntletCooldowns(run.state.teams[0]), enemies: gauntletEnemies(run.fight + 1), state: null };
   let pack = null, packType = null, holo = null;
   next.xp = (run.xp || 0) + gauntletXp(run.fight);
-  const writes = [db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(gold, gauntletXp(run.fight), user.id), bumpProgress(db, user.id, 'wins'),
+  const writes = [db.prepare('UPDATE users SET gold = gold + ?, xp = xp + ? WHERE id = ?').bind(gold, gauntletXp(run.fight), user.id), ...winWrites(db, user.id),
     questEvent(db, user.id, 'streak', next.wins, true), ...(next.wins === 10 ? [questEvent(db, user.id, 'g10')] : [])];
   if (next.wins % GAUNTLET_PACK_EVERY === 0) {
     packType = (await getProgress(db, user.id)).cleared < UNLOCKS.packs.cleared ? 'cyber' : freePack();   // Cyber only until chapter 1 is beaten
@@ -1614,7 +1666,7 @@ async function deleteAccount(req, db, user) {
     db.prepare('DELETE FROM trades WHERE from_id = ?1 OR to_id = ?1').bind(id),
     db.prepare('DELETE FROM fused WHERE user_id = ?1').bind(id),
     ...heldFused.map(f => db.prepare('DELETE FROM fused WHERE id = ? AND user_id = 0').bind(f)),
-    ...['collection', 'sessions', 'progress', 'presence', 'spins', 'gauntlet', 'shop_buys', 'hunts', 'daily_quests', 'quest_events', 'ranked', 'ranked_queue', 'pack_inv', 'powers', 'power_team', 'main_quest', 'emails', 'agreements', 'seen_cards', 'email_tokens', 'locks', 'activity'].map(t => db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(id)),
+    ...['collection', 'sessions', 'progress', 'presence', 'spins', 'gauntlet', 'shop_buys', 'hunts', 'daily_quests', 'quest_events', 'ranked', 'ranked_queue', 'pack_inv', 'powers', 'power_team', 'main_quest', 'emails', 'agreements', 'seen_cards', 'email_tokens', 'locks', 'activity', 'pass'].map(t => db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(id)),
     db.prepare('DELETE FROM users WHERE id = ?').bind(id),
   ]);
   return json({ ok: true });
@@ -1692,6 +1744,7 @@ async function route(req, env, ctx) {
     if (method === 'POST' && b === 'leave') return leaveCampaign(db, user);
   }
   if (method === 'POST' && pathname === '/quests/claim') return claimQuest(req, db, user);
+  if (method === 'POST' && pathname === '/pass/claim') return claimPass(req, db, user);
   if (a === 'ranked') {
     if (method === 'GET' && !b) { await needUnlock(db, user, 'ranked'); return json(await rankedView(db, user)); }
     if (method === 'POST' && b === 'search') return rankedSearch(db, user);

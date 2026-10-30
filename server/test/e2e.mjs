@@ -44,7 +44,7 @@ if (!base.includes('localhost')) {
   const sql = [`DELETE FROM friends WHERE user_id IN ${old} OR friend_id IN ${old}`,
     `DELETE FROM challenges WHERE to_id IN ${old} OR match_id IN (SELECT id FROM matches WHERE p0 IN ${old} OR p1 IN ${old})`,
     `DELETE FROM matches WHERE p0 IN ${old} OR p1 IN ${old}`, `DELETE FROM trades WHERE from_id IN ${old} OR to_id IN ${old}`,
-    ...'fused collection sessions progress presence spins gauntlet shop_buys hunts daily_quests quest_events ranked ranked_queue pack_inv powers power_team main_quest agreements seen_cards email_tokens locks activity'.split(' ').map(t => `DELETE FROM ${t} WHERE user_id IN ${old}`),
+    ...'fused collection sessions progress presence spins gauntlet shop_buys hunts daily_quests quest_events ranked ranked_queue pack_inv powers power_team main_quest agreements seen_cards email_tokens locks activity pass'.split(' ').map(t => `DELETE FROM ${t} WHERE user_id IN ${old}`),
     `DELETE FROM users WHERE id IN ${old}`,
     'DELETE FROM emails WHERE user_id NOT IN (SELECT id FROM users)',   // last: the list above finds test players by their email
     "DELETE FROM attempts WHERE key LIKE 'signup:%' OR key LIKE 'signupchk:%' OR key LIKE 'loginip:%'"].join('; ');   // network limits: runners can share an address
@@ -291,6 +291,9 @@ check(hres && (hres.won ? hres.pack.length === 8 : true), 'hunt over');
 check((await call('/me', a.token)).hunt.status === (hres.won ? 'won' : 'lost'), 'hunt used for today');
 await expectError(call('/hunt/start', a.token, {}), 400);   // one try a day
 console.log('hunt:', hres.won ? 'won ' + hres.pack : 'lost');
+const passNow = (await call('/me', a.token)).pass;
+check(passNow.rewards.length === 30 && passNow.per === 600 && passNow.xp >= 0 && Array.isArray(passNow.claimed), 'season pass in the profile');
+if (passNow.xp < 600) await expectError(call('/pass/claim', a.token, { tier: 1 }), 400);   // not reached yet
 const shop = (await call('/me', a.token)).shop.cards;
 check(shop.length === 4 && [2500, 4000, 8000, 12000].includes(shop[0].price) && shop[1].price === 500 && !shop[1].sold, 'daily shop: a featured Rare or Epic + 3 Commons');
 await expectError(call('/shop', a.token, { slot: 1, card: shop[2].id }), 400);   // wrong card for that slot

@@ -1,7 +1,9 @@
 // Pure game rules shared by the server: battles, packs, rewards. No I/O here so it can be tested in node.
-import CARDS from '../../shared/cards.json' with { type: 'json' };
+import ALL_CARDS from '../../shared/cards.json' with { type: 'json' };
 
-export const BY_ID = Object.fromEntries(CARDS.map(c => [c.id, c]));
+export const BY_ID = Object.fromEntries(ALL_CARDS.map(c => [c.id, c]));
+// Synth cards come only from season passes: never in packs, the shop, the campaign or computer teams.
+const CARDS = ALL_CARDS.filter(c => c.cls !== 'Synth');
 export const STARTER_TEAM = ['volt', 'fang', 'goliath'];
 export const START_GOLD = 0;           // gold comes from the campaign
 export const PACK_COST = 5000;
@@ -17,6 +19,7 @@ export const XP_PER_LEVEL = 250;
 export const BEATS = {
   Fighter: ['Beast', 'Arcanist'], Beast: ['Mech', 'Mystic'], Mech: ['Fighter', 'Spirit'],
   Arcanist: ['Spirit', 'Beast'], Spirit: ['Mystic', 'Fighter'], Mystic: ['Arcanist', 'Mech'],
+  Synth: [],   // season-pass cards: neutral, no edge and no weakness
 };
 const beats = (a, b) => BEATS[a].includes(b);
 // A Mystic's special heals one of its own team (special.heal); everything else hits an enemy.
@@ -284,12 +287,28 @@ export const RANK_REWARDS = [[1000, null], [2500, null], [5000, 'omni'], [7500, 
 export const RANKED_WIN = 25, RANKED_LOSS = 20, RANKED_GOLD = 150, RANKED_XP = 100, GROUP = 30;
 export const WEEK_MS = 7 * DAY_MS;
 export const weekStart = t => Math.floor((t - 4 * DAY_MS) / WEEK_MS) * WEEK_MS + 4 * DAY_MS;   // Mondays 00:00 UTC
-const SEASON_EPOCH = Date.UTC(2026, 10, 1);   // season 1 runs to the end of November 2026
+const SEASON_EPOCH = Date.UTC(2026, 10, 1);   // Season 0 runs to the end of November 2026
 export const seasonOf = t => {
   const d = new Date(t), months = (d.getUTCFullYear() - 2026) * 12 + d.getUTCMonth() - 10;
-  return Math.max(0, months);   // 0 = season 1
+  return Math.max(0, months);   // 0 = Season 0 (November 2026, and the days before it)
 };
 export const seasonEnd = s => Date.UTC(2026, 11 + s, 1);
+// ---- season pass ----
+// Free track for now (a paid track may come later). One per Ranked season (calendar month); 30 tiers of 600 Pass XP.
+// Pass XP: claiming a daily quest (100 / 150 / 250 by tier), and 20 a battle win for the first 10 wins a day.
+export const PASS_TIERS = 30, PASS_PER = 600, PASS_QUEST_XP = [100, 150, 250], PASS_WIN_XP = 20, PASS_WIN_CAP = 10;
+// Each season's exclusive card, given with the Legends Pack at tier 30 (only from that season's pass).
+export const SEASON_CARDS = { 0: 'zero' };   // given holo
+const PASS_POWERS = { 3: 'overclock', 8: 'shield', 13: 'recharge', 18: 'repair', 23: 'mirror', 28: 'restore' };
+const PASS_PACKS = { 5: 'cyber', 10: 'omni', 15: 'magic', 20: 'omni', 25: 'omni', 30: 'legends' };
+export const passRewards = season => Array.from({ length: PASS_TIERS }, (_, i) => {
+  const tier = i + 1;
+  if (tier === PASS_TIERS) return { pack: PASS_PACKS[tier], card: SEASON_CARDS[season] ?? null };
+  if (PASS_PACKS[tier]) return { pack: PASS_PACKS[tier] };
+  if (PASS_POWERS[tier]) return { power: PASS_POWERS[tier] };
+  return { gold: tier % 2 ? 500 : 750 };
+});
+export const passTier = xp => Math.min(PASS_TIERS, Math.floor(xp / PASS_PER));
 export const rankMove = place => (place === 1 ? 3 : place <= 3 ? 2 : place <= 10 ? 1 : place <= 20 ? 0 : -1);
 const BOT_NAMES = ['NeonVex', 'Kiro', 'ByteWolf', 'Sable', 'ZeroDay', 'Halcyon', 'Rook', 'Mira', 'Pyx', 'Glitchjaw', 'Talon', 'Orbit',
   'Juno', 'Quill', 'Static', 'Vanta', 'Ember', 'Nyx', 'Cobalt', 'Wren', 'Drift', 'Fable', 'Onyx', 'Kestrel', 'Lumen', 'Rift', 'Sol',

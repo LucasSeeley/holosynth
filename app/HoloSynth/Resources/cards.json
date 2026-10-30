@@ -4720,5 +4720,31 @@
   "color": "#7dff3d",
   "quip": "Slow to anger, slower to move, fern collection thriving.",
   "passive": "blessing"
+ },
+ {
+  "id": "zero",
+  "num": 214,
+  "name": "Zero",
+  "rarity": "Legendary",
+  "cls": "Synth",
+  "hp": 125,
+  "basic": {
+   "name": "Test Strike",
+   "dmg": 25
+  },
+  "special": {
+   "name": "Blueprint Burst",
+   "dmg": 55,
+   "cd": 3
+  },
+  "look": "The very first android ever built, kneeling half-assembled on a lab rig while robot arms fit its white armour, blueprint holograms all around.",
+  "color": "#5fb8ff",
+  "quip": "The first one built. Everyone else is a copy.",
+  "special2": {
+   "name": "Full Assembly",
+   "dmg": 75,
+   "cd": 4
+  },
+  "passive": "rebirth"
  }
 ]
