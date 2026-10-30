@@ -91,13 +91,13 @@ struct CardView: View {
     private func moveRow(_ name: String, dmg: Int, cd: Int?, w: CGFloat, ready: Bool = true, heal: Bool = false, boosted: Bool = false) -> some View {
         HStack(spacing: w * 0.02) {
             Text(name).font(.system(size: w * 0.046, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.6)
-            Spacer(minLength: 2)
-            if let cd {
+            if let cd {   // the cooldown sits right after the move name
                 Text("\(cd)")
                     .font(.system(size: w * 0.035, weight: .regular).monospacedDigit())   // same size as web
                     .frame(width: w * 0.056, height: w * 0.056)
                     .background(Circle().fill(Theme.classColor(card.cls).opacity(ready ? 0.28 : 0.6)))
             }
+            Spacer(minLength: 2)
             Text(heal ? "+\(dmg) HP" : "\(dmg)").font(.system(size: w * 0.043, weight: boosted ? .bold : .regular, design: .monospaced))
                 .foregroundColor(heal ? Color(hex: 0x3DFF8A) : boosted ? Self.goldText : Theme.fg)
         }

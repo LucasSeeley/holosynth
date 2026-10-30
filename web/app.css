@@ -167,13 +167,13 @@ img { display: block; -webkit-user-drag: none; user-select: none; }   /* picture
 .card .art { width: 100%; aspect-ratio: 1.3; object-fit: cover; border-radius: 7cqw; background: #070612; }
 .card .moves { display: flex; flex-direction: column; gap: 2cqw; }
 .card .mv { display: flex; align-items: baseline; height: 5.6cqw; gap: 2cqw; }
-.card .mv .n { flex: 1; font-size: 4.6cqw; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card .mv .n { flex: 0 1 auto; min-width: 0; font-size: 4.6cqw; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* names and numbers share one baseline (browsers round each text's baseline on its own, so centring them drifts by a pixel).
    The circle and the passive's diamond sit on that baseline taking no height (negative top margin), then move down so their
    centres meet the middle of the text; the offsets were measured from rendered pixels. */
 .card .mv .cd { width: 5.6cqw; height: 5.6cqw; margin-top: -5.6cqw; position: relative; top: 1.18cqw; flex: none; overflow: visible; }   /* one drawing, so the digit stays centred in its circle at any size */
 .card .mv .cd text { font: 12.5px system-ui, -apple-system, 'Segoe UI', sans-serif; fill: currentColor; }
-.card .mv .d { font-size: 4.3cqw; font-variant-numeric: tabular-nums; }
+.card .mv .d { margin-left: auto; padding-left: 2cqw; font-size: 4.3cqw; font-variant-numeric: tabular-nums; }
 .card .mv .d.heal { color: var(--online); }
 .card .pas { display: flex; align-items: baseline; gap: 2cqw; padding: 1.45cqw 2.5cqw .95cqw; border-radius: 3cqw; color: var(--cyan); background: rgba(63,240,255,.12); border: 1px solid rgba(63,240,255,.55); font-size: 4.4cqw; font-weight: 700; }
 .card .pas svg { width: 4.4cqw; height: 4.4cqw; margin-top: -4.4cqw; position: relative; top: .55cqw; flex: none; }   /* scales with the card so small cards keep room for the quip */
