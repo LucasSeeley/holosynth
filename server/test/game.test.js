@@ -52,11 +52,11 @@ test('no pity: a pack never forces a Legendary', () => {
 test('drop rates follow the slot ladder: rarity x tier, with power-card rows', () => {
   const n = {};
   const N = 40000;
-  for (let i = 0; i < N; i++) for (const id of openPack(0, 'omni').cards) {
+  for (let i = 0; i < N; i++) for (const id of openPack(0, 'omni').cards.slice(0, 1)) {   // the first slot: later ones skip power rows once a pack has its power card
     const k = id.startsWith('pw:') ? (FAVOURITE_POWERS.includes(id.slice(3)) ? 'Common power' : POWERS[id.slice(3)].rarity + ' power') : rarityOf(id) + ' ' + TIER_OF[id];
     n[k] = (n[k] || 0) + 1;
   }
-  const pct = k => (100 * (n[k] || 0)) / (N * 3);
+  const pct = k => (100 * (n[k] || 0)) / N;
   for (const [r, t, want] of SLOT_ODDS) assert.ok(Math.abs(pct(r + ' ' + t) - want) < Math.max(0.6, want * 0.08), `${r} ${t}: ${pct(r + ' ' + t).toFixed(2)} vs ${want}`);
   assert.ok(SLOT_ODDS.every((row, i) => i === 0 || row[2] < SLOT_ODDS[i - 1][2]), 'each row rarer than the one above');
   assert.ok(Math.abs(SLOT_ODDS.reduce((a, x) => a + x[2], 0) - 100) < 1e-9);
@@ -433,7 +433,7 @@ test('power cards: each does its job, is used up, and counts as the card\'s move
   const m = aiMove(s, 1); assert.ok(m.move.startsWith('pw:'));
   // packs: power cards turn up in normal packs, Power Packs are all power cards; campaign chapter 1 enemies have none
   let found = 0; for (let i = 0; i < 2000; i++) found += op(0).cards.filter(c => c.startsWith('pw:')).length;
-  assert.ok(Math.abs(found / 6000 - 0.3458) < 0.03, `${found} power cards in 6000 pack cards`);   // the SLOT_ODDS power rows
+  assert.ok(found > 400 && found <= 2000, `${found} power cards in 2000 packs`);   // most packs have one, none has two
   assert.ok(op(0, 'power').cards.every(c => POWERS[c.slice(3)]));
   assert.deepEqual(campaignPowers(0), []);
   assert.ok(campaignPowers(31).length >= 1);

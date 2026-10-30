@@ -438,7 +438,8 @@ export const apiOrNull = path => api(path).catch(e => { if (e.message === 'Unexp
 
 // The Victory / Defeated card over the board (campaign, friend battles).
 export function ResultCard({ won, children }) {
-  useEffect(() => { Sound.play(won ? 'victory' : 'defeat'); }, []);
-  return html`<div class="bb-result" role="dialog" aria-modal="true" aria-label=${won ? 'Victory' : 'Defeated'}>
+  const box = useRef();
+  useEffect(() => { Sound.play(won ? 'victory' : 'defeat'); box.current?.querySelector('.btn.gold')?.focus(); }, []);   // Enter presses the main button (Next battle / Try again)
+  return html`<div class="bb-result" ref=${box} role="dialog" aria-modal="true" aria-label=${won ? 'Victory' : 'Defeated'}>
     <div class="box"><h2 class=${won ? 'win' : 'lose'}>${won ? 'Victory' : 'Defeated'}</h2>${children}</div></div>`;
 }
