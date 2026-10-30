@@ -246,7 +246,7 @@ export function PackOpening({ type, count, load, onDone, onCancel, onFail, hideC
   const packW = Math.min(w * 0.7, 300, (h - 220) * 631 / 1050);
   const packH = packW * 1050 / 631;
   const rows = Math.ceil(n / 3);
-  const smallW = Math.min((w - 48) / 3, 150, ((h - 200) / rows - 10) / 1.4);
+  const smallW = Math.min((w - 48) / 3, 130, ((h - 200) / rows - 10) / 1.4);   // same size as the app
   const bigW = Math.min(w * 0.7, 320, (h - 240) * 5 / 7);
   const torn = phase !== 'pack', dealt = phase === 'dealt';
   const finished = dealt && current >= n;
@@ -257,12 +257,12 @@ export function PackOpening({ type, count, load, onDone, onCancel, onFail, hideC
     Rip.end(); Sound.play('tear');
     setPhase('torn'); setShake(true);
     setTimeout(() => setShake(false), 400);
-    const got = load();
+    const got = load(), t0 = performance.now();
     setTimeout(() => setPhase(p => p === 'torn' ? 'rising' : p), 400);
     const r = await got;
     if (!r) { (onFail || onCancel)?.(); return; }
     setCards(r.cards); setHolo(new Set(r.holo || []));
-    setTimeout(() => setPhase('dealt'), 1000);
+    setTimeout(() => setPhase('dealt'), Math.max(0, 1400 - (performance.now() - t0)));   // dealt 1.4 s after the tear, like the app
   };
 
   // tear: drag across the top of the pack (mouse or finger)

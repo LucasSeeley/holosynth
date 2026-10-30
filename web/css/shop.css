@@ -90,6 +90,7 @@
 
 /* opening */
 .opening .screenhead { position: absolute; z-index: 5; }
+.screen.city.opening { background: linear-gradient(180deg, rgba(7,6,12,.55) 0%, rgba(7,6,12,.35) 30%, rgba(7,6,12,.85) 58%, #07060c 75%), url(/img/login_bg.webp) center top / cover no-repeat, var(--ink); }   /* the app's backdrop: no red glow behind the cards */
 .stage { position: relative; flex: 1; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
 .stage > * { position: absolute; left: 50%; top: 50%; }
 .leak { border-radius: 50%; filter: blur(40px); transition: opacity .4s, transform .45s; pointer-events: none; }
