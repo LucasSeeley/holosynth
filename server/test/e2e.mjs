@@ -292,7 +292,7 @@ check((await call('/me', a.token)).hunt.status === (hres.won ? 'won' : 'lost'), 
 await expectError(call('/hunt/start', a.token, {}), 400);   // one try a day
 console.log('hunt:', hres.won ? 'won ' + hres.pack : 'lost');
 const shop = (await call('/me', a.token)).shop.cards;
-check(shop.length === 4 && shop[0].price === 2500 && shop[1].price === 500 && !shop[1].sold, 'daily shop: 1 Rare + 3 Commons');
+check(shop.length === 4 && [2500, 4000, 8000, 12000].includes(shop[0].price) && shop[1].price === 500 && !shop[1].sold, 'daily shop: a featured Rare or Epic + 3 Commons');
 await expectError(call('/shop', a.token, { slot: 1, card: shop[2].id }), 400);   // wrong card for that slot
 if (done.gold >= 500) {
   const got = await call('/shop', a.token, { slot: 1, card: shop[1].id });
