@@ -154,7 +154,6 @@ img { display: block; -webkit-user-drag: none; user-select: none; }   /* picture
 .card { position: relative; container-type: inline-size; min-width: 0; }
 .card .face { text-align: left; aspect-ratio: 5 / 7; overflow: hidden; position: relative; border-radius: 6cqw; border: max(1px, .8cqw) solid var(--edge); padding: 5cqw;
   display: flex; flex-direction: column; gap: 4cqw; color: var(--fg); font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; background: var(--face); }
-.card.fused .face { border-width: max(1px, 1.2cqw); box-shadow: 0 0 6cqw rgba(255,215,122,.45); }
 .card .top { display: flex; align-items: center; gap: 2cqw; font-size: 5.5cqw; font-weight: 700; white-space: nowrap; }
 .card .top img { width: 6.3cqw; height: 6.3cqw; flex: none; }
 .card .top .nm { overflow: hidden; text-overflow: ellipsis; }

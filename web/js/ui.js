@@ -64,7 +64,7 @@ export const fmt = n => Number(n || 0).toLocaleString('en-US');
 export function Card({ id, fusion, hpNow, cooldown = 0, count, isNew, selected, dim, onClick, label, class: cls = '', style = '' }) {
   const c = cardOf(id);
   if (!c) return html`<div class="card ${cls}" style=${style}><div class="cardback"></div></div>`;
-  const total = fusionTotal(fusion), fused = total > 0, edge = fused ? 'var(--gold-text)' : rarityColor(c.rarity);
+  const total = fusionTotal(fusion), fused = total > 0, edge = rarityColor(c.rarity);   // the outline is always the rarity; fusing shows in the crest and gold numbers
   const face = `linear-gradient(135deg, color-mix(in srgb, ${c.color} 38%, #12111D), color-mix(in srgb, ${c.color} 12%, #0A0912))`;
   const synth = c.cls === 'Synth';   // one of a kind: second special and passive always on, never fused
   const mhp = maxHP(c, fusion), pas = fusion?.p || synth ? passiveOf(c) : null, col = classColor(c.cls);
@@ -99,7 +99,7 @@ export const CardBack = ({ style = '' }) => html`<div class="cardback" style=${s
 export function Tile({ id, sub, fused }) {
   const c = cardOf(id);
   if (!c) return html`<div class="tile"><div class="empty"><${Icon} name="lock" size="16" /></div>${sub && html`<span class="small muted">${sub}</span>`}</div>`;
-  return html`<div class="tile" style="--edge: ${fused ? 'var(--gold-text)' : classColor(c.cls) + '80'}">
+  return html`<div class="tile" style="--edge: ${classColor(c.cls) + '80'}">
     <img src=${art(id)} alt="" loading="lazy" /><span class="head" style="font-size: 13px;">${c.name}${fused ? ' ✦' : ''}</span></div>`;
 }
 export const Avatar = ({ id, size = 40, ring = true }) => {

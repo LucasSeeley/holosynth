@@ -81,8 +81,7 @@ struct CardView: View {
             .background(card.face)
             .clipShape(RoundedRectangle(cornerRadius: w * 0.06, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: w * 0.06, style: .continuous)
-                .stroke((fusion?.total ?? 0) > 0 ? Self.goldText : Theme.rarityColor(card.rarity), lineWidth: max(1, w * ((fusion?.total ?? 0) > 0 ? 0.012 : 0.008))))
-            .shadow(color: (fusion?.total ?? 0) > 0 ? Self.goldText.opacity(0.45) : .clear, radius: w * 0.06)
+                .stroke(Theme.rarityColor(card.rarity), lineWidth: max(1, w * 0.008)))   // always the rarity; fusing shows in the crest and gold numbers
             .modifier(HoloFoil(on: fusion?.holo == true || card.cls == "Synth", width: w))   // Synths always look holo
         }
         .aspectRatio(5.0 / 7.0, contentMode: .fit)
