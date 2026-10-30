@@ -685,6 +685,7 @@ const passXp = (db, userId, amount, win = false) => {
       claimed = CASE WHEN pass.season = ?2 THEN pass.claimed ELSE '[]' END,
       season = ?2, day = ?4`).bind(userId, season, amount, day, w, PASS_WIN_CAP);
 };
+const PASS_HUNT_XP = 200;   // beating the Legend Hunt
 // A ranked win's Pass XP: its own daily cap, counted from today's ranked wins ('rwin', logged after this in the same batch).
 const passXpRanked = (db, userId) => {
   const t = now(), season = seasonOf(t), day = dayStart(t);
@@ -1524,7 +1525,7 @@ async function huntMove(req, db, user) {
   await db.batch([...packWrites(db, user.id, pack, 'overload'),
     db.prepare('UPDATE users SET packs_since_legend = ?, gold = gold + ?, xp = xp + ? WHERE id = ?')
       .bind(pack.packsSinceLegend, HUNT_GOLD, HUNT_XP, user.id),
-    ...winWrites(db, user.id), questEvent(db, user.id, 'hunt')]);
+    bumpProgress(db, user.id, 'wins'), passXp(db, user.id, PASS_HUNT_XP), questEvent(db, user.id, 'hunt')]);
   return json({ legend: h.legend, state, result: { won: true, pack: pack.cards, holo: pack.holo, packType: 'overload', gold: HUNT_GOLD, xp: HUNT_XP },
     profile: await profile(db, await freshUser(db, user.id)) });
 }
