@@ -78,3 +78,12 @@ footer p { margin: 0; }
   .features { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { .btn, .cardrow img { transition: none; } }
+
+/* trailer: right under the hero, a gold-framed 16:9 player */
+.trailer { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 72px 16px 8px; }
+.eyebrow { margin: 0; font: 600 14px var(--body); letter-spacing: .3em; text-transform: uppercase; color: #3FF0FF; }
+.trailer h2 { font-size: clamp(28px, 4vw, 42px); }
+.tframe { width: min(960px, 100%); margin-top: 18px; padding: 3px; border-radius: 18px;
+  background: linear-gradient(135deg, var(--gold-hi), var(--gold-lo) 45%, rgba(158,16,36,.8));
+  box-shadow: 0 0 60px rgba(255, 160, 60, .25), 0 30px 80px rgba(0,0,0,.7); }
+.tframe video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; border-radius: 15px; background: #000; }
