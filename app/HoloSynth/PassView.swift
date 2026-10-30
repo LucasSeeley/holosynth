@@ -70,18 +70,23 @@ struct PassView: View {
         .padding(.top, 8)
     }
 
-    // The tier-30 prize: the season card in front, its Legends Pack behind.
+    // The tier-30 prize: the season card and its Legends Pack side by side, straight, the same height.
     private func hero(_ p: PassInfo) -> some View {
-        ZStack {
-            if let img = Art.pack(p.rewards.last?.pack ?? "legends") {
-                Image(uiImage: img).resizable().scaledToFit().frame(height: 230)
-                    .rotationEffect(.degrees(9)).offset(x: 60).shadow(color: .black.opacity(0.7), radius: 18, y: 14)
+        prize(p.rewards.last, cardWidth: 170, gap: 14)
+            .shadow(color: .black.opacity(0.7), radius: 18, y: 14)
+            .padding(.top, 20).padding(.bottom, 24)
+            .frame(maxWidth: .infinity)
+            .accessibilityHidden(true)
+    }
+
+    // Season card + its pack, both card height (5:7), tops and bottoms lined up. The hero and the tier-30 tile both use it.
+    private func prize(_ r: PassInfo.Reward?, cardWidth w: CGFloat, gap: CGFloat) -> some View {
+        HStack(spacing: gap) {
+            SeasonCardView(id: r?.card, width: w)
+            if let img = Art.pack(r?.pack ?? "legends") {
+                Image(uiImage: img).resizable().scaledToFit().frame(height: w * 7 / 5)
             }
-            SeasonCardView(id: p.rewards.last?.card, width: 160)
-                .offset(x: -38)   // kept straight so its stats read cleanly.shadow(color: .black.opacity(0.7), radius: 20, y: 16)
         }
-        .frame(height: 290)
-        .accessibilityHidden(true)
     }
 
     private func progress(_ p: PassInfo) -> some View {
@@ -136,6 +141,11 @@ struct PassView: View {
         let big = r.pack != nil, final = t == p.tiers
         let into = p.xp - p.tier * p.per
         return VStack(spacing: 8) {
+            if final, r.card != nil {
+                prize(r, cardWidth: 104, gap: 8)
+                    .opacity(claimed ? 0.45 : 1)
+                    .accessibilityElement(children: .ignore).accessibilityLabel("Tier \(t): \(Self.name(r))")
+            } else {
             ZStack {
                 RoundedRectangle(cornerRadius: 10).fill(Color(hex: 0x14121F))
                 RadialGradient(colors: [(big && !reached ? Theme.backRed : Theme.brass).opacity(big && !reached ? 0.35 : 0.16), .clear],
@@ -144,15 +154,8 @@ struct PassView: View {
                     CardBack()
                 } else {
                     VStack(spacing: 4) {
-                        art(r, final: final).frame(maxHeight: .infinity)
-                        VStack(spacing: 2) {
-                            if final, let id = r.card, let c = CardBook.card(id) {   // the season card's name, its pack underneath
-                                Text(c.name).font(.chakra(13, semibold: true)).foregroundColor(Theme.fg)
-                                Text("+ \(Self.packNames[r.pack ?? ""] ?? "Pack")").font(.barlow(10)).foregroundColor(Color(hex: 0xA9A5C2))
-                            } else {
-                                Text(Self.name(r)).font(.chakra(12, semibold: true)).foregroundColor(Theme.fg)
-                            }
-                        }
+                        art(r).frame(maxHeight: .infinity)
+                        Text(Self.name(r)).font(.chakra(12, semibold: true)).foregroundColor(Theme.fg)
                         .multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.8).padding(.horizontal, 6).padding(.bottom, 8)
                     }
                 }
@@ -165,6 +168,7 @@ struct PassView: View {
             .shadow(color: reached && !claimed ? Color(hex: 0xFFC53D).opacity(0.45) : final ? Color(hex: 0x78DCFF).opacity(0.35) : .clear, radius: 10)
             .opacity(claimed ? 0.45 : 1)
             .accessibilityElement(children: .ignore).accessibilityLabel("Tier \(t): \(Self.name(r))")
+            }
             Text("\(t)").font(.chakra(14)).foregroundColor(current ? HuntView.gold : Theme.muted).monospacedDigit()
             Group {
                 if claimed {
@@ -177,23 +181,16 @@ struct PassView: View {
             }
             .frame(height: 30)
         }
-        .frame(width: 104)
+        .frame(width: final && r.card != nil ? nil : 104)
     }
 
-    @ViewBuilder private func art(_ r: PassInfo.Reward, final: Bool) -> some View {
+    @ViewBuilder private func art(_ r: PassInfo.Reward) -> some View {
         if let g = r.gold {
             Coins(n: g >= 750 ? 4 : 3).frame(width: 72, height: 72)
         } else if let id = r.power, let pw = Power.all.first(where: { $0.id == id }) {
             PowerCardView(power: pw).frame(width: 64, height: 90)
         } else if let pack = r.pack, let img = Art.pack(pack) {
-            if final {   // the season card up front, its pack peeking out behind
-                ZStack {
-                    Image(uiImage: img).resizable().scaledToFit().frame(height: 78).rotationEffect(.degrees(-10)).offset(x: -14).opacity(0.9)
-                    SeasonCardView(id: r.card, width: 52).rotationEffect(.degrees(6)).offset(x: 14).shadow(color: .black.opacity(0.6), radius: 6, y: 4)
-                }
-            } else {
-                Image(uiImage: img).resizable().scaledToFit().frame(height: 100)
-            }
+            Image(uiImage: img).resizable().scaledToFit().frame(height: 100)
         }
     }
 

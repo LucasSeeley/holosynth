@@ -18,7 +18,6 @@ export const rewardName = r => r.gold ? `${fmt(r.gold)} gold` : r.power ? power(
   : r.card ? `Season card + ${packInfo(r.pack).name}` : packInfo(r.pack).name;
 const RewardArt = ({ r }) => r.gold ? html`<${Coins} n=${r.gold} />`
   : r.power ? html`<div class="ppower"><${PowerCard} pw=${power(r.power)} /></div>`
-  : r.tier30 ? html`<span class="pfin"><${PackImg} type=${r.pack} height="92" /><span class="pfcard"><${SeasonCard} id=${r.card} /></span></span>`
   : html`<${PackImg} type=${r.pack} height="104" />`;
 
 // The season card (Synths always look holo): the real card once it's out, a shimmering card back until then.
@@ -54,7 +53,7 @@ export function SeasonPass({ close }) {
   const shown = Math.min(p.tiers, tier + 1);   // the tier you're working on (all 30 once every tier is reached)
   return html`<${Screen} close=${close} title="Season ${p.season}" right=${html`<span class="small soft">Ends in <b class="head" style="color: var(--fg);">${left(p.ends)}</b></span>`}>
     <div class="pass">
-      <div class="phero" aria-hidden="true"><${PackImg} type=${final.pack} height="250" /><div class="pscard"><${SeasonCard} id=${final.card} /></div></div>
+      <div class="phero" aria-hidden="true"><div class="pscard"><${SeasonCard} id=${final.card} /></div><${PackImg} type=${final.pack} height="238" /></div>
       <div class="pprize">
         <h2>${final.card ? card(final.card)?.name : `Season ${p.season} card`}</h2>
         <p>A holo ${final.card ? card(final.card)?.cls + ' ' : ''}card you can only get this season. Reach tier ${p.tiers} to unlock it, plus a ${packInfo(final.pack).name}.</p>
@@ -80,8 +79,8 @@ export function SeasonPass({ close }) {
           const big = !!r.pack;
           return html`<div class="ptier ${st} ${big ? 'big' : ''} ${t === p.tiers ? 'final' : ''}" data-tier=${t}>
             <div class="ptile" aria-label="Tier ${t}: ${rewardName(r)}">
-              ${st === 'locked' && !big ? html`<${CardBack} />` : html`<div class="pface"><${RewardArt} r=${{ ...r, tier30: t === p.tiers }} /></div>${t === p.tiers && r.card
-                ? html`<span class="pname">${card(r.card)?.name}<small>+ ${packInfo(r.pack).name}</small></span>` : html`<span class="pname">${rewardName(r)}</span>`}`}
+              ${t === p.tiers && r.card ? html`<div class="pfull"><${SeasonCard} id=${r.card} /></div><${PackImg} type=${r.pack} height="146" />`
+                : st === 'locked' && !big ? html`<${CardBack} />` : html`<div class="pface"><${RewardArt} r=${r} /></div><span class="pname">${rewardName(r)}</span>`}
             </div>
             <span class="pnum num">${t}</span>
             ${claimed ? html`<span class="pok">Claimed</span>`
