@@ -53,7 +53,7 @@ export function SeasonPass({ close }) {
   const shown = Math.min(p.tiers, tier + 1);   // the tier you're working on (all 30 once every tier is reached)
   return html`<${Screen} close=${close} title="Season ${p.season}" right=${html`<span class="small soft">Ends in <b class="head" style="color: var(--fg);">${left(p.ends)}</b></span>`}>
     <div class="pass">
-      <div class="phero" aria-hidden="true"><div class="pscard"><${SeasonCard} id=${final.card} /></div><${PackImg} type=${final.pack} height="238" /></div>
+      <div class="phero" aria-hidden="true"><div class="pscard"><${SeasonCard} id=${final.card} /></div><${PackImg} type=${final.pack} style="height: auto;" /></div>
       <div class="pprize">
         <h2>${final.card ? card(final.card)?.name : `Season ${p.season} card`}</h2>
         <p>A holo ${final.card ? card(final.card)?.cls + ' ' : ''}card you can only get this season. Reach tier ${p.tiers} to unlock it, plus a ${packInfo(final.pack).name}.</p>

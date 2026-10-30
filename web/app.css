@@ -166,13 +166,13 @@ img { display: block; -webkit-user-drag: none; user-select: none; }   /* picture
 .card .crest { flex: none; padding: .6cqw 2.4cqw; border-radius: 3cqw; border: 1px solid var(--gold-text); background: rgba(7,6,12,.6); color: var(--gold-text); font: 700 4cqw var(--head); }
 .card .art { width: 100%; aspect-ratio: 1.3; object-fit: cover; border-radius: 7cqw; background: #070612; }
 .card .moves { display: flex; flex-direction: column; gap: 2cqw; }
-.card .mv { display: flex; align-items: center; gap: 2cqw; }
+.card .mv { display: flex; align-items: baseline; height: 5.6cqw; gap: 2cqw; }
 .card .mv .n { flex: 1; font-size: 4.6cqw; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.card .mv .cd { width: 5cqw; height: 5cqw; border-radius: 50%; font: 3cqw ui-monospace, monospace; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.card .mv .cd { align-self: center; position: relative; top: -.6cqw; line-height: 1; padding-top: .4cqw; box-sizing: border-box; width: 5cqw; height: 5cqw; border-radius: 50%; font: 3cqw ui-monospace, monospace; display: inline-flex; align-items: center; justify-content: center; flex: none; }
 .card .mv .d { font: 4.3cqw ui-monospace, Menlo, Consolas, monospace; }
 .card .mv .d.heal { color: var(--online); }
-.card .pas { display: flex; align-items: center; gap: 2cqw; padding: 1.2cqw 2.5cqw; border-radius: 3cqw; color: var(--cyan); background: rgba(63,240,255,.12); border: 1px solid rgba(63,240,255,.55); font-size: 4.4cqw; font-weight: 700; }
-.card .pas svg { width: 4.4cqw; height: 4.4cqw; flex: none; }   /* scale with the card so small cards keep room for the quip */
+.card .pas { display: flex; align-items: baseline; gap: 2cqw; padding: 1.2cqw 2.5cqw; border-radius: 3cqw; color: var(--cyan); background: rgba(63,240,255,.12); border: 1px solid rgba(63,240,255,.55); font-size: 4.4cqw; font-weight: 700; }
+.card .pas svg { width: 4.4cqw; height: 4.4cqw; flex: none; align-self: center; }   /* names and numbers share a baseline; the icon sits centred */   /* scale with the card so small cards keep room for the quip */
 .card .pas .pn { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card .pas .pv { font: 4.3cqw ui-monospace, monospace; }
 .card .quip { margin-top: auto; text-align: center; font-size: 3cqw; font-style: italic; color: rgba(235,233,247,.62); line-height: 1.25;

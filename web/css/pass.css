@@ -1,8 +1,9 @@
 /* Season Pass: the prize up top, your tier, then one card-shaped tile per tier (a swipe row on phones, a grid when wide). */
 .pass { display: flex; flex-direction: column; padding: 0 0 28px; }
-.phero { display: flex; justify-content: center; align-items: flex-end; gap: 14px; padding: 20px 16px 24px; }
-.phero > img { height: 238px; width: auto; filter: drop-shadow(0 18px 30px rgba(0,0,0,.7)); }
-.pscard { width: 170px; filter: drop-shadow(0 18px 30px rgba(0,0,0,.7)); }
+.phero { display: flex; align-items: flex-start; gap: 14px; width: min(420px, 100%); margin: 0 auto; padding: 20px 16px 24px; }
+/* widths 25:21 = card (5:7) : pack (3:5), so both come out the same height */
+.pscard { flex: 25 1 0; min-width: 0; filter: drop-shadow(0 18px 30px rgba(0,0,0,.7)); }
+.phero > img { flex: 21 1 0; min-width: 0; height: auto; aspect-ratio: 3 / 5; object-fit: cover; filter: drop-shadow(0 18px 30px rgba(0,0,0,.7)); }
 .pmystery { position: relative; aspect-ratio: 5 / 7; border-radius: 6% / 4.3%; overflow: hidden; box-shadow: 0 0 0 2px rgba(255,215,122,.8), 0 0 40px rgba(120,220,255,.3); }
 .pmystery .cardback { position: absolute; inset: 0; border-radius: 0; }
 .pholo { position: absolute; inset: 0; mix-blend-mode: screen; opacity: .55; background-size: 250% 100%;
@@ -14,7 +15,7 @@
 .pprize { text-align: center; padding: 0 24px; }
 .pprize h2 { font: 700 26px var(--head); margin: 0; }
 .pprize p { margin: 6px auto 0; max-width: 320px; color: var(--soft); font-size: 14px; }
-.pprog { display: flex; align-items: center; gap: 14px; width: min(560px, 100%); margin: 18px auto 0; padding: 0 16px; }
+.pprog { display: flex; align-items: center; gap: 14px; width: min(420px, 100%); margin: 18px auto 0; padding: 0 16px; }
 .pbadge { width: 62px; height: 62px; flex: none; clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
   background: linear-gradient(180deg, var(--gold-hi), var(--gold-lo)); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #2A1A00; }
 .pbadge small { font: 600 10px var(--head); letter-spacing: 1px; text-transform: uppercase; } .pbadge b { font: 700 24px/1 var(--head); }
@@ -33,14 +34,15 @@
 /* tier 30: a small copy of the hero — the season card and its Legends Pack side by side, both tile height */
 .pname { font: 600 12px/1.2 var(--head); text-align: center; padding: 0 6px 8px; }
 .pnum { font: 700 14px var(--head); color: var(--muted); }
-.ptier .btn { height: 30px; padding: 0 14px; font-size: 12px; }
+.ptier .btn { width: 84px; height: 30px; padding: 0; font-size: 12px; }
+.pass .ptier.final > .btn { width: 84px; margin-left: 10px; }
 .pok { font: 600 12px var(--head); color: var(--online); } .pcur { font: 600 12px var(--head); color: var(--gold-hi); }
 .ptier.claimed .ptile { opacity: .45; }
 .ptier.ready .ptile { border-color: var(--gold-hi); box-shadow: 0 0 18px rgba(255,197,61,.45); }
 .ptier.current .ptile { border: 2px solid var(--gold-hi); } .ptier.current .pnum { color: var(--gold-hi); }
 .ptier.locked .ptile { border-color: rgba(158,16,36,.6); }
 .ptier.locked.big .ptile { background: radial-gradient(80% 60% at 50% 40%, rgba(158,16,36,.35), transparent 75%), #14121F; }
-.pearn { display: flex; gap: 10px; width: min(560px, 100%); margin: 14px auto 0; padding: 0 16px; }
+.pearn { display: flex; gap: 10px; width: min(420px, 100%); margin: 14px auto 0; padding: 0 16px; }
 .pearn div { flex: 1; padding: 10px 12px; border-radius: 14px; background: var(--field); border: 1px solid rgba(235,233,247,.08); font-size: 13px; color: var(--soft); }
 .pearn b { display: block; color: var(--fg); font: 700 14px var(--head); }
 /* wide: the same swipe row as the app, centred, with arrows for a mouse */
@@ -51,7 +53,8 @@
 @media (pointer: coarse), (max-width: 759px) { .parr { display: none; } }
 @media (prefers-reduced-motion: reduce) { .pholo { animation: none; } }
 /* tier 30: a small copy of the hero — the season card and its Legends Pack side by side, both tile height (last, so it beats the locked styles) */
-.pass .ptier.final { width: auto; }
+.pass .ptier.final { width: auto; align-items: flex-start; }
+.pass .ptier.final > :not(.ptile) { width: 104px; text-align: center; justify-content: center; }
 .pass .ptier.final .ptile { width: auto; aspect-ratio: auto; height: calc(104px * 7 / 5); flex-direction: row; gap: 8px; border: 0; background: none; box-shadow: none; overflow: visible; }
 .pfull { width: 104px; }
 .pass .ptier.final .ptile > img { height: 100%; width: auto; }

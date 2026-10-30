@@ -72,11 +72,16 @@ struct PassView: View {
 
     // The tier-30 prize: the season card and its Legends Pack side by side, straight, the same height.
     private func hero(_ p: PassInfo) -> some View {
-        prize(p.rewards.last, cardWidth: 170, gap: 14)
-            .shadow(color: .black.opacity(0.7), radius: 18, y: 14)
-            .padding(.top, 20).padding(.bottom, 24)
-            .frame(maxWidth: .infinity)
-            .accessibilityHidden(true)
+        GeometryReader { g in   // fill the width between the 16pt edges, card and pack the same height
+            let h = (g.size.width - 14) / (5.0 / 7.0 + 0.6)
+            prize(p.rewards.last, cardWidth: h * 5 / 7, gap: 14).frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .aspectRatio(1.365, contentMode: .fit)
+        .frame(maxWidth: 388)
+        .shadow(color: .black.opacity(0.7), radius: 18, y: 14)
+        .padding(.horizontal, 16).padding(.top, 20).padding(.bottom, 24)
+        .frame(maxWidth: .infinity)
+        .accessibilityHidden(true)
     }
 
     // Season card + its pack, both card height (5:7), tops and bottoms lined up. The hero and the tier-30 tile both use it.
@@ -140,7 +145,7 @@ struct PassView: View {
         let claimed = p.claimed.contains(t), reached = t <= p.tier, current = t == p.tier + 1
         let big = r.pack != nil, final = t == p.tiers
         let into = p.xp - p.tier * p.per
-        return VStack(spacing: 8) {
+        return VStack(alignment: .leading, spacing: 8) {   // number and claim line sit under the card (tier 30 also has its pack beside it)
             if final, r.card != nil {
                 prize(r, cardWidth: 104, gap: 8)
                     .opacity(claimed ? 0.45 : 1)
@@ -169,7 +174,7 @@ struct PassView: View {
             .opacity(claimed ? 0.45 : 1)
             .accessibilityElement(children: .ignore).accessibilityLabel("Tier \(t): \(Self.name(r))")
             }
-            Text("\(t)").font(.chakra(14)).foregroundColor(current ? HuntView.gold : Theme.muted).monospacedDigit()
+            Text("\(t)").font(.chakra(14)).foregroundColor(current ? HuntView.gold : Theme.muted).monospacedDigit().frame(width: 104)
             Group {
                 if claimed {
                     Text("Claimed").font(.chakra(12, semibold: true)).foregroundColor(QuestsView.green)
@@ -179,9 +184,8 @@ struct PassView: View {
                     Text("\(into.formatted()) / \(p.per.formatted())").font(.chakra(12, semibold: true)).foregroundColor(HuntView.gold).monospacedDigit()
                 }
             }
-            .frame(height: 30)
+            .frame(width: 104, height: 30)
         }
-        .frame(width: final && r.card != nil ? nil : 104)
     }
 
     @ViewBuilder private func art(_ r: PassInfo.Reward) -> some View {
