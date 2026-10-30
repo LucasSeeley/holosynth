@@ -4727,7 +4727,7 @@
   "name": "Zero",
   "rarity": "Legendary",
   "cls": "Synth",
-  "hp": 150,
+  "hp": 220,
   "basic": {
    "name": "Test Strike",
    "dmg": 30
