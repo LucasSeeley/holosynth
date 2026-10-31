@@ -2366,7 +2366,7 @@
   "name": "Regalis",
   "rarity": "Legendary",
   "cls": "Fighter",
-  "hp": 120,
+  "hp": 145,
   "basic": {
    "name": "Crown Strike",
    "dmg": 25
@@ -2392,7 +2392,7 @@
   "name": "Vorgath",
   "rarity": "Legendary",
   "cls": "Beast",
-  "hp": 115,
+  "hp": 140,
   "basic": {
    "name": "Primal Rend",
    "dmg": 30
@@ -2418,7 +2418,7 @@
   "name": "Prime Forge",
   "rarity": "Legendary",
   "cls": "Mech",
-  "hp": 125,
+  "hp": 150,
   "basic": {
    "name": "Forge Beam",
    "dmg": 25
@@ -3355,7 +3355,7 @@
   "name": "Omniarch",
   "rarity": "Legendary",
   "cls": "Arcanist",
-  "hp": 115,
+  "hp": 140,
   "basic": {
    "name": "Prime Word",
    "dmg": 30
@@ -3381,7 +3381,7 @@
   "name": "Solenne",
   "rarity": "Legendary",
   "cls": "Spirit",
-  "hp": 120,
+  "hp": 145,
   "basic": {
    "name": "First Light",
    "dmg": 25
@@ -3407,7 +3407,7 @@
   "name": "Everheart",
   "rarity": "Legendary",
   "cls": "Mystic",
-  "hp": 125,
+  "hp": 150,
   "basic": {
    "name": "Prism Pulse",
    "dmg": 25
@@ -3434,7 +3434,7 @@
   "name": "Kensho",
   "rarity": "Legendary",
   "cls": "Fighter",
-  "hp": 115,
+  "hp": 140,
   "basic": {
    "name": "Twin Crescent",
    "dmg": 30
@@ -3460,7 +3460,7 @@
   "name": "Gorrath",
   "rarity": "Legendary",
   "cls": "Fighter",
-  "hp": 145,
+  "hp": 170,
   "basic": {
    "name": "Iron Fist",
    "dmg": 35
@@ -3486,7 +3486,7 @@
   "name": "Rimefang",
   "rarity": "Legendary",
   "cls": "Beast",
-  "hp": 120,
+  "hp": 145,
   "basic": {
    "name": "Rime Rend",
    "dmg": 25
@@ -3512,7 +3512,7 @@
   "name": "Rexmortis",
   "rarity": "Legendary",
   "cls": "Beast",
-  "hp": 145,
+  "hp": 170,
   "basic": {
    "name": "Bone Crusher",
    "dmg": 35
@@ -3538,7 +3538,7 @@
   "name": "Terrakor",
   "rarity": "Legendary",
   "cls": "Mech",
-  "hp": 145,
+  "hp": 170,
   "basic": {
    "name": "Gravity Fist",
    "dmg": 35
@@ -3564,7 +3564,7 @@
   "name": "Skyreign",
   "rarity": "Legendary",
   "cls": "Mech",
-  "hp": 115,
+  "hp": 140,
   "basic": {
    "name": "Ion Lance",
    "dmg": 30
@@ -3590,7 +3590,7 @@
   "name": "Codexa",
   "rarity": "Legendary",
   "cls": "Arcanist",
-  "hp": 120,
+  "hp": 145,
   "basic": {
    "name": "Paper Edge",
    "dmg": 25
@@ -3616,7 +3616,7 @@
   "name": "Chronelle",
   "rarity": "Legendary",
   "cls": "Arcanist",
-  "hp": 135,
+  "hp": 160,
   "basic": {
    "name": "Echo Step",
    "dmg": 40
@@ -3642,7 +3642,7 @@
   "name": "Starmother",
   "rarity": "Legendary",
   "cls": "Spirit",
-  "hp": 145,
+  "hp": 170,
   "basic": {
    "name": "Starsong",
    "dmg": 35
@@ -3668,7 +3668,7 @@
   "name": "Pyrazhar",
   "rarity": "Legendary",
   "cls": "Spirit",
-  "hp": 115,
+  "hp": 140,
   "basic": {
    "name": "Smoke Lash",
    "dmg": 30
@@ -3694,7 +3694,7 @@
   "name": "Halcyon",
   "rarity": "Legendary",
   "cls": "Mystic",
-  "hp": 120,
+  "hp": 145,
   "basic": {
    "name": "Halo Lance",
    "dmg": 25
@@ -3721,7 +3721,7 @@
   "name": "Sylvara",
   "rarity": "Legendary",
   "cls": "Mystic",
-  "hp": 145,
+  "hp": 170,
   "basic": {
    "name": "Thorn Whip",
    "dmg": 35

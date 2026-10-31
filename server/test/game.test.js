@@ -148,12 +148,12 @@ test('fusion boosts stats and unlocks a stronger second special', () => {
     assert.ok(m.dmg > BY_ID[id].special.dmg, `${id}: second special hits harder`);
   }
   const f = { h: 1, b: 2, s: 3, x: true };
-  assert.equal(fusedHp('apex', f), 127);                 // 115 * 1.1
+  assert.equal(fusedHp('apex', f), 154);                 // 140 * 1.1
   assert.equal(fusedDmg('apex', f, 'basic'), 42);        // 30 * 1.4
   assert.equal(fusedDmg('apex', f, 'special'), 85);      // 65 * 1.3, rounded
   assert.equal(fusedDmg('apex', f, 'special2'), 117);    // 90 * 1.3
   const s = newBattle(['apex'], ['volt'], () => 0, { apex: f });
-  assert.equal(s.teams[0][0].hp, 127);
+  assert.equal(s.teams[0][0].hp, 154);
   applyMove(s, 0, 0, 'special2', 0);
   assert.equal(s.teams[1][0].hp, 0);                     // 117 into Volt's 60
   assert.equal(s.teams[0][0].cd2, 3);
