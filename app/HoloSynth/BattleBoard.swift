@@ -75,6 +75,7 @@ struct BattleBoard: View {
             API.warm()
             if state.winner == nil { Music.play(.battle) }
             withAnimation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true)) { pulse = true }
+            if autoReady { autoStep() }   // Auto left on from the last battle: onChange won't fire, it's already true
         }
         .onDisappear { Music.play(.menu) }
         .onChange(of: autoReady) { ready in if ready { autoStep() } }
