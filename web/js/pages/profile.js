@@ -39,8 +39,9 @@ export function ProfileTab() {
       <section class="panel pad col" style="gap: 10px; border-color: rgba(232,184,90,.2);" aria-label="Collection">
         <div class="row" style="justify-content: space-between;"><span class="label">Collection</span><span class="head" style="font-size: 13px;">${Object.keys(p.collection).length}/${CARDS.length}</span></div>
         ${['Common', 'Rare', 'Epic', 'Legendary', 'Holo'].map(r => {
-          const all = r === 'Holo' ? CARDS : CARDS.filter(c => c.rarity === r);
-          const have = r === 'Holo' ? all.filter(c => holoCount(p, c.id) > 0).length : all.filter(c => p.collection[c.id]).length;
+          // holos: only Legendaries can come out holo, and Synths always are
+          const all = r === 'Holo' ? CARDS.filter(c => c.rarity === 'Legendary' || c.cls === 'Synth') : CARDS.filter(c => c.rarity === r);
+          const have = r === 'Holo' ? all.filter(c => c.cls === 'Synth' ? p.collection[c.id] : holoCount(p, c.id) > 0).length : all.filter(c => p.collection[c.id]).length;
           return html`<div class="pf-bar" role="img" aria-label="${r}: ${have} of ${all.length}"><span>${r}</span>
             <span class="t"><i style="width: ${100 * have / Math.max(all.length, 1)}%; background: ${r === 'Holo' ? RAINBOW : rarityColor(r)};"></i></span>
             <span class="head muted" style="font-size: 13px; text-align: right;">${have}/${all.length}</span></div>`;

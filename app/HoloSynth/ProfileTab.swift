@@ -80,8 +80,10 @@ struct ProfileTab: View {
                 Text("\(p.collection.count)/\(CardBook.all.count)").font(.chakra(13)).foregroundColor(Theme.fg)
             }
             ForEach(["Common", "Rare", "Epic", "Legendary", "Holo"], id: \.self) { r in
-                let all = r == "Holo" ? CardBook.all : CardBook.all.filter { $0.rarity == r }
-                let have = r == "Holo" ? all.filter { p.holoCount($0.id) > 0 }.count : all.filter { p.collection[$0.id] != nil }.count
+                // holos: only Legendaries can come out holo, and Synths always are
+                let all = r == "Holo" ? CardBook.all.filter { $0.rarity == "Legendary" || $0.cls == "Synth" } : CardBook.all.filter { $0.rarity == r }
+                let have = r == "Holo" ? all.filter { $0.cls == "Synth" ? p.collection[$0.id] != nil : p.holoCount($0.id) > 0 }.count
+                    : all.filter { p.collection[$0.id] != nil }.count
                 HStack(spacing: 10) {
                     Text(r).font(.barlow(14)).foregroundColor(Theme.fg).frame(width: 84, alignment: .leading)
                     GeometryReader { g in
