@@ -127,7 +127,7 @@ jobs:
             API_BASE="$URL" BUILD_NUMBER="${{ github.run_number }}" MARKETING_VERSION="1.2.${{ github.run_number }}" \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
             build 2>&1 | tee build.log | grep -E "error:|warning: .*deprecated|BUILD (SUCCEEDED|FAILED)" || true
-          grep -q "BUILD SUCCEEDED" build.log
+          grep -q "BUILD SUCCEEDED" build.log || { grep -E "error:" build.log | sort -u | head -20 | sed "s/^/::error::/"; exit 1; }   # compile errors show as annotations
           mkdir -p Payload
           cp -R build/Build/Products/Release-iphoneos/HoloSynth.app Payload/
           zip -qr HoloSynth.ipa Payload
