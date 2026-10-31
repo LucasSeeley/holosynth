@@ -639,8 +639,8 @@ async function setTeam(req, db, user) {
     throw new HttpError(400, `Pick ${size} different cards.`);
   }
   if (!team.every(id => owned[id])) throw new HttpError(400, "You don't own all of those cards.");
-  const away = await awayCards(db, user.id);
-  if (team.some(id => away.includes(id))) throw new HttpError(400, `${BY_ID[team.find(id => away.includes(id))].name} is on an expedition.`);
+  const away = await awayCards(db, user.id), gone = id => owned[id] <= away.filter(x => x === id).length;   // every copy is away
+  if (team.some(gone)) throw new HttpError(400, `${BY_ID[team.find(gone)].name} is on an expedition.`);
   await db.prepare('UPDATE users SET team = ? WHERE id = ?').bind(JSON.stringify(team), user.id).run();
   return json(await profile(db, { ...user, team: JSON.stringify(team) }));
 }
@@ -758,13 +758,14 @@ async function sendExpedition(req, db, user) {
   const { mission, cards } = await body(req);
   const t = now(), day = dayStart(t), m = expMissions(t)[mission];
   if (!Number.isInteger(mission) || !m) throw new HttpError(400, 'Pick a mission.');
-  if (!Array.isArray(cards) || !cards.length || cards.length > 3 || new Set(cards).size !== cards.length || !cards.every(id => typeof id === 'string' && BY_ID[id])) {
-    throw new HttpError(400, 'Pick 1 to 3 different cards.');
+  if (!Array.isArray(cards) || !cards.length || cards.length > 3 || !cards.every(id => typeof id === 'string' && BY_ID[id])) {
+    throw new HttpError(400, 'Pick 1 to 3 cards.');
   }
-  const prof = await profile(db, user), away = await awayCards(db, user.id);
-  if (!cards.every(id => prof.collection[id])) throw new HttpError(400, "You don't own all of those cards.");
-  if (cards.some(id => prof.team.includes(id))) throw new HttpError(400, "Cards on your team can't go.");
-  if (cards.some(id => away.includes(id))) throw new HttpError(400, 'One of those cards is already away.');
+  // copies: the same card can go more than once, as far as your copies at home go (one copy of a team card stays)
+  const prof = await profile(db, user), away = await awayCards(db, user.id), n = (list, id) => list.filter(x => x === id).length;
+  if (cards.some(id => (prof.collection[id] || 0) - (prof.team.includes(id) ? 1 : 0) - n(away, id) < n(cards, id))) {
+    throw new HttpError(400, "You don't have that many copies free.");
+  }
   const { gold, xp } = expReward(m, cards);
   const res = await db.prepare(`INSERT INTO expeditions (user_id, day, mission, name, cls, cards, start, ends, gold, xp, pack)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (user_id, day, mission) DO NOTHING`)
@@ -802,7 +803,9 @@ async function turnIn(req, db, user) {
   for (const id of cards) need[id] = (need[id] || 0) + 1;
   const counts = Object.fromEntries((await db.prepare('SELECT card_id, count FROM collection WHERE user_id = ?').bind(user.id).all()).results.map(x => [x.card_id, x.count]));
   const fused = await fusedRows(db, user.id);
-  const keep = id => Math.max(1, fused.filter(f => f.card_id === id).length);   // your best copy (or every fused one) stays
+  const away = await awayCards(db, user.id);
+  // your best copy (or every fused one) stays, and copies out on an expedition can't be turned in
+  const keep = id => Math.max(1, fused.filter(f => f.card_id === id).length) + away.filter(x => x === id).length;
   if (Object.entries(need).some(([id, k]) => (counts[id] || 0) - keep(id) < k)) throw new HttpError(400, "You don't have those spare copies.");
   const done = await db.prepare('INSERT INTO quest_events (user_id, day, kind, n) VALUES (?, ?, ?, 1) ON CONFLICT DO NOTHING')
     .bind(user.id, dayStart(t), 'col' + request).run();
@@ -1085,13 +1088,13 @@ const fusedIdOf = tok => (tok.includes('#') ? Number(tok.split('#')[1]) : null);
 // What a player can trade: plain copies beyond the fused ones, and their fused copies; one copy of each team card stays
 // (ignoreTeam: what they could trade once they change their team).
 async function tradeable(db, u, ignoreTeam = false) {
-  const team = [...(ignoreTeam ? [] : JSON.parse(u.team)), ...await awayCards(db, u.id)];   // a card out on an expedition keeps a copy too
+  const team = [...(ignoreTeam ? [] : JSON.parse(u.team)), ...await awayCards(db, u.id)];   // copies out on an expedition stay too
   const rows = (await db.prepare('SELECT card_id, count FROM collection WHERE user_id = ?').bind(u.id).all()).results;
   const fused = await fusedRows(db, u.id);
   const plain = {}, total = {};
   for (const r of rows) {
     const nf = fused.filter(f => f.card_id === r.card_id).length;
-    total[r.card_id] = r.count - (team.includes(r.card_id) ? 1 : 0);
+    total[r.card_id] = r.count - team.filter(x => x === r.card_id).length;
     const n = Math.min(r.count - nf, total[r.card_id]);
     if (n > 0) plain[r.card_id] = n;
   }

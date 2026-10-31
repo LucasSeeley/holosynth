@@ -101,8 +101,15 @@ extension Profile {
         return score(h) >= score(fusion(id))
     }
     func battleFusion(_ id: String) -> Fusion? { battleUsesHolo(id) ? holo(id) : fusion(id) }
-    // Spare copies: all but your best one (every fused copy stays too).
-    func spare(_ id: String) -> Int { (collection[id] ?? 0) - max(1, fused?.filter { $0.card == id }.count ?? 0) }
+    // Copies out on an expedition that isn't back yet.
+    func away(_ id: String) -> Int {
+        let now = Date().timeIntervalSince1970 * 1000
+        return expeditions?.away.filter { $0.ends > now }.flatMap(\.cards).filter { $0 == id }.count ?? 0
+    }
+    // Spare copies: all but your best one (every fused copy stays too), not counting copies that are away.
+    func spare(_ id: String) -> Int { (collection[id] ?? 0) - max(1, fused?.filter { $0.card == id }.count ?? 0) - away(id) }
+    // Copies that can go on an expedition: at home, and one copy of a team card stays.
+    func expFree(_ id: String) -> Int { (collection[id] ?? 0) - (team.contains(id) ? 1 : 0) - away(id) }
     func holoCount(_ id: String) -> Int { fused?.filter { $0.card == id && $0.o == true }.count ?? 0 }
     private func best(_ id: String, holo: Bool) -> Fusion? {
         fused?.filter { $0.card == id && ($0.o == true) == holo }.max { $0.fusion.total < $1.fusion.total }?.fusion

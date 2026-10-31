@@ -219,7 +219,7 @@ struct ExpeditionsView: View {
     }
 }
 
-// Pick one of today's missions, then up to 3 cards (not on your team, not already away).
+// Pick one of today's missions, then up to 3 cards: copies at home (one copy of a team card stays), the same card more than once if you have them.
 struct ExpSendView: View {
     @EnvironmentObject var store: GameStore
     let onClose: () -> Void
@@ -279,9 +279,7 @@ struct ExpSendView: View {
     }
 
     private func cards(_ p: Profile, _ e: ExpeditionsInfo, _ m: ExpeditionsInfo.Mission) -> some View {
-        let now = Date().timeIntervalSince1970 * 1000
-        let away = Set(e.away.filter { $0.ends > now }.flatMap(\.cards))
-        let owned = CardBook.all.filter { (p.collection[$0.id] ?? 0) > 0 && !p.team.contains($0.id) && !away.contains($0.id) }
+        let owned = CardBook.all.filter { p.expFree($0.id) > 0 }
         let list = CardSort.apply(owned, 2)
         let match = picked.filter { CardBook.card($0)?.cls == m.cls }.count
         let matchNote: String = match > 0 ? " · \(match) \(m.cls)" + (match > 1 ? "s" : "") : ""
@@ -292,11 +290,11 @@ struct ExpSendView: View {
             Text("2 · Pick up to 3 cards").sectionTitle()
             ScrollView(showsIndicators: false) {
                 if list.isEmpty {
-                    Text("Every card you own is on your team. Get more from packs.").font(.barlow(14)).foregroundColor(Theme.muted)
+                    Text("No free cards: your team stays home. Get more from packs.").font(.barlow(14)).foregroundColor(Theme.muted)
                 } else {
                     LazyVGrid(columns: xGrid, spacing: 14) {
                         ForEach(list) { c in
-                            XPickCell(card: c, count: p.collection[c.id] ?? 0, picked: picked.contains(c.id) ? 1 : 0) { toggle(c.id) }
+                            XPickCell(card: c, count: p.expFree(c.id), picked: picked.filter { $0 == c.id }.count) { toggle(c.id, free: p.expFree(c.id)) }
                         }
                     }
                     .padding(.top, 8).padding(.horizontal, 4)
@@ -309,8 +307,9 @@ struct ExpSendView: View {
         .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 8)
     }
 
-    private func toggle(_ id: String) {
-        if let i = picked.firstIndex(of: id) { picked.remove(at: i) } else if picked.count < 3 { picked.append(id) }
+    // A tap adds a copy (up to your free ones); once that card is maxed a tap takes them all back.
+    private func toggle(_ id: String, free: Int) {
+        if picked.filter({ $0 == id }).count < free && picked.count < 3 { picked.append(id) } else { picked.removeAll { $0 == id } }
         UISelectionFeedbackGenerator().selectionChanged()
     }
 

@@ -11,7 +11,10 @@ const EXP_COUNT = [0.4, 0.7, 1], EXP_RARITY = { Common: 0, Rare: 0.1, Epic: 0.2,
 const expMult = (m, ids) => EXP_COUNT[ids.length - 1] + ids.reduce((s, id) => s + EXP_RARITY[card(id).rarity] + (card(id).cls === m.cls ? 0.05 : 0), 0);
 export const expReward = (m, ids) => { const k = expMult(m, ids); return { gold: Math.round(m.gold * k / 10) * 10, xp: Math.round(m.xp * k / 10) * 10 }; };
 // Spare copies: all but your best one (every fused copy stays too).
-export const spareOf = (p, id) => (p.collection[id] || 0) - Math.max(1, p.fused.filter(f => f.card === id).length);
+// Copies out on an expedition that isn't back yet.
+const awayN = (p, id) => p.expeditions.away.filter(x => x.ends > Date.now()).flatMap(x => x.cards).filter(x => x === id).length;
+// Spare copies: all but your best one (every fused copy stays too), not counting copies that are away.
+export const spareOf = (p, id) => (p.collection[id] || 0) - Math.max(1, p.fused.filter(f => f.card === id).length) - awayN(p, id);
 
 const Reward = ({ gold, xp, pack }) => html`<span class="xreward">
   <span class="row" style="gap: 4px;"><${Coin} size="14" />${fmt(gold)}</span><span class="xp">+${fmt(xp)} Pass XP</span>${pack && html`<span class="pk">+ pack</span>`}</span>`;
@@ -68,15 +71,17 @@ export function Expeditions({ close }) {
   </${Screen}>`;
 }
 
-// Pick one of today's missions, then up to 3 cards (not on your team, not already away).
+// Pick one of today's missions, then up to 3 cards: copies at home (one copy of a team card stays), the same card more than once if you have them.
 function ExpSend({ close }) {
   const p = useStore().profile, e = p.expeditions;
   const [mi, setMi] = useState(null), [step, setStep] = useState(1), [picked, setPicked] = useState([]);
   const [busy, setBusy] = useState(false), [error, setError] = useState(null);
   const m = mi == null ? null : e.missions[mi];
-  const away = e.away.filter(x => x.ends > Date.now()).flatMap(x => x.cards);
-  const cards = byRarity(Object.keys(p.collection).filter(id => card(id) && !p.team.includes(id) && !away.includes(id)));
-  const toggle = id => setPicked(picked.includes(id) ? picked.filter(x => x !== id) : picked.length < 3 ? [...picked, id] : picked);
+  const free = id => (p.collection[id] || 0) - (p.team.includes(id) ? 1 : 0) - awayN(p, id);
+  const cards = byRarity(Object.keys(p.collection).filter(id => card(id) && free(id) > 0));
+  const k = id => picked.filter(x => x === id).length;
+  // a tap adds a copy (up to your free ones); once that card is maxed a tap takes them all back
+  const toggle = id => setPicked(k(id) < free(id) && picked.length < 3 ? [...picked, id] : picked.filter(x => x !== id));
   const send = async () => {
     setBusy(true);
     try { set({ profile: await api('expeditions/send', { mission: mi, cards: picked }) }); Sound.play('select'); close(); }
@@ -100,9 +105,9 @@ function ExpSend({ close }) {
     <div class="narrow xlist">
       <span class="label">2 · Pick up to 3 cards</span>
       ${cards.length ? html`<div class="xgrid">${cards.map(id => html`<div class="xpick">
-          <${Card} id=${id} count=${p.collection[id]} selected=${picked.includes(id)} onClick=${() => toggle(id)} />
-          ${picked.includes(id) && html`<span class="xcheck"><${Icon} name="check" size="14" /></span>`}</div>`)}</div>`
-        : html`<p class="small muted">Every card you own is on your team. Get more from packs.</p>`}
+          <${Card} id=${id} count=${free(id)} selected=${k(id) > 0} onClick=${() => toggle(id)} label="${card(id).name}, ${free(id)} free" />
+          ${k(id) > 0 && html`<span class="xcheck">${k(id) > 1 ? `×${k(id)}` : html`<${Icon} name="check" size="14" />`}</span>`}</div>`)}</div>`
+        : html`<p class="small muted">No free cards: your team stays home. Get more from packs.</p>`}
       <div class="xfoot">
         <div class="panel xsum"><span class="small muted">${picked.length ? `${picked.length} of 3${match ? ` · ${match} ${m.cls}${match > 1 ? 's' : ''}` : ''}` : `Best: 3 ${m.cls}s`}</span>
           ${r ? html`<${Reward} ...${r} pack=${m.pack} />` : html`<span class="small muted">Pick a card</span>`}</div>
