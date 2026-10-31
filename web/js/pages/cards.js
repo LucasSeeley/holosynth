@@ -212,9 +212,9 @@ function SpinCard({ id, fusion, style = '' }) {
   };
   return html`<div class="spin" style=${style} onPointerDown=${down} onPointerMove=${move} onPointerUp=${up} onPointerCancel=${up}
       role="img" aria-label="${cardOf(id)?.name}. Swipe to turn it over.">
-    <div class="spin-in" style="transform: rotateY(${angle}deg); transition: ${drag ? 'none' : 'transform .5s cubic-bezier(.2,.9,.3,1.1)'};">
-      <div class="spin-face"><${Card} id=${id} fusion=${fusion} /></div>
-      <div class="spin-face spin-back"><${CardBack} /></div>
+    <div class="spin-in" style="position: relative; transform-style: preserve-3d; transform: rotateY(${angle}deg); transition: ${drag ? 'none' : 'transform .5s cubic-bezier(.2,.9,.3,1.1)'};">
+      <div class="spin-face" style="backface-visibility: hidden; -webkit-backface-visibility: hidden;"><${Card} id=${id} fusion=${fusion} /></div>
+      <div class="spin-face spin-back" style="position: absolute; inset: 0; transform: rotateY(180deg); backface-visibility: hidden; -webkit-backface-visibility: hidden;"><${CardBack} style="width: 100%; height: 100%;" /></div>
     </div></div>`;
 }
 
