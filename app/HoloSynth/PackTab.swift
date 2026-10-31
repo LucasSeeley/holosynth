@@ -707,62 +707,120 @@ struct HoloReveal: View {
     private static let rainbow = HoloFoil.rainbow + [HoloFoil.rainbow[0]]
     var body: some View {
         TimelineView(.animation) { ctx in
-            let t = ctx.date.timeIntervalSince(start), h = width * 7 / 5
-            let k = { (a: Double, b: Double) in max(0, min(1, (t - a) / (b - a))) }
+            let t: Double = ctx.date.timeIntervalSince(start)
+            let h: CGFloat = width * 7 / 5
+            let k: Ramp = { a, b in max(0, min(1, (t - a) / (b - a))) }
             if front { frontLayer(t, h, k) } else { backLayer(t, k) }
         }
         .allowsHitTesting(false)
         .accessibilityHidden(!front)
     }
 
-    @ViewBuilder private func backLayer(_ t: Double, _ k: @escaping (Double, Double) -> Double) -> some View {   // escaping: the sparkles ForEach keeps it
-        ZStack {
-            Color.black.opacity(0.55 * k(0, 0.3)).ignoresSafeArea()
-            ZStack {   // rainbow spokes
-                ForEach(0..<32, id: \.self) { i in
-                    Rectangle().fill(HoloFoil.rainbow[i % HoloFoil.rainbow.count].opacity(0.55))
-                        .frame(width: 7, height: 550).offset(y: -275).rotationEffect(.degrees(Double(i) * 11.25))
-                }
-            }
-            .rotationEffect(.degrees(t * 20))
-            .mask(RadialGradient(colors: [.black, .black, .clear], center: .center, startRadius: 0, endRadius: 330))
-            .scaleEffect(0.3 + 0.7 * k(0.25, 0.75)).opacity(0.9 * k(0.25, 0.5))
+    private func backLayer(_ t: Double, _ k: @escaping (Double, Double) -> Double) -> some View {
+        let dim: Double = 0.55 * k(0, 0.3)
+        let raysScale: CGFloat = CGFloat(0.3 + 0.7 * k(0.25, 0.75))
+        let raysOpacity: Double = 0.9 * k(0.25, 0.5)
+        let glowOpacity: Double = 0.8 * k(0.3, 0.6)
+        return ZStack {
+            Color.black.opacity(dim).ignoresSafeArea()
+            spokes
+                .rotationEffect(.degrees(t * 20))
+                .mask(RadialGradient(colors: [.black, .black, .clear], center: .center, startRadius: 0, endRadius: 330))
+                .scaleEffect(raysScale)
+                .opacity(raysOpacity)
             Ellipse().fill(AngularGradient(colors: Self.rainbow, center: .center))
-                .frame(width: 460, height: 520).rotationEffect(.degrees(t * 60)).blur(radius: 40).opacity(0.8 * k(0.3, 0.6))
+                .frame(width: 460, height: 520)
+                .rotationEffect(.degrees(t * 60))
+                .blur(radius: 40)
+                .opacity(glowOpacity)
         }
     }
 
-    @ViewBuilder private func frontLayer(_ t: Double, _ h: CGFloat, _ k: @escaping (Double, Double) -> Double) -> some View {   // escaping: the sparkles ForEach keeps it
+    // rainbow spokes for the rays
+    private var spokes: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: width * 0.07, style: .continuous)
-                .strokeBorder(AngularGradient(colors: Self.rainbow, center: .center, angle: .degrees(t * 120)), lineWidth: 4)
-                .frame(width: width + 8, height: h + 8).shadow(color: .white.opacity(0.6), radius: 10).opacity(k(0.4, 0.6))
-            let sx = -0.6 + 2.2 * k(0.5, 1.2)
-            LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .white.opacity(0.75), location: 0.5), .init(color: .clear, location: 1)],
-                           startPoint: .leading, endPoint: .trailing)
-                .frame(width: width * 0.45, height: h * 1.3).rotationEffect(.degrees(20))
-                .offset(x: CGFloat(sx - 0.5) * width)
-                .frame(width: width, height: h).clipShape(RoundedRectangle(cornerRadius: width * 0.06, style: .continuous))
-                .blendMode(.screen).opacity(t > 0.5 && t < 1.2 ? 1 : 0)
-            ForEach(0..<26, id: \.self) { i in   // sparkles drifting out
-                let a = Double(i) * 2.39, r = Double(120 + (i * 53) % 150), d = k(0.4 + Double(i % 7) * 0.13, 2.6)
-                let size = CGFloat(3 + (i % 4) * 2)
-                Circle().fill(.white).frame(width: size, height: size)
-                    .shadow(color: HoloFoil.rainbow[i % HoloFoil.rainbow.count], radius: size)
-                    .offset(x: CGFloat(cos(a) * r * (0.6 + 0.6 * d)), y: CGFloat(sin(a) * r * 1.2 * (0.6 + 0.6 * d)))
-                    .opacity(d <= 0 ? 0 : (1 - k(1.6, 2.6)) * (0.5 + 0.5 * abs(sin(t * 6 + Double(i)))))
+            ForEach(0..<32, id: \.self) { i in
+                Rectangle().fill(HoloFoil.rainbow[i % HoloFoil.rainbow.count].opacity(0.55))
+                    .frame(width: 7, height: 550)
+                    .offset(y: -275)
+                    .rotationEffect(.degrees(Double(i) * 11.25))
             }
-            VStack(spacing: 6) {
-                Text("HOLOGRAPHIC").font(.chakra(15)).tracking(5).foregroundColor(.white).shadow(color: .black.opacity(0.7), radius: 2)
-                    .padding(.horizontal, 20).padding(.vertical, 8)
-                    .background(Capsule().fill(LinearGradient(colors: Self.rainbow, startPoint: UnitPoint(x: -t.truncatingRemainder(dividingBy: 3) / 3, y: 0.5),
-                                                               endPoint: UnitPoint(x: 2 - t.truncatingRemainder(dividingBy: 3) / 3, y: 0.5))))
-                    .shadow(color: Color(hex: 0xA0C8FF).opacity(0.6), radius: 11)
-                Text("\(name) · +20% to every stat").font(.barlow(13, semibold: true)).foregroundColor(Color(hex: 0xC9C6DE))
-            }
-            .offset(y: h / 2 + 30 + 14 * (1 - k(0.75, 1.1)) + 22).opacity(k(0.75, 1.1))
-            .accessibilityElement(children: .combine)
         }
+    }
+
+    typealias Ramp = (Double, Double) -> Double
+    // Split into small pieces: one big view expression is too much for the type checker.
+    @ViewBuilder private func frontLayer(_ t: Double, _ h: CGFloat, _ k: @escaping Ramp) -> some View {
+        ZStack {
+            edge(t, h, k)
+            sweep(t, h, k)
+            sparkles(t, k)
+            plate(t, h, k)
+        }
+    }
+
+    private func edge(_ t: Double, _ h: CGFloat, _ k: Ramp) -> some View {
+        let ring = AngularGradient(colors: Self.rainbow, center: .center, angle: .degrees(t * 120))
+        return RoundedRectangle(cornerRadius: width * 0.07, style: .continuous)
+            .strokeBorder(ring, lineWidth: 4)
+            .frame(width: width + 8, height: h + 8)
+            .shadow(color: Color.white.opacity(0.6), radius: 10)
+            .opacity(k(0.4, 0.6))
+    }
+
+    private func sweep(_ t: Double, _ h: CGFloat, _ k: Ramp) -> some View {
+        let x: CGFloat = CGFloat(-0.6 + 2.2 * k(0.5, 1.2) - 0.5) * width
+        let band = LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: Color.white.opacity(0.75), location: 0.5), .init(color: .clear, location: 1)],
+                                  startPoint: .leading, endPoint: .trailing)
+        let shown: Double = (t > 0.5 && t < 1.2) ? 1 : 0
+        return band
+            .frame(width: width * 0.45, height: h * 1.3)
+            .rotationEffect(.degrees(20))
+            .offset(x: x)
+            .frame(width: width, height: h)
+            .clipShape(RoundedRectangle(cornerRadius: width * 0.06, style: .continuous))
+            .blendMode(.screen)
+            .opacity(shown)
+    }
+
+    private func sparkles(_ t: Double, _ k: @escaping Ramp) -> some View {
+        ZStack {
+            ForEach(0..<26, id: \.self) { i in sparkle(i, t, k) }
+        }
+    }
+
+    private func sparkle(_ i: Int, _ t: Double, _ k: Ramp) -> some View {
+        let a: Double = Double(i) * 2.39
+        let r: Double = Double(120 + (i * 53) % 150)
+        let d: Double = k(0.4 + Double(i % 7) * 0.13, 2.6)
+        let spread: Double = 0.6 + 0.6 * d
+        let size: CGFloat = CGFloat(3 + (i % 4) * 2)
+        let twinkle: Double = 0.5 + 0.5 * abs(sin(t * 6 + Double(i)))
+        let fade: Double = d <= 0 ? 0 : (1 - k(1.6, 2.6)) * twinkle
+        let color: Color = HoloFoil.rainbow[i % HoloFoil.rainbow.count]
+        return Circle().fill(Color.white)
+            .frame(width: size, height: size)
+            .shadow(color: color, radius: size)
+            .offset(x: CGFloat(cos(a) * r * spread), y: CGFloat(sin(a) * r * 1.2 * spread))
+            .opacity(fade)
+    }
+
+    private func plate(_ t: Double, _ h: CGFloat, _ k: Ramp) -> some View {
+        let shift: Double = t.truncatingRemainder(dividingBy: 3) / 3
+        let fill = LinearGradient(colors: Self.rainbow, startPoint: UnitPoint(x: -shift, y: 0.5), endPoint: UnitPoint(x: 2 - shift, y: 0.5))
+        let a: Double = k(0.75, 1.1)
+        let y: CGFloat = h / 2 + 52 + CGFloat(14 * (1 - a))
+        return VStack(spacing: 6) {
+            Text("HOLOGRAPHIC").font(.chakra(15)).tracking(5).foregroundColor(.white)
+                .shadow(color: Color.black.opacity(0.7), radius: 2)
+                .padding(.horizontal, 20).padding(.vertical, 8)
+                .background(Capsule().fill(fill))
+                .shadow(color: Color(hex: 0xA0C8FF).opacity(0.6), radius: 11)
+            Text("\(name) · +20% to every stat").font(.barlow(13, semibold: true)).foregroundColor(Color(hex: 0xC9C6DE))
+        }
+        .offset(y: y)
+        .opacity(a)
+        .accessibilityElement(children: .combine)
     }
 }
 
