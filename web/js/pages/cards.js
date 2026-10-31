@@ -77,7 +77,7 @@ export function CollectionTab() {
     <div class="cp-hd"><span class="label">Your team</span>
       <span class="tiny muted">${pending ? `Choose who ${cardOf(pending)?.name} replaces` : 'Drag a card here, or press + Team'}</span></div>
     <div class="cp-slots">${[0, 1, 2].map(i => html`<${TeamSlot} i=${i} id=${team[i]} size=${teamSize} picking=${pending && i < teamSize} p=${p}
-      onPick=${() => pending && put(pending, i)} onDrop=${id => put(id, i)} />`)}</div>
+      onPick=${() => pending ? put(pending, i) : team[i] && open(team[i], battleUsesHolo(p, team[i]))} onDrop=${id => put(id, i)} />`)}</div>
     <div class="cp-hd"><span class="label" style="font-size: 11px; color: ${POWER_VIOLET};">Power cards</span>
       <span class="tiny muted">${pendingPower ? `Choose where ${powerOf(pendingPower)?.name} goes` : '2 per battle · used up when played'}</span></div>
     <div class="cp-pslots">${[0, 1].map(i => html`<${PowerSlot} id=${pTeam[i]} picking=${!!pendingPower}

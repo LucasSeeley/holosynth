@@ -124,7 +124,10 @@ struct CollectionTab: View {
         .shadow(color: picking ? Theme.brass.opacity(0.45) : .clear, radius: 8)
         .overlay(alignment: .topLeading) { Text("\(i + 1)").font(.chakra(10, semibold: true)).foregroundColor(Theme.muted).padding(6) }
         .contentShape(Rectangle())
-        .onTapGesture { if let p = pending { put(p, at: i) } }
+        .onTapGesture {   // placing a card, or else open the one in the slot
+            if let p = pending { put(p, at: i) }
+            else if i < team.count, let card = CardBook.card(team[i]) { zoomed = Entry(card: card, holo: store.profile?.battleUsesHolo(card.id) ?? false) }
+        }
         .dropDestination(for: String.self) { items, _ in
             guard let id = items.first else { return false }
             put(id, at: i)
