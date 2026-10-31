@@ -58,7 +58,8 @@ export function CollectionTab() {
 
   // One cell per card you own (holo copies get their own next to the normal one), then locked cards.
   const hc = id => holoCount(p, id);
-  const mine = sortCards(CARDS.filter(c => owned[c.id]), sort, owned, new Set(Object.keys(owned).filter(id => hc(id) > 0)));
+  const bestHP = c => Math.max(maxHP(c, fusionOf(p, c.id)), hc(c.id) > 0 ? maxHP(c, holoOf(p, c.id)) : 0);   // fused / holo HP counts
+  const mine = sortCards(CARDS.filter(c => owned[c.id]), sort, owned, new Set(Object.keys(owned).filter(id => hc(id) > 0)), bestHP);
   const holoFirst = SORTS[sort % SORTS.length] === 'Holo';
   let entries = [];
   for (const c of mine) {

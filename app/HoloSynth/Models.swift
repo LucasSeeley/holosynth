@@ -245,11 +245,14 @@ enum CardSort {
     private static let rank = ["Legendary": 0, "Epic": 1, "Rare": 2, "Common": 3]
     // `cards` must already be in number order so ties keep it. `counts` (copies per card) is only used by Dups,
     // `holos` (cards you have a holo copy of) by Holo.
-    static func apply(_ cards: [Card], _ mode: Int, counts: [String: Int] = [:], holos: Set<String> = []) -> [Card] {
+    // `hp` is a card's HP for the HP sort (your best copy, fused or holo); defaults to the printed HP.
+    static func apply(_ cards: [Card], _ mode: Int, counts: [String: Int] = [:], holos: Set<String> = [], hp: (Card) -> Int = { $0.hp }) -> [Card] {
         switch mode % names.count {
         case 4: return cards.enumerated().sorted { (holos.contains($0.element.id) ? 0 : 1, $0.offset) < (holos.contains($1.element.id) ? 0 : 1, $1.offset) }.map(\.element)
         case 3: return cards.enumerated().sorted { (counts[$1.element.id] ?? 0, $0.offset) < (counts[$0.element.id] ?? 0, $1.offset) }.map(\.element)
-        case 1: return cards.enumerated().sorted { ($1.element.hp, $0.offset) < ($0.element.hp, $1.offset) }.map(\.element)
+        case 1:
+            let h = Dictionary(uniqueKeysWithValues: cards.map { ($0.id, hp($0)) })
+            return cards.enumerated().sorted { (h[$1.element.id]!, $0.offset) < (h[$0.element.id]!, $1.offset) }.map(\.element)
         case 2: return cards.enumerated().sorted { (rank[$0.element.rarity] ?? 9, $0.offset) < (rank[$1.element.rarity] ?? 9, $1.offset) }.map(\.element)
         default: return cards
         }

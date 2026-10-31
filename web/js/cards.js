@@ -99,11 +99,12 @@ export const xpNeed = p => Math.max(p.levelNeed ?? 100, 1);
 // Collection order: Synth #, HP, Rarity, Dups, Holo (cards must already be in number order so ties keep it)
 export const SORTS = ['Synth #', 'HP', 'Rarity', 'Dups', 'Holo'];
 const RANK = { Legendary: 0, Epic: 1, Rare: 2, Common: 3 };
-export function sortCards(cards, mode, counts = {}, holos = new Set()) {
+// hp: a card's HP for the HP sort (your best copy, fused or holo); defaults to the printed HP.
+export function sortCards(cards, mode, counts = {}, holos = new Set(), hp = c => c.hp) {
   const idx = new Map(cards.map((c, i) => [c.id, i]));
   const by = key => cards.slice().sort((a, b) => key(a) - key(b) || idx.get(a.id) - idx.get(b.id));
   switch (mode % SORTS.length) {
-    case 1: return by(c => -c.hp);
+    case 1: return by(c => -hp(c));
     case 2: return by(c => RANK[c.rarity] ?? 9);
     case 3: return by(c => -(counts[c.id] || 0));
     case 4: return by(c => holos.has(c.id) ? 0 : 1);

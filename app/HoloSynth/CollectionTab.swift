@@ -256,7 +256,8 @@ struct CollectionTab: View {
     private func entries(_ owned: [String: Int]) -> [Entry] {
         let holoCount = { (id: String) in store.profile?.holoCount(id) ?? 0 }
         let mine = CardSort.apply(CardBook.all.filter { owned[$0.id] != nil }, sort, counts: owned,
-                                  holos: Set(owned.keys.filter { holoCount($0) > 0 }))
+                                  holos: Set(owned.keys.filter { holoCount($0) > 0 }),
+                                  hp: { c in max(c.maxHP(store.profile?.fusion(c.id)), holoCount(c.id) > 0 ? c.maxHP(store.profile?.holo(c.id)) : 0) })   // fused / holo HP counts
         let holoFirst = CardSort.names[sort % CardSort.names.count] == "Holo"
         var out: [Entry] = []
         for c in mine {
