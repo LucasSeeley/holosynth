@@ -523,3 +523,9 @@ test('Auto (aiMove without powers) only uses cards\' moves', () => {
   const m = aiMove(s, 0, false);
   assert.ok(m && !String(m.move).startsWith('pw:'));
 });
+
+test('only Legendaries come out holo', () => {
+  let holos = 0;
+  for (let i = 0; i < 20000; i++) { const p = openPack(0, 'legends'); for (const k of p.holo) { holos++; assert.equal(BY_ID[p.cards[k]].rarity, 'Legendary'); } }
+  assert.ok(holos > 0);
+});

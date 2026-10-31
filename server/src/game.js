@@ -101,12 +101,12 @@ export function openPack(packsSinceLegend, type = 'cyber', rand = Math.random) {
   const cards = rows.map(([r, t]) => (t === 'power' ? powerRow(r, rand) : pickOf(r, type, rand, t)));
   return {
     cards,
-    holo: cards.map((_, i) => i).filter(i => !cards[i].startsWith('pw:') && rand() < HOLO_CHANCE),   // which of them came out holo
+    holo: cards.map((_, i) => i).filter(i => !cards[i].startsWith('pw:') && BY_ID[cards[i]].rarity === 'Legendary' && rand() < HOLO_CHANCE),   // only Legendaries come out holo (Synths always look holo)
     packsSinceLegend: rows.some(([r, t]) => r === 'Legendary' && t !== 'power') ? 0 : packsSinceLegend + 1,
   };
 }
 
-// Any card from a pack can come out holo: rainbow foil, +20% to every stat, its own copy (like a fused one).
+// A Legendary from a pack can come out holo: rainbow foil, +20% to every stat, its own copy (like a fused one).
 export const HOLO_CHANCE = 1 / 250, HOLO_BOOST = 1.2;
 
 // ---- daily spin ----
