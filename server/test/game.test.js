@@ -322,9 +322,9 @@ test('the Legends Pack: 5 cards, the last always a Legendary', () => {
   for (let i = 0; i < 50; i++) assert.notEqual(freePack(), 'legends');
 });
 
-test('holo: about 1 in 250 character cards from packs (never a power card), +20% to every stat, stacking with fusion', () => {
+test('holo: about 1 in 250 Legendaries from packs (nothing else), +20% to every stat, stacking with fusion', () => {
   let n = 0, holo = 0;
-  for (let i = 0; i < 40000; i++) { const p = openPack(5); n += p.cards.filter(c => !c.startsWith('pw:')).length; holo += p.holo.length; assert.ok(p.holo.every(k => k < p.cards.length && !p.cards[k].startsWith('pw:'))); }
+  for (let i = 0; i < 40000; i++) { const p = openPack(5, 'legends'); n += p.cards.filter(c => !c.startsWith('pw:') && BY_ID[c].rarity === 'Legendary').length; holo += p.holo.length; assert.ok(p.holo.every(k => k < p.cards.length && !p.cards[k].startsWith('pw:'))); }
   assert.ok(holo / n > 1 / 320 && holo / n < 1 / 190, `holo rate 1 in ${Math.round(n / holo)}`);
   assert.equal(fusedHp('apex', { o: true }), Math.round(BY_ID.apex.hp * 1.2));
   assert.equal(fusedDmg('apex', { b: 1, o: true }, 'basic'), Math.round(BY_ID.apex.basic.dmg * 1.2 * 1.2));
