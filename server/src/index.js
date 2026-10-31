@@ -423,6 +423,14 @@ async function withPower(req, db, user, fn) {
   try { return await fn(); }
   catch (e) { await db.prepare('UPDATE powers SET count = count + 1 WHERE user_id = ? AND power = ?').bind(user.id, id).run(); throw e; }
 }
+// The move a player sent, or with { auto: true } the best one for their side (never a power card: those are theirs to play).
+async function moveFrom(req, state, side) {
+  const b = await body(req);
+  if (b.auto !== true && b.move !== 'auto') return b;
+  const m = aiMove(state, side, false);
+  if (!m) throw new HttpError(400, 'None of your cards can move.');
+  return m;
+}
 const addCard = (db, userId, id) => db.prepare(
   'INSERT INTO collection (user_id, card_id, count) VALUES (?, ?, 1) ON CONFLICT (user_id, card_id) DO UPDATE SET count = count + 1',
 ).bind(userId, id);
@@ -772,7 +780,7 @@ async function campaignMove(req, db, user) {
   const prog = user._prog ? JSON.parse(user._prog) : await getProgress(db, user.id);   // read with the login check
   if (!prog.run) throw new HttpError(400, 'No campaign battle in progress.');
   const run = JSON.parse(prog.run);
-  const { from, move: kind, to } = await body(req);
+  const { from, move: kind, to } = await moveFrom(req, run.state, 0);
   const had = [...(run.state.pw?.[0] ?? [])];
   try {
     applyMove(run.state, 0, from, kind, to);
@@ -897,9 +905,9 @@ async function currentMatch(db, user) {
 async function move(req, db, user, id) {
   const m = await getMatch(db, user, id);
   if (m.status !== 'active') throw new HttpError(400, 'This match is not in progress.');
-  const { from, move: kind, to } = await body(req);
   const state = JSON.parse(m.state);
   const side = m.p0 === user.id ? 0 : 1, had = [...(state.pw?.[side] ?? [])];
+  const { from, move: kind, to } = await moveFrom(req, state, side);
   try { applyMove(state, side, from, kind, to); }
   catch (e) { throw new HttpError(400, e.message); }
 
@@ -1398,7 +1406,7 @@ async function rankedMove(req, db, user) {
   const me = await rankedRow(db, user.id);
   const run = me.run && JSON.parse(me.run);
   if (!run) throw new HttpError(400, 'No ranked fight in progress.');
-  const { from, move: kind, to } = await body(req);
+  const { from, move: kind, to } = await moveFrom(req, run.state, 0);
   const had = [...(run.state.pw?.[0] ?? [])];
   try {
     applyMove(run.state, 0, from, kind, to);
@@ -1499,7 +1507,7 @@ async function huntMove(req, db, user) {
   const h = await getHunt(db, user.id);
   if (!h || !h.state) throw new HttpError(400, 'No hunt in progress.');
   const state = JSON.parse(h.state);
-  const { from, move: kind, to } = await body(req);
+  const { from, move: kind, to } = await moveFrom(req, state, 0);
   const had = [...(state.pw?.[0] ?? [])];
   try {
     applyMove(state, 0, from, kind, to);
@@ -1591,7 +1599,7 @@ async function gauntletMove(req, db, user) {
   const g = await getGauntlet(db, user.id);
   const run = JSON.parse(g.run);
   if (!run?.state) throw new HttpError(400, 'No Gauntlet fight in progress.');
-  const { from, move: kind, to } = await body(req);
+  const { from, move: kind, to } = await moveFrom(req, run.state, 0);
   const had = [...(run.state.pw?.[0] ?? [])];
   try {
     applyMove(run.state, 0, from, kind, to);

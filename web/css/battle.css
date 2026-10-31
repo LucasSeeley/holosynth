@@ -2,6 +2,9 @@
 
 /* ---------- board ---------- */
 .bb { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.bb-auto { order: 9; margin-left: auto; flex: none; height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid rgba(63,240,255,.55); background: rgba(63,240,255,.08);
+  color: var(--cyan); font: 700 13px var(--head); letter-spacing: 2px; text-transform: uppercase; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.bb-auto.on { background: var(--cyan); color: #04161A; box-shadow: 0 0 16px rgba(63,240,255,.5); }
 .bb-top { height: 84px; flex: none; padding: 0 28px; display: flex; align-items: center; gap: 18px; border-bottom: 1px solid rgba(232,184,90,.14); background: rgba(7,6,12,.6); }
 .bb-title { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .bb-hints { margin-left: auto; white-space: nowrap; }

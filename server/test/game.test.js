@@ -516,3 +516,10 @@ test('packs hold at most 1 power card (2 in an Overload); Power packs are all po
   }
   assert.ok(openPack(0, 'power').cards.every(id => id.startsWith('pw:')));
 });
+
+test('Auto (aiMove without powers) only uses cards\' moves', () => {
+  const s = newBattle(['volt', 'fang', 'goliath'], ['volt', 'fang', 'goliath']);
+  s.pw = [['overclock', 'repair'], []];
+  const m = aiMove(s, 0, false);
+  assert.ok(m && !String(m.move).startsWith('pw:'));
+});

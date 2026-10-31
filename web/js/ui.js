@@ -44,6 +44,8 @@ const P = {
   trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
   music: '<path fill="currentColor" d="M9 18a3 3 0 1 1-2-2.8V5l12-2v12a3 3 0 1 1-2-2.8V6.4l-8 1.4z"/>',
   speaker: '<path fill="currentColor" d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  play: '<path d="M8 5v14l11-7z" fill="currentColor"/>',
+  pause: '<path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"/>',
   info: '<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11v6M12 7.5v.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
   adduser: '<circle cx="9" cy="8" r="3.5" fill="currentColor"/><path fill="currentColor" d="M2 20c0-3.9 3.1-7 7-7s7 3.1 7 7z"/><path d="M19 8v6M16 11h6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
   diamond: '<path fill="currentColor" d="M12 2 22 12 12 22 2 12z"/>',

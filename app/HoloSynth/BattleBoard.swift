@@ -31,6 +31,8 @@ struct BattleBoard: View {
     @State var error: String?
     @State var confirmLeave = false
     @State var pulse = false
+    // Auto: the server picks each of your moves (cards only, never your power cards) until you turn it off. Remembered between battles.
+    @State var auto = UserDefaults.standard.bool(forKey: "autoBattle")
 
     struct HitFX: Equatable {
         var lunge: CGFloat = 0
@@ -45,6 +47,7 @@ struct BattleBoard: View {
 
     private var s: BattleState { shown ?? state }
     private var myTurn: Bool { s.turn == you && s.winner == nil && !playing }
+    private var autoReady: Bool { auto && myTurn && !sending && !confirmLeave }
     private var cardWidth: CGFloat {
         switch max(s.teams[0].count, s.teams[1].count) {
         case 1: return 170
@@ -74,6 +77,7 @@ struct BattleBoard: View {
             withAnimation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true)) { pulse = true }
         }
         .onDisappear { Music.play(.menu) }
+        .onChange(of: autoReady) { ready in if ready { autoStep() } }
         .onChange(of: state) { new in
             latest = new
             if new.winner == nil { Music.play(.battle) }   // "Next battle" reuses this screen: bring the music back
@@ -100,7 +104,19 @@ struct BattleBoard: View {
                 Text(title).font(.chakra(17)).foregroundColor(Theme.fg).lineLimit(1).minimumScaleFactor(0.7)
             }
             .frame(maxWidth: .infinity)
-            Color.clear.frame(width: 44, height: 44)
+            Button { setAuto(!auto) } label: {
+                HStack(spacing: 5) {
+                    Image(systemName: auto ? "pause.fill" : "play.fill").font(.system(size: 11, weight: .bold))
+                    Text("Auto").font(.chakra(12)).tracking(1.5).textCase(.uppercase)
+                }
+                .foregroundColor(auto ? Color(hex: 0x04161A) : Theme.cyan)
+                .padding(.horizontal, 12).frame(height: 36)
+                .background(Capsule().fill(auto ? Theme.cyan : Theme.cyan.opacity(0.08)))
+                .overlay(Capsule().stroke(Theme.cyan.opacity(0.55), lineWidth: 1))
+                .shadow(color: auto ? Theme.cyan.opacity(0.5) : .clear, radius: 8)
+            }
+            .accessibilityLabel(auto ? "Auto battle on. Tap to stop." : "Auto battle")
+            .opacity(s.winner == nil ? 1 : 0)
         }
         .padding(.horizontal, 16).padding(.top, 4)
     }
@@ -490,7 +506,27 @@ struct BattleBoard: View {
 
     // MARK: input
 
+    private func setAuto(_ on: Bool) {
+        auto = on; UserDefaults.standard.set(on, forKey: "autoBattle")
+        selected = nil; move = nil
+        UISelectionFeedbackGenerator().selectionChanged()
+        if autoReady { autoStep() }
+    }
+
+    // One Auto move, a beat after the last one finished playing.
+    private func autoStep() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            guard autoReady else { return }
+            sending = true; error = nil; selected = nil; move = nil
+            Task {
+                do { try await onMove(-1, "auto", -1) }
+                catch { self.error = error.localizedDescription; sending = false; setAuto(false) }
+            }
+        }
+    }
+
     private func tap(side: Int, index i: Int, unit: Unit) {
+        if auto { setAuto(false); return }   // a tap takes back control
         guard myTurn, !sending else { return }
         if side == you, let p = powerMove, let from = selected {
             if powerCanTarget(p, unit: unit, index: i) { send(from: from, move: "pw:" + p.id, to: i) }

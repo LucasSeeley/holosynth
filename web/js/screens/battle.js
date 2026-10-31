@@ -5,7 +5,7 @@
 // the number pops and the HP bar drains.
 import { html, useEffect, useRef, useReducer } from '../vendor/preact-htm.js';
 import { card as cardOf, art, classColor, rarityColor, dmg as dmgOf, power as powerOf, passiveOf, POWER_VIOLET } from '../cards.js';
-import { api, warm } from '../store.js';
+import { api, warm, local } from '../store.js';
 import { Icon, Modal, sleep } from '../ui.js';
 import { Sound, Music } from '../sound.js';
 
@@ -32,6 +32,18 @@ export function BattleBoard({ state, you, eyebrow, title, foeName, leaveLabel, l
 
   const s = v.shown;
   const myTurn = s.turn === you && s.winner == null && !v.playing;
+  // Auto: the server picks each of your moves (cards only, never your power cards) until you turn it off. Remembered between battles.
+  if (v.auto === undefined) v.auto = !!local.get('autoBattle', false);
+  const setAuto = on => { v.auto = on; local.set('autoBattle', on); v.selected = null; v.move = null; bump(); };
+  useEffect(() => {
+    if (!v.auto || !myTurn || v.sending || v.confirm) return;
+    const t = setTimeout(() => {
+      if (!v.alive || !v.auto || v.sending || v.playing || v.shown.turn !== you || v.shown.winner != null) return;
+      v.sending = true; v.selected = null; v.move = null; v.error = null; bump();
+      props.current.onMove(null, 'auto', null).catch(e => { v.error = e.message; v.sending = false; v.auto = false; if (v.alive) bump(); });
+    }, 300);
+    return () => clearTimeout(t);
+  });
   const fxOf = k => (v.fx[k] ||= {});
   const set = (k, patch) => { Object.assign(fxOf(k), patch); };
   const shake = k => els.current[k]?.animate?.([{ transform: 'translateX(0)' }, { transform: 'translateX(-7px)' }, { transform: 'translateX(7px)' },
@@ -108,6 +120,7 @@ export function BattleBoard({ state, you, eyebrow, title, foeName, leaveLabel, l
   };
   const tap = (side, i) => {
     const unit = s.teams[side][i];
+    if (v.auto) { setAuto(false); return; }   // a tap takes back control
     if (!myTurn || v.sending || !unit) return;
     if (side === you && powerMove && v.selected != null) { if (powerCanTarget(powerMove, unit, i)) send(v.selected, v.move, i); return; }
     if (unit.hp <= 0) return;
@@ -390,6 +403,7 @@ export function BattleBoard({ state, you, eyebrow, title, foeName, leaveLabel, l
     <header class="bb-top">
       <button type="button" class="close" style="visibility: ${s.winner == null ? 'visible' : 'hidden'};" onClick=${() => { v.confirm = true; bump(); }} aria-label=${leaveLabel}><${Icon} name="x" /></button>
       <div class="bb-title"><span class="label" style="font-size: 11px; letter-spacing: 2.5px;">${eyebrow}</span><span class="head ellipsis" style="font-size: 20px;">${title}</span></div>
+      <button type="button" class="bb-auto ${v.auto ? 'on' : ''}" aria-pressed=${v.auto ? 'true' : 'false'} onClick=${() => setAuto(!v.auto)}><${Icon} name=${v.auto ? 'pause' : 'play'} size="14" />Auto</button>
       <span class="bb-hints small muted">Keys: <b>1 2 3</b> pick a card · <b>Q W${team.some(u => u.cd2 != null) ? ' E' : ''}</b> moves · click a target</span>
     </header>
     <div class="bb-body">

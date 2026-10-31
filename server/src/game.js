@@ -643,7 +643,7 @@ function moveDamage(state, p, from, move, to) {
 }
 
 // Computer opponent: knocks a card out if it can, otherwise deals the most damage it can, hitting the weakest card on ties.
-export function aiMove(state, p) {
+export function aiMove(state, p, powers = true) {   // powers = false: cards' moves only (the player's Auto button)
   let best = null;
   state.teams[p].forEach((_, from) => ['special2', 'special', 'basic'].forEach(move => state.teams[1 - p].forEach((t, to) => {
     const dmg = moveDamage(state, p, from, move, to);
@@ -665,7 +665,7 @@ export function aiMove(state, p) {
       });
     });
   }
-  const power = powerChoice(state, p);
+  const power = powers && powerChoice(state, p);
   if (power && (!best || power.score > best.score)) best = power;
   return best && { from: best.from, move: best.move, to: best.to };
 }
