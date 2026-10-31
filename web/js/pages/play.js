@@ -1,6 +1,7 @@
 // The Play tab (PlayTab in the app): main quest, the campaign, packs to open, daily things, modes, team, friends online, stats.
 import { html, useState, useEffect } from '../vendor/preact-htm.js';
-import { card, art, CARDS, battleFusion, fusionTotal, xpInto, xpNeed } from '../cards.js';
+import { card, art, CARDS, battleFusion, battleUsesHolo, fusionTotal, xpInto, xpNeed } from '../cards.js';
+import { FuseScreen } from './cards.js';
 import { useStore, api, openScreen, claimMainQuest, goTab } from '../store.js';
 import { Icon, Coin, Tile, Avatar, Bar, PackImg, LockLine, fmt, useNow, left } from '../ui.js';
 import { CampaignMap } from '../screens/campaign.js';
@@ -35,7 +36,10 @@ export function PlayTab() {
       <section class="panel pad col">
         <div class="row" style="justify-content: space-between;"><span class="label">Your team</span><a href="#/cards" class="link small">Edit</a></div>
         <div class="row" style="gap: 10px; align-items: flex-start;">
-          ${[0, 1, 2].map(i => html`<div class="grow" style="flex: 1;"><${Tile} id=${p.team[i]} fused=${fusionTotal(battleFusion(p, p.team[i])) > 0} sub=${i === 1 ? 'Level 3' : 'Level 6'} /></div>`)}
+          ${[0, 1, 2].map(i => p.team[i]
+            ? html`<button class="grow teamtile" style="flex: 1;" aria-label="${card(p.team[i])?.name}, open" onClick=${() => openScreen(FuseScreen, { id: p.team[i], holo: battleUsesHolo(p, p.team[i]), start: 'detail' })}>
+                <${Tile} id=${p.team[i]} fused=${fusionTotal(battleFusion(p, p.team[i])) > 0} /></button>`
+            : html`<div class="grow" style="flex: 1;"><${Tile} id=${p.team[i]} sub=${i === 1 ? 'Level 3' : 'Level 6'} /></div>`)}
         </div>
       </section>
       ${p.unopened?.length > 0 && html`<div class="wide-only"><${PacksRow} u=${p.unopened} /></div>`}

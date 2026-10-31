@@ -8,6 +8,7 @@ struct PlayTab: View {
     enum Screen: Identifiable { case map, campaign, friend, recruit, spin, gauntlet, hunt, quests, ranked, packs, pass; var id: Self { self } }
     @State var screen: Screen?
     @State private var claiming = false
+    @State private var zoomed: CollectionTab.Entry?   // a team card tapped: the same card preview as the Cards tab
 
     var body: some View {
         ZStack {
@@ -31,6 +32,7 @@ struct PlayTab: View {
                 ProgressView().tint(Theme.brass)
             }
         }
+        .sheet(item: $zoomed) { e in FuseSheet(card: e.card, holo: e.holo) { zoomed = nil } }
         .fullScreenCover(item: $screen) { s in
             switch s {
             case .map:
@@ -327,6 +329,7 @@ struct PlayTab: View {
                 ForEach(0..<3, id: \.self) { i in
                     VStack(alignment: .leading, spacing: 5) {
                         if i < p.team.count, let card = CardBook.card(p.team[i]) {
+                            Button { zoomed = CollectionTab.Entry(card: card, holo: p.battleUsesHolo(card.id)) } label: { VStack(alignment: .leading, spacing: 5) {
                             Group {
                                 if let img = Art.image(card.id) { Image(uiImage: img).resizable().scaledToFill() }
                                 else { Theme.panel }
@@ -335,6 +338,7 @@ struct PlayTab: View {
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                             .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.classColor(card.cls).opacity(0.5), lineWidth: 1))
                             Text(card.name).font(.chakra(13)).foregroundColor(Theme.fg)
+                            } }.buttonStyle(.plain).accessibilityLabel("\(card.name), open")
                         } else {
                             RoundedRectangle(cornerRadius: 10)
                                 .stroke(Theme.brass.opacity(0.4), style: StrokeStyle(lineWidth: 1, dash: [4]))

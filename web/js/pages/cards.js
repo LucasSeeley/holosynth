@@ -243,7 +243,7 @@ function Detail({ id, holo, p, onTeam }) {
 }
 
 // FuseSheet: the card big (detail), the fuse options (fuse), or the result.
-function FuseScreen({ close, id, holo, start }) {
+export function FuseScreen({ close, id, holo, start }) {
   const s = useStore(), p = s.profile;
   const [view, setView] = useState(start);
   const [busy, setBusy] = useState(false), [err, setErr] = useState(null), [result, setResult] = useState(null);
