@@ -103,6 +103,31 @@ struct CardView: View {
     }
 }
 
+// A card you can swipe sideways to turn over and see its back; a short flick turns it all the way.
+struct SpinCard: View {
+    let card: Card
+    var fusion: Fusion? = nil
+    @State private var angle: Double = 0
+    @State private var base: Double = 0
+    var body: some View {
+        let a = (angle.truncatingRemainder(dividingBy: 360) + 360).truncatingRemainder(dividingBy: 360)
+        let front = a < 90 || a > 270
+        CardView(card: card, fusion: fusion).opacity(front ? 1 : 0)
+            .overlay(CardBack().rotation3DEffect(.degrees(180), axis: (x: 0, y: 1, z: 0)).opacity(front ? 0 : 1))
+            .rotation3DEffect(.degrees(angle), axis: (x: 0, y: 1, z: 0), perspective: 0.4)
+            .contentShape(Rectangle())
+            .gesture(DragGesture(minimumDistance: 8)
+                .onChanged { angle = base + Double($0.translation.width) * 0.6 }
+                .onEnded { v in
+                    let dx = Double(v.translation.width)
+                    let target = abs(dx) > 40 ? base + (dx > 0 ? 180 : -180) : (angle / 180).rounded() * 180
+                    withAnimation(.spring(response: 0.5, dampingFraction: 0.75)) { angle = target }
+                    base = target
+                })
+            .accessibilityLabel("\(card.name). Swipe to turn it over.")
+    }
+}
+
 // The shared card back.
 struct CardBack: View {
     var body: some View {

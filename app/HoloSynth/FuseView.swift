@@ -40,7 +40,7 @@ struct FuseSheet: View {
     private var detail: some View {
         VStack(spacing: 16) {
             Spacer(minLength: 0)
-            CardView(card: card, fusion: fusion).padding(.horizontal, 40)
+            SpinCard(card: card, fusion: fusion).padding(.horizontal, 40)   // swipe to see the back
             HStack(spacing: 14) {
                 (Text("×\(holo ? holoCopies : copies - holoCopies)").font(.chakra(14)).foregroundColor(Theme.fg) + Text(holo ? " holo" : " copies"))
                 pipLabel("HP", fusion?.h ?? 0); pipLabel("Basic", fusion?.b ?? 0); pipLabel("Special", fusion?.s ?? 0)

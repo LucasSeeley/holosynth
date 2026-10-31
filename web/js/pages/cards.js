@@ -198,13 +198,33 @@ function fuseInfo(p, id, holo) {
   return { fusion, copies, holoCopies: holoCount(p, id), spare: Math.max(0, copies - fusedCount - (fusion ? 0 : 1)) };
 }
 
+// A card you can swipe (or drag) sideways to turn over and see its back; a short flick turns it all the way.
+function SpinCard({ id, fusion, style = '' }) {
+  const [angle, setAngle] = useState(0);
+  const [drag, setDrag] = useState(null);
+  const down = e => { setDrag({ x: e.clientX, a0: angle }); e.currentTarget.setPointerCapture?.(e.pointerId); };
+  const move = e => { if (drag) setAngle(drag.a0 + (e.clientX - drag.x) * 0.6); };
+  const up = e => {
+    if (!drag) return;
+    const dx = e.clientX - drag.x;
+    setAngle(Math.abs(dx) > 40 ? drag.a0 + Math.sign(dx) * 180 : Math.round(angle / 180) * 180);
+    setDrag(null);
+  };
+  return html`<div class="spin" style=${style} onPointerDown=${down} onPointerMove=${move} onPointerUp=${up} onPointerCancel=${up}
+      role="img" aria-label="${cardOf(id)?.name}. Swipe to turn it over.">
+    <div class="spin-in" style="transform: rotateY(${angle}deg); transition: ${drag ? 'none' : 'transform .5s cubic-bezier(.2,.9,.3,1.1)'};">
+      <div class="spin-face"><${Card} id=${id} fusion=${fusion} /></div>
+      <div class="spin-face spin-back"><${CardBack} /></div>
+    </div></div>`;
+}
+
 // The picked card on wide screens: big face, copies and fusion pips, Fuse and + Team.
 function Detail({ id, holo, p, onTeam }) {
   const c = cardOf(id), { fusion, copies, holoCopies } = fuseInfo(p, id, holo);
   const pas = passiveOf(c), inTeam = p.team.includes(id);
   return html`<section class="panel pad col cp-detail" style="border-color: rgba(232,184,90,.4);">
     <div class="row" style="align-items: flex-start; gap: 16px;">
-      <${Card} id=${id} fusion=${fusion} style="width: 132px; flex: none;" />
+      <${SpinCard} id=${id} fusion=${fusion} style="width: 132px; flex: none;" />
       <div class="col grow" style="gap: 6px;">
         <span class="label" style="font-size: 11px; color: ${rarityColor(c.rarity)};">${c.rarity} · ${c.cls}${holo ? ' · Holo' : ''}</span>
         <span class="head" style="font-size: 22px;">${c.name}</span>
@@ -251,7 +271,7 @@ function FuseScreen({ close, id, holo, start }) {
   }
   if (view === 'detail') {
     return html`<${Screen} close=${close}><div class="col narrow" style="align-items: center; gap: 16px; padding: 8px 24px 24px;">
-      <${Card} id=${id} fusion=${fusion} style="width: min(300px, 78vw);" />
+      <${SpinCard} id=${id} fusion=${fusion} style="width: min(300px, 78vw);" />
       <div class="row muted" style="gap: 14px; flex-wrap: wrap; justify-content: center; font-size: 14px;">
         <span><b class="head" style="color: var(--fg);">×${holo ? holoCopies : copies - holoCopies}</b> ${holo ? 'holo' : 'copies'}</span>
         <span>HP <${Pips} level=${fusion?.h || 0} size="7" /></span><span>Basic <${Pips} level=${fusion?.b || 0} size="7" /></span><span>Special <${Pips} level=${fusion?.s || 0} size="7" /></span></div>
