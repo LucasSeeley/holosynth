@@ -5,7 +5,7 @@ struct PlayTab: View {
     @EnvironmentObject var store: GameStore
     @Binding var tab: Int
 
-    enum Screen: Identifiable { case map, campaign, friend, recruit, spin, gauntlet, hunt, quests, ranked, packs, pass; var id: Self { self } }
+    enum Screen: Identifiable { case map, campaign, friend, recruit, spin, gauntlet, hunt, quests, ranked, packs, pass, expeditions, collector; var id: Self { self } }
     @State var screen: Screen?
     @State private var claiming = false
     @State private var zoomed: CollectionTab.Entry?   // a team card tapped: the same card preview as the Cards tab
@@ -21,6 +21,7 @@ struct PlayTab: View {
                         campaignTile(p)
                         if let u = p.unopened, !u.isEmpty { packsRow(u) }
                         if let pass = p.pass { passRow(pass) }
+                        if let e = p.expeditions, let c = p.collector { xRow(p, e, c) }
                         daily(p)
                         modes(p)
                         teamPanel(p)
@@ -52,6 +53,10 @@ struct PlayTab: View {
                 RankedView { _ in screen = nil; Task { await store.refresh() } }
             case .pass:
                 PassView { screen = nil }
+            case .expeditions:
+                ExpeditionsView { screen = nil }
+            case .collector:
+                CollectorView { screen = nil }
             case .quests:
                 QuestsView { _, _ in screen = nil }
             case .hunt:
@@ -268,6 +273,30 @@ struct PlayTab: View {
         .accessibilityLabel("Season \(pass.season) pass, tier \(pass.shown) of \(pass.tiers)\(pass.toClaim > 0 ? ", \(pass.toClaim) to claim" : "")")
     }
 
+    // Expeditions and the Collector, side by side under the pass.
+    private func xRow(_ p: Profile, _ e: ExpeditionsInfo, _ c: CollectorInfo) -> some View {
+        TimelineView(.periodic(from: .now, by: 15)) { ctx in
+            xTiles(p, e, c, now: ctx.date.timeIntervalSince1970 * 1000)
+        }
+    }
+    private func xTiles(_ p: Profile, _ e: ExpeditionsInfo, _ c: CollectorInfo, now: Double) -> some View {
+        let back = e.away.filter { $0.ends <= now }, away = e.away.filter { $0.ends > now }
+        let open = e.missions.filter { !$0.sent }.count
+        let soonest: Double = away.map(\.ends).min() ?? now
+        let eSub: String = back.count > 0 ? "\(back.count) back · claim" : away.count > 0 ? "\(away.count) away · \(HuntView.left(soonest))"
+            : open > 0 ? "\(open) mission\(open > 1 ? "s" : "") today" : "New in \(HuntView.left(e.next))"
+        let todo = c.requests.filter { !$0.done }
+        let cSub: String = todo.isEmpty ? "New in \(HuntView.left(c.next))" : "\(todo.count) request\(todo.count > 1 ? "s" : "") today"
+        let eAvs: [String] = Array((back + away).flatMap(\.cards).prefix(3))
+        let cAvs: [String] = Array(todo.flatMap { CollectorView.spares(p, $0).map(\.card.id) }.prefix(3))
+        return HStack(spacing: 10) {
+            XTile(title: "Expeditions", sub: eSub, avatars: eAvs, icon: "map", alert: !back.isEmpty, hot: !back.isEmpty,
+                  lockText: p.locked?["expeditions"]) { screen = .expeditions }
+            XTile(title: "Collector", sub: cSub, avatars: cAvs, icon: "arrow.left.arrow.right", alert: false, hot: false,
+                  lockText: p.locked?["collector"]) { screen = .collector }
+        }
+    }
+
     private func daily(_ p: Profile) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Daily").sectionTitle()
@@ -375,6 +404,49 @@ struct PlayTab: View {
 }
 
 // A small square on the Play tab's Daily row: icon, name, one line of status, a dot when something's waiting.
+// A half-width tile under the pass (Expeditions, Collector): avatars or an icon, name, status.
+struct XTile: View {
+    let title: String
+    let sub: String
+    let avatars: [String]
+    let icon: String
+    let alert: Bool
+    let hot: Bool               // status in gold (something to claim)
+    let lockText: String?
+    let action: () -> Void
+
+    var body: some View {
+        let locked = lockText != nil
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: -10) {
+                    if avatars.isEmpty { Image(systemName: icon).font(.system(size: 24, weight: .medium)).foregroundColor(Theme.brass) }
+                    ForEach(avatars, id: \.self) { Avatar(id: $0, size: 34) }
+                }
+                .frame(height: 34)
+                Text(title).font(.chakra(17)).foregroundColor(Theme.fg)
+                if let lockText {
+                    Label(lockText.replacingOccurrences(of: "Reach player level", with: "Player Lv"), systemImage: "lock.fill")
+                        .font(.barlow(12)).foregroundColor(Theme.muted).lineLimit(1).minimumScaleFactor(0.7)
+                } else {
+                    Text(sub).font(.barlow(12, semibold: hot)).foregroundColor(hot ? HuntView.gold : Color(hex: 0xA9A5C2)).lineLimit(1).minimumScaleFactor(0.7)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 14).padding(.vertical, 12)
+            .background(RadialGradient(colors: [Color(hex: 0x3DD6FF).opacity(0.16), Theme.field], center: .topLeading, startRadius: 0, endRadius: 200),
+                        in: RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(hex: 0x3DD6FF).opacity(0.55), lineWidth: 1))
+            .overlay(alignment: .topTrailing) { if alert && !locked { Circle().fill(Theme.pink).frame(width: 10, height: 10).padding(9) } }
+            .saturation(locked ? 0 : 1).opacity(locked ? 0.55 : 1)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(locked)
+        .accessibilityLabel("\(title), \(lockText.map { "locked: \($0)" } ?? sub)")
+    }
+}
+
 struct PlayChip<Icon: View>: View {
     let title: String
     let sub: String

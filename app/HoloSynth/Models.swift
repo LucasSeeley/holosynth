@@ -101,6 +101,8 @@ extension Profile {
         return score(h) >= score(fusion(id))
     }
     func battleFusion(_ id: String) -> Fusion? { battleUsesHolo(id) ? holo(id) : fusion(id) }
+    // Spare copies: all but your best one (every fused copy stays too).
+    func spare(_ id: String) -> Int { (collection[id] ?? 0) - max(1, fused?.filter { $0.card == id }.count ?? 0) }
     func holoCount(_ id: String) -> Int { fused?.filter { $0.card == id && $0.o == true }.count ?? 0 }
     private func best(_ id: String, holo: Bool) -> Fusion? {
         fused?.filter { $0.card == id && ($0.o == true) == holo }.max { $0.fusion.total < $1.fusion.total }?.fusion
@@ -144,7 +146,35 @@ struct Profile: Decodable, Equatable {
     let fused: [FusedCopy]?     // fused copies you own
     let gauntlet: GauntletStats
     let campaign: Campaign
+    let expeditions: ExpeditionsInfo?   // today's missions and cards out on one (older servers leave it out)
+    let collector: CollectorInfo?       // today's Collector requests
 }
+
+// Expeditions: three missions a day; cards sent on one come back after `hours` with gold, Pass XP and maybe a pack.
+struct ExpeditionsInfo: Decodable, Equatable {
+    struct Mission: Decodable, Equatable { let hours: Int; let gold: Int; let xp: Int; let pack: String?; let name: String; let cls: String; let sent: Bool }
+    struct Away: Decodable, Equatable, Identifiable {
+        let id: Int; let name: String; let cls: String; let cards: [String]; let start: Double; let ends: Double; let gold: Int; let xp: Int; let pack: String?
+    }
+    let missions: [Mission]
+    let away: [Away]
+    let next: Double
+    // Same as the server: more cards and rarer ones pay more, plus 5% per card of the mission's class.
+    static func reward(_ m: Mission, _ ids: [String]) -> (gold: Int, xp: Int) {
+        let share: [String: Double] = ["Common": 0, "Rare": 0.1, "Epic": 0.2, "Legendary": 0.3]
+        var k = [0.4, 0.7, 1.0][max(0, min(2, ids.count - 1))]
+        for id in ids { if let c = CardBook.card(id) { k += (share[c.rarity] ?? 0) + (c.cls == m.cls ? 0.05 : 0) } }
+        let r = { (x: Int) -> Int in Int((Double(x) * k / 10).rounded()) * 10 }
+        return (r(m.gold), r(m.xp))
+    }
+}
+// The Collector: three requests a day for spare copies.
+struct CollectorInfo: Decodable, Equatable {
+    struct Request: Decodable, Equatable { let n: Int; let rarity: String; let gold: Int; let xp: Int; let cls: String?; let name: String; let done: Bool }
+    let requests: [Request]
+    let next: Double
+}
+struct XReward: Decodable { let name: String; let gold: Int; let xp: Int; let pack: String?; let profile: Profile }
 
 // One step of the main quest line, shown one at a time on the Play tab.
 struct MainQuest: Decodable, Equatable {

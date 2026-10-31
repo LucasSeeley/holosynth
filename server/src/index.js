@@ -4,7 +4,7 @@ import {
   BY_ID, STARTER_TEAM, START_GOLD, PACK_COST, PACK_COSTS, WIN_GOLD, WIN_XP, CAMPAIGN_GOLD, CAMPAIGN_XP, CAMPAIGN, CHAPTERS, CHAPTERS_OPEN, NEW_CARD_AFTER, OPEN_LEVELS,
   levelFor, levelStart, openPack, newBattle, spinWheel, SPIN_SLOTS, dayStart, nextSpinAt, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, dailyShop, shopPrice, huntFoes, huntStart, HUNT_MS, huntBattle, huntPack, HUNT_GOLD, HUNT_XP, QUESTS, QUEST_PAY, questBonus, pickQuests, RANKS, RANK_REWARDS, RANKED_WIN, RANKED_LOSS, RANKED_GOLD, RANKED_XP, WEEK_MS, weekStart, seasonOf, seasonEnd, PASS_TIERS, PASS_PER, PASS_QUEST_XP, PASS_WIN_XP, PASS_WIN_CAP, passRewards, passTier, rankMove, rankTable, rankedTeam, botName, rankedFusions,
   gauntletEnemies, gauntletBattle, gauntletHeal, gauntletCooldowns, fusedHp, FUSE_COPIES, FUSE_GOLD, FUSE_MAX, SECOND, SECOND_COST, PASSIVE_COST, POWERS, POWER_SLOTS, rankedPowers, gauntletGold, GAUNTLET_PACK_EVERY, newCampaignBattle, applyMove, aiMove,
-  UNLOCKS, isUnlocked, recruitsOwed, mainProgress, MAIN_QUESTS, gauntletXp,
+  UNLOCKS, isUnlocked, recruitsOwed, mainProgress, MAIN_QUESTS, gauntletXp, expMissions, expReward, colRequests, colFits,
 } from './game.js';
 import CARDS from '../../shared/cards.json' with { type: 'json' };
 
@@ -257,7 +257,7 @@ async function profile(db, user) {
   // Every read in one batch, so one round trip: separate queries queue one after another in the database.
   const t = now(), day = dayStart(t), week = weekStart(t);
   const q = (sql, ...args) => db.prepare(sql).bind(...args);
-  const [results, [progRow], [extra], ev0rows, fused, powerRows, [teamRow], [mainRowRead], [meta], [rankRow], rankPeers, [questRow], todayEvents, [emailRow], [passRow]] =
+  const [results, [progRow], [extra], ev0rows, fused, powerRows, [teamRow], [mainRowRead], [meta], [rankRow], rankPeers, [questRow], todayEvents, [emailRow], [passRow], expRows] =
     (await db.batch([
       q('SELECT card_id, count FROM collection WHERE user_id = ?', user.id),
       q('SELECT * FROM progress WHERE user_id = ?', user.id),
@@ -289,6 +289,7 @@ async function profile(db, user) {
          (SELECT ids FROM seen_cards WHERE user_id = ?1) AS seen,
          (SELECT verified FROM emails WHERE user_id = ?1) AS verified`, user.id),
       q('SELECT * FROM pass WHERE user_id = ?', user.id),
+      q('SELECT * FROM expeditions WHERE user_id = ? AND (claimed = 0 OR day = ?) ORDER BY ends', user.id, day),
     ])).map(r => r.results);
   const prog = progRow ?? { user_id: user.id, cleared: 0, wins: 0, packs: 0, run: null };
   const mainRowNow = mainRowRead ?? { step: 0, base: '{}' };
@@ -349,6 +350,10 @@ async function profile(db, user) {
     quests,
     pass: passView(passRow),   // the season pass: Pass XP, claimed tiers and each tier's reward
     ranked,
+    // today's missions (sent: done for today) and cards out on one (back once ends has passed; claim to get the reward)
+    expeditions: { missions: expMissions(t).map((m, i) => ({ ...m, pack: m.pack ? questBonus(prog.cleared, t) : null,
+      sent: expRows.some(r => r.day === day && r.mission === i) })), away: expRows.filter(r => !r.claimed).map(expView), next: day + 86400000 },
+    collector: { requests: colRequests(t).map((r, i) => ({ ...r, done: todayEvents.some(e => e.kind === 'col' + i) })), next: day + 86400000 },
     hunt: { ...huntFoes(now()), status: extra.hunted ?? 'ready', next: huntStart(now()) + HUNT_MS },   // ready | playing | won | lost
     gauntlet: { best: extra.gbest || 0, rank: extra.gahead + 1 },   // rank among you and your friends
     wins: prog.wins,
@@ -634,6 +639,8 @@ async function setTeam(req, db, user) {
     throw new HttpError(400, `Pick ${size} different cards.`);
   }
   if (!team.every(id => owned[id])) throw new HttpError(400, "You don't own all of those cards.");
+  const away = await awayCards(db, user.id);
+  if (team.some(id => away.includes(id))) throw new HttpError(400, `${BY_ID[team.find(id => away.includes(id))].name} is on an expedition.`);
   await db.prepare('UPDATE users SET team = ? WHERE id = ?').bind(JSON.stringify(team), user.id).run();
   return json(await profile(db, { ...user, team: JSON.stringify(team) }));
 }
@@ -739,6 +746,70 @@ async function claimPass(req, db, user) {
     await db.batch(writes);
     return json({ tier, reward, profile: await profile(db, await freshUser(db, me.id)) });
   });
+}
+
+// ---- expeditions ----
+const expView = r => ({ id: r.id, name: r.name, cls: r.cls, cards: JSON.parse(r.cards), start: r.start, ends: r.ends, gold: r.gold, xp: r.xp, pack: r.pack });
+// Cards out on an expedition that isn't back yet (they can't join the team or be traded away).
+const awayCards = async (db, userId) => (await db.prepare('SELECT cards FROM expeditions WHERE user_id = ? AND claimed = 0 AND ends > ?')
+  .bind(userId, now()).all()).results.flatMap(r => JSON.parse(r.cards));
+async function sendExpedition(req, db, user) {
+  await needUnlock(db, user, 'expeditions');
+  const { mission, cards } = await body(req);
+  const t = now(), day = dayStart(t), m = expMissions(t)[mission];
+  if (!Number.isInteger(mission) || !m) throw new HttpError(400, 'Pick a mission.');
+  if (!Array.isArray(cards) || !cards.length || cards.length > 3 || new Set(cards).size !== cards.length || !cards.every(id => typeof id === 'string' && BY_ID[id])) {
+    throw new HttpError(400, 'Pick 1 to 3 different cards.');
+  }
+  const prof = await profile(db, user), away = await awayCards(db, user.id);
+  if (!cards.every(id => prof.collection[id])) throw new HttpError(400, "You don't own all of those cards.");
+  if (cards.some(id => prof.team.includes(id))) throw new HttpError(400, "Cards on your team can't go.");
+  if (cards.some(id => away.includes(id))) throw new HttpError(400, 'One of those cards is already away.');
+  const { gold, xp } = expReward(m, cards);
+  const res = await db.prepare(`INSERT INTO expeditions (user_id, day, mission, name, cls, cards, start, ends, gold, xp, pack)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (user_id, day, mission) DO NOTHING`)
+    .bind(user.id, day, mission, m.name, m.cls, JSON.stringify(cards), t, t + m.hours * 3600000, gold, xp, prof.expeditions.missions[mission].pack).run();
+  if (!res.meta.changes) throw new HttpError(400, 'You already did that mission today.');
+  return json(await profile(db, user));
+}
+async function claimExpedition(req, db, user) {
+  const { id } = await body(req);
+  const t = now();
+  const row = await db.prepare('UPDATE expeditions SET claimed = 1 WHERE id = ? AND user_id = ? AND claimed = 0 AND ends <= ? RETURNING *')
+    .bind(Number(id), user.id, t).first();
+  if (!row) throw new HttpError(400, "That team isn't back yet.");
+  const writes = [db.prepare('UPDATE users SET gold = gold + ? WHERE id = ?').bind(row.gold, user.id), passXp(db, user.id, row.xp),
+    db.prepare('DELETE FROM expeditions WHERE user_id = ? AND claimed = 1 AND day < ?').bind(user.id, dayStart(t))];
+  if (row.pack) {
+    const pack = openPack(user.packs_since_legend, row.pack);
+    writes.push(...packWrites(db, user.id, pack, row.pack), db.prepare('UPDATE users SET packs_since_legend = ? WHERE id = ?').bind(pack.packsSinceLegend, user.id));
+  }
+  await db.batch(writes);
+  return json({ name: row.name, gold: row.gold, xp: row.xp, pack: row.pack, profile: await profile(db, await freshUser(db, user.id)) });
+}
+
+// ---- collector ----
+// Turn in spare copies for one of today's requests; cards: the card ids, one per copy (the same id twice = 2 copies).
+async function turnIn(req, db, user) {
+  await needUnlock(db, user, 'collector');
+  const { request, cards } = await body(req);
+  const t = now(), r = colRequests(t)[request];
+  if (!Number.isInteger(request) || !r) throw new HttpError(400, 'Unknown request.');
+  if (!Array.isArray(cards) || cards.length !== r.n || !cards.every(id => typeof id === 'string' && colFits(r, id))) {
+    throw new HttpError(400, `Pick ${r.n} ${r.name.replace(/^\d+ /, '')}.`);
+  }
+  const need = {};
+  for (const id of cards) need[id] = (need[id] || 0) + 1;
+  const counts = Object.fromEntries((await db.prepare('SELECT card_id, count FROM collection WHERE user_id = ?').bind(user.id).all()).results.map(x => [x.card_id, x.count]));
+  const fused = await fusedRows(db, user.id);
+  const keep = id => Math.max(1, fused.filter(f => f.card_id === id).length);   // your best copy (or every fused one) stays
+  if (Object.entries(need).some(([id, k]) => (counts[id] || 0) - keep(id) < k)) throw new HttpError(400, "You don't have those spare copies.");
+  const done = await db.prepare('INSERT INTO quest_events (user_id, day, kind, n) VALUES (?, ?, ?, 1) ON CONFLICT DO NOTHING')
+    .bind(user.id, dayStart(t), 'col' + request).run();
+  if (!done.meta.changes) throw new HttpError(400, 'You already did that one today.');
+  await db.batch([...Object.entries(need).map(([id, k]) => db.prepare('UPDATE collection SET count = count - ? WHERE user_id = ? AND card_id = ?').bind(k, user.id, id)),
+    db.prepare('UPDATE users SET gold = gold + ? WHERE id = ?').bind(r.gold, user.id), passXp(db, user.id, r.xp)]);
+  return json({ name: r.name, gold: r.gold, xp: r.xp, profile: await profile(db, await freshUser(db, user.id)) });
 }
 
 // ---- starter card & campaign ----
@@ -1014,7 +1085,7 @@ const fusedIdOf = tok => (tok.includes('#') ? Number(tok.split('#')[1]) : null);
 // What a player can trade: plain copies beyond the fused ones, and their fused copies; one copy of each team card stays
 // (ignoreTeam: what they could trade once they change their team).
 async function tradeable(db, u, ignoreTeam = false) {
-  const team = ignoreTeam ? [] : JSON.parse(u.team);
+  const team = [...(ignoreTeam ? [] : JSON.parse(u.team)), ...await awayCards(db, u.id)];   // a card out on an expedition keeps a copy too
   const rows = (await db.prepare('SELECT card_id, count FROM collection WHERE user_id = ?').bind(u.id).all()).results;
   const fused = await fusedRows(db, u.id);
   const plain = {}, total = {};
@@ -1688,7 +1759,7 @@ async function deleteAccount(req, db, user) {
     db.prepare('DELETE FROM trades WHERE from_id = ?1 OR to_id = ?1').bind(id),
     db.prepare('DELETE FROM fused WHERE user_id = ?1').bind(id),
     ...heldFused.map(f => db.prepare('DELETE FROM fused WHERE id = ? AND user_id = 0').bind(f)),
-    ...['collection', 'sessions', 'progress', 'presence', 'spins', 'gauntlet', 'shop_buys', 'hunts', 'daily_quests', 'quest_events', 'ranked', 'ranked_queue', 'pack_inv', 'powers', 'power_team', 'main_quest', 'emails', 'agreements', 'seen_cards', 'email_tokens', 'locks', 'activity', 'pass'].map(t => db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(id)),
+    ...['collection', 'sessions', 'progress', 'presence', 'spins', 'gauntlet', 'shop_buys', 'hunts', 'daily_quests', 'quest_events', 'ranked', 'ranked_queue', 'pack_inv', 'powers', 'power_team', 'main_quest', 'emails', 'agreements', 'seen_cards', 'email_tokens', 'locks', 'activity', 'pass', 'expeditions'].map(t => db.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(id)),
     db.prepare('DELETE FROM users WHERE id = ?').bind(id),
   ]);
   return json({ ok: true });
@@ -1767,6 +1838,9 @@ async function route(req, env, ctx) {
   }
   if (method === 'POST' && pathname === '/quests/claim') return claimQuest(req, db, user);
   if (method === 'POST' && pathname === '/pass/claim') return claimPass(req, db, user);
+  if (method === 'POST' && pathname === '/expeditions/send') return locked(db, user.id, u => sendExpedition(req, db, u));
+  if (method === 'POST' && pathname === '/expeditions/claim') return locked(db, user.id, u => claimExpedition(req, db, u));
+  if (method === 'POST' && pathname === '/collector/turnin') return locked(db, user.id, u => turnIn(req, db, u));
   if (a === 'ranked') {
     if (method === 'GET' && !b) { await needUnlock(db, user, 'ranked'); return json(await rankedView(db, user)); }
     if (method === 'POST' && b === 'search') return rankedSearch(db, user);

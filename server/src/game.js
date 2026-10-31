@@ -241,6 +241,34 @@ export function pickQuests(userId, t, can, rand = seeded((userId * 2654435761) ^
   return picked;
 }
 
+// ---- expeditions ----
+// Three missions a day (1, 4 and 8 hours), the same for everyone; each can be sent once. Send 1-3 cards that aren't on
+// your team: more cards pay more (40 / 70 / 100% of base), each rarer card adds a share, and each card of the mission's class 5% more.
+const EXP_NAMES = ['Frozen Relay', 'Signal Hunt', 'Neon Undercity', 'Static Wastes', 'Chrome Canyon', 'Data Vault', 'Glitch Bazaar',
+  'Solar Spire', 'Void Market', 'Pulse Reactor', 'Ghost Grid', 'Rust Harbor'];
+const EXP_CLASSES = ['Fighter', 'Beast', 'Mech', 'Arcanist', 'Spirit', 'Mystic'];
+export const EXP_TIERS = [{ hours: 1, gold: 750, xp: 100 }, { hours: 4, gold: 2500, xp: 300 }, { hours: 8, gold: 5000, xp: 600, pack: true }];
+const EXP_COUNT = [0.4, 0.7, 1], EXP_RARITY = { Common: 0, Rare: 0.1, Epic: 0.2, Legendary: 0.3 }, EXP_MATCH = 0.05;
+export function expMissions(t) {
+  const rand = seeded(Math.floor(t / DAY_MS) * 7919 + 17), names = [...EXP_NAMES];
+  return EXP_TIERS.map(tier => ({ ...tier, pack: !!tier.pack, name: names.splice(Math.floor(rand() * names.length), 1)[0],
+    cls: EXP_CLASSES[Math.floor(rand() * EXP_CLASSES.length)] }));
+}
+export function expReward(m, ids) {
+  const mult = EXP_COUNT[ids.length - 1] + ids.reduce((s, id) => s + EXP_RARITY[BY_ID[id].rarity] + (BY_ID[id].cls === m.cls ? EXP_MATCH : 0), 0);
+  const r10 = x => Math.round(x * mult / 10) * 10;
+  return { gold: r10(m.gold), xp: r10(m.xp) };
+}
+
+// ---- collector ----
+// Three requests a day for spare copies (you always keep one of each card), the same for everyone.
+export const COL_TIERS = [{ n: 2, rarity: 'Common', gold: 750, xp: 200 }, { n: 2, rarity: 'Rare', gold: 1500, xp: 350 }, { n: 1, rarity: 'Epic', gold: 3000, xp: 500 }];
+export function colRequests(t) {
+  const cls = ['Fighter', 'Beast', 'Mech'][Math.floor(seeded(Math.floor(t / DAY_MS) * 7919 + 31)() * 3)];
+  return COL_TIERS.map((r, i) => ({ ...r, cls: i ? null : cls, name: `${r.n} ${r.rarity}${i ? '' : ' ' + cls}${r.n > 1 ? 's' : ''}` }));
+}
+export const colFits = (req, id) => !!BY_ID[id] && BY_ID[id].rarity === req.rarity && (!req.cls || BY_ID[id].cls === req.cls);
+
 // ---- legend hunt ----
 // Every 8 hours (00:00, 08:00, 16:00 UTC) one Legendary, fully fused, the same for everyone, with two support cards,
 // each a Rare or an Epic, medium fused (Rare 2-3 per stat, Epic 1-2). The first is a healer unless the Legendary heals itself;
@@ -868,6 +896,8 @@ export const UNLOCKS = {
   shop: { level: 5, text: 'Reach player level 5' },
   trades: { level: 10, text: 'Reach player level 10' },
   hunt: { level: 15, text: 'Reach player level 15' },
+  expeditions: { level: 5, text: 'Reach player level 5' },
+  collector: { level: 5, text: 'Reach player level 5' },
 };
 export const isUnlocked = (key, cleared, level) => { const u = UNLOCKS[key]; return u.cleared ? cleared >= u.cleared : level >= u.level; };
 // Starters come out of 1-card Recruit Packs: one at sign-up, one after level 3, one after level 6.

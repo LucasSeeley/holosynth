@@ -246,3 +246,22 @@ CREATE TABLE IF NOT EXISTS pass (
   wins INTEGER NOT NULL DEFAULT 0,
   claimed TEXT NOT NULL DEFAULT '[]'
 );
+
+-- Expeditions: cards sent on one of today's missions (0-2), rewards fixed when sent. Claimed rows stay until a later claim
+-- clears old days, so a mission can't be sent twice in a day.
+CREATE TABLE IF NOT EXISTS expeditions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  day INTEGER NOT NULL,
+  mission INTEGER NOT NULL,
+  name TEXT NOT NULL,
+  cls TEXT NOT NULL,
+  cards TEXT NOT NULL,
+  start INTEGER NOT NULL,
+  ends INTEGER NOT NULL,
+  gold INTEGER NOT NULL,
+  xp INTEGER NOT NULL,
+  pack TEXT,
+  claimed INTEGER NOT NULL DEFAULT 0,
+  UNIQUE (user_id, day, mission)
+);

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { rarityOf, newBattle, SLOT_ODDS, TIER_OF, FAVOURITE_POWERS, POWERS, newCampaignBattle, applyMove as applyMove_, DODGE, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS, levelFor, levelStart, fusedHp, fusedDmg, SECOND, FUSE_GOLD, dailyShop, shopPrice, passRewards, passTier, PASS_TIERS, PASS_PER, huntFoes, HUNT_MS, huntBattle, huntPack, HUNT_FUSION, pickQuests, QUESTS, QUEST_PAY, weekStart, seasonOf, seasonEnd, rankMove, rankTable, rankBots, rankedTeam, rankedFusions, RANKS, RANK_REWARDS, WEEK_MS } from '../src/game.js';
+import { rarityOf, newBattle, SLOT_ODDS, TIER_OF, FAVOURITE_POWERS, POWERS, newCampaignBattle, applyMove as applyMove_, DODGE, aiMove, openPack, BY_ID, CAMPAIGN, STARTER_TEAM, CHAPTERS, CAMPAIGN_GOLD, SPIN_SLOTS, spinWheel, nextSpinAt, gauntletEnemies, gauntletBattle, gauntletHeal, BEATS, PACK_TYPES, PACKS_OPEN, freePack, dailyPack, CAMPAIGN_XP, CHAPTERS_OPEN, OPEN_LEVELS, levelFor, levelStart, fusedHp, fusedDmg, SECOND, FUSE_GOLD, dailyShop, shopPrice, passRewards, passTier, PASS_TIERS, PASS_PER, huntFoes, HUNT_MS, huntBattle, huntPack, HUNT_FUSION, pickQuests, QUESTS, QUEST_PAY, weekStart, seasonOf, seasonEnd, rankMove, rankTable, rankBots, rankedTeam, rankedFusions, RANKS, RANK_REWARDS, WEEK_MS, expMissions, expReward, colRequests, colFits } from '../src/game.js';
 const applyMove = (s, p, from, move, to) => applyMove_(s, p, from, move, to, () => 1);   // no dodges: tests check exact numbers
 
 const fixed = v => () => v;
@@ -528,4 +528,24 @@ test('only Legendaries come out holo', () => {
   let holos = 0;
   for (let i = 0; i < 20000; i++) { const p = openPack(0, 'legends'); for (const k of p.holo) { holos++; assert.equal(BY_ID[p.cards[k]].rarity, 'Legendary'); } }
   assert.ok(holos > 0);
+});
+
+test('expedition rewards scale with card count, rarity and class', () => {
+  const m = { gold: 5000, xp: 600, cls: 'Beast' };
+  const leg = Object.values(BY_ID).filter(c => c.rarity === 'Legendary' && c.cls === 'Beast').slice(0, 3).map(c => c.id);
+  const com = Object.values(BY_ID).find(c => c.rarity === 'Common' && c.cls === 'Mech').id;
+  assert.deepEqual(expReward(m, [com]), { gold: 2000, xp: 240 });
+  assert.deepEqual(expReward(m, leg), { gold: 10250, xp: 1230 });
+  const ms = expMissions(Date.UTC(2026, 9, 31));
+  assert.deepEqual(ms.map(x => x.hours), [1, 4, 8]);
+  assert.equal(new Set(ms.map(x => x.name)).size, 3);
+  assert.deepEqual(expMissions(Date.UTC(2026, 9, 31, 23)), ms);   // the same all day
+});
+
+test('collector requests', () => {
+  const [easy, mid, hard] = colRequests(Date.UTC(2026, 9, 31));
+  assert.match(easy.name, /^2 Common (Fighter|Beast|Mech)s$/);
+  assert.equal(mid.name, '2 Rares'); assert.equal(hard.name, '1 Epic');
+  const fit = Object.values(BY_ID).find(c => c.rarity === 'Common' && c.cls === easy.cls).id;
+  assert.ok(colFits(easy, fit) && !colFits(mid, fit) && !colFits(easy, 'nope'));
 });

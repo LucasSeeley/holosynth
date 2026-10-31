@@ -13,6 +13,7 @@ import { SeasonPass, SeasonCard } from '../screens/pass.js';
 import { Hunt, HUNT_GOLD } from '../screens/hunt.js';
 import { DailySpin, MiniWheel, spinReady } from '../screens/spin.js';
 import { PacksScreen, RecruitView } from './shop.js';
+import { Expeditions, Collector, spareOf } from '../screens/expeditions.js';
 
 export function PlayTab() {
   const s = useStore(), p = s.profile;
@@ -27,6 +28,7 @@ export function PlayTab() {
       <${CampaignHero} p=${p} />
       ${p.unopened?.length > 0 && html`<div class="narrow-only"><${PacksRow} u=${p.unopened} /></div>`}
       ${p.pass && html`<${PassRow} pass=${p.pass} />`}
+      ${p.expeditions && html`<${XRow} p=${p} />`}
       <span class="label">Daily</span>
       <${Daily} p=${p} />
       <span class="label">Modes</span>
@@ -113,6 +115,25 @@ function PassRow({ pass }) {
     </div>
     ${ready > 0 && html`<span class="dot"></span>`}
   </button>`;
+}
+
+// Expeditions and the Collector, side by side under the pass.
+function XRow({ p }) {
+  const t = useNow(15000), e = p.expeditions, c = p.collector;
+  const back = e.away.filter(x => x.ends <= t), away = e.away.filter(x => x.ends > t), open = e.missions.filter(m => !m.sent).length;
+  const eSub = back.length ? html`<b style="color: var(--gold-hi);">${back.length} back · claim</b>`
+    : away.length ? `${away.length} away · ${left(Math.min(...away.map(x => x.ends)))}` : open ? `${open} mission${open > 1 ? 's' : ''} today` : `New in ${left(e.next)}`;
+  const todo = c.requests.filter(r => !r.done);
+  const cAvs = todo.flatMap(r => Object.keys(p.collection).filter(id => spareOf(p, id) > 0 && card(id)?.rarity === r.rarity && (!r.cls || card(id).cls === r.cls))).slice(0, 3);
+  const tile = (title, sub, avs, icon, alert, lock, view) => html`<button class="xtile" disabled=${!!lock} onClick=${() => openScreen(view, {})} aria-label="${title}, ${lock ? 'locked: ' + lock : ''}">
+    <span class="avs">${avs.length ? avs.map(id => html`<${Avatar} id=${id} size="34" />`) : html`<${Icon} name=${icon} size="30" style="color: var(--brass);" />`}</span>
+    <span class="head" style="font-size: 17px;">${title}</span>
+    ${lock ? html`<${LockLine} text=${lock.replace('Reach player level', 'Player Lv')} />` : html`<span class="small soft ellipsis" style="max-width: 100%;">${sub}</span>`}
+    ${alert && !lock && html`<span class="dot"></span>`}</button>`;
+  return html`<div class="xrow2">
+    ${tile('Expeditions', eSub, [...back, ...away].flatMap(x => x.cards).slice(0, 3), 'map', back.length > 0, p.locked?.expeditions, Expeditions)}
+    ${tile('Collector', todo.length ? `${todo.length} request${todo.length > 1 ? 's' : ''} today` : `New in ${left(c.next)}`, cAvs, 'swap', false, p.locked?.collector, Collector)}
+  </div>`;
 }
 
 const chipIcon = (name) => html`<${Icon} name=${name} size="34" style="color: var(--brass);" />`;
