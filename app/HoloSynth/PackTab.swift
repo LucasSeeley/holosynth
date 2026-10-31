@@ -642,7 +642,7 @@ struct PackTab: View {
             UINotificationFeedbackGenerator().notificationOccurred(.success)
             DispatchQueue.main.asyncAfter(deadline: .now() + Sound.flip.duration) {
                 Sound.legendary.play()
-                withAnimation(.easeOut(duration: 0.15)) { burst = .white }
+                withAnimation(.easeOut(duration: 0.15)) { burst = Color.white }
                 withAnimation(.easeIn(duration: 0.9).delay(0.15)) { burst = nil }
             }
             return
@@ -715,7 +715,7 @@ struct HoloReveal: View {
         .accessibilityHidden(!front)
     }
 
-    @ViewBuilder private func backLayer(_ t: Double, _ k: (Double, Double) -> Double) -> some View {
+    @ViewBuilder private func backLayer(_ t: Double, _ k: @escaping (Double, Double) -> Double) -> some View {   // escaping: the sparkles ForEach keeps it
         ZStack {
             Color.black.opacity(0.55 * k(0, 0.3)).ignoresSafeArea()
             ZStack {   // rainbow spokes
@@ -732,7 +732,7 @@ struct HoloReveal: View {
         }
     }
 
-    @ViewBuilder private func frontLayer(_ t: Double, _ h: CGFloat, _ k: (Double, Double) -> Double) -> some View {
+    @ViewBuilder private func frontLayer(_ t: Double, _ h: CGFloat, _ k: @escaping (Double, Double) -> Double) -> some View {   // escaping: the sparkles ForEach keeps it
         ZStack {
             RoundedRectangle(cornerRadius: width * 0.07, style: .continuous)
                 .strokeBorder(AngularGradient(colors: Self.rainbow, center: .center, angle: .degrees(t * 120)), lineWidth: 4)
