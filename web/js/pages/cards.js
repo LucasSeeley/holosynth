@@ -190,7 +190,7 @@ function PowerZoom({ close, id }) {
 }
 
 // ---- fusion ----
-const FUSE_COPIES = [1, 3, 5], FUSE_GOLD = [1000, 2500, 5000], MAX = 3, SECOND_COPIES = 10, SECOND_GOLD = 10000, PASSIVE_GOLD = 2500;
+const FUSE_COPIES = [1, 3, 5], FUSE_GOLD = [1000, 2500, 5000], MAX = 3, SECOND_COPIES = 5, SECOND_GOLD = 10000, PASSIVE_GOLD = 2500;
 const Pips = ({ level, size = 8 }) => html`<span class="pips" aria-label="${level} of 3">${[0, 1, 2].map(i => html`<i class=${i < level ? 'on' : ''} style="width: ${size}px; height: ${size}px;"></i>`)}</span>`;
 function fuseInfo(p, id, holo) {
   const fusion = holo ? holoOf(p, id) : fusionOf(p, id);

@@ -360,8 +360,8 @@ export function rankedTeam(rank, rand = Math.random) {
 
 // ---- fusion ----
 // Fuse spare copies into one copy for +10% HP, +20% basic or +10% special (max 3 each): 1, 3, then 5 copies.
-// Epic and Legendary cards can also unlock a second, stronger special (10 copies + 10,000 gold); the special bonus applies to it too.
-export const FUSE_COPIES = [1, 3, 5], FUSE_MAX = 3, SECOND_COST = { copies: 10, gold: 10000 };
+// Epic and Legendary cards can also unlock a second, stronger special (5 copies + 10,000 gold); the special bonus applies to it too.
+export const FUSE_COPIES = [1, 3, 5], FUSE_MAX = 3, SECOND_COST = { copies: 5, gold: 10000 };
 export const FUSE_GOLD = [1000, 2500, 5000];   // gold for a stat's 1st, 2nd and 3rd fusion
 export const SECOND = Object.fromEntries(ALL_CARDS.filter(c => c.special2).map(c => [c.id, c.special2]));   // Epic & Legendary only
 // Every card has a passive (cards.json "passive"), switched on by fusion for 1 copy + 2,500 gold. Values by rarity

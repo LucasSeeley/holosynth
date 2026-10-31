@@ -2,7 +2,7 @@ import SwiftUI
 
 // Fusion (v1.2): tap a card in the collection to see it big; Fuse spends spare copies on your best copy of it.
 // HP +10%, basic +20%, special +10% per fusion (1, 3, then 5 copies; max 3 per stat). Every card can switch on its passive
-// for 1 copy + 2,500 gold; Epic & Legendary cards can also unlock a stronger second special for 10 copies + 10,000 gold.
+// for 1 copy + 2,500 gold; Epic & Legendary cards can also unlock a stronger second special for 5 copies + 10,000 gold.
 // The server checks the costs; these screens only show them.
 struct FuseSheet: View {
     @EnvironmentObject var store: GameStore
@@ -16,7 +16,7 @@ struct FuseSheet: View {
     @State private var result: (line: String, before: Int, after: Int, stat: String)?
 
     private static let gold = Color(hex: 0xFFD77A)
-    private let fuseCopies = [1, 3, 5], maxLevel = 3, secondCopies = 10, secondGold = 10_000, passiveGold = 2_500
+    private let fuseCopies = [1, 3, 5], maxLevel = 3, secondCopies = 5, secondGold = 10_000, passiveGold = 2_500
     private let fuseGold = [1000, 2500, 5000]   // a stat's 1st, 2nd and 3rd fusion (same as the server)
 
     private var fusion: Fusion? { holo ? store.profile?.holo(card.id) : store.profile?.fusion(card.id) }
