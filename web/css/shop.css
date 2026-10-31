@@ -116,9 +116,36 @@
 .flip .cardback { width: 100%; height: 100%; }
 .flip.jolt { animation: jolt .45s .35s 2; }
 @keyframes jolt { 25% { margin-left: 6px; } 75% { margin-left: -6px; } }
-.holotext { transform: translateX(-50%); font: 700 40px var(--head); letter-spacing: 4px; pointer-events: none; z-index: 30; animation: pop .3s;
-  background: linear-gradient(90deg, #FF3D6E, #FFB03D, #FFF03D, #3DFF8A, #3DD6FF, #8A5CFF, #FF3DF0); -webkit-background-clip: text; background-clip: text; color: transparent;
-  filter: drop-shadow(0 0 10px rgba(255,255,255,.5)); }
+/* holo pull (HoloReveal): behind the card the room dims and rainbow rays spin; on it a rainbow edge, one light sweep, sparkles */
+.hr-back { position: absolute; inset: 0; left: 0; top: 0; pointer-events: none; z-index: 2; }
+.hr-dim { position: absolute; inset: 0; background: #000; opacity: 0; animation: hrin .3s forwards; --o: .55; }
+.hr-rays { position: absolute; left: 50%; top: calc(50% - 0px); width: 1100px; height: 1100px; margin: -550px 0 0 -550px; border-radius: 50%; opacity: 0;
+  background: repeating-conic-gradient(rgba(255,61,110,.55) 0deg 3deg, transparent 3deg 12deg, rgba(61,214,255,.55) 12deg 15deg, transparent 15deg 24deg, rgba(255,240,61,.5) 24deg 27deg, transparent 27deg 36deg, rgba(138,92,255,.55) 36deg 39deg, transparent 39deg 48deg);
+  -webkit-mask: radial-gradient(circle, #000 12%, transparent 60%); mask: radial-gradient(circle, #000 12%, transparent 60%);
+  animation: hrrays .5s .25s cubic-bezier(.2,.9,.3,1) forwards, hrspin 18s linear infinite; }
+.hr-glow { position: absolute; left: 50%; top: 50%; width: 460px; height: 520px; margin: -260px 0 0 -230px; border-radius: 50%; filter: blur(40px); opacity: 0;
+  background: conic-gradient(#FF3D6E, #FFB03D, #FFF03D, #3DFF8A, #3DD6FF, #8A5CFF, #FF3DF0, #FF3D6E); animation: hrin .3s .3s forwards, hrspin 6s linear infinite; --o: .8; }
+.hr-front { position: absolute; left: 50%; top: 50%; width: var(--w); height: calc(var(--w) * 1.4); pointer-events: none; z-index: 60; }
+.hr-edge { position: absolute; inset: -4px; padding: 4px; border-radius: 7% / 5%; opacity: 0; animation: hrin .2s .4s forwards, hredge 3s linear infinite; --o: 1;
+  background: linear-gradient(90deg, #FF3D6E, #FFB03D, #FFF03D, #3DFF8A, #3DD6FF, #8A5CFF, #FF3DF0, #FF3D6E, #FFB03D, #FFF03D) 0 0 / 200% 100%;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; filter: drop-shadow(0 0 12px rgba(255,255,255,.6)); }
+.hr-sweep { position: absolute; inset: 0; border-radius: 6% / 4.3%; mix-blend-mode: screen; background-size: 300% 100%; background-position: 100% 0; opacity: 0;
+  background-image: linear-gradient(110deg, transparent 40%, rgba(255,255,255,.75) 50%, rgba(160,230,255,.35) 53%, transparent 60%); animation: hrsweep .7s .5s ease-in-out forwards; }
+.hr-spark { position: absolute; left: 50%; top: 50%; width: var(--s); height: var(--s); margin: calc(var(--s) / -2); border-radius: 50%; background: #fff; box-shadow: 0 0 calc(var(--s) * 2) var(--c);
+  opacity: 0; animation: hrdrift 2.2s ease-out forwards, hrtwinkle .5s ease-in-out infinite alternate; }
+.hr-label { position: absolute; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; z-index: 30; pointer-events: none; opacity: 0; animation: hrlabel .35s .75s ease-out forwards; }
+.hr-label b { padding: 8px 20px; border-radius: 999px; font: 700 15px var(--head); letter-spacing: 5px; text-transform: uppercase; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.7);
+  background: linear-gradient(90deg, #FF3D6E, #FFB03D, #FFF03D, #3DFF8A, #3DD6FF, #8A5CFF, #FF3DF0, #FF3D6E) 0 0 / 200% 100%; box-shadow: 0 0 22px rgba(160,200,255,.6); animation: hredge 3s linear infinite; }
+.hr-label span { font: 600 13px var(--body); color: #C9C6DE; white-space: nowrap; }
+@keyframes hrin { to { opacity: var(--o, 1); } }
+@keyframes hrrays { from { opacity: 0; transform: scale(.3); } to { opacity: .9; transform: scale(1); } }
+@keyframes hrspin { to { rotate: 360deg; } }
+@keyframes hredge { to { background-position: 200% 0; } }
+@keyframes hrsweep { 0% { opacity: 1; background-position: 100% 0; } 99% { opacity: 1; } 100% { opacity: 0; background-position: 0 0; } }
+@keyframes hrdrift { 0% { opacity: 0; transform: translate(calc(var(--x) * .6), calc(var(--y) * .6)); } 15% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; transform: translate(calc(var(--x) * 1.2), calc(var(--y) * 1.2)); } }
+@keyframes hrtwinkle { to { scale: .5; } }
+@keyframes hrlabel { from { opacity: 0; transform: translate(-50%, 14px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@media (prefers-reduced-motion: reduce) { .hr-rays, .hr-glow, .hr-edge, .hr-label b { animation-iteration-count: 1; } }
 .hint { transform: translateX(-50%); width: max-content; max-width: 90vw; text-align: center; color: var(--muted); z-index: 30; transition: top .5s; }
 .hint button { pointer-events: auto; }
 .burst { position: absolute; inset: 0; opacity: .45; pointer-events: none; animation: burst 1.2s ease-in forwards; z-index: 40; }

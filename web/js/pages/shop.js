@@ -311,7 +311,7 @@ export function PackOpening({ type, count, load, onDone, onCancel, onFail, hideC
       Sound.play(holo.has(i) || r === 'Legendary' ? 'legendary' : 'rare');
       setBurst(color); setTimeout(() => setBurst(null), ms);
     }, Sound.duration('flip') * 1000);
-    if (holo.has(i)) flash('#8CC8FF', 1200);
+    if (holo.has(i)) flash('radial-gradient(circle at 50% 45%, #fff, rgba(200,230,255,.6) 40%, transparent 75%)', 900);
     else if (r !== 'Common') flash(rarityColor(r), r === 'Legendary' ? 1200 : 500);
   };
   const cdown = (e, i) => { if (i !== current || !dealt) return; cardDrag.current = { x: e.clientX, moved: false }; e.currentTarget.setPointerCapture?.(e.pointerId); };
@@ -388,7 +388,7 @@ export function PackOpening({ type, count, load, onDone, onCancel, onFail, hideC
         const a = i / 16 * 2 * Math.PI, d = 90 + (i * 37) % 70;
         return html`<i style="--x: ${Math.cos(a) * d}px; --y: ${Math.sin(a) * d * 0.6}px; background: ${i % 3 ? LEAK : '#fff'};"></i>`;
       })}</div>`}
-      ${showHolo && html`<div class="holotext" style="top: calc(50% - ${bigW * 0.7 + 48}px);">HOLO!</div>`}
+      ${showHolo && html`<${HoloReveal} key=${current} w=${bigW} dragX=${dragX} name=${card(cards[current])?.name} />`}
       <div class="hint" style="top: calc(50% + ${hintY}px);">
         ${!torn ? html`<span style="opacity: ${progress > 0 ? 0 : 1};">${coarse ? 'Swipe across the top to tear it open' : 'Drag across the top to tear it open, or press Enter'}</span>`
           : dealt && current < n ? html`<span>${flipped.has(current) ? 'Swipe for the next card' : `Swipe to reveal ${current + 1} of ${n}`}</span>`
@@ -398,6 +398,19 @@ export function PackOpening({ type, count, load, onDone, onCancel, onFail, hideC
     </div>
     ${burst && html`<div class="burst" style="background: ${burst};"></div>`}
   </div>`;
+}
+
+// A holo pull: the room dims, rainbow rays spin out from behind the card, a rainbow edge and one light sweep on it,
+// sparkles, and a HOLOGRAPHIC plate under it (same as the app's HoloReveal).
+const SPARKS = Array.from({ length: 26 }, (_, i) => { const a = i * 2.39, r = 120 + (i * 53) % 150;
+  return { x: Math.cos(a) * r, y: Math.sin(a) * r * 1.2, s: 3 + (i % 4) * 2, c: ['#FF3D6E', '#3DD6FF', '#FFF03D', '#8A5CFF', '#3DFF8A'][i % 5], d: (i % 7) * 0.13 }; });
+function HoloReveal({ w, dragX, name }) {
+  return html`<div class="hr-back" aria-hidden="true"><div class="hr-dim"></div><div class="hr-rays"></div><div class="hr-glow"></div></div>
+    <div class="hr-front" style="--w: ${w}px; transform: translate(calc(-50% + ${dragX}px), -50%); opacity: ${Math.max(0, 1 - Math.abs(dragX) / 120)};" aria-hidden="true">
+      <div class="hr-edge"></div><div class="hr-sweep"></div>
+      ${SPARKS.map(p => html`<i class="hr-spark" style="--x: ${p.x}px; --y: ${p.y}px; --s: ${p.s}px; --c: ${p.c}; animation-delay: ${0.4 + p.d}s, ${0.4 + p.d}s;"></i>`)}
+    </div>
+    <div class="hr-label" style="top: calc(50% + ${w * 0.7 + 30}px);" role="status"><b>Holographic</b><span>${name} · +20% to every stat</span></div>`;
 }
 
 // Card back that turns over to its face; Epic and Legendary glow and shake when revealed.

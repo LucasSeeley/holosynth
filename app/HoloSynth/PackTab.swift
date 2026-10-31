@@ -496,14 +496,11 @@ struct PackTab: View {
 
                 hint.offset(y: hintY(finished: finished, smallW: smallW, bigW: bigW, packH: packH))
 
-                // HOLO! over the card while a holo one is showing
+                // a holo pull: rays and a dimmed room behind the card, rainbow edge, light sweep, sparkles and the HOLOGRAPHIC plate on it
                 if dealt, current < pulled.count, flipped.contains(current), pulledHolo.contains(current) {
-                    Text("HOLO!").font(.chakra(40)).tracking(4)
-                        .foregroundStyle(LinearGradient(colors: HoloFoil.rainbow, startPoint: .leading, endPoint: .trailing))
-                        .shadow(color: .white.opacity(0.5), radius: 10)
-                        .offset(y: -(bigW * 0.7) - 48)
-                        .transition(.scale.combined(with: .opacity))
-                        .allowsHitTesting(false)
+                    HoloReveal(width: bigW, front: false, name: "").id("b\(current)").zIndex(-100)
+                    HoloReveal(width: bigW, front: true, name: CardBook.card(pulled[current])?.name ?? "")
+                        .offset(x: dragX).opacity(max(0, 1 - Double(abs(dragX)) / 120)).id("f\(current)").zIndex(1)
                 }
             }
             .frame(width: geo.size.width, height: geo.size.height)
@@ -645,8 +642,8 @@ struct PackTab: View {
             UINotificationFeedbackGenerator().notificationOccurred(.success)
             DispatchQueue.main.asyncAfter(deadline: .now() + Sound.flip.duration) {
                 Sound.legendary.play()
-                withAnimation(.easeOut(duration: 0.15)) { burst = Color(hex: 0x8CC8FF) }
-                withAnimation(.easeIn(duration: 1.2).delay(0.15)) { burst = nil }
+                withAnimation(.easeOut(duration: 0.15)) { burst = .white }
+                withAnimation(.easeIn(duration: 0.9).delay(0.15)) { burst = nil }
             }
             return
         }
@@ -697,6 +694,75 @@ struct FlipCard: View {
     private var glow: Color {
         guard let r = card?.rarity ?? power?.rarity, r != "Common" else { return .clear }
         return Theme.rarityColor(r)
+    }
+}
+
+// A holo pull (web: HoloReveal in shop.js). front = false: the dimmed room, spinning rainbow rays and glow behind the card;
+// front = true: rainbow edge, one light sweep, sparkles, and the HOLOGRAPHIC plate under it.
+struct HoloReveal: View {
+    let width: CGFloat
+    let front: Bool
+    let name: String
+    @State private var start = Date()
+    private static let rainbow = HoloFoil.rainbow + [HoloFoil.rainbow[0]]
+    var body: some View {
+        TimelineView(.animation) { ctx in
+            let t = ctx.date.timeIntervalSince(start), h = width * 7 / 5
+            let k = { (a: Double, b: Double) in max(0, min(1, (t - a) / (b - a))) }
+            if front { frontLayer(t, h, k) } else { backLayer(t, k) }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(!front)
+    }
+
+    @ViewBuilder private func backLayer(_ t: Double, _ k: (Double, Double) -> Double) -> some View {
+        ZStack {
+            Color.black.opacity(0.55 * k(0, 0.3)).ignoresSafeArea()
+            ZStack {   // rainbow spokes
+                ForEach(0..<32, id: \.self) { i in
+                    Rectangle().fill(HoloFoil.rainbow[i % HoloFoil.rainbow.count].opacity(0.55))
+                        .frame(width: 7, height: 550).offset(y: -275).rotationEffect(.degrees(Double(i) * 11.25))
+                }
+            }
+            .rotationEffect(.degrees(t * 20))
+            .mask(RadialGradient(colors: [.black, .black, .clear], center: .center, startRadius: 0, endRadius: 330))
+            .scaleEffect(0.3 + 0.7 * k(0.25, 0.75)).opacity(0.9 * k(0.25, 0.5))
+            Ellipse().fill(AngularGradient(colors: Self.rainbow, center: .center))
+                .frame(width: 460, height: 520).rotationEffect(.degrees(t * 60)).blur(radius: 40).opacity(0.8 * k(0.3, 0.6))
+        }
+    }
+
+    @ViewBuilder private func frontLayer(_ t: Double, _ h: CGFloat, _ k: (Double, Double) -> Double) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: width * 0.07, style: .continuous)
+                .strokeBorder(AngularGradient(colors: Self.rainbow, center: .center, angle: .degrees(t * 120)), lineWidth: 4)
+                .frame(width: width + 8, height: h + 8).shadow(color: .white.opacity(0.6), radius: 10).opacity(k(0.4, 0.6))
+            let sx = -0.6 + 2.2 * k(0.5, 1.2)
+            LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .white.opacity(0.75), location: 0.5), .init(color: .clear, location: 1)],
+                           startPoint: .leading, endPoint: .trailing)
+                .frame(width: width * 0.45, height: h * 1.3).rotationEffect(.degrees(20))
+                .offset(x: CGFloat(sx - 0.5) * width)
+                .frame(width: width, height: h).clipShape(RoundedRectangle(cornerRadius: width * 0.06, style: .continuous))
+                .blendMode(.screen).opacity(t > 0.5 && t < 1.2 ? 1 : 0)
+            ForEach(0..<26, id: \.self) { i in   // sparkles drifting out
+                let a = Double(i) * 2.39, r = Double(120 + (i * 53) % 150), d = k(0.4 + Double(i % 7) * 0.13, 2.6)
+                let size = CGFloat(3 + (i % 4) * 2)
+                Circle().fill(.white).frame(width: size, height: size)
+                    .shadow(color: HoloFoil.rainbow[i % HoloFoil.rainbow.count], radius: size)
+                    .offset(x: CGFloat(cos(a) * r * (0.6 + 0.6 * d)), y: CGFloat(sin(a) * r * 1.2 * (0.6 + 0.6 * d)))
+                    .opacity(d <= 0 ? 0 : (1 - k(1.6, 2.6)) * (0.5 + 0.5 * abs(sin(t * 6 + Double(i)))))
+            }
+            VStack(spacing: 6) {
+                Text("HOLOGRAPHIC").font(.chakra(15)).tracking(5).foregroundColor(.white).shadow(color: .black.opacity(0.7), radius: 2)
+                    .padding(.horizontal, 20).padding(.vertical, 8)
+                    .background(Capsule().fill(LinearGradient(colors: Self.rainbow, startPoint: UnitPoint(x: -t.truncatingRemainder(dividingBy: 3) / 3, y: 0.5),
+                                                               endPoint: UnitPoint(x: 2 - t.truncatingRemainder(dividingBy: 3) / 3, y: 0.5))))
+                    .shadow(color: Color(hex: 0xA0C8FF).opacity(0.6), radius: 11)
+                Text("\(name) · +20% to every stat").font(.barlow(13, semibold: true)).foregroundColor(Color(hex: 0xC9C6DE))
+            }
+            .offset(y: h / 2 + 30 + 14 * (1 - k(0.75, 1.1)) + 22).opacity(k(0.75, 1.1))
+            .accessibilityElement(children: .combine)
+        }
     }
 }
 
