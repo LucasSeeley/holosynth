@@ -2369,20 +2369,20 @@
   "hp": 120,
   "basic": {
    "name": "Crown Strike",
-   "dmg": 20
+   "dmg": 25
   },
   "special": {
    "name": "Neon Judgment",
-   "dmg": 50,
-   "cd": 3
+   "dmg": 65,
+   "cd": 2
   },
   "look": "The ruler android of the neon city on a throne above the skyline, hardlight crown, cape flowing.",
   "color": "#ffd23d",
   "quip": "The crown is hardlight. The ego is solid.",
   "special2": {
    "name": "Royal Decree",
-   "dmg": 70,
-   "cd": 4
+   "dmg": 90,
+   "cd": 3
   },
   "passive": "firststrike"
  },
@@ -2395,20 +2395,20 @@
   "hp": 115,
   "basic": {
    "name": "Primal Rend",
-   "dmg": 25
+   "dmg": 30
   },
   "special": {
    "name": "Extinction Event",
-   "dmg": 50,
-   "cd": 3
+   "dmg": 65,
+   "cd": 2
   },
   "look": "An ancient chrome alpha predator on a cliff in a lightning storm, eyes burning.",
   "color": "#ff4d5e",
   "quip": "Lightning behind him on the cliff. Staged, obviously.",
   "special2": {
    "name": "Predator Dominion",
-   "dmg": 70,
-   "cd": 4
+   "dmg": 90,
+   "cd": 3
   },
   "passive": "executioner"
  },
@@ -2421,20 +2421,20 @@
   "hp": 125,
   "basic": {
    "name": "Forge Beam",
-   "dmg": 20
+   "dmg": 25
   },
   "special": {
    "name": "Mass Assembly",
-   "dmg": 55,
-   "cd": 3
+   "dmg": 70,
+   "cd": 2
   },
   "look": "A colossal self-building mech assembling new armour mid-air from swirling parts in a factory of light.",
   "color": "#ff3df0",
   "quip": "Builds itself mid-fight. The warranty keeps getting longer.",
   "special2": {
    "name": "Final Assembly",
-   "dmg": 75,
-   "cd": 4
+   "dmg": 95,
+   "cd": 3
   },
   "passive": "thorns"
  },
@@ -3358,20 +3358,20 @@
   "hp": 115,
   "basic": {
    "name": "Prime Word",
-   "dmg": 25
+   "dmg": 30
   },
   "special": {
    "name": "Rune Cataclysm",
-   "dmg": 50,
-   "cd": 3
+   "dmg": 65,
+   "cd": 2
   },
   "look": "A towering platinum sorcerer android crowned by orbiting rune planets, magic storm around it.",
   "color": "#e8e8ff",
   "quip": "Rune planets orbit him. Him only.",
   "special2": {
    "name": "Final Word",
-   "dmg": 70,
-   "cd": 4
+   "dmg": 90,
+   "cd": 3
   },
   "passive": "quickcharge"
  },
@@ -3384,20 +3384,20 @@
   "hp": 120,
   "basic": {
    "name": "First Light",
-   "dmg": 20
+   "dmg": 25
   },
   "special": {
    "name": "Dawn Charge",
-   "dmg": 50,
-   "cd": 3
+   "dmg": 65,
+   "cd": 2
   },
   "look": "A colossal stag-dragon made of sunrise light striding over mountains, dawn sky trailing behind it.",
   "color": "#ff8a5c",
   "quip": "Brings the dawn personally. Zero sympathy for night owls.",
   "special2": {
    "name": "Solar Crown",
-   "dmg": 70,
-   "cd": 4
+   "dmg": 90,
+   "cd": 3
   },
   "passive": "phaseshift"
  },
@@ -3410,12 +3410,12 @@
   "hp": 125,
   "basic": {
    "name": "Prism Pulse",
-   "dmg": 20
+   "dmg": 25
   },
   "special": {
    "name": "Eternal Renewal",
-   "dmg": 50,
-   "cd": 3,
+   "dmg": 65,
+   "cd": 2,
    "heal": true
   },
   "look": "A vast floating crystal heart ringed by spinning halos, throwing full-spectrum light across a temple.",
@@ -3423,8 +3423,8 @@
   "quip": "A heart that big has to float. Gravity gave up.",
   "special2": {
    "name": "Endless Light",
-   "dmg": 70,
-   "cd": 4
+   "dmg": 90,
+   "cd": 3
   },
   "passive": "regen"
  },
@@ -3437,20 +3437,20 @@
   "hp": 115,
   "basic": {
    "name": "Twin Crescent",
-   "dmg": 25
+   "dmg": 30
   },
   "special": {
    "name": "Starfall Slash",
-   "dmg": 50,
-   "cd": 3
+   "dmg": 65,
+   "cd": 2
   },
   "look": "A samurai general android with twin hardlight katanas, cape whipping, a burning city behind him.",
   "color": "#2ee6d6",
   "quip": "Walked out of a burning city. Didn't look back or hurry.",
   "special2": {
    "name": "Last Stand",
-   "dmg": 70,
-   "cd": 4
+   "dmg": 90,
+   "cd": 3
   },
   "passive": "momentum"
  },
@@ -3463,20 +3463,20 @@
   "hp": 145,
   "basic": {
    "name": "Iron Fist",
-   "dmg": 30
+   "dmg": 35
   },
   "special": {
    "name": "Arena Breaker",
-   "dmg": 65,
-   "cd": 3
+   "dmg": 80,
+   "cd": 2
   },
   "look": "A towering gladiator champion android in gunmetal and molten gold, roaring in a packed neon arena.",
   "color": "#d4a72c",
   "quip": "The crowd chants his name. He has given them no choice.",
   "special2": {
    "name": "Worldbreaker",
-   "dmg": 90,
-   "cd": 4
+   "dmg": 110,
+   "cd": 3
   },
   "passive": "firststrike"
  },
@@ -3489,11 +3489,11 @@
   "hp": 120,
   "basic": {
    "name": "Rime Rend",
-   "dmg": 20
+   "dmg": 25
   },
   "special": {
    "name": "Glacier Fang",
-   "dmg": 50,
+   "dmg": 65,
    "cd": 2
   },
   "look": "A giant frosted-chrome wolf howling on a frozen peak, ice crystals on its back, breath of blue frost.",
@@ -3501,7 +3501,7 @@
   "quip": "Howls at the peak. The avalanche is just the echo.",
   "special2": {
    "name": "Endless Winter",
-   "dmg": 70,
+   "dmg": 90,
    "cd": 3
   },
   "passive": "lifesteal"
@@ -3515,20 +3515,20 @@
   "hp": 145,
   "basic": {
    "name": "Bone Crusher",
-   "dmg": 30
+   "dmg": 35
   },
   "special": {
    "name": "Toxic Roar",
-   "dmg": 65,
-   "cd": 3
+   "dmg": 80,
+   "cd": 2
   },
   "look": "A black-chrome tyrannosaurus king with a crown of toxic-lime neon spikes, roaring over ruins.",
   "color": "#8dff3d",
   "quip": "Short arms, long crown, and nobody dares mention either.",
   "special2": {
    "name": "Tyrant Reign",
-   "dmg": 90,
-   "cd": 4
+   "dmg": 110,
+   "cd": 3
   },
   "passive": "executioner"
  },
@@ -3541,20 +3541,20 @@
   "hp": 145,
   "basic": {
    "name": "Gravity Fist",
-   "dmg": 30
+   "dmg": 35
   },
   "special": {
    "name": "Planet Drop",
-   "dmg": 65,
-   "cd": 3
+   "dmg": 80,
+   "cd": 2
   },
   "look": "A mountain-sized titan mech carrying a glowing ringed planet on its shoulders, clouds at its knees.",
   "color": "#3d6bff",
   "quip": "Carries a planet. Ask nicely before he moves.",
   "special2": {
    "name": "World Engine",
-   "dmg": 90,
-   "cd": 4
+   "dmg": 110,
+   "cd": 3
   },
   "passive": "armor"
  },
@@ -3567,20 +3567,20 @@
   "hp": 115,
   "basic": {
    "name": "Ion Lance",
-   "dmg": 25
+   "dmg": 30
   },
   "special": {
    "name": "Skyfall",
-   "dmg": 50,
-   "cd": 3
+   "dmg": 65,
+   "cd": 2
   },
   "look": "A silver-white sky-fortress mech, half jet and half walking fortress, breaking through the clouds.",
   "color": "#d6dcec",
   "quip": "Half jet, half fortress, entirely above your concerns.",
   "special2": {
    "name": "Zero Hour",
-   "dmg": 70,
-   "cd": 4
+   "dmg": 90,
+   "cd": 3
   },
   "passive": "thorns"
  },
@@ -3593,20 +3593,20 @@
   "hp": 120,
   "basic": {
    "name": "Paper Edge",
-   "dmg": 20
+   "dmg": 25
   },
   "special": {
    "name": "Forbidden Chapter",
-   "dmg": 50,
-   "cd": 3
+   "dmg": 65,
+   "cd": 2
   },
   "look": "A giant spellbook golem, pages fanned into armour, violet runes storming around it in a vast library.",
   "color": "#a35cff",
   "quip": "Pages as armour, footnotes as weapons. Spoilers are free.",
   "special2": {
    "name": "Final Page",
-   "dmg": 70,
-   "cd": 4
+   "dmg": 90,
+   "cd": 3
   },
   "passive": "laststand"
  },
@@ -3619,20 +3619,20 @@
   "hp": 135,
   "basic": {
    "name": "Echo Step",
-   "dmg": 35
+   "dmg": 40
   },
   "special": {
    "name": "Time Fracture",
-   "dmg": 60,
-   "cd": 3
+   "dmg": 75,
+   "cd": 2
   },
   "look": "A time-sorceress android with floating clock-rune rings and a cracked hourglass heart, time shattering around her.",
   "color": "#3dffc4",
   "quip": "Knows how this ends. The hourglass says hurry.",
   "special2": {
    "name": "Hourglass Shatter",
-   "dmg": 85,
-   "cd": 4
+   "dmg": 105,
+   "cd": 3
   },
   "passive": "quickcharge"
  },
@@ -3645,20 +3645,20 @@
   "hp": 145,
   "basic": {
    "name": "Starsong",
-   "dmg": 30
+   "dmg": 35
   },
   "special": {
    "name": "Comet Tide",
-   "dmg": 65,
-   "cd": 3
+   "dmg": 80,
+   "cd": 2
   },
   "look": "A huge whale of living starlight swimming through a nebula, constellations across its body.",
   "color": "#7a6bff",
   "quip": "Hums lullabies to galaxies. They go to bed on time.",
   "special2": {
    "name": "Galaxy Wave",
-   "dmg": 90,
-   "cd": 4
+   "dmg": 110,
+   "cd": 3
   },
   "passive": "rebirth"
  },
@@ -3671,20 +3671,20 @@
   "hp": 115,
   "basic": {
    "name": "Smoke Lash",
-   "dmg": 25
+   "dmg": 30
   },
   "special": {
    "name": "Desert Inferno",
-   "dmg": 50,
-   "cd": 3
+   "dmg": 65,
+   "cd": 2
   },
   "look": "A fire djinn of living flame and black smoke with a molten-gold mask, towering over a burning desert.",
   "color": "#ff5a1f",
   "quip": "Grants three wishes. All of them involve more smoke.",
   "special2": {
    "name": "Wish Of Ash",
-   "dmg": 70,
-   "cd": 4
+   "dmg": 90,
+   "cd": 3
   },
   "passive": "phaseshift"
  },
@@ -3697,12 +3697,12 @@
   "hp": 120,
   "basic": {
    "name": "Halo Lance",
-   "dmg": 20
+   "dmg": 25
   },
   "special": {
    "name": "Healing Grace",
-   "dmg": 50,
-   "cd": 3,
+   "dmg": 65,
+   "cd": 2,
    "heal": true
   },
   "look": "A six-winged porcelain angel healer descending in a beam of gold light through storm clouds.",
@@ -3710,8 +3710,8 @@
   "quip": "Six wings, one gentle sigh, a polite look of disappointment.",
   "special2": {
    "name": "Radiant Verdict",
-   "dmg": 70,
-   "cd": 4
+   "dmg": 90,
+   "cd": 3
   },
   "passive": "blessing"
  },
@@ -3724,12 +3724,12 @@
   "hp": 145,
   "basic": {
    "name": "Thorn Whip",
-   "dmg": 30
+   "dmg": 35
   },
   "special": {
    "name": "Lifebloom",
-   "dmg": 65,
-   "cd": 3,
+   "dmg": 80,
+   "cd": 2,
    "heal": true
   },
   "look": "A world-tree healer construct of crystal and glowing vines with a leaf-canopy crown, a forest blooming around it.",
@@ -3737,8 +3737,8 @@
   "quip": "Planted one vine. The forest took it as an invitation.",
   "special2": {
    "name": "Overgrowth",
-   "dmg": 90,
-   "cd": 4
+   "dmg": 110,
+   "cd": 3
   },
   "passive": "regen"
  },
@@ -4730,20 +4730,20 @@
   "hp": 220,
   "basic": {
    "name": "Test Strike",
-   "dmg": 30
+   "dmg": 35
   },
   "special": {
    "name": "Blueprint Burst",
-   "dmg": 65,
-   "cd": 3
+   "dmg": 80,
+   "cd": 2
   },
   "look": "The very first android ever built, kneeling half-assembled on a lab rig while robot arms fit its white armour, blueprint holograms all around.",
   "color": "#5fb8ff",
   "quip": "The first one built. Everyone else is a copy.",
   "special2": {
    "name": "Full Assembly",
-   "dmg": 85,
-   "cd": 4
+   "dmg": 105,
+   "cd": 3
   },
   "passive": "rebirth"
  }
