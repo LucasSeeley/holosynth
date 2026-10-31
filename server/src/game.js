@@ -840,7 +840,7 @@ export const CHAPTERS = [
 ];
 // One flat list for progress (`cleared` counts across chapters); `chapter` is 0-based, `num` is the level within its chapter.
 // Boss packs by chapter, for levels 10 / 20 / 30.
-export const BOSS_PACKS = [['cyber', 'cyber', 'omni'], ['magic', 'magic', 'omni'], ['cyber', 'magic', 'overload'], ['cyber', 'magic', 'overload'], ['cyber', 'magic', 'overload']];
+export const BOSS_PACKS = [['cyber', 'cyber', 'omni'], ['magic', 'magic', 'omni'], ['cyber', 'magic', 'overload'], ['overload', 'overload', 'overload'], ['overload', 'overload', 'overload']];   // chapters 4 and 5: every boss gives an Overload
 export const CAMPAIGN = CHAPTERS.flatMap((c, chapter) => c.levels.map((l, i) => ({ ...l, chapter, num: i + 1, ...(l.boss ? { pack: BOSS_PACKS[chapter][Math.floor(i / 10)] } : {}) })));
 export const NEW_CARD_AFTER = [3, 6];   // levels that unlock your 2nd and 3rd card
 export const OPEN_LEVELS = CAMPAIGN.filter(l => l.chapter < CHAPTERS_OPEN).length;
